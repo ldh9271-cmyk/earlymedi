@@ -1,0 +1,36 @@
+{
+  "name": "EarlyMedi AI Concierge",
+  "short_name": "EarlyMedi",
+  "description": "환자의 첫 문의부터 귀국 후 케어까지, 한 손에서 끝나는 의료관광",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4F46E5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "케이스",
+      "url": "/agency/cases",
+      "description": "케이스 라이프사이클 관리"
+    },
+    {
+      "name": "인박스",
+      "url": "/agency/inbox",
+      "description": "다국어 통합 인박스"
+    }
+  ]
+}
