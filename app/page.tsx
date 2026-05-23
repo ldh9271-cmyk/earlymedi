@@ -141,7 +141,7 @@ function Hero(): JSX.Element {
           <p className="mx-auto mt-5 max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
             10채널 다국어 인박스 · AI 시술 차트 자동 채움.
             <br className="hidden md:inline" />
-            <span className="font-medium text-foreground">유치업체 · 의료기관 · 프리랜서 · 파트너업체</span>를 한 플랫폼에서 자동 매칭·정산합니다.
+            <span className="font-medium text-foreground">의료기관 · 유치업체 · 파트너업체 · 프리랜서</span>를 한 플랫폼에서 자동 매칭·정산합니다.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
