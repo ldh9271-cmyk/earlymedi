@@ -38,28 +38,28 @@ export default function LoginPage({
             <TabsContent value="signup" className="space-y-3 pt-4">
               <p className="text-sm text-muted-foreground">가입 카테고리를 선택하세요.</p>
               <SignupOption
-                href="/signup/agency"
-                title="유치업체 (Agency)"
-                description="모객 · 매칭 · 결제 · 정산 · 비자 · 사후관리"
-                color="brand"
-              />
-              <SignupOption
-                href="/signup/freelancer"
-                title="프리랜서"
-                description="송객 · 통역 · 코디 · 인플루언서"
-                color="hospitality"
-              />
-              <SignupOption
                 href="/signup/medical"
                 title="의료기관"
                 description="견적 · 진료 · 시술 차트"
                 color="care"
               />
               <SignupOption
+                href="/signup/agency"
+                title="유치업체 (Agency)"
+                description="모객 · 매칭 · 결제 · 정산 · 비자 · 사후관리"
+                color="brand"
+              />
+              <SignupOption
                 href="/signup/partner"
                 title="파트너업체"
                 description="호텔 · 스파 · 살롱 · 식당 · 교통 · 관광"
                 color="slate"
+              />
+              <SignupOption
+                href="/signup/freelancer"
+                title="프리랜서"
+                description="송객 · 통역 · 코디 · 인플루언서"
+                color="hospitality"
               />
             </TabsContent>
           </Tabs>
