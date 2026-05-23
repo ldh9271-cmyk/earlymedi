@@ -66,7 +66,7 @@ export const ACCOUNT_TYPE_LABEL_KO: Record<AccountType, string> = {
   agency: '유치업체',
   freelancer: '프리랜서',
   medical: '의료기관',
-  non_medical: '비의료 파트너',
+  non_medical: '파트너업체',
 };
 
 export const ACCOUNT_TYPE_LABEL_EN: Record<AccountType, string> = {

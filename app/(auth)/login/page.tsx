@@ -57,7 +57,7 @@ export default function LoginPage({
               />
               <SignupOption
                 href="/signup/partner"
-                title="비의료 파트너"
+                title="파트너업체"
                 description="호텔 · 스파 · 살롱 · 식당 · 교통 · 관광"
                 color="slate"
               />

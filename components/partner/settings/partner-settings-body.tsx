@@ -25,7 +25,7 @@ export function PartnerSettingsBody(): JSX.Element {
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-2 py-2 md:px-4">
       <SettingsHero
-        eyebrow="비의료 파트너 운영"
+        eyebrow="파트너업체 운영"
         title="설정"
         lead="업체 정보·가용성·다국어 메뉴·시술 후 제약 조건. Agency 패키지 빌더가 자동 충돌 감지에 이 정보를 사용합니다."
         actions={

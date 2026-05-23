@@ -141,7 +141,7 @@ function Hero(): JSX.Element {
           <p className="mx-auto mt-5 max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
             10채널 다국어 인박스 · AI 시술 차트 자동 채움.
             <br className="hidden md:inline" />
-            <span className="font-medium text-foreground">유치업체 · 의료기관 · 프리랜서 · 비의료 파트너</span>를 한 플랫폼에서 자동 매칭·정산합니다.
+            <span className="font-medium text-foreground">유치업체 · 의료기관 · 프리랜서 · 파트너업체</span>를 한 플랫폼에서 자동 매칭·정산합니다.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
@@ -200,7 +200,7 @@ const ACTORS = [
   {
     href: '/signup/partner',
     icon: MapPin,
-    name: '비의료 파트너',
+    name: '파트너업체',
     en: 'Non-medical',
     body: '호텔·스파·식당·교통·관광. 시술 후 제약 자동 충돌 감지.',
     accent: 'slate' as const,
@@ -455,7 +455,7 @@ function PricingBand(): JSX.Element {
         <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <PriceCard color="brand" name="유치업체" sub="Starter / Growth / Pro" price="₩99K~699K / 월" extra="14일 무료 체험" />
           <PriceCard color="care" name="의료기관" sub="Pay-as-you-go / Committed" price="₩500K부터 충전" extra="등록비 ₩300K" />
-          <PriceCard color="slate" name="비의료 파트너" sub="Listing / Active" price="₩50K + GMV 3% / 1.5%" extra="가입비 ₩50K" />
+          <PriceCard color="slate" name="파트너업체" sub="Listing / Active" price="₩50K + GMV 3% / 1.5%" extra="가입비 ₩50K" />
           <PriceCard color="hospitality" name="프리랜서" sub="Free" price="무료" extra="Agency 좌석에 포함" />
         </div>
         <div className="mt-8 text-center">

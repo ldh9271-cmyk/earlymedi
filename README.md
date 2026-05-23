@@ -11,7 +11,7 @@
 | `agency` | `/agency/*` | 유치업체 — 모객 · 매칭 · 결제 · 정산 · 비자 · 사후관리 |
 | `freelancer` | `/freelancer/*` | 프리랜서 — 송객 · 통역 · 코디 · 인플루언서 |
 | `medical` | `/medical/*` | 의료기관 — 견적 · 진료 · 시술 차트 |
-| `non_medical` | `/partner/*` | 비의료 파트너 — 호텔 · 스파 · 살롱 · 식당 · 교통 · 관광 |
+| `non_medical` | `/partner/*` | 파트너업체 — 호텔 · 스파 · 살롱 · 식당 · 교통 · 관광 |
 
 URL prefix와 `account_type`이 불일치하면 미들웨어가 즉시 차단합니다 (5단 권한).
 

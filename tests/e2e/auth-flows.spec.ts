@@ -23,7 +23,7 @@ test.describe('Phase 1 — 5-step middleware + auth flows', () => {
     await expect(page.getByText('유치업체 (Agency)')).toBeVisible();
     await expect(page.getByText('프리랜서')).toBeVisible();
     await expect(page.getByText('의료기관')).toBeVisible();
-    await expect(page.getByText('비의료 파트너')).toBeVisible();
+    await expect(page.getByText('파트너업체')).toBeVisible();
   });
 
   test('pricing page lists all 8 plans', async ({ page }) => {

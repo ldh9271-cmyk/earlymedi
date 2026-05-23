@@ -43,7 +43,7 @@ export const agencySections: SidebarSection[] = [
     items: [
       { href: '/agency/patients', label: '환자 CRM', icon: UserCircle },
       { href: '/agency/hospitals', label: '병원 마켓플레이스', icon: Hospital },
-      { href: '/agency/partners', label: '비의료 파트너', icon: MapPin },
+      { href: '/agency/partners', label: '파트너업체', icon: MapPin },
       { href: '/agency/freelancers', label: '프리랜서', icon: Users },
     ],
   },

@@ -13,7 +13,7 @@ export default async function PartnerDashboardPage(): Promise<JSX.Element> {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">파트너 대시보드</h1>
         <p className="text-sm text-muted-foreground">
-          <Badge variant="slate">비의료 파트너</Badge>{' '}
+          <Badge variant="slate">파트너업체</Badge>{' '}
           <span className="ml-1">{ctx.email}</span>
         </p>
       </div>
