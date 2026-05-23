@@ -77,11 +77,11 @@ export default function HomePage(): JSX.Element {
 function SiteNav(): JSX.Element {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-5">
-        <Link href="/" className="text-xl font-bold tracking-tight md:text-2xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:gap-6 md:px-6 md:py-5">
+        <Link href="/" className="shrink-0 whitespace-nowrap text-base font-bold tracking-tight md:text-2xl">
           <span className="font-extrabold text-brand-600">Early</span>
-          <span className="font-semibold">Medi</span>{' '}
-          <span className="text-hospitality-500">AI Concierge</span>
+          <span className="font-semibold">Medi</span>
+          <span className="hidden text-hospitality-500 md:inline">{' '}AI Concierge</span>
         </Link>
         <nav className="hidden items-center gap-7 text-lg font-medium md:flex">
           <Link href="#actors" className="text-muted-foreground hover:text-foreground">
@@ -97,16 +97,16 @@ function SiteNav(): JSX.Element {
             데모 둘러보기
           </Link>
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 md:gap-2">
           <Link
             href="/login"
-            className="inline-flex h-11 items-center rounded-full border border-border bg-card px-5 text-base font-semibold transition hover:bg-muted"
+            className="inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full border border-border bg-card px-3 text-xs font-semibold transition hover:bg-muted md:h-11 md:px-5 md:text-base"
           >
             로그인
           </Link>
           <Link
             href="/login"
-            className="inline-flex h-11 items-center rounded-full bg-foreground px-5 text-base font-semibold text-background transition hover:bg-foreground/90"
+            className="inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full bg-foreground px-3 text-xs font-semibold text-background transition hover:bg-foreground/90 md:h-11 md:px-5 md:text-base"
           >
             무료로 시작
           </Link>
