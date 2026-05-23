@@ -272,7 +272,7 @@ function ViolationRow({ v }: { v: AdViolation }): JSX.Element {
       <div className="flex flex-wrap items-center gap-2">
         {badge}
         <span className="font-mono text-[10px] text-muted-foreground">{v.code}</span>
-        <span className="text-xs font-semibold">"{v.matched}"</span>
+        <span className="text-xs font-semibold">&ldquo;{v.matched}&rdquo;</span>
       </div>
       <div className="mt-1 text-xs">{v.message}</div>
       <div className="mt-0.5 text-[11px] text-muted-foreground">{v.guidance}</div>
