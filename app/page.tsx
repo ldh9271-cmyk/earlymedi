@@ -180,15 +180,6 @@ function Hero(): JSX.Element {
 
 const ACTORS = [
   {
-    href: '/signup/agency',
-    icon: ClipboardList,
-    name: '유치업체',
-    en: 'Agency',
-    body: '모객·매칭·결제·정산·비자·사후관리 본체. 의료관광를 묶는 허브.',
-    accent: 'brand' as const,
-    badge: '핵심',
-  },
-  {
     href: '/signup/medical',
     icon: Stethoscope,
     name: '의료기관',
@@ -198,13 +189,13 @@ const ACTORS = [
     badge: '병원',
   },
   {
-    href: '/signup/freelancer',
-    icon: Users,
-    name: '프리랜서',
-    en: 'Freelancer',
-    body: '송객·통역·코디·인플루언서. 다중 에이전시 겸업 + QR 추천 코드.',
-    accent: 'hospitality' as const,
-    badge: '송객자',
+    href: '/signup/agency',
+    icon: ClipboardList,
+    name: '유치업체',
+    en: 'Agency',
+    body: '모객·매칭·결제·정산·비자·사후관리 본체. 의료관광를 묶는 허브.',
+    accent: 'brand' as const,
+    badge: '핵심',
   },
   {
     href: '/signup/partner',
@@ -214,6 +205,15 @@ const ACTORS = [
     body: '호텔·스파·식당·교통·관광. 시술 후 제약 자동 충돌 감지.',
     accent: 'slate' as const,
     badge: '여정',
+  },
+  {
+    href: '/signup/freelancer',
+    icon: Users,
+    name: '프리랜서',
+    en: 'Freelancer',
+    body: '송객·통역·코디·인플루언서. 다중 에이전시 겸업 + QR 추천 코드.',
+    accent: 'hospitality' as const,
+    badge: '송객자',
   },
 ];
 
