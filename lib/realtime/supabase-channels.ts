@@ -22,6 +22,7 @@ export function useInboxRealtime(organizationId: string | null): void {
   useEffect(() => {
     if (!organizationId) return;
     const supabase = createSupabaseBrowserClient();
+    if (!supabase) return; // Supabase not configured — skip realtime
     const channel = supabase
       .channel(`em-inbox-${organizationId}`)
       .on(

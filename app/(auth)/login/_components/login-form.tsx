@@ -38,6 +38,10 @@ export function LoginForm({
     setGoogleLoading(true);
     try {
       const supabase = createSupabaseBrowserClient();
+      if (!supabase) {
+        setError('데모 모드 — Supabase가 아직 연결되지 않았습니다. 환경 변수 설정 후 다시 시도해주세요.');
+        return;
+      }
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', nextPath);
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -61,6 +65,10 @@ export function LoginForm({
     setLoading(true);
     try {
       const supabase = createSupabaseBrowserClient();
+      if (!supabase) {
+        setError('데모 모드 — Supabase가 아직 연결되지 않았습니다. 환경 변수 설정 후 다시 시도해주세요.');
+        return;
+      }
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', nextPath);
       const { error: signInError } = await supabase.auth.signInWithOtp({
