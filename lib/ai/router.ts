@@ -61,7 +61,12 @@ async function withFallback<T>(
     });
     return { finishReason: 'stop', ...res } as T & ChatResponse;
   } catch (e) {
-    if (e instanceof AiProviderError && FALLBACK_CODES.has(e.code)) {
+    // Only attempt fallback when (a) it's a recoverable error code AND
+    // (b) a Claude key is actually configured. Otherwise the Claude SDK
+    // raises an "Anthropic API key is missing" that masks the real
+    // (Gemini) failure the operator needs to fix.
+    const fallbackKeyPresent = !!process.env.ANTHROPIC_API_KEY;
+    if (e instanceof AiProviderError && FALLBACK_CODES.has(e.code) && fallbackKeyPresent) {
       const fbStarted = Date.now();
       try {
         const res = await call(FALLBACK);

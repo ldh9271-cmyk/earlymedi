@@ -92,22 +92,41 @@ export async function POST(
         } catch (innerErr) {
           const detailMessage =
             innerErr instanceof Error ? innerErr.message : 'unknown_error';
+          const lower = detailMessage.toLowerCase();
+
+          // If the error mentions Anthropic, it means Gemini already
+          // failed AND the router tried Claude as fallback — but Claude
+          // has no key. The ROOT cause is whatever made Gemini fail; the
+          // Anthropic part is just downstream noise. Re-frame for the user.
+          const isAnthropicNoise =
+            lower.includes('anthropic') && lower.includes('api key');
+
+          let hint: string;
+          if (isAnthropicNoise) {
+            hint =
+              'Gemini 호출 자체가 실패해 Claude 폴백을 시도했지만 ANTHROPIC_API_KEY도 없습니다. ① Google Cloud Console에서 EarlyMedi 프로젝트의 "Generative Language API"가 활성화되어 있는지 확인 (console.cloud.google.com/apis/library/generativelanguage.googleapis.com). ② aistudio.google.com/api-keys 에서 "+ API 키 만들기"로 키를 다시 발급해 새 키로 교체. ③ Vercel Redeploy (캐시 OFF).';
+          } else if (lower.includes('model') || lower.includes('not found')) {
+            hint = 'AI_PRIMARY_MODEL을 gemini-2.0-flash-001 또는 gemini-1.5-flash-latest로 시도해 보세요.';
+          } else if (
+            lower.includes('api key') ||
+            lower.includes('unauthorized') ||
+            lower.includes('401') ||
+            lower.includes('permission')
+          ) {
+            hint =
+              'GOOGLE_GENERATIVE_AI_API_KEY가 잘못되었거나 Generative Language API가 비활성화되어 있을 수 있습니다.';
+          } else if (lower.includes('quota') || lower.includes('rate') || lower.includes('429')) {
+            hint = 'Gemini 일일/분당 요청 한도 초과. 1-2분 후 다시 시도해 주세요.';
+          } else {
+            hint =
+              'Google AI Studio (aistudio.google.com) 에서 키 상태를 확인하고, Generative Language API 활성화 여부도 확인해 주세요.';
+          }
+
           return NextResponse.json(
             {
               error: 'gemini_call_failed',
-              message: `Gemini API 호출 실패: ${detailMessage}`,
-              hint:
-                detailMessage.toLowerCase().includes('model') ||
-                detailMessage.toLowerCase().includes('not found')
-                  ? 'AI_PRIMARY_MODEL을 gemini-2.0-flash-001 또는 gemini-1.5-flash-latest로 시도해 보세요.'
-                  : detailMessage.toLowerCase().includes('api key') ||
-                      detailMessage.toLowerCase().includes('unauthorized') ||
-                      detailMessage.toLowerCase().includes('401')
-                    ? 'GOOGLE_GENERATIVE_AI_API_KEY가 잘못되었거나 만료되었습니다.'
-                    : detailMessage.toLowerCase().includes('quota') ||
-                        detailMessage.toLowerCase().includes('rate')
-                      ? 'Gemini 일일 한도 또는 분당 요청 한도 초과.'
-                      : 'Google AI Studio (https://aistudio.google.com/) 에서 키 상태를 확인해 주세요.',
+              message: `AI 번역 실패: ${detailMessage}`,
+              hint,
             },
             { status: 502 },
           );
