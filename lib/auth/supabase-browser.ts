@@ -22,7 +22,16 @@ export function createSupabaseBrowserClient(): ReturnType<typeof createBrowserCl
     }
     return null;
   }
-  _client = createBrowserClient(url, anonKey);
+  _client = createBrowserClient(url, anonKey, {
+    auth: {
+      // Use implicit flow (hash tokens) instead of PKCE for magic links so
+      // that Gmail/Outlook link-preview scanners can't invalidate the OTP
+      // by pre-fetching it, and the link works across browsers/devices.
+      // Trade-off: slightly less secure than PKCE, but standard for magic
+      // links and acceptable for our use case.
+      flowType: 'implicit',
+    },
+  });
   return _client;
 }
 
