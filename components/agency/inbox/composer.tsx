@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Send, Sparkles } from 'lucide-react';
+import { Send, Sparkles, Languages } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/shared/ui/button';
 import { useInboxStore } from '@/lib/stores/inbox-store';
+import { cn } from '@/lib/utils/cn';
 
 type QuickReply = {
   id: string;
@@ -23,9 +24,14 @@ export function Composer({
   contactLocale: string | null;
 }): JSX.Element {
   const [text, setText] = useState('');
+  const [translateOn, setTranslateOn] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { setAssistantOpen, isAssistantOpen } = useInboxStore();
   const queryClient = useQueryClient();
+
+  // AI translation makes sense only when the agent's language differs
+  // from the patient's. Default to ON when contactLocale is non-Korean.
+  const shouldOfferTranslation = contactLocale && !contactLocale.startsWith('ko');
 
   const { data: quickReplies } = useQuery({
     queryKey: ['inbox', 'quick-replies'],
@@ -42,7 +48,11 @@ export function Composer({
       const res = await fetch(`/api/agency/inbox/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: payload.body, bodyLocale: 'ko' }),
+        body: JSON.stringify({
+          body: payload.body,
+          bodyLocale: 'ko',
+          translateBeforeSend: shouldOfferTranslation && translateOn,
+        }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'unknown' }));
@@ -113,6 +123,33 @@ export function Composer({
         </div>
       ) : null}
 
+      {/* AI translation toggle — only shown when the patient speaks a
+          non-Korean language. Default ON. Click to switch off (send the
+          Korean text verbatim). */}
+      {shouldOfferTranslation ? (
+        <button
+          type="button"
+          onClick={() => setTranslateOn((v) => !v)}
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
+            translateOn
+              ? 'border-hospitality-300 bg-hospitality-50 text-hospitality-800'
+              : 'border-border bg-card text-muted-foreground hover:bg-muted',
+          )}
+          title={
+            translateOn
+              ? `한국어로 입력하면 ${contactLocale} 로 자동 번역해 발송합니다`
+              : 'AI 자동 번역 OFF — 입력한 그대로 발송'
+          }
+        >
+          <Languages className="h-3 w-3" />
+          AI 통역 {translateOn ? 'ON' : 'OFF'}
+          <span className="text-[10px] opacity-70">
+            {translateOn ? `ko → ${contactLocale}` : ''}
+          </span>
+        </button>
+      ) : null}
+
       <div className="flex items-end gap-2">
         <textarea
           ref={textareaRef}
@@ -120,7 +157,11 @@ export function Composer({
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="답변을 입력하세요. ⌘Enter 전송 · /<단축어>+Space 빠른 답변 · ⌘. AI 어시스턴트"
+          placeholder={
+            shouldOfferTranslation && translateOn
+              ? `한국어로 입력하세요. 발송 시 ${contactLocale}로 자동 번역 · ⌘Enter 전송`
+              : '답변을 입력하세요. ⌘Enter 전송 · /<단축어>+Space 빠른 답변 · ⌘. AI 어시스턴트'
+          }
           className="min-h-[44px] flex-1 resize-none rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <Button

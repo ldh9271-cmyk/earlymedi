@@ -4,6 +4,8 @@ import { db } from '@/lib/db/client';
 import { channels } from '@/drizzle/schema/channels';
 import { conversations } from '@/drizzle/schema/conversations';
 import { messages } from '@/drizzle/schema/messages';
+import { translateInboundMessage } from '@/lib/ai/translation';
+import { callerFromCtx } from '@/lib/ai/router';
 
 /**
  * Normalized event the webhook handlers feed into the inbox. The router
@@ -98,7 +100,9 @@ export async function routeIncomingMessage(input: IncomingMessage): Promise<Rout
     conversationId = created.id;
   }
 
-  // 3. Insert the message
+  // 3. Insert the message FIRST (so the inbox shows it within ms even if
+  //    translation takes a beat). Translation patches the row asynchronously
+  //    afterwards.
   const [msg] = await db
     .insert(messages)
     .values({
@@ -116,6 +120,33 @@ export async function routeIncomingMessage(input: IncomingMessage): Promise<Rout
     })
     .returning({ id: messages.id });
   if (!msg) throw new Error('message_create_failed');
+
+  // 3b. Real-time AI translation (best-effort). Runs in the same request
+  //     so the next /api/agency/inbox poll returns translations attached.
+  //     Failures are swallowed — message stays visible without translation
+  //     rather than blocking inbox display.
+  try {
+    const result = await translateInboundMessage(
+      callerFromCtx({ orgId: input.organizationId, userId: null }, {
+        entityType: 'message',
+        entityId: msg.id,
+      }),
+      input.body,
+      input.bodyLocale,
+    );
+    if (result.translationKo || result.translationEn) {
+      await db
+        .update(messages)
+        .set({
+          translationKo: result.translationKo,
+          translationEn: result.translationEn,
+          bodyLocale: input.bodyLocale ?? result.detectedLocale,
+        })
+        .where(eq(messages.id, msg.id));
+    }
+  } catch {
+    // swallow — translation is non-essential
+  }
 
   // 4. Bump conversation counters atomically
   await db
