@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 
@@ -20,11 +20,18 @@ export const dynamic = 'force-dynamic';
  * 3. The destination is server-rendered, so by then the cookies are set
  *    and the server-side supabase client can read the user.
  *
- * Failure modes:
- * - Token expired / invalid → redirect to /login with the error message.
- * - Supabase not configured → demo mode, just go home.
+ * The inner component uses useSearchParams(), which Next.js requires to be
+ * inside a Suspense boundary during prerender — hence the outer wrapper.
  */
 export default function AuthLandingPage(): JSX.Element {
+  return (
+    <Suspense fallback={<LoadingState message="로그인 처리 중…" />}>
+      <AuthLandingInner />
+    </Suspense>
+  );
+}
+
+function AuthLandingInner(): JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<string>('로그인 처리 중…');
@@ -96,11 +103,15 @@ export default function AuthLandingPage(): JSX.Element {
     };
   }, [router, searchParams]);
 
+  return <LoadingState message={status} />;
+}
+
+function LoadingState({ message }: { message: string }): JSX.Element {
   return (
     <div className="flex min-h-[50vh] items-center justify-center">
       <div className="space-y-3 text-center">
         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-brand-300 border-t-brand-600" />
-        <p className="text-sm text-muted-foreground">{status}</p>
+        <p className="text-sm text-muted-foreground">{message}</p>
       </div>
     </div>
   );
