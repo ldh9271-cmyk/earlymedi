@@ -26,15 +26,29 @@ export async function GET(request: Request): Promise<Response> {
     return NextResponse.json({ error: 'invalid_query', issues: parsed.error.issues }, { status: 400 });
   }
 
-  const data = await withRls(access.ctx, () =>
-    listInboxConversations(access.ctx.orgId, {
-      channelKinds: parsed.data.channels?.split(',').filter(Boolean) as ChannelKind[] | undefined,
-      stages: parsed.data.stages?.split(',').filter(Boolean) as Array<'lead' | 'qualified' | 'case' | 'quoted' | 'booked' | 'archived'> | undefined,
-      countryCodes: parsed.data.countries?.split(',').filter(Boolean),
-      unreadOnly: parsed.data.unread === '1',
-      starredOnly: parsed.data.starred === '1',
-      search: parsed.data.q,
-    }),
-  );
-  return NextResponse.json({ data });
+  try {
+    const data = await withRls(access.ctx, () =>
+      listInboxConversations(access.ctx.orgId, {
+        channelKinds: parsed.data.channels?.split(',').filter(Boolean) as ChannelKind[] | undefined,
+        stages: parsed.data.stages?.split(',').filter(Boolean) as Array<'lead' | 'qualified' | 'case' | 'quoted' | 'booked' | 'archived'> | undefined,
+        countryCodes: parsed.data.countries?.split(',').filter(Boolean),
+        unreadOnly: parsed.data.unread === '1',
+        starredOnly: parsed.data.starred === '1',
+        search: parsed.data.q,
+      }),
+    );
+    return NextResponse.json({ data });
+  } catch (err) {
+    // Surface the underlying DB / SQL error to the client so the inbox UI
+    // can show something more useful than "로딩 실패". Still 500 — this
+    // means something is genuinely broken (schema mismatch, etc.) that
+    // a "refresh" won't fix.
+    const message = err instanceof Error ? err.message : 'unknown_error';
+    // eslint-disable-next-line no-console
+    console.error('[inbox] listInboxConversations failed:', message);
+    return NextResponse.json(
+      { error: 'inbox_query_failed', message },
+      { status: 500 },
+    );
+  }
 }

@@ -54,11 +54,15 @@ export function ConversationList({ initialId }: { initialId?: string }): JSX.Ele
       if (unreadOnly) params.set('unread', '1');
       if (search) params.set('q', search);
       const res = await fetch(`/api/agency/inbox?${params.toString()}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status}${body ? ' — ' + body.slice(0, 200) : ''}`);
+      }
       const json = (await res.json()) as { data: ConversationRow[] };
       return json.data;
     },
     refetchInterval: 15_000,
+    retry: 1,
   });
 
   // Auto-pick initial conversation on first render
@@ -100,8 +104,23 @@ export function ConversationList({ initialId }: { initialId?: string }): JSX.Ele
             ))}
           </div>
         ) : error ? (
-          <div className="p-6 text-sm text-destructive">
-            <AlertCircle className="mb-2 h-4 w-4" /> 인박스 로딩 실패. 새로고침 해주세요.
+          <div className="space-y-2 p-6 text-sm">
+            <div className="flex items-start gap-2 text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <div className="font-medium">인박스 로딩 실패</div>
+                <div className="mt-1 break-all text-xs font-mono text-destructive/80">
+                  {error instanceof Error ? error.message : String(error)}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="rounded-md border border-input bg-card px-3 py-1 text-xs hover:bg-muted"
+            >
+              다시 시도
+            </button>
           </div>
         ) : !data || data.length === 0 ? (
           <div className="flex flex-col items-center gap-2 p-12 text-center text-sm text-muted-foreground">
