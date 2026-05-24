@@ -147,18 +147,58 @@ export async function disconnectChannelAction(channelId: string): Promise<void> 
 }
 
 /**
- * Simulates an inbound message arriving via the channel's webhook. Used
- * by the "테스트 메시지 보내기" button on the channels page so an
- * operator can confirm the inbox pipeline works end-to-end without
- * waiting for a real customer message.
- *
- * Posts the same kind of payload our webhook handler accepts (the
- * `test: true` shape). Returns the conversation id so the UI can deep-
- * link to it.
+ * Realistic medical-tourism inquiry samples in 5 languages. Each one
+ * mentions a procedure + a timeline so the AI translation + intent
+ * classifier have actual content to work with.
  */
-export async function sendTestMessageAction(channelId: string): Promise<{
-  conversationId: string;
-}> {
+const TEST_MESSAGE_SAMPLES: Record<
+  'ko' | 'en' | 'zh' | 'ja' | 'ru',
+  { displayName: string; countryCode: string; body: string }
+> = {
+  ko: {
+    displayName: '김민지 (시뮬레이션)',
+    countryCode: 'KR',
+    body: '안녕하세요, 한국에서 코 성형 견적 받고 싶어요. 7월 둘째 주 일정 가능한가요? — (테스트 메시지)',
+  },
+  en: {
+    displayName: 'Emma Johnson (simulated)',
+    countryCode: 'US',
+    body:
+      "Hi, I'm interested in getting rhinoplasty in Seoul. Could you send a quote? I'm available the second week of July. — (test message)",
+  },
+  zh: {
+    displayName: '李小芳 (模拟)',
+    countryCode: 'CN',
+    body: '你好，我想在韩国做鼻整形,能不能给个报价?7月第二周方便吗? — (测试消息)',
+  },
+  ja: {
+    displayName: '佐藤 美咲 (シミュレーション)',
+    countryCode: 'JP',
+    body:
+      'こんにちは。韓国で鼻の整形を検討していて、見積もりをお願いします。7月第2週は可能ですか? — (テストメッセージ)',
+  },
+  ru: {
+    displayName: 'Анна Иванова (симуляция)',
+    countryCode: 'RU',
+    body:
+      'Здравствуйте, хочу получить смету на ринопластику в Корее. Возможно ли на второй неделе июля? — (тестовое сообщение)',
+  },
+};
+
+export type TestMessageLocale = keyof typeof TEST_MESSAGE_SAMPLES;
+
+/**
+ * Simulates an inbound message arriving via the channel's webhook. Used
+ * by the per-flag test buttons on the channels page so an operator can
+ * confirm the inbox pipeline (and AI translation) works end-to-end in
+ * any of the 5 sample locales without waiting for a real customer message.
+ *
+ * Returns the conversation id so the UI can deep-link to it.
+ */
+export async function sendTestMessageAction(
+  channelId: string,
+  locale: TestMessageLocale = 'ko',
+): Promise<{ conversationId: string; locale: TestMessageLocale }> {
   const { orgId } = await requireOrgOwnerOrAdmin();
 
   // Verify the channel belongs to the caller's org.
@@ -169,25 +209,27 @@ export async function sendTestMessageAction(channelId: string): Promise<{
     .limit(1);
   if (!channel) throw new Error('channel_not_found');
 
+  const sample = TEST_MESSAGE_SAMPLES[locale];
+  const threadId = `test-${locale}-${Date.now()}`;
+
   const { routeIncomingMessage } = await import('@/lib/channels/inbox-router');
   const result = await routeIncomingMessage({
     organizationId: orgId,
     channelId,
-    externalThreadId: `test-user-${Date.now()}`,
-    externalMessageId: `test-msg-${Date.now()}`,
+    externalThreadId: threadId,
+    externalMessageId: `${threadId}-msg`,
     contact: {
-      externalId: `test-user-${Date.now()}`,
-      displayName: '테스트 환자 (시뮬레이션)',
-      locale: 'ko',
-      countryCode: 'KR',
+      externalId: threadId,
+      displayName: sample.displayName,
+      locale,
+      countryCode: sample.countryCode,
     },
-    body:
-      '안녕하세요, 한국에서 코 성형 견적 받고 싶어요. 7월 둘째 주 일정 가능한가요? — (테스트 메시지)',
-    bodyLocale: 'ko',
+    body: sample.body,
+    bodyLocale: locale,
     sentAt: new Date(),
   });
 
-  return { conversationId: result.conversationId };
+  return { conversationId: result.conversationId, locale };
 }
 
 export async function listChannelsForOrg(orgId: string): Promise<
