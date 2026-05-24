@@ -56,31 +56,17 @@ export default function LoginPage({
             </TabsContent>
 
             <TabsContent value="signup" className="space-y-3 pt-4">
-              <p className="text-sm text-muted-foreground">가입 카테고리를 선택하세요.</p>
-              <SignupOption
-                href="/signup/medical"
-                title="의료기관"
-                description="견적 · 진료 · 시술 차트"
-                color="care"
-              />
-              <SignupOption
-                href="/signup/agency"
-                title="유치업체 (Agency)"
-                description="모객 · 매칭 · 결제 · 정산 · 비자 · 사후관리"
-                color="brand"
-              />
-              <SignupOption
-                href="/signup/partner"
-                title="파트너업체"
-                description="호텔 · 스파 · 살롱 · 식당 · 교통 · 관광"
-                color="slate"
-              />
-              <SignupOption
-                href="/signup/freelancer"
-                title="프리랜서"
-                description="송객 · 통역 · 코디 · 인플루언서"
-                color="hospitality"
-              />
+              <div className="rounded-lg border bg-care-50 px-4 py-3 text-sm text-care-700">
+                <p className="font-semibold">🎁 무료 체험 — 환자 10명까지</p>
+                <p className="mt-1 text-xs">
+                  이메일 또는 Google로 로그인 → 4가지 기본 정보 입력 → 바로 전체 서비스를 둘러볼 수
+                  있습니다. 11명째 환자 등록부터 유료 전환.
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                먼저 로그인하시면 가입 페이지(/signup)로 자동 안내됩니다.
+              </p>
+              <LoginForm nextPath="/signup" sent={searchParams.sent === '1'} />
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -101,35 +87,3 @@ export default function LoginPage({
   );
 }
 
-function SignupOption({
-  href,
-  title,
-  description,
-  color,
-}: {
-  href: string;
-  title: string;
-  description: string;
-  color: 'brand' | 'hospitality' | 'care' | 'slate';
-}): JSX.Element {
-  const ringClass = {
-    brand: 'hover:ring-brand-300',
-    hospitality: 'hover:ring-hospitality-300',
-    care: 'hover:ring-care-300',
-    slate: 'hover:ring-slate-300',
-  }[color];
-  return (
-    <Link
-      href={href}
-      className={`flex items-center justify-between rounded-lg border bg-white px-4 py-3 text-left transition ${ringClass} hover:ring-2`}
-    >
-      <div>
-        <div className="text-sm font-semibold">{title}</div>
-        <div className="text-xs text-muted-foreground">{description}</div>
-      </div>
-      <span aria-hidden className="text-muted-foreground">
-        →
-      </span>
-    </Link>
-  );
-}

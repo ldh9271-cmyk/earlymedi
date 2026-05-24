@@ -62,16 +62,11 @@ export default async function SelectOrgPage({
       <EmptyState
         icon={Building2}
         title="가입된 조직이 없습니다"
-        description="회원가입을 통해 첫 조직을 만들거나, 받은 초대 링크를 사용해 보세요."
+        description="간편 가입(30초)으로 첫 조직을 만드세요. 환자 10명까지 무료 체험."
         action={
-          <div className="flex gap-2">
-            <Link href="/signup/agency">
-              <Button variant="brand">유치업체로 가입</Button>
-            </Link>
-            <Link href="/signup/freelancer">
-              <Button variant="outline">프리랜서로 가입</Button>
-            </Link>
-          </div>
+          <Link href="/signup">
+            <Button variant="brand">간편 가입하고 시작하기 →</Button>
+          </Link>
         }
       />
     );

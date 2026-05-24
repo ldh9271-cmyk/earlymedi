@@ -16,6 +16,7 @@ export default async function MedicalLayout({ children }: { children: React.Reac
     <AppShell
       accountType="medical"
       orgName={org?.name ?? '— 병원 —'}
+      organizationId={ctx.orgId}
       userEmail={ctx.email}
       sections={medicalSections}
       currentPath={pathname}

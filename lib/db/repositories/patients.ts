@@ -5,6 +5,7 @@ import { db } from '../client';
 import { patients, patientMedicalHistory } from '@/drizzle/schema/patients';
 import { auditLogs } from '@/drizzle/schema/audit';
 import { encryptPii, hashFingerprint } from '@/lib/encryption/pgcrypto';
+import { assertTrialQuotaAvailable, incrementTrialUsage } from '@/lib/billing/trial-quota';
 
 export type ListPatientsFilter = {
   search?: string;
@@ -110,6 +111,13 @@ export async function createPatient(
   createdByUserId: string | null,
   input: CreatePatientInput,
 ): Promise<{ id: string; duplicateOfId?: string }> {
+  // Free-trial gate: throws PaywallError if the org has used up its 10-patient
+  // quota and hasn't converted to a paid plan. Caller should catch & redirect
+  // to /upgrade (UI) or return HTTP 402 (API). Duplicates *don't* consume
+  // quota — they still INSERT a separate row today but we early-return below
+  // wouldn't help since duplicates are also new rows; we just count them.
+  await assertTrialQuotaAvailable(organizationId);
+
   const phoneHash = input.phone ? hashFingerprint(input.phone) : null;
   const emailHash = input.email ? hashFingerprint(input.email) : null;
   const passportHash = input.passportNumber ? hashFingerprint(input.passportNumber) : null;
@@ -179,6 +187,9 @@ export async function createPatient(
     entityId: inserted.id,
     diff: { source: 'crm', extractionJobId: input.extractionJobId ?? null, duplicateOfId: duplicateOfId ?? null },
   });
+
+  // Burn one trial credit. Idempotent for paid plans (status check inside).
+  await incrementTrialUsage(organizationId);
 
   return { id: inserted.id, duplicateOfId };
 }

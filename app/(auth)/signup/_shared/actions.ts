@@ -65,6 +65,126 @@ const SignupInputSchema = z.object({
 export type SignupInput = z.infer<typeof SignupInputSchema>;
 
 /**
+ * Minimal signup payload used by the new unified /signup page.
+ * Only 4 facts are required — no licenses, no tax info, no plan choice.
+ * Defaults: trial plan (10-patient quota), KR locale, owner role.
+ */
+const QuickSignupSchema = z.object({
+  accountType: z.enum(['agency', 'freelancer', 'medical', 'non_medical']),
+  partnerSubtype: z
+    .enum(['hotel', 'spa', 'salon', 'studio', 'restaurant', 'transport', 'tour', 'shopping', 'wellness', 'other'])
+    .nullable()
+    .optional(),
+  orgName: z.string().min(2, '회사명은 2자 이상').max(120),
+  representativeName: z.string().min(2, '담당자명은 2자 이상').max(80),
+  contactPhone: z.string().min(8, '연락처를 입력해 주세요').max(40),
+});
+
+export type QuickSignupInput = z.infer<typeof QuickSignupSchema>;
+
+/**
+ * Unified, single-step signup. Trades the multi-step wizard for a 4-field
+ * form. Every new org starts on the free trial plan for its account_type
+ * (10 patient registrations free, then /upgrade). The user can fill in
+ * tax / banking / verification docs later from the settings UI.
+ *
+ * Returns the dashboard URL to redirect to.
+ */
+export async function quickSignupAction(rawInput: QuickSignupInput): Promise<string> {
+  const input = QuickSignupSchema.parse(rawInput);
+
+  const supabase = createSupabaseServerClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) throw new Error('unauthenticated');
+
+  // Default plan per actor — all start in 'trial' status; trial quota is
+  // separate from the plan's own trialDays (we don't enforce trialDays for
+  // the new flow, just the per-org 10-patient counter on billing_accounts).
+  const defaultPlanByType: Record<AccountType, SignupInput['planCode']> = {
+    agency: 'agency_starter',
+    medical: 'medical_payg',
+    non_medical: 'partner_listing',
+    freelancer: 'freelancer_free',
+  };
+  const planCode = defaultPlanByType[input.accountType];
+  if (!planCode) throw new Error('plan_resolution_failed');
+
+  const [plan] = await db.select().from(billingPlans).where(eq(billingPlans.code, planCode)).limit(1);
+  if (!plan) throw new Error(`plan_not_found:${planCode}`);
+
+  // 1. users row (mirror of auth.users for FK targets)
+  await db
+    .insert(users)
+    .values({
+      id: auth.user.id,
+      email: auth.user.email ?? '',
+      fullName: input.representativeName,
+      phone: input.contactPhone,
+      locale: 'ko',
+      timezone: 'Asia/Seoul',
+    })
+    .onConflictDoNothing();
+
+  // 2. organization
+  const slug = `${input.orgName.toLowerCase().replace(/[^a-z0-9가-힣]+/gi, '-').slice(0, 24)}-${nanoid(6)}`;
+  const [org] = await db
+    .insert(organizations)
+    .values({
+      accountType: input.accountType,
+      partnerSubtype: input.accountType === 'non_medical' ? (input.partnerSubtype ?? 'other') : null,
+      name: input.orgName,
+      slug,
+      countryCode: 'KR',
+      timezone: 'Asia/Seoul',
+      defaultLocale: 'ko',
+      defaultCurrency: 'KRW',
+      representativeName: input.representativeName,
+      verificationStatus: 'unverified', // user can upload docs later from settings
+    })
+    .returning();
+  if (!org) throw new Error('org_create_failed');
+
+  // 3. owner membership
+  await db.insert(orgMemberships).values({
+    organizationId: org.id,
+    userId: auth.user.id,
+    role: 'owner',
+    status: 'active',
+    acceptedAt: new Date(),
+  });
+
+  // 4. billing account on trial — 10-patient quota lives here (default in
+  // the schema), so we don't have to set it explicitly.
+  await db.insert(billingAccounts).values({
+    organizationId: org.id,
+    planId: plan.id,
+    status: 'trial',
+    trialEndsAt: null, // no time-based expiry; only quota-based
+    currentPeriodStartsAt: new Date(),
+    currentPeriodEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    billingEmail: auth.user.email ?? null,
+    billingName: input.representativeName,
+  });
+
+  // 5. audit
+  await db.insert(auditLogs).values({
+    organizationId: org.id,
+    actorUserId: auth.user.id,
+    action: 'create',
+    entityType: 'organization',
+    entityId: org.id,
+    diff: { accountType: input.accountType, plan: planCode, signup: 'quick' },
+    metadata: { reason: 'quick_signup' },
+  });
+
+  // 6. pointer + cookie
+  await db.update(users).set({ activeOrgId: org.id }).where(eq(users.id, auth.user.id));
+  setActiveOrgCookie(org.id, input.accountType);
+
+  return `${ACCOUNT_TYPE_TO_PREFIX[input.accountType]}/dashboard?welcome=1`;
+}
+
+/**
  * Provisions a new organization, billing account, owner membership, and (when
  * applicable) any cross-org links derived from an invite. Uses the service
  * role so signup can write to RLS-protected tables before the very first

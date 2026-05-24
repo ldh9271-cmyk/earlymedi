@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { tryAccess } from '@/lib/auth/route-guards';
 import { withRls } from '@/lib/auth/rls-context';
 import { createPatient, listPatients } from '@/lib/db/repositories/patients';
+import { PaywallError } from '@/lib/billing/trial-quota';
 
 const Query = z.object({
   q: z.string().optional(),
@@ -55,8 +56,25 @@ export async function POST(request: Request): Promise<Response> {
   const parsed = Body.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success)
     return NextResponse.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 });
-  const created = await withRls(access.ctx, () =>
-    createPatient(access.ctx.orgId, access.ctx.userId, parsed.data),
-  );
-  return NextResponse.json({ data: created });
+  try {
+    const created = await withRls(access.ctx, () =>
+      createPatient(access.ctx.orgId, access.ctx.userId, parsed.data),
+    );
+    return NextResponse.json({ data: created });
+  } catch (err) {
+    if (err instanceof PaywallError) {
+      // HTTP 402 Payment Required — clients should redirect the user to /upgrade.
+      return NextResponse.json(
+        {
+          error: 'paywall',
+          message: `무료 환자 ${err.limit}명 한도를 사용했습니다. 유료 플랜으로 전환해 주세요.`,
+          used: err.used,
+          limit: err.limit,
+          upgradeUrl: '/upgrade',
+        },
+        { status: 402 },
+      );
+    }
+    throw err;
+  }
 }

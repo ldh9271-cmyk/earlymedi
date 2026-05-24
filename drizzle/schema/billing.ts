@@ -132,6 +132,14 @@ export const billingAccounts = pgTable(
     // Configurable settlement-fee bearer policy: 'agency' | 'patient_added' | 'split'
     settlementFeeBearer: text('settlement_fee_bearer').notNull().default('agency'),
 
+    // Free-trial quota — counts billable creations (e.g. new patient rows).
+    // Once `trialUsesCount >= trialUsesLimit` AND status='trial', the
+    // application redirects new attempts to /upgrade. Resets to 0 when the
+    // org converts to a paid plan (status → 'active'). Default 10 free
+    // patient registrations for every new signup.
+    trialUsesLimit: integer('trial_uses_limit').notNull().default(10),
+    trialUsesCount: integer('trial_uses_count').notNull().default(0),
+
     metadata: jsonb('metadata')
       .$type<Record<string, unknown>>()
       .notNull()

@@ -16,6 +16,7 @@ export default async function AgencyLayout({ children }: { children: React.React
     <AppShell
       accountType="agency"
       orgName={org?.name ?? '— 조직 —'}
+      organizationId={ctx.orgId}
       userEmail={ctx.email}
       sections={agencySections}
       currentPath={pathname}

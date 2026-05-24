@@ -16,6 +16,7 @@ export default async function PartnerLayout({ children }: { children: React.Reac
     <AppShell
       accountType="non_medical"
       orgName={org?.name ?? '— 파트너 —'}
+      organizationId={ctx.orgId}
       userEmail={ctx.email}
       sections={partnerSections}
       currentPath={pathname}

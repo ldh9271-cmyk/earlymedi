@@ -16,6 +16,7 @@ export default async function FreelancerLayout({ children }: { children: React.R
     <AppShell
       accountType="freelancer"
       orgName={org?.name ?? '— 조직 —'}
+      organizationId={ctx.orgId}
       userEmail={ctx.email}
       sections={freelancerSections}
       currentPath={pathname}

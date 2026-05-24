@@ -139,7 +139,7 @@ function Hero(): JSX.Element {
 
 const ACTORS = [
   {
-    href: '/signup/medical',
+    href: '/signup',
     icon: Stethoscope,
     name: '의료기관',
     en: 'Medical',
@@ -148,7 +148,7 @@ const ACTORS = [
     badge: '병원',
   },
   {
-    href: '/signup/agency',
+    href: '/signup',
     icon: ClipboardList,
     name: '유치업체',
     en: 'Agency',
@@ -157,7 +157,7 @@ const ACTORS = [
     badge: '핵심',
   },
   {
-    href: '/signup/partner',
+    href: '/signup',
     icon: MapPin,
     name: '파트너업체',
     en: 'Non-medical',
@@ -166,7 +166,7 @@ const ACTORS = [
     badge: '여정',
   },
   {
-    href: '/signup/freelancer',
+    href: '/signup',
     icon: Users,
     name: '프리랜서',
     en: 'Freelancer',
@@ -517,14 +517,14 @@ function FinalCta(): JSX.Element {
           14일 무료. 신용카드 없이 시작.
         </h2>
         <p className="mt-3 text-balance text-sm text-muted-foreground md:text-base">
-          본인이 속한 카테고리를 선택해서 5분 안에 첫 환자 케이스를 시뮬레이션하세요.
+          이메일·구글로 30초 가입 → 환자 10명까지 무료. 11명째부터 유료 전환.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
-            href="/signup/agency"
+            href="/signup"
             className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-6 text-sm font-semibold text-background transition hover:bg-foreground/90"
           >
-            무료 계정 만들기 <ArrowRight className="h-4 w-4" />
+            무료로 10명 시작 <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="/login"
