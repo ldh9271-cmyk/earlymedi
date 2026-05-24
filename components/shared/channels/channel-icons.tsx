@@ -126,27 +126,33 @@ export function InstagramIcon(props: IconProps): JSX.Element {
 }
 
 export function MessengerIcon(props: IconProps): JSX.Element {
-  // White lightning chevron sitting inside a chat bubble — Messenger's glyph.
+  // Facebook-style mark: white disc with the iconic blue lowercase "f"
+  // descending past the disc's bottom edge. Matches the brand icon the
+  // user shipped as the reference for the Facebook Messenger tile.
   return (
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      {/* White circular badge */}
+      <circle cx="12" cy="12" r="8.2" fill="#FFFFFF" />
+      {/* Blue lowercase "f" — vertical stem with a small top hook and
+          a crossbar near the top third. Curve drawn as a path for clean
+          edges instead of stroked geometry. */}
       <path
-        d="M12 2C6.5 2 2 6.1 2 11.2c0 2.8 1.4 5.3 3.6 7v3.4l3.3-1.8c1 .3 2 .4 3.1.4 5.5 0 10-4.1 10-9S17.5 2 12 2Z"
-        fill="#FFFFFF"
-      />
-      <path
-        d="m10.7 14.5-3.4-3.7 7.8 3.7-2.4-4 3.4 3.7-7.8-3.7 2.4 4Z"
-        fill="#0084FF"
+        d="M14 7.6c-.2 0-.5-.1-1.1-.1-1.2 0-2 .7-2 2v1.6H9v2h1.9v6.4h2.2v-6.4h2l.3-2h-2.3V9.8c0-.4.2-.7.7-.7h1.4V7.6Z"
+        fill="#1877F2"
       />
     </svg>
   );
 }
 
 export function NaverIcon(props: IconProps): JSX.Element {
-  // The famous white "N" wordmark — solid letter shape, not stroked.
+  // Naver's iconic white "N" — bold uppercase with a thick diagonal that
+  // runs from upper-left of the right vertical down to lower-right of the
+  // left vertical. Drawn as a single filled path so the diagonal merges
+  // smoothly with both verticals.
   return (
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path
-        d="M6.5 5h3.8l3.7 6V5H18v14h-3.8l-3.7-6v6H6.5V5Z"
+        d="M5.6 4.5h4.7l3.4 6.6V4.5h4.7v15h-4.7l-3.4-6.6v6.6H5.6V4.5Z"
         fill="#FFFFFF"
       />
     </svg>
