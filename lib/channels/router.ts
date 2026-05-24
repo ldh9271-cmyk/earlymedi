@@ -18,6 +18,7 @@ const adapters: Record<ChannelKind, ChannelAdapter> = {
   wechat: new BaseMockAdapter('wechat'),
   telegram: new BaseMockAdapter('telegram'),
   messenger: new BaseMockAdapter('messenger'),
+  naver: new BaseMockAdapter('naver'),
   sms: new BaseMockAdapter('sms'),
   email: new BaseMockAdapter('email'),
   web: new BaseMockAdapter('web'),

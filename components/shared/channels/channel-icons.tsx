@@ -1,5 +1,6 @@
 import type { SVGProps } from 'react';
-import type { ChannelKind } from '@/lib/channels/registry';
+import type { ChannelKind as RegistryChannelKind } from '@/lib/channels/registry';
+import type { ChannelKind as DisplayChannelKind } from '@/lib/channels/types';
 
 /**
  * Brand-accurate SVG icons for every supported messenger.
@@ -182,8 +183,55 @@ export function WeChatIcon(props: IconProps): JSX.Element {
   );
 }
 
-/** Single lookup table the channel card uses to pick the right icon. */
-export const CHANNEL_ICONS: Record<ChannelKind, (props: IconProps) => JSX.Element> = {
+export function SmsIcon(props: IconProps): JSX.Element {
+  // White speech bubble with three dots — generic SMS / text mark.
+  return (
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path
+        d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2Z"
+        fill="#FFFFFF"
+      />
+      <circle cx="9" cy="11" r="1.1" fill="#64748B" />
+      <circle cx="12" cy="11" r="1.1" fill="#64748B" />
+      <circle cx="15" cy="11" r="1.1" fill="#64748B" />
+    </svg>
+  );
+}
+
+export function EmailIcon(props: IconProps): JSX.Element {
+  // White envelope with a chevron flap.
+  return (
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" fill="#FFFFFF" />
+      <path
+        d="m4.5 7 7.5 5.5L19.5 7"
+        stroke="#7C3AED"
+        strokeWidth="1.8"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function WebChatIcon(props: IconProps): JSX.Element {
+  // White globe with longitudes — represents the public web chat widget.
+  return (
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <circle cx="12" cy="12" r="8" fill="#FFFFFF" />
+      <path
+        d="M4 12h16M12 4c2.5 2.4 4 5 4 8s-1.5 5.6-4 8c-2.5-2.4-4-5-4-8s1.5-5.6 4-8Z"
+        stroke="#6366F1"
+        strokeWidth="1.5"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
+/** Channels that have a real registry entry (the 8 messengers). */
+export const CHANNEL_ICONS: Record<RegistryChannelKind, (props: IconProps) => JSX.Element> = {
   kakao: KakaoTalkIcon,
   line: LineIcon,
   telegram: TelegramIcon,
@@ -192,4 +240,16 @@ export const CHANNEL_ICONS: Record<ChannelKind, (props: IconProps) => JSX.Elemen
   messenger: MessengerIcon,
   naver: NaverIcon,
   wechat: WeChatIcon,
+};
+
+/**
+ * Full inbox-side lookup — the 8 messengers plus the three generic
+ * transports (sms / email / web) that the inbox can also surface but
+ * that aren't on the channel-connection page.
+ */
+export const INBOX_CHANNEL_ICONS: Record<DisplayChannelKind, (props: IconProps) => JSX.Element> = {
+  ...CHANNEL_ICONS,
+  sms: SmsIcon,
+  email: EmailIcon,
+  web: WebChatIcon,
 };
