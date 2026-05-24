@@ -7,6 +7,7 @@ import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
 import { CHANNELS, type ChannelKind } from '@/lib/channels/registry';
 import { ChannelConnectDialog } from './channel-connect-dialog';
+import { CHANNEL_ICONS } from './channel-icons';
 
 type ConnectedChannel = {
   id: string;
@@ -26,6 +27,7 @@ export function ChannelCard({
   connected: ConnectedChannel | null;
 }): JSX.Element {
   const def = CHANNELS[kind];
+  const Icon = CHANNEL_ICONS[kind];
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const isConnected = connected?.status === 'connected';
@@ -38,10 +40,10 @@ export function ChannelCard({
           {/* Header: icon + name + status */}
           <div className="flex items-start gap-3">
             <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg font-bold shadow-sm"
-              style={{ backgroundColor: def.color, color: pickContrast(def.color) }}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm"
+              style={{ backgroundColor: def.color }}
             >
-              {def.emoji}
+              <Icon className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -121,11 +123,3 @@ export function ChannelCard({
   );
 }
 
-/** Picks black/white text for an icon background by luminance. */
-function pickContrast(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.6 ? '#1f2937' : '#ffffff';
-}

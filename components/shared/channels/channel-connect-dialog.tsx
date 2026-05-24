@@ -8,6 +8,7 @@ import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import { CHANNELS, type ChannelKind } from '@/lib/channels/registry';
 import { connectChannelAction } from '@/lib/channels/actions';
+import { CHANNEL_ICONS } from './channel-icons';
 
 export function ChannelConnectDialog({
   kind,
@@ -21,6 +22,7 @@ export function ChannelConnectDialog({
   existingChannelId: string | null;
 }): JSX.Element | null {
   const def = CHANNELS[kind];
+  const Icon = CHANNEL_ICONS[kind];
   const [displayName, setDisplayName] = useState('');
   const [externalAccountId, setExternalAccountId] = useState('');
   const [credentials, setCredentials] = useState<Record<string, string>>({});
@@ -78,10 +80,10 @@ export function ChannelConnectDialog({
         <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-5 py-4">
           <div className="flex items-center gap-3">
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold"
+              className="flex h-9 w-9 items-center justify-center rounded-lg"
               style={{ backgroundColor: def.color }}
             >
-              {def.emoji}
+              <Icon className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-base font-semibold">{def.label} 연결</h2>
