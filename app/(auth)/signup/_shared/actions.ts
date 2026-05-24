@@ -78,9 +78,36 @@ const QuickSignupSchema = z.object({
   orgName: z.string().min(2, '회사명은 2자 이상').max(120),
   representativeName: z.string().min(2, '담당자명은 2자 이상').max(80),
   contactPhone: z.string().min(8, '연락처를 입력해 주세요').max(40),
+  // Demographics — optional, defaults to null for users who decline.
+  gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).nullable().optional(),
+  birthYear: z
+    .number()
+    .int()
+    .min(1920, '1920년 이후로 입력')
+    .max(new Date().getFullYear() - 10, '최소 10세 이상')
+    .nullable()
+    .optional(),
 });
 
 export type QuickSignupInput = z.infer<typeof QuickSignupSchema>;
+
+/**
+ * Bucket a birth year into the same 10-year age range we expose to the
+ * signup UI. Returns null if no birth year was provided. Keep this here
+ * (server-only) so the analytics queries downstream see a single source
+ * of truth.
+ */
+function ageRangeFromBirthYear(birthYear: number | null): string | null {
+  if (birthYear == null) return null;
+  const age = new Date().getFullYear() - birthYear;
+  if (age < 20) return 'under_20';
+  if (age < 30) return '20s';
+  if (age < 40) return '30s';
+  if (age < 50) return '40s';
+  if (age < 60) return '50s';
+  if (age < 70) return '60s';
+  return '70_plus';
+}
 
 /**
  * Unified, single-step signup. Trades the multi-step wizard for a 4-field
@@ -112,6 +139,10 @@ export async function quickSignupAction(rawInput: QuickSignupInput): Promise<str
   const [plan] = await db.select().from(billingPlans).where(eq(billingPlans.code, planCode)).limit(1);
   if (!plan) throw new Error(`plan_not_found:${planCode}`);
 
+  // Derive age range from birth year — single source of truth so the
+  // analytics queries can filter on either column without inconsistency.
+  const ageRange = ageRangeFromBirthYear(input.birthYear ?? null);
+
   // 1. users row (mirror of auth.users for FK targets)
   await db
     .insert(users)
@@ -122,8 +153,21 @@ export async function quickSignupAction(rawInput: QuickSignupInput): Promise<str
       phone: input.contactPhone,
       locale: 'ko',
       timezone: 'Asia/Seoul',
+      gender: input.gender ?? null,
+      birthYear: input.birthYear ?? null,
+      ageRange,
     })
-    .onConflictDoNothing();
+    .onConflictDoUpdate({
+      target: users.id,
+      set: {
+        fullName: input.representativeName,
+        phone: input.contactPhone,
+        gender: input.gender ?? null,
+        birthYear: input.birthYear ?? null,
+        ageRange,
+        updatedAt: new Date(),
+      },
+    });
 
   // 2. organization
   const slug = `${input.orgName.toLowerCase().replace(/[^a-z0-9가-힣]+/gi, '-').slice(0, 24)}-${nanoid(6)}`;

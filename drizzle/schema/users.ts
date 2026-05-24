@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -32,6 +33,14 @@ export const users = pgTable(
     locale: text('locale').notNull().default('ko'),
     timezone: text('timezone').notNull().default('Asia/Seoul'),
     phone: text('phone'),
+
+    // Demographics — collected at signup for marketing analytics + KOIHA
+    // statistical reporting. Optional; users can decline ('prefer_not_to_say').
+    // age_range is denormalized from birth_year for fast filtering; the
+    // signup server action keeps them in sync.
+    gender: text('gender'), // 'male' | 'female' | 'other' | 'prefer_not_to_say'
+    birthYear: integer('birth_year'),
+    ageRange: text('age_range'), // 'under_20' | '20s' | '30s' | '40s' | '50s' | '60s' | '70_plus'
 
     // Per-user feature flags (admin overrides)
     flags: jsonb('flags').$type<Record<string, boolean>>().notNull().default(sql`'{}'::jsonb`),

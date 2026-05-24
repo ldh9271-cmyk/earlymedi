@@ -10,6 +10,8 @@ import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import { quickSignupAction } from '../_shared/actions';
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 const schema = z.object({
   accountType: z.enum(['medical', 'agency', 'non_medical', 'freelancer'], {
     required_error: '카테고리를 선택해 주세요',
@@ -24,9 +26,42 @@ const schema = z.object({
     .min(8, '연락처를 입력해 주세요')
     .max(40)
     .regex(/^[0-9+\-\s()]+$/, '숫자·+·-·괄호만 사용해 주세요'),
+  // Optional demographics — '' means "decline to answer" (lets the radio
+  // group bind to react-hook-form even when no choice is made).
+  gender: z
+    .union([
+      z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
+      z.literal(''),
+    ])
+    .optional(),
+  birthYear: z
+    .union([
+      z.string().regex(/^\d{4}$/, '4자리 연도 (예: 1990)'),
+      z.literal(''),
+    ])
+    .optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
+
+const GENDERS: Array<{ value: 'male' | 'female' | 'other' | 'prefer_not_to_say'; label: string }> = [
+  { value: 'male', label: '남성' },
+  { value: 'female', label: '여성' },
+  { value: 'other', label: '기타' },
+  { value: 'prefer_not_to_say', label: '응답 안함' },
+];
+
+/** Bucket label shown next to the birth-year input. */
+function ageRangeLabelFor(year: number): string {
+  const age = CURRENT_YEAR - year;
+  if (age < 20) return '10대 이하';
+  if (age < 30) return '20대';
+  if (age < 40) return '30대';
+  if (age < 50) return '40대';
+  if (age < 60) return '50대';
+  if (age < 70) return '60대';
+  return '70대 이상';
+}
 
 const CATEGORIES: Array<{
   value: 'medical' | 'agency' | 'non_medical' | 'freelancer';
@@ -99,12 +134,21 @@ export function QuickSignupForm({ email }: { email: string }): JSX.Element {
     setServerError(null);
     startTransition(async () => {
       try {
+        const birthYearStr = values.birthYear?.trim() ?? '';
+        const birthYearNum = birthYearStr ? Number(birthYearStr) : null;
+        const genderRaw = (values.gender ?? '') as string;
+        const gender =
+          genderRaw === 'male' || genderRaw === 'female' || genderRaw === 'other' || genderRaw === 'prefer_not_to_say'
+            ? genderRaw
+            : null;
         const dest = await quickSignupAction({
           accountType: values.accountType,
           partnerSubtype: showPartnerSubtype ? values.partnerSubtype ?? 'other' : null,
           orgName: values.orgName,
           representativeName: values.representativeName,
           contactPhone: values.contactPhone,
+          gender,
+          birthYear: birthYearNum,
         });
         router.replace(dest);
       } catch (err) {
@@ -193,6 +237,62 @@ export function QuickSignupForm({ email }: { email: string }): JSX.Element {
         {errors.contactPhone ? (
           <p className="text-xs text-destructive">{errors.contactPhone.message}</p>
         ) : null}
+      </div>
+
+      {/* Demographics (optional) — gender + birth year. Used for KOIHA
+          stats and marketing analytics; users can decline. */}
+      <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
+        <div className="flex items-baseline justify-between">
+          <Label className="text-sm font-semibold">담당자 기본 정보 (선택)</Label>
+          <span className="text-[10px] text-muted-foreground">분석용 · 응답 안 해도 가입 가능</span>
+        </div>
+
+        {/* Gender */}
+        <div className="space-y-1.5">
+          <Label htmlFor="gender" className="text-xs">성별</Label>
+          <div className="grid grid-cols-4 gap-1.5">
+            {GENDERS.map((g) => (
+              <label key={g.value} className="cursor-pointer">
+                <input
+                  type="radio"
+                  value={g.value}
+                  {...register('gender')}
+                  className="peer sr-only"
+                />
+                <div className="rounded-md border bg-card px-2 py-1.5 text-center text-xs transition peer-checked:border-brand-500 peer-checked:bg-brand-50 peer-checked:font-semibold peer-checked:text-brand-700">
+                  {g.label}
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Birth year + auto age range */}
+        <div className="space-y-1.5">
+          <Label htmlFor="birthYear" className="text-xs">출생연도</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="birthYear"
+              type="number"
+              inputMode="numeric"
+              placeholder="예: 1990"
+              min={1920}
+              max={CURRENT_YEAR - 10}
+              {...register('birthYear')}
+              className="w-32"
+            />
+            {watch('birthYear') && /^\d{4}$/.test(String(watch('birthYear'))) ? (
+              <span className="text-xs text-muted-foreground">
+                연령대: <strong className="text-foreground">{ageRangeLabelFor(Number(watch('birthYear')))}</strong>
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground">연령대는 자동 계산됩니다</span>
+            )}
+          </div>
+          {errors.birthYear ? (
+            <p className="text-xs text-destructive">{errors.birthYear.message}</p>
+          ) : null}
+        </div>
       </div>
 
       {/* Email (read-only, from auth) */}
