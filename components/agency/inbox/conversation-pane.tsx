@@ -2,12 +2,13 @@
 
 import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Inbox as InboxIcon, MoreHorizontal } from 'lucide-react';
+import { Inbox as InboxIcon, MoreHorizontal, Languages } from 'lucide-react';
 import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { ChannelBadge } from './channel-badge';
 import { MessageBubble } from './message-bubble';
 import { Composer } from './composer';
 import { useInboxStore } from '@/lib/stores/inbox-store';
+import { cn } from '@/lib/utils/cn';
 import type { ChannelKind } from '@/lib/channels/types';
 
 type Detail = {
@@ -131,6 +132,11 @@ export function ConversationPane(): JSX.Element {
           </div>
         </div>
 
+        {/* AI auto-translation toggle — global, persisted via inbox-store.
+            ON ⇒ agent-typed Korean gets translated into patient's locale
+            before delivery; only the translated text reaches the patient. */}
+        <AutoTranslateToggle contactLocale={data.conversation.contactLocale} />
+
         <div className="ml-auto flex items-center gap-1.5">
           {STAGES.map((s) => {
             const active = data.conversation.stage === s.key;
@@ -170,5 +176,56 @@ export function ConversationPane(): JSX.Element {
 
       <Composer conversationId={data.conversation.id} contactLocale={data.conversation.contactLocale} />
     </div>
+  );
+}
+
+/**
+ * Small toggle that lives in the conversation header. Reads + writes
+ * `autoTranslate` on the inbox store (persisted to localStorage). When
+ * ON, any agent reply typed in Korean is AI-translated into the
+ * patient's contactLocale before being delivered — the patient never
+ * sees the Korean original. When the patient is already Korean-speaking
+ * the button shows the neutral "ko" state since no translation happens.
+ */
+function AutoTranslateToggle({ contactLocale }: { contactLocale: string | null }): JSX.Element {
+  const { autoTranslate, setAutoTranslate } = useInboxStore();
+  const patientIsKorean = !contactLocale || contactLocale.startsWith('ko');
+  const enabled = autoTranslate && !patientIsKorean;
+
+  return (
+    <button
+      type="button"
+      onClick={() => setAutoTranslate(!autoTranslate)}
+      disabled={patientIsKorean}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
+        enabled
+          ? 'border-hospitality-300 bg-hospitality-50 text-hospitality-800'
+          : patientIsKorean
+            ? 'cursor-not-allowed border-border bg-muted/40 text-muted-foreground opacity-60'
+            : 'border-border bg-card text-muted-foreground hover:bg-muted',
+      )}
+      title={
+        patientIsKorean
+          ? '한국어 환자 — 자동 번역 불필요'
+          : enabled
+            ? `ON · 한국어로 입력하면 ${contactLocale} 로 자동 번역해 전송 (고객은 번역문만 봅니다)`
+            : 'OFF — 입력한 그대로 전송'
+      }
+      aria-pressed={enabled}
+    >
+      <Languages className="h-3 w-3" />
+      <span>AI 자동 번역</span>
+      <span
+        className={cn(
+          'rounded-full px-1.5 py-0 text-[9px] font-bold',
+          enabled
+            ? 'bg-hospitality-500/20 text-hospitality-900'
+            : 'bg-muted text-muted-foreground',
+        )}
+      >
+        {patientIsKorean ? '—' : enabled ? 'ON' : 'OFF'}
+      </span>
+    </button>
   );
 }

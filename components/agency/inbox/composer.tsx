@@ -2,11 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Send, Sparkles, Languages } from 'lucide-react';
+import { Send, Sparkles, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/shared/ui/button';
 import { useInboxStore } from '@/lib/stores/inbox-store';
-import { cn } from '@/lib/utils/cn';
 
 type QuickReply = {
   id: string;
@@ -24,14 +23,15 @@ export function Composer({
   contactLocale: string | null;
 }): JSX.Element {
   const [text, setText] = useState('');
-  const [translateOn, setTranslateOn] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { setAssistantOpen, isAssistantOpen } = useInboxStore();
+  const { setAssistantOpen, isAssistantOpen, autoTranslate } = useInboxStore();
   const queryClient = useQueryClient();
 
   // AI translation makes sense only when the agent's language differs
-  // from the patient's. Default to ON when contactLocale is non-Korean.
-  const shouldOfferTranslation = contactLocale && !contactLocale.startsWith('ko');
+  // from the patient's. Use the global autoTranslate toggle from the
+  // header so the composer + header stay in sync.
+  const shouldOfferTranslation = !!(contactLocale && !contactLocale.startsWith('ko'));
+  const translateOn = shouldOfferTranslation && autoTranslate;
 
   const { data: quickReplies } = useQuery({
     queryKey: ['inbox', 'quick-replies'],
@@ -43,6 +43,25 @@ export function Composer({
     },
   });
 
+  // AI suggested replies — 3 different tones (concise / friendly / luxury).
+  // Refetched whenever the conversation changes; surfaced as clickable
+  // chips below the textarea so the agent can drop one into the box.
+  const { data: suggestions, isLoading: suggestionsLoading, refetch: refetchSuggestions } =
+    useQuery({
+      queryKey: ['inbox', 'suggested-replies', conversationId],
+      queryFn: async () => {
+        const res = await fetch(`/api/agency/inbox/${conversationId}/suggested-replies?outputLocale=ko`);
+        if (!res.ok) return [] as Array<{ tone: string; label: string; text: string }>;
+        const json = (await res.json()) as {
+          data: { suggestions: Array<{ tone: string; label: string; text: string }> };
+        };
+        return json.data.suggestions;
+      },
+      // Don't auto-refetch; agent clicks "다시 추천" to refresh.
+      staleTime: 5 * 60 * 1000,
+      retry: 0,
+    });
+
   const sendMut = useMutation({
     mutationFn: async (payload: { body: string }) => {
       const res = await fetch(`/api/agency/inbox/${conversationId}/messages`, {
@@ -51,7 +70,7 @@ export function Composer({
         body: JSON.stringify({
           body: payload.body,
           bodyLocale: 'ko',
-          translateBeforeSend: shouldOfferTranslation && translateOn,
+          translateBeforeSend: translateOn,
         }),
       });
       if (!res.ok) {
@@ -123,31 +142,49 @@ export function Composer({
         </div>
       ) : null}
 
-      {/* AI translation toggle — only shown when the patient speaks a
-          non-Korean language. Default ON. Click to switch off (send the
-          Korean text verbatim). */}
-      {shouldOfferTranslation ? (
-        <button
-          type="button"
-          onClick={() => setTranslateOn((v) => !v)}
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
-            translateOn
-              ? 'border-hospitality-300 bg-hospitality-50 text-hospitality-800'
-              : 'border-border bg-card text-muted-foreground hover:bg-muted',
-          )}
-          title={
-            translateOn
-              ? `한국어로 입력하면 ${contactLocale} 로 자동 번역해 발송합니다`
-              : 'AI 자동 번역 OFF — 입력한 그대로 발송'
-          }
-        >
-          <Languages className="h-3 w-3" />
-          AI 통역 {translateOn ? 'ON' : 'OFF'}
-          <span className="text-[10px] opacity-70">
-            {translateOn ? `ko → ${contactLocale}` : ''}
-          </span>
-        </button>
+      {/* AI suggested replies — 3 different tones. Click a chip to drop
+          its text into the textarea. Header's "AI 자동 번역" toggle
+          controls whether the suggestion gets translated on send. */}
+      {suggestionsLoading ? (
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <Wand2 className="h-3 w-3 animate-pulse text-hospitality-500" />
+          AI가 답변을 생각 중…
+        </div>
+      ) : suggestions && suggestions.length > 0 ? (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Wand2 className="h-3 w-3 text-hospitality-500" />
+              AI 추천 답변
+            </span>
+            <button
+              type="button"
+              onClick={() => refetchSuggestions()}
+              className="text-muted-foreground hover:text-foreground"
+              title="다시 추천"
+            >
+              ⟳ 다시
+            </button>
+          </div>
+          <div className="space-y-1">
+            {suggestions.map((s) => (
+              <button
+                key={s.tone}
+                type="button"
+                onClick={() => {
+                  setText(s.text);
+                  textareaRef.current?.focus();
+                }}
+                className="group flex w-full items-start gap-2 rounded-lg border bg-muted/20 px-3 py-2 text-left text-xs transition hover:border-hospitality-300 hover:bg-hospitality-50"
+              >
+                <span className="mt-0.5 shrink-0 rounded-full bg-hospitality-100 px-1.5 py-0.5 text-[9px] font-bold text-hospitality-800">
+                  {s.label}
+                </span>
+                <span className="line-clamp-2 text-foreground/90">{s.text}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       ) : null}
 
       <div className="flex items-end gap-2">
@@ -158,7 +195,7 @@ export function Composer({
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKeyDown}
           placeholder={
-            shouldOfferTranslation && translateOn
+            translateOn
               ? `한국어로 입력하세요. 발송 시 ${contactLocale}로 자동 번역 · ⌘Enter 전송`
               : '답변을 입력하세요. ⌘Enter 전송 · /<단축어>+Space 빠른 답변 · ⌘. AI 어시스턴트'
           }
