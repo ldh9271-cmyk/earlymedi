@@ -12,7 +12,8 @@ export const channelKindEnum = pgEnum('channel_kind', [
   'whatsapp',
   'wechat',
   'telegram',
-  'messenger',
+  'messenger', // Facebook Messenger
+  'naver', // Naver Talk Talk
   'sms',
   'email',
   'web',

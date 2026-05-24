@@ -14,6 +14,7 @@ import {
   ListChecks,
   MapPin,
   Plane,
+  Plug,
   QrCode,
   ReceiptText,
   Settings,
@@ -34,6 +35,7 @@ export const agencySections: SidebarSection[] = [
     items: [
       { href: '/agency/dashboard', label: '대시보드', icon: BarChart3 },
       { href: '/agency/inbox', label: '통합 인박스', icon: Inbox },
+      { href: '/agency/channels', label: '채널 연결', icon: Plug },
       { href: '/agency/leads', label: '리드', icon: Sparkles },
       { href: '/agency/cases', label: '케이스', icon: ListChecks },
     ],
