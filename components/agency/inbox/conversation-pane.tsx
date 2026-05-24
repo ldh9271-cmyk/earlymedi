@@ -215,7 +215,7 @@ function AutoTranslateToggle({ contactLocale }: { contactLocale: string | null }
       aria-pressed={enabled}
     >
       <Languages className="h-3 w-3" />
-      <span>AI 자동 번역</span>
+      <span>AI 번역</span>
       <span
         className={cn(
           'rounded-full px-1.5 py-0 text-[9px] font-bold',

@@ -143,7 +143,7 @@ export function Composer({
       ) : null}
 
       {/* AI suggested replies — 3 different tones. Click a chip to drop
-          its text into the textarea. Header's "AI 자동 번역" toggle
+          its text into the textarea. Header's "AI 번역" toggle
           controls whether the suggestion gets translated on send. */}
       {suggestionsLoading ? (
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">

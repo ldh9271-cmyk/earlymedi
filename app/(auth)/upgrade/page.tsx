@@ -105,7 +105,7 @@ export default async function UpgradePage(): Promise<JSX.Element> {
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-0.5 text-care-600">✓</span>
-              <span>10채널 다국어 인박스 · AI 자동 번역 · 견적 자동 생성</span>
+              <span>10채널 다국어 인박스 · AI 번역 · 견적 자동 생성</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-0.5 text-care-600">✓</span>
