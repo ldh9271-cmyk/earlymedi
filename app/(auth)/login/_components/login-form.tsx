@@ -4,16 +4,26 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 
-const schema = z.object({
+const emailSchema = z.object({
   email: z.string().email('유효한 이메일을 입력해 주세요.'),
 });
 
-type FormValues = z.infer<typeof schema>;
+const passwordSchema = z.object({
+  email: z.string().email('유효한 이메일을 입력해 주세요.'),
+  password: z.string().min(8, '비밀번호는 8자 이상').max(128),
+});
+
+type EmailValues = z.infer<typeof emailSchema>;
+type PasswordValues = z.infer<typeof passwordSchema>;
 
 export function LoginForm({
   nextPath,
@@ -22,29 +32,27 @@ export function LoginForm({
   nextPath: string;
   sent: boolean;
 }): JSX.Element {
-  const [submitted, setSubmitted] = useState(sent);
+  const router = useRouter();
+  const [magicLinkSent, setMagicLinkSent] = useState(sent);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [magicLoading, setMagicLoading] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  const magicForm = useForm<EmailValues>({ resolver: zodResolver(emailSchema) });
+  const pwForm = useForm<PasswordValues>({ resolver: zodResolver(passwordSchema) });
 
+  // ─── Google OAuth ───────────────────────────────────────────────
   async function onGoogleSignIn(): Promise<void> {
     setError(null);
     setGoogleLoading(true);
     try {
       const supabase = createSupabaseBrowserClient();
       if (!supabase) {
-        setError('데모 모드 — Supabase가 아직 연결되지 않았습니다. 환경 변수 설정 후 다시 시도해주세요.');
+        setError('데모 모드 — Supabase가 아직 연결되지 않았습니다.');
         return;
       }
-      // PKCE flow lands on /api/auth/callback Route Handler, which is the
-      // only place we can reliably write the Supabase session cookies in
-      // Next.js 14 (Server Components silently drop cookieStore.set).
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', nextPath);
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -55,7 +63,6 @@ export function LoginForm({
         },
       });
       if (oauthError) setError(oauthError.message);
-      // 정상 동작 시: 브라우저가 Google로 자동 redirect되므로 이후 코드는 실행되지 않음.
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Google 로그인 실패');
     } finally {
@@ -63,19 +70,16 @@ export function LoginForm({
     }
   }
 
-  async function onSubmit({ email }: FormValues): Promise<void> {
+  // ─── Magic Link (email) ─────────────────────────────────────────
+  async function onMagicLinkSubmit({ email }: EmailValues): Promise<void> {
     setError(null);
-    setLoading(true);
+    setMagicLoading(true);
     try {
       const supabase = createSupabaseBrowserClient();
       if (!supabase) {
-        setError('데모 모드 — Supabase가 아직 연결되지 않았습니다. 환경 변수 설정 후 다시 시도해주세요.');
+        setError('데모 모드 — Supabase가 아직 연결되지 않았습니다.');
         return;
       }
-      // PKCE magic link redirects through the /api/auth/callback Route
-      // Handler, which is the only place we can reliably set session
-      // cookies. /login then has a forwarding fallback for cases where
-      // Supabase's verify endpoint drops the user back at the Site URL.
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', nextPath);
       const { error: signInError } = await supabase.auth.signInWithOtp({
@@ -86,29 +90,92 @@ export function LoginForm({
         setError(signInError.message);
         return;
       }
-      setSubmitted(true);
+      setMagicLinkSent(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : '알 수 없는 오류가 발생했습니다.');
     } finally {
-      setLoading(false);
+      setMagicLoading(false);
     }
   }
 
-  if (submitted) {
+  // ─── Email + Password ───────────────────────────────────────────
+  async function onPasswordSubmit({ email, password }: PasswordValues): Promise<void> {
+    setError(null);
+    setPwLoading(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) {
+        setError('데모 모드 — Supabase가 아직 연결되지 않았습니다.');
+        return;
+      }
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        // Friendly Korean messages for common Supabase errors.
+        const msg = signInError.message.toLowerCase();
+        if (msg.includes('invalid login')) {
+          setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+        } else if (msg.includes('email not confirmed')) {
+          setError('이메일 인증이 완료되지 않았습니다. 받은 인증 메일을 확인해 주세요.');
+        } else {
+          setError(signInError.message);
+        }
+        return;
+      }
+      toast.success('로그인 성공');
+      router.replace(nextPath);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setPwLoading(false);
+    }
+  }
+
+  // ─── Forgot password ────────────────────────────────────────────
+  async function onForgotPassword(): Promise<void> {
+    const email = pwForm.getValues('email');
+    if (!email || !email.includes('@')) {
+      setError('비밀번호 재설정 메일을 받을 이메일을 먼저 입력해 주세요.');
+      return;
+    }
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) return;
+      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/api/auth/callback?next=/account/reset-password`,
+      });
+      if (resetErr) {
+        setError(resetErr.message);
+        return;
+      }
+      toast.success(`${email} 주소로 비밀번호 재설정 메일을 보냈습니다.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '재설정 메일 발송 실패');
+    }
+  }
+
+  if (magicLinkSent) {
     return (
       <div className="space-y-3 rounded-lg border bg-care-50 p-4 text-sm text-care-700">
         <p className="font-medium">📩 매직링크를 보냈습니다.</p>
         <p>이메일 받은편지함에서 링크를 클릭해 로그인하세요. (스팸함도 확인)</p>
+        <button
+          type="button"
+          onClick={() => setMagicLinkSent(false)}
+          className="text-xs text-care-700 underline hover:text-care-900"
+        >
+          다른 방법으로 로그인
+        </button>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      {/* Google OAuth — always at the top */}
       <button
         type="button"
         onClick={onGoogleSignIn}
-        disabled={googleLoading || loading}
+        disabled={googleLoading || magicLoading || pwLoading}
         className="inline-flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60"
       >
         <GoogleIcon className="h-4 w-4" />
@@ -121,29 +188,122 @@ export function LoginForm({
         </div>
         <div className="relative flex justify-center">
           <span className="bg-background px-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-            또는 이메일로
+            또는
           </span>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="email">이메일</Label>
-          <Input
-            id="email"
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder="you@example.com"
-            {...register('email')}
-          />
-          {errors.email ? <p className="text-xs text-destructive">{errors.email.message}</p> : null}
-        </div>
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        <Button type="submit" variant="brand" className="w-full" disabled={loading || googleLoading}>
-          {loading ? '전송 중…' : '매직링크 받기'}
-        </Button>
-      </form>
+      {/* Email/password vs Magic link */}
+      <Tabs defaultValue="password">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="password">비밀번호</TabsTrigger>
+          <TabsTrigger value="magic">매직링크</TabsTrigger>
+        </TabsList>
+
+        {/* Password tab */}
+        <TabsContent value="password" className="space-y-3 pt-3">
+          <form onSubmit={pwForm.handleSubmit(onPasswordSubmit)} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="pw-email">이메일</Label>
+              <Input
+                id="pw-email"
+                type="email"
+                inputMode="email"
+                autoComplete="username"
+                placeholder="you@example.com"
+                {...pwForm.register('email')}
+              />
+              {pwForm.formState.errors.email ? (
+                <p className="text-xs text-destructive">{pwForm.formState.errors.email.message}</p>
+              ) : null}
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="pw-password">비밀번호</Label>
+                <button
+                  type="button"
+                  onClick={onForgotPassword}
+                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  비밀번호 찾기
+                </button>
+              </div>
+              <div className="relative">
+                <Input
+                  id="pw-password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="8자 이상"
+                  className="pr-10"
+                  {...pwForm.register('password')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+                >
+                  {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+              {pwForm.formState.errors.password ? (
+                <p className="text-xs text-destructive">
+                  {pwForm.formState.errors.password.message}
+                </p>
+              ) : null}
+            </div>
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            <Button
+              type="submit"
+              variant="brand"
+              className="w-full"
+              disabled={pwLoading || magicLoading || googleLoading}
+            >
+              {pwLoading ? '로그인 중…' : '로그인'}
+            </Button>
+            <p className="text-center text-[11px] text-muted-foreground">
+              계정이 없으신가요?{' '}
+              <a href="/signup" className="font-medium text-foreground underline">
+                회원가입
+              </a>
+            </p>
+          </form>
+        </TabsContent>
+
+        {/* Magic link tab */}
+        <TabsContent value="magic" className="space-y-3 pt-3">
+          <form onSubmit={magicForm.handleSubmit(onMagicLinkSubmit)} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="magic-email">이메일</Label>
+              <Input
+                id="magic-email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                {...magicForm.register('email')}
+              />
+              {magicForm.formState.errors.email ? (
+                <p className="text-xs text-destructive">
+                  {magicForm.formState.errors.email.message}
+                </p>
+              ) : null}
+            </div>
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            <Button
+              type="submit"
+              variant="brand"
+              className="w-full"
+              disabled={magicLoading || pwLoading || googleLoading}
+            >
+              {magicLoading ? '전송 중…' : '매직링크 받기'}
+            </Button>
+            <p className="text-center text-[11px] text-muted-foreground">
+              비밀번호 없이 이메일 링크 한 번으로 로그인합니다.
+            </p>
+          </form>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

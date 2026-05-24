@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { QuickSignupForm } from './_components/quick-signup-form';
@@ -11,36 +10,45 @@ export const dynamic = 'force-dynamic';
  * (/signup/agency, /signup/medical, /signup/freelancer, /signup/partner)
  * — each of which used to demand tax IDs, banking, plan selection, etc.
  *
- * New deal: log in (Google or magic link), fill 4 fields, get a 10-patient
- * free trial. Detailed info (sales tax, licenses, banking, verification
- * docs) is collected later from the dashboard's Settings → Compliance flow.
+ * Two entry paths supported:
+ *   1) Already authenticated (came via /login → Google OAuth or magic
+ *      link): the form skips the email + password fields and just
+ *      collects org/contact info.
+ *   2) Fresh visitor: the form shows email + password (+ confirm) fields
+ *      and the server action calls supabase.auth.signUp() before
+ *      provisioning the org.
  *
- * The user MUST be authenticated to reach this page — if not, bounce to
- * /login with ?next=/signup so they come back here after sign-in.
+ * Detailed info (sales tax, licenses, banking, verification docs) is
+ * collected later from the dashboard's Settings → Compliance flow.
  */
 export default async function SignupPage(): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect('/login?next=/signup');
-
-  const email = auth.user.email ?? '';
+  const alreadyAuthed = !!auth.user;
+  const presetEmail = auth.user?.email ?? '';
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">EarlyMedi 가입</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          기본 정보 4가지만 입력하시면 바로 둘러볼 수 있습니다. 환자 10명까지 무료, 그 이후는 유료 전환.
+          {alreadyAuthed
+            ? '기본 정보 4가지만 입력하시면 바로 둘러볼 수 있습니다. 환자 10명까지 무료, 그 이후는 유료 전환.'
+            : '이메일·비밀번호로 가입하거나, 우측 상단 로그인에서 Google·매직링크를 이용할 수 있습니다. 환자 10명까지 무료.'}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">조직 정보</CardTitle>
-          <CardDescription>가입한 카테고리에 맞는 대시보드로 자동 진입합니다.</CardDescription>
+          <CardTitle className="text-base">계정 + 조직 정보</CardTitle>
+          <CardDescription>
+            {alreadyAuthed
+              ? '가입한 카테고리에 맞는 대시보드로 자동 진입합니다.'
+              : '이메일/비밀번호로 계정을 만들고, 곧바로 조직 정보를 입력하시면 가입이 완료됩니다.'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <QuickSignupForm email={email} />
+          <QuickSignupForm email={presetEmail} alreadyAuthed={alreadyAuthed} />
         </CardContent>
       </Card>
 

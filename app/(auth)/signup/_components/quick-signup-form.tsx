@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Eye, EyeOff } from 'lucide-react';
+import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
@@ -12,37 +14,65 @@ import { quickSignupAction } from '../_shared/actions';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-const schema = z.object({
-  accountType: z.enum(['medical', 'agency', 'non_medical', 'freelancer'], {
-    required_error: '카테고리를 선택해 주세요',
-  }),
-  partnerSubtype: z
-    .enum(['hotel', 'spa', 'salon', 'studio', 'restaurant', 'transport', 'tour', 'shopping', 'wellness', 'other'])
-    .optional(),
-  orgName: z.string().min(2, '회사명은 2자 이상').max(120),
-  representativeName: z.string().min(2, '담당자명은 2자 이상').max(80),
-  contactPhone: z
-    .string()
-    .min(8, '연락처를 입력해 주세요')
-    .max(40)
-    .regex(/^[0-9+\-\s()]+$/, '숫자·+·-·괄호만 사용해 주세요'),
-  // Optional demographics — '' means "decline to answer" (lets the radio
-  // group bind to react-hook-form even when no choice is made).
-  gender: z
-    .union([
-      z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
-      z.literal(''),
-    ])
-    .optional(),
-  birthYear: z
-    .union([
-      z.string().regex(/^\d{4}$/, '4자리 연도 (예: 1990)'),
-      z.literal(''),
-    ])
-    .optional(),
-});
+/**
+ * Schema builder — when the user is already authenticated (came from
+ * Google OAuth or magic link), email + password fields are not needed.
+ * For fresh signups they're required.
+ */
+function buildSchema(alreadyAuthed: boolean) {
+  const orgBlock = {
+    accountType: z.enum(['medical', 'agency', 'non_medical', 'freelancer'], {
+      required_error: '카테고리를 선택해 주세요',
+    }),
+    partnerSubtype: z
+      .enum(['hotel', 'spa', 'salon', 'studio', 'restaurant', 'transport', 'tour', 'shopping', 'wellness', 'other'])
+      .optional(),
+    orgName: z.string().min(2, '회사명은 2자 이상').max(120),
+    representativeName: z.string().min(2, '담당자명은 2자 이상').max(80),
+    contactPhone: z
+      .string()
+      .min(8, '연락처를 입력해 주세요')
+      .max(40)
+      .regex(/^[0-9+\-\s()]+$/, '숫자·+·-·괄호만 사용해 주세요'),
+    gender: z
+      .union([
+        z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
+        z.literal(''),
+      ])
+      .optional(),
+    birthYear: z
+      .union([
+        z.string().regex(/^\d{4}$/, '4자리 연도 (예: 1990)'),
+        z.literal(''),
+      ])
+      .optional(),
+  };
 
-type FormValues = z.infer<typeof schema>;
+  if (alreadyAuthed) {
+    return z.object(orgBlock);
+  }
+
+  return z
+    .object({
+      ...orgBlock,
+      email: z.string().email('유효한 이메일을 입력해 주세요'),
+      password: z
+        .string()
+        .min(8, '비밀번호는 8자 이상')
+        .max(128, '비밀번호는 128자 이하'),
+      passwordConfirm: z.string(),
+    })
+    .refine((d) => d.password === d.passwordConfirm, {
+      path: ['passwordConfirm'],
+      message: '비밀번호가 일치하지 않습니다',
+    });
+}
+
+type FormValues = z.infer<ReturnType<typeof buildSchema>> & {
+  email?: string;
+  password?: string;
+  passwordConfirm?: string;
+};
 
 const GENDERS: Array<{ value: 'male' | 'female' | 'other' | 'prefer_not_to_say'; label: string }> = [
   { value: 'male', label: '남성' },
@@ -112,10 +142,18 @@ const PARTNER_SUBTYPES: Array<{ value: string; label: string }> = [
   { value: 'other', label: '기타' },
 ];
 
-export function QuickSignupForm({ email }: { email: string }): JSX.Element {
+export function QuickSignupForm({
+  email,
+  alreadyAuthed,
+}: {
+  email: string;
+  alreadyAuthed: boolean;
+}): JSX.Element {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const schema = buildSchema(alreadyAuthed);
 
   const {
     register,
@@ -124,7 +162,7 @@ export function QuickSignupForm({ email }: { email: string }): JSX.Element {
     setValue,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as ReturnType<typeof zodResolver>,
   });
 
   const accountType = watch('accountType');
@@ -134,13 +172,50 @@ export function QuickSignupForm({ email }: { email: string }): JSX.Element {
     setServerError(null);
     startTransition(async () => {
       try {
-        const birthYearStr = values.birthYear?.trim() ?? '';
+        // 1) Fresh signup path — create the auth user first via supabase.
+        if (!alreadyAuthed) {
+          const supabase = createSupabaseBrowserClient();
+          if (!supabase) {
+            setServerError('Supabase가 연결되지 않았습니다. 환경 변수 확인.');
+            return;
+          }
+          const { error: signUpErr } = await supabase.auth.signUp({
+            email: values.email!,
+            password: values.password!,
+            options: {
+              emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/signup`,
+            },
+          });
+          if (signUpErr) {
+            const msg = signUpErr.message.toLowerCase();
+            if (msg.includes('already registered') || msg.includes('user already exists')) {
+              setServerError(
+                '이미 가입된 이메일입니다. 로그인 페이지에서 비밀번호로 로그인하거나, 비밀번호 찾기를 이용해 주세요.',
+              );
+            } else if (msg.includes('weak') || msg.includes('password')) {
+              setServerError('비밀번호가 너무 약합니다. 8자 이상, 영문 + 숫자 조합 권장.');
+            } else {
+              setServerError(signUpErr.message);
+            }
+            return;
+          }
+          // Wait a tick for the session cookie to land before calling the
+          // server action (which reads it via createSupabaseServerClient).
+          await new Promise((r) => setTimeout(r, 300));
+        }
+
+        const birthYearStr =
+          typeof values.birthYear === 'string' ? values.birthYear.trim() : '';
         const birthYearNum = birthYearStr ? Number(birthYearStr) : null;
         const genderRaw = (values.gender ?? '') as string;
         const gender =
-          genderRaw === 'male' || genderRaw === 'female' || genderRaw === 'other' || genderRaw === 'prefer_not_to_say'
+          genderRaw === 'male' ||
+          genderRaw === 'female' ||
+          genderRaw === 'other' ||
+          genderRaw === 'prefer_not_to_say'
             ? genderRaw
             : null;
+
         const dest = await quickSignupAction({
           accountType: values.accountType,
           partnerSubtype: showPartnerSubtype ? values.partnerSubtype ?? 'other' : null,
@@ -152,7 +227,16 @@ export function QuickSignupForm({ email }: { email: string }): JSX.Element {
         });
         router.replace(dest);
       } catch (err) {
-        setServerError(err instanceof Error ? err.message : '가입 중 오류가 발생했습니다.');
+        const msg = err instanceof Error ? err.message : '가입 중 오류가 발생했습니다.';
+        // unauthenticated thrown from server action means the auth user
+        // wasn't created yet (probably email-confirmation required).
+        if (msg === 'unauthenticated' && !alreadyAuthed) {
+          setServerError(
+            '계정 생성 후 이메일 인증이 필요합니다. 받은 인증 메일의 링크를 클릭한 뒤 다시 진행해 주세요.',
+          );
+        } else {
+          setServerError(msg);
+        }
       }
     });
   }
@@ -295,12 +379,85 @@ export function QuickSignupForm({ email }: { email: string }): JSX.Element {
         </div>
       </div>
 
-      {/* Email (read-only, from auth) */}
-      <div className="space-y-1.5">
-        <Label>이메일</Label>
-        <Input value={email} disabled className="bg-muted/40" />
-        <p className="text-[11px] text-muted-foreground">로그인하신 이메일이 자동으로 사용됩니다.</p>
-      </div>
+      {/* Email + password — required for fresh signups; read-only when
+          the user already authed via OAuth or magic link. */}
+      {alreadyAuthed ? (
+        <div className="space-y-1.5">
+          <Label>이메일</Label>
+          <Input value={email} disabled className="bg-muted/40" />
+          <p className="text-[11px] text-muted-foreground">로그인하신 이메일이 자동으로 사용됩니다.</p>
+        </div>
+      ) : (
+        <div className="space-y-3 rounded-lg border border-brand-200 bg-brand-50/40 p-4">
+          <Label className="text-sm font-semibold">로그인 계정</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="signup-email" className="text-xs">
+              이메일 <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="signup-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              {...register('email')}
+            />
+            {(errors as Record<string, { message?: string } | undefined>).email ? (
+              <p className="text-xs text-destructive">
+                {(errors as Record<string, { message?: string }>).email?.message}
+              </p>
+            ) : null}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="signup-password" className="text-xs">
+              비밀번호 <span className="text-destructive">*</span>
+            </Label>
+            <div className="relative">
+              <Input
+                id="signup-password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="8자 이상"
+                className="pr-10"
+                {...register('password')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+              >
+                {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+            {(errors as Record<string, { message?: string } | undefined>).password ? (
+              <p className="text-xs text-destructive">
+                {(errors as Record<string, { message?: string }>).password?.message}
+              </p>
+            ) : null}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="signup-password-confirm" className="text-xs">
+              비밀번호 확인 <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="signup-password-confirm"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              placeholder="다시 한 번"
+              {...register('passwordConfirm')}
+            />
+            {(errors as Record<string, { message?: string } | undefined>).passwordConfirm ? (
+              <p className="text-xs text-destructive">
+                {(errors as Record<string, { message?: string }>).passwordConfirm?.message}
+              </p>
+            ) : null}
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            비밀번호 없이 시작하려면 우측 상단 로그인 메뉴에서 Google · 매직링크를 사용하세요.
+          </p>
+        </div>
+      )}
 
       {serverError ? (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
