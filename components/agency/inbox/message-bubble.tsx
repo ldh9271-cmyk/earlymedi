@@ -1,6 +1,12 @@
-import { Languages } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { Languages, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { formatLocal } from '@/lib/utils/date';
+import { useInboxStore } from '@/lib/stores/inbox-store';
 
 export type BubbleMessage = {
   id: string;
@@ -17,17 +23,33 @@ export type BubbleMessage = {
 /**
  * One chat bubble, KakaoTalk/iMessage-shaped. Inbound (patient) sits on
  * the left with a white card; outbound (agent) sits on the right with a
- * filled brand bubble. When an inbound message has a Korean translation
- * (auto-filled by translateInboundMessage), it renders directly under
- * the bubble as a quoted, lighter "AI 번역" line — same width, same
- * column, so the eye flows naturally without breaking the chat rhythm.
+ * filled brand bubble.
+ *
+ * Below each bubble the translation card may appear:
+ *   - inbound non-Korean message with translation_ko present  →
+ *       "AI 번역 · EN→KO" card with the Korean translation
+ *   - inbound non-Korean message WITHOUT translation_ko       →
+ *       "다시 번역" retry button (calls the manual translate API)
+ *   - outbound message where the agent typed Korean and we
+ *     translated it before delivery                            →
+ *       "내 한국어 원문" card so the agent sees what they wrote
  */
 export function MessageBubble({ message }: { message: BubbleMessage }): JSX.Element {
+  const queryClient = useQueryClient();
+  const { selectedConversationId } = useInboxStore();
+  const [retrying, setRetrying] = useState(false);
+
   const isOutbound = message.direction === 'outbound';
   const isSystem = message.direction === 'system';
   const ts = formatLocal(new Date(message.sentAt), 'Asia/Seoul', 'HH:mm');
   const sourceLabel =
     message.bodyLocale && message.bodyLocale !== 'ko' ? message.bodyLocale.toUpperCase() : null;
+
+  const inboundNeedsTranslation =
+    !isOutbound &&
+    !!message.bodyLocale &&
+    !message.bodyLocale.startsWith('ko') &&
+    !(message.translationKo && message.translationKo.trim());
   const showInboundTranslation =
     !isOutbound &&
     !!message.translationKo &&
@@ -41,6 +63,42 @@ export function MessageBubble({ message }: { message: BubbleMessage }): JSX.Elem
     !!message.translationKo &&
     message.translationKo.trim() !== '' &&
     message.translationKo !== message.body;
+
+  async function handleRetryTranslate(): Promise<void> {
+    if (!selectedConversationId) return;
+    setRetrying(true);
+    try {
+      const res = await fetch(
+        `/api/agency/inbox/${selectedConversationId}/messages/${message.id}/translate`,
+        { method: 'POST' },
+      );
+      const json = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+        data?: { translationKo: string | null };
+      };
+      if (!res.ok) {
+        toast.error(json.message ?? json.error ?? `HTTP ${res.status}`, {
+          description:
+            res.status === 503
+              ? 'Vercel 환경 변수에서 GOOGLE_GENERATIVE_AI_API_KEY 확인 후 다시 시도.'
+              : undefined,
+          duration: 8000,
+        });
+        return;
+      }
+      if (json.data?.translationKo) {
+        toast.success('번역 완료', { duration: 2000 });
+      } else {
+        toast.message('번역할 내용이 없습니다', { duration: 2000 });
+      }
+      queryClient.invalidateQueries({ queryKey: ['conversation', selectedConversationId] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '번역 실패');
+    } finally {
+      setRetrying(false);
+    }
+  }
 
   if (isSystem) {
     return (
@@ -64,7 +122,7 @@ export function MessageBubble({ message }: { message: BubbleMessage }): JSX.Elem
         <div className="whitespace-pre-wrap break-words">{message.body}</div>
       </div>
 
-      {/* AI translation row — slips right under the bubble, messenger-style */}
+      {/* AI translation row */}
       {showInboundTranslation ? (
         <div className="max-w-[78%] rounded-2xl bg-hospitality-50/80 px-3 py-1.5 text-xs leading-relaxed text-hospitality-900">
           <div className="mb-0.5 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-hospitality-700/80">
@@ -73,6 +131,19 @@ export function MessageBubble({ message }: { message: BubbleMessage }): JSX.Elem
           </div>
           <div className="whitespace-pre-wrap break-words">{message.translationKo}</div>
         </div>
+      ) : inboundNeedsTranslation ? (
+        // Translation hasn't landed yet — show a retry button with the
+        // language hint so the operator can fire it manually.
+        <button
+          type="button"
+          onClick={handleRetryTranslate}
+          disabled={retrying}
+          className="inline-flex max-w-[78%] items-center gap-1.5 rounded-full border border-dashed bg-muted/30 px-2.5 py-1 text-[11px] text-muted-foreground transition hover:border-hospitality-300 hover:bg-hospitality-50 hover:text-hospitality-800 disabled:opacity-50"
+          title="이 메시지를 한국어로 번역"
+        >
+          <RefreshCw className={cn('h-3 w-3', retrying && 'animate-spin')} />
+          {retrying ? '번역 중…' : `🌐 ${sourceLabel ?? ''} 번역하기`}
+        </button>
       ) : null}
 
       {showOutboundOriginal ? (
