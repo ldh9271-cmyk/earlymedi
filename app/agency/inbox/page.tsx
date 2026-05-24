@@ -20,7 +20,11 @@ export default async function AgencyInboxPage({
   const initialId = searchParams.c ?? initial[0]?.id;
 
   return (
-    <div className="-m-6 grid h-[calc(100vh-4rem)] grid-cols-12 overflow-hidden bg-background md:-m-8">
+    // -m-6/-m-8 cancels main's padding so the 3-column grid fills edge-to-edge.
+    // min-h-0 + flex-1 lets the inbox grow into whatever vertical space main
+    // gives it (AppShell now makes main `flex flex-col`), without
+    // hard-coding viewport math that breaks when the trial banner appears.
+    <div className="-m-6 grid min-h-0 flex-1 grid-cols-12 overflow-hidden bg-background md:-m-8">
       <KeyboardShortcuts />
       <InboxRealtimeBridge organizationId={ctx.orgId} />
 

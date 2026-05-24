@@ -33,15 +33,15 @@ export function AppShell({
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar accountType={accountType} userEmail={userEmail} userName={userName} />
-        <main className="flex-1 bg-muted/20 px-5 py-6 md:px-8">
-          {organizationId ? (
-            <div className="mb-4">
-              {/* Server-rendered banner that fetches the org's trial usage row. */}
-              <TrialBanner organizationId={organizationId} />
-            </div>
-          ) : null}
-          {children}
-        </main>
+        {/* Trial banner lives as its own slim bar between Topbar and main so
+            full-height pages (e.g. /agency/inbox with `-m-6` negative margin)
+            don't have to subtract its height from their viewport calc. */}
+        {organizationId ? (
+          <div className="border-b bg-background px-5 py-2 md:px-8">
+            <TrialBanner organizationId={organizationId} />
+          </div>
+        ) : null}
+        <main className="flex flex-1 flex-col bg-muted/20 px-5 py-6 md:px-8">{children}</main>
       </div>
     </div>
   );
