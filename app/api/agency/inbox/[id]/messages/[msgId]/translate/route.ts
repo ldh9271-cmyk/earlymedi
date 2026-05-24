@@ -22,6 +22,19 @@ export async function POST(
   const access = await tryAccess({ allowedAccountTypes: ['agency'] });
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
 
+  // Early-exit with a concrete error BEFORE we even attempt the AI call,
+  // so the toast says exactly what's wrong instead of "응답하지 않습니다".
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    return NextResponse.json(
+      {
+        error: 'env_missing',
+        message:
+          'GOOGLE_GENERATIVE_AI_API_KEY 환경 변수가 Vercel 또는 로컬 .env에 설정되어 있지 않습니다. (Vercel: Settings → Environment Variables → Add New → 키 등록 후 반드시 Redeploy with "Use existing Build Cache" OFF.)',
+      },
+      { status: 503 },
+    );
+  }
+
   return await withRls(access.ctx, async () => {
     const [msg] = await db
       .select({
