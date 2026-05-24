@@ -70,6 +70,7 @@ export const agencySections: SidebarSection[] = [
     title: '컴플라이언스',
     items: [
       { href: '/agency/compliance', label: 'KOIHA · 광고 규제', icon: ShieldCheck },
+      { href: '/agency/team', label: '팀원 관리', icon: Users },
       { href: '/agency/settings', label: '설정', icon: Settings },
     ],
   },
@@ -89,6 +90,7 @@ export const freelancerSections: SidebarSection[] = [
       { href: '/freelancer/referral-codes', label: '추천 코드 · QR', icon: QrCode },
       { href: '/freelancer/tax-docs', label: '세금 서류', icon: FileBadge },
       { href: '/freelancer/disputes', label: '이의 제기', icon: Gavel },
+      { href: '/freelancer/team', label: '팀원 관리', icon: Users },
       { href: '/freelancer/settings', label: '설정 · 소속', icon: Settings },
     ],
   },
@@ -118,6 +120,7 @@ export const medicalSections: SidebarSection[] = [
       { href: '/medical/settlements', label: '정산 · 세금계산서', icon: ReceiptText },
       { href: '/medical/contracts', label: '계약', icon: TicketCheck },
       { href: '/medical/billing', label: '잔액 · 사용량', icon: Wallet },
+      { href: '/medical/team', label: '팀원 관리', icon: Users },
       { href: '/medical/settings', label: '설정', icon: Settings },
     ],
   },
@@ -144,6 +147,7 @@ export const partnerSections: SidebarSection[] = [
     items: [
       { href: '/partner/settlements', label: '정산', icon: Wallet },
       { href: '/partner/billing', label: '청구서', icon: ReceiptText },
+      { href: '/partner/team', label: '팀원 관리', icon: Users },
       { href: '/partner/settings', label: '설정', icon: Settings },
     ],
   },
