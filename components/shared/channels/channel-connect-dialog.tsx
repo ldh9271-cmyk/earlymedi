@@ -229,8 +229,8 @@ export function ChannelConnectDialog({
                   <p className="font-semibold text-foreground">카카오 콘솔 등록 위치</p>
                   <ol className="space-y-1 pl-3">
                     <li>① Kakao Developers → 내 애플리케이션 → 해당 앱</li>
-                    <li>② 좌측 메뉴 "카카오톡 채널" → 챗봇 / 메시지 webhook 설정</li>
-                    <li>③ 위 URL을 "Webhook URL" 입력란에 붙여넣기</li>
+                    <li>② 좌측 메뉴 &quot;카카오톡 채널&quot; → 챗봇 / 메시지 webhook 설정</li>
+                    <li>③ 위 URL을 &quot;Webhook URL&quot; 입력란에 붙여넣기</li>
                     <li>④ 저장 + 활성화</li>
                   </ol>
                 </div>

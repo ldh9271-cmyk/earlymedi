@@ -55,7 +55,7 @@ export default async function AgencyChannelsPage(): Promise<JSX.Element> {
           <ol className="space-y-2 text-xs text-muted-foreground">
             <li className="flex gap-2">
               <span className="font-semibold text-foreground">①</span>
-              연결할 채널 카드의 <strong className="text-foreground">"연결하기"</strong> 클릭
+              연결할 채널 카드의 <strong className="text-foreground">&quot;연결하기&quot;</strong> 클릭
             </li>
             <li className="flex gap-2">
               <span className="font-semibold text-foreground">②</span>
