@@ -47,12 +47,16 @@ export default async function InvitePage({
     .where(eq(organizations.id, row.organizationId))
     .limit(1);
 
-  // 3. If not logged in, bounce to /login with this URL as the next= target.
+  // 3. If not logged in, give the visitor TWO choices: log in (existing
+  //    account) or sign up (new account). Both preserve next= so they
+  //    land back here. Forward to /signup by default since most invitees
+  //    are first-time users — /signup detects the invite flow and shows
+  //    the slim InviteSignupForm instead of the full org-creation form.
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) {
     const nextPath = `/invite/${params.token}`;
-    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+    redirect(`/signup?next=${encodeURIComponent(nextPath)}`);
   }
 
   // 4. Logged-in — show a confirmation card. The form submits to a server

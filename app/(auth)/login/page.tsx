@@ -59,14 +59,23 @@ export default function LoginPage({
               <div className="rounded-lg border bg-care-50 px-4 py-3 text-sm text-care-700">
                 <p className="font-semibold">🎁 무료 체험 — 환자 10명까지</p>
                 <p className="mt-1 text-xs">
-                  이메일 또는 Google로 로그인 → 4가지 기본 정보 입력 → 바로 전체 서비스를 둘러볼 수
-                  있습니다. 11명째 환자 등록부터 유료 전환.
+                  이메일·비밀번호로 직접 가입하거나, Google · 매직링크로 가입할 수 있습니다.
+                  11명째 환자 등록부터 유료 전환.
                 </p>
               </div>
+              <a
+                href={`/signup${searchParams.next ? `?next=${encodeURIComponent(searchParams.next)}` : ''}`}
+                className="block w-full rounded-md bg-brand-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-brand-700"
+              >
+                회원가입 페이지로 →
+              </a>
               <p className="text-xs text-muted-foreground">
-                먼저 로그인하시면 가입 페이지(/signup)로 자동 안내됩니다.
+                또는 Google · 매직링크로 빠른 가입:
               </p>
-              <LoginForm nextPath="/signup" sent={searchParams.sent === '1'} />
+              <LoginForm
+                nextPath={searchParams.next ?? '/signup'}
+                sent={searchParams.sent === '1'}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
