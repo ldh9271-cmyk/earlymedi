@@ -181,7 +181,7 @@ function ActorMatrix(): JSX.Element {
       <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
         <SectionHead
           eyebrow="의료관광 · One Platform"
-          title="역할이 다른 의료관광를 같은 케이스에서 협업"
+          title="역할이 다른 의료관광 파트너가 같은 케이스에서 협업"
           lead="각 액터는 자기 데이터만 보고, 계약으로 연결된 다른 액터의 데이터는 명시적 공개 범위에서만 봅니다."
         />
         <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
