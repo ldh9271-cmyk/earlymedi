@@ -146,6 +146,50 @@ export async function disconnectChannelAction(channelId: string): Promise<void> 
   });
 }
 
+/**
+ * Simulates an inbound message arriving via the channel's webhook. Used
+ * by the "테스트 메시지 보내기" button on the channels page so an
+ * operator can confirm the inbox pipeline works end-to-end without
+ * waiting for a real customer message.
+ *
+ * Posts the same kind of payload our webhook handler accepts (the
+ * `test: true` shape). Returns the conversation id so the UI can deep-
+ * link to it.
+ */
+export async function sendTestMessageAction(channelId: string): Promise<{
+  conversationId: string;
+}> {
+  const { orgId } = await requireOrgOwnerOrAdmin();
+
+  // Verify the channel belongs to the caller's org.
+  const [channel] = await db
+    .select({ id: channels.id, kind: channels.kind })
+    .from(channels)
+    .where(and(eq(channels.id, channelId), eq(channels.organizationId, orgId)))
+    .limit(1);
+  if (!channel) throw new Error('channel_not_found');
+
+  const { routeIncomingMessage } = await import('@/lib/channels/inbox-router');
+  const result = await routeIncomingMessage({
+    organizationId: orgId,
+    channelId,
+    externalThreadId: `test-user-${Date.now()}`,
+    externalMessageId: `test-msg-${Date.now()}`,
+    contact: {
+      externalId: `test-user-${Date.now()}`,
+      displayName: '테스트 환자 (시뮬레이션)',
+      locale: 'ko',
+      countryCode: 'KR',
+    },
+    body:
+      '안녕하세요, 한국에서 코 성형 견적 받고 싶어요. 7월 둘째 주 일정 가능한가요? — (테스트 메시지)',
+    bodyLocale: 'ko',
+    sentAt: new Date(),
+  });
+
+  return { conversationId: result.conversationId };
+}
+
 export async function listChannelsForOrg(orgId: string): Promise<
   Array<{
     id: string;

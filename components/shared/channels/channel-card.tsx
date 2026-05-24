@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { Check, AlertCircle, ExternalLink, Plug, PowerOff } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { Check, AlertCircle, ExternalLink, Plug, PowerOff, Send } from 'lucide-react';
 import { Card, CardContent } from '@/components/shared/ui/card';
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
 import { CHANNELS, type ChannelKind } from '@/lib/channels/registry';
+import { sendTestMessageAction } from '@/lib/channels/actions';
 import { ChannelConnectDialog } from './channel-connect-dialog';
 import { CHANNEL_ICONS } from './channel-icons';
 
@@ -28,10 +31,26 @@ export function ChannelCard({
 }): JSX.Element {
   const def = CHANNELS[kind];
   const Icon = CHANNEL_ICONS[kind];
+  const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isTestPending, startTestTransition] = useTransition();
 
   const isConnected = connected?.status === 'connected';
   const hasError = connected?.status === 'error';
+
+  function handleTest(): void {
+    if (!connected) return;
+    startTestTransition(async () => {
+      try {
+        await sendTestMessageAction(connected.id);
+        toast.success('테스트 메시지가 인박스에 도착했습니다.', {
+          action: { label: '인박스 열기', onClick: () => router.push('/agency/inbox') },
+        });
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : '테스트 실패');
+      }
+    });
+  }
 
   return (
     <>
@@ -101,6 +120,19 @@ export function ChannelCard({
                 곧 활성화 예정
               </Button>
             )}
+            {isConnected ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={handleTest}
+                disabled={isTestPending}
+                title="시뮬레이션 메시지를 인박스로 보냅니다"
+              >
+                <Send className="mr-1 h-3 w-3" />
+                {isTestPending ? '전송 중…' : '테스트'}
+              </Button>
+            ) : null}
             <a
               href={def.devConsoleUrl}
               target="_blank"
