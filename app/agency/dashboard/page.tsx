@@ -63,10 +63,30 @@ export default async function AgencyDashboardPage(): Promise<JSX.Element> {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Inbox} label="신규 리드 (24h)" value={String(stats.newLeads)} />
-        <StatCard icon={ListChecks} label="진행 중 케이스" value={String(stats.open)} />
-        <StatCard icon={Wallet} label="이번 달 GMV" value="₩0" />
-        <StatCard icon={BarChart3} label="안 읽음 메시지" value={String(stats.unread)} />
+        <StatCard
+          icon={Inbox}
+          label="신규 리드 (24h)"
+          value={String(stats.newLeads)}
+          hint="최근 24시간 동안 인박스에 새로 들어온 환자 문의 수. AI가 아직 자격 검증을 안 한 'lead' 단계 대화만 집계."
+        />
+        <StatCard
+          icon={ListChecks}
+          label="진행 중 케이스"
+          value={String(stats.open)}
+          hint="시술 견적 받기 ~ 예약 완료 단계 (qualified · case · quoted · booked). 종결/취소된 케이스는 제외."
+        />
+        <StatCard
+          icon={Wallet}
+          label="이번 달 GMV"
+          value="₩0"
+          hint="이번 달 정산 완료된 시술 총 거래액 (Gross Merchandise Value). Phase 6 결제 엔진 활성화 시 자동 집계."
+        />
+        <StatCard
+          icon={BarChart3}
+          label="안 읽음 메시지"
+          value={String(stats.unread)}
+          hint="모든 채널 누적 미확인 환자 메시지. 24시간 내 미응대 시 SLA 위반 알림."
+        />
       </div>
 
       <Card>
@@ -96,21 +116,28 @@ function StatCard({
   icon: Icon,
   label,
   value,
+  hint,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
+  hint?: string;
 }): JSX.Element {
   return (
     <Card>
-      <CardContent className="flex items-center gap-3 p-5">
-        <div className="rounded-lg bg-brand-50 p-2">
-          <Icon className="h-5 w-5 text-brand-600" />
+      <CardContent className="space-y-2 p-5">
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg bg-brand-50 p-2">
+            <Icon className="h-5 w-5 text-brand-600" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs text-muted-foreground">{label}</div>
+            <div className="truncate text-xl font-bold">{value}</div>
+          </div>
         </div>
-        <div className="min-w-0">
-          <div className="text-xs text-muted-foreground">{label}</div>
-          <div className="truncate text-xl font-bold">{value}</div>
-        </div>
+        {hint ? (
+          <p className="text-[11px] leading-relaxed text-muted-foreground">{hint}</p>
+        ) : null}
       </CardContent>
     </Card>
   );
