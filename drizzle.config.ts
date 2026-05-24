@@ -1,5 +1,10 @@
 import type { Config } from 'drizzle-kit';
-import 'dotenv/config';
+import { config as loadEnv } from 'dotenv';
+
+// Load .env.local first (Next.js convention for local secrets), then fall
+// back to .env. drizzle-kit runs outside Next, so we must do this manually.
+loadEnv({ path: '.env.local' });
+loadEnv();
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
