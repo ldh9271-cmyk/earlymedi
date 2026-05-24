@@ -22,16 +22,11 @@ export function createSupabaseBrowserClient(): ReturnType<typeof createBrowserCl
     }
     return null;
   }
-  _client = createBrowserClient(url, anonKey, {
-    auth: {
-      // Use implicit flow (hash tokens) instead of PKCE for magic links so
-      // that Gmail/Outlook link-preview scanners can't invalidate the OTP
-      // by pre-fetching it, and the link works across browsers/devices.
-      // Trade-off: slightly less secure than PKCE, but standard for magic
-      // links and acceptable for our use case.
-      flowType: 'implicit',
-    },
-  });
+  // Use Supabase's default PKCE flow. Code exchange happens in the
+  // /api/auth/callback Route Handler (which can write session cookies) —
+  // not in a Server Component (which can't), and not in a client landing
+  // page (which can't see the redirect cookie chain SSR needs).
+  _client = createBrowserClient(url, anonKey);
   return _client;
 }
 

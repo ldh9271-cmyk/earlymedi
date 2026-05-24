@@ -42,9 +42,10 @@ export function LoginForm({
         setError('데모 모드 — Supabase가 아직 연결되지 않았습니다. 환경 변수 설정 후 다시 시도해주세요.');
         return;
       }
-      // Implicit-flow landing page handles the hash (#access_token=...) and
-      // writes session cookies before redirecting to nextPath.
-      const redirectTo = new URL('/auth/landing', window.location.origin);
+      // PKCE flow lands on /api/auth/callback Route Handler, which is the
+      // only place we can reliably write the Supabase session cookies in
+      // Next.js 14 (Server Components silently drop cookieStore.set).
+      const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', nextPath);
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -71,10 +72,11 @@ export function LoginForm({
         setError('데모 모드 — Supabase가 아직 연결되지 않았습니다. 환경 변수 설정 후 다시 시도해주세요.');
         return;
       }
-      // Implicit-flow magic link lands on /auth/landing which processes the
-      // hash fragment client-side. This sidesteps Gmail's link-preview
-      // scanner consuming the OTP and the PKCE verifier-not-found bug.
-      const redirectTo = new URL('/auth/landing', window.location.origin);
+      // PKCE magic link redirects through the /api/auth/callback Route
+      // Handler, which is the only place we can reliably set session
+      // cookies. /login then has a forwarding fallback for cases where
+      // Supabase's verify endpoint drops the user back at the Site URL.
+      const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', nextPath);
       const { error: signInError } = await supabase.auth.signInWithOtp({
         email,

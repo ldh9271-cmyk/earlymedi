@@ -39,6 +39,18 @@ function AuthLandingInner(): JSX.Element {
   useEffect(() => {
     const next = searchParams.get('next') ?? '/select-org';
 
+    // If we somehow landed here with a PKCE ?code= (legacy email links still
+    // pointing at /auth/landing), forward to the Route Handler so cookies
+    // get written. Don't try to exchange client-side.
+    const code = searchParams.get('code');
+    if (code) {
+      const cb = new URL('/api/auth/callback', window.location.origin);
+      cb.searchParams.set('code', code);
+      cb.searchParams.set('next', next);
+      window.location.replace(cb.toString());
+      return;
+    }
+
     // If the URL hash carries an error from Supabase, show it and bail to /login.
     if (typeof window !== 'undefined' && window.location.hash) {
       const params = new URLSearchParams(window.location.hash.slice(1));
