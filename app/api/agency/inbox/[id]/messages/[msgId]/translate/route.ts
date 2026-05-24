@@ -65,29 +65,53 @@ export async function POST(
       );
 
       if (!result.translationKo && !result.translationEn) {
-        // The translator returned null — most likely Gemini call failed.
-        // Try a more explicit error path: call translateText directly
-        // so the underlying AiProviderError bubbles up.
+        // The first attempt swallowed any error. Re-call translateText
+        // with throwOnError so the underlying Gemini error surfaces to
+        // the operator (model not found / key invalid / quota / etc.).
         const { translateText } = await import('@/lib/ai/translation');
         const target: 'ko' | 'en' = msg.bodyLocale?.startsWith('ko') ? 'en' : 'ko';
-        const direct = await translateText(
-          callerFromCtx(access.ctx, { entityType: 'message', entityId: msg.id }),
-          msg.body,
-          target,
-          msg.bodyLocale ?? undefined,
-        );
-        if (!direct) {
+        try {
+          const direct = await translateText(
+            callerFromCtx(access.ctx, { entityType: 'message', entityId: msg.id }),
+            msg.body,
+            target,
+            msg.bodyLocale ?? undefined,
+            { throwOnError: true },
+          );
+          if (!direct) {
+            return NextResponse.json(
+              {
+                error: 'translation_empty',
+                message: 'AI가 빈 응답을 반환했습니다. 다시 시도해 주세요.',
+              },
+              { status: 502 },
+            );
+          }
+          if (target === 'ko') result.translationKo = direct;
+          else result.translationEn = direct;
+        } catch (innerErr) {
+          const detailMessage =
+            innerErr instanceof Error ? innerErr.message : 'unknown_error';
           return NextResponse.json(
             {
-              error: 'translation_unavailable',
-              message:
-                'AI 번역 서비스가 응답하지 않습니다. GOOGLE_GENERATIVE_AI_API_KEY 환경 변수 또는 Gemini 할당량을 확인해 주세요.',
+              error: 'gemini_call_failed',
+              message: `Gemini API 호출 실패: ${detailMessage}`,
+              hint:
+                detailMessage.toLowerCase().includes('model') ||
+                detailMessage.toLowerCase().includes('not found')
+                  ? 'AI_PRIMARY_MODEL을 gemini-2.0-flash-001 또는 gemini-1.5-flash-latest로 시도해 보세요.'
+                  : detailMessage.toLowerCase().includes('api key') ||
+                      detailMessage.toLowerCase().includes('unauthorized') ||
+                      detailMessage.toLowerCase().includes('401')
+                    ? 'GOOGLE_GENERATIVE_AI_API_KEY가 잘못되었거나 만료되었습니다.'
+                    : detailMessage.toLowerCase().includes('quota') ||
+                        detailMessage.toLowerCase().includes('rate')
+                      ? 'Gemini 일일 한도 또는 분당 요청 한도 초과.'
+                      : 'Google AI Studio (https://aistudio.google.com/) 에서 키 상태를 확인해 주세요.',
             },
-            { status: 503 },
+            { status: 502 },
           );
         }
-        if (target === 'ko') result.translationKo = direct;
-        else result.translationEn = direct;
       }
 
       await db

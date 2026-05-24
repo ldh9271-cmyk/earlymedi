@@ -37,14 +37,21 @@ export function detectLocale(text: string): 'ko' | 'en' | 'other' {
 /**
  * Translate `text` into `targetLocale` using the AI router (Gemini primary,
  * Claude fallback). Auto-detects source locale when `sourceLocale` is omitted.
- * Returns null on failure — callers should treat translation as best-effort
- * and never block message persistence on it.
+ *
+ * Two return modes via the `throwOnError` flag:
+ *   - false (default): null on failure (best-effort path used by
+ *     translateInboundMessage so a Gemini outage never blocks message
+ *     persistence)
+ *   - true: re-throws the underlying provider error, so the manual
+ *     "다시 번역" button can show what's actually wrong (model not
+ *     found, key invalid, quota, etc.)
  */
 export async function translateText(
   caller: Caller,
   text: string,
   targetLocale: 'ko' | 'en',
   sourceLocale?: string,
+  options?: { throwOnError?: boolean },
 ): Promise<string | null> {
   if (!text.trim()) return null;
 
@@ -71,6 +78,7 @@ export async function translateText(
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn('[translate] failed:', err instanceof Error ? err.message : err);
+    if (options?.throwOnError) throw err;
     return null;
   }
 }

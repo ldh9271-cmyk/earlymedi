@@ -4,7 +4,12 @@ import { generateText, streamText } from 'ai';
 import type { AiProvider, ChatRequest } from '../types';
 import { AiProviderError } from '../types';
 
-const MODEL_CHAT = process.env.AI_PRIMARY_MODEL ?? 'gemini-2.5-pro';
+// Default to a model that is GA on the free Gemini API key tier. 2.5-pro
+// is paywalled on most projects; flash is fast, free-tier-enabled, and
+// more than adequate for translation / classification / chat replies.
+// Override with AI_PRIMARY_MODEL=gemini-2.5-pro once the org's billing
+// is enabled in the GCP project that issued the key.
+const MODEL_CHAT = process.env.AI_PRIMARY_MODEL ?? 'gemini-2.0-flash-001';
 const MODEL_VISION = process.env.AI_VISION_MODEL ?? MODEL_CHAT;
 
 function mapMessages(req: ChatRequest): { role: 'system' | 'user' | 'assistant'; content: string }[] {

@@ -75,15 +75,13 @@ export function MessageBubble({ message }: { message: BubbleMessage }): JSX.Elem
       const json = (await res.json().catch(() => ({}))) as {
         error?: string;
         message?: string;
+        hint?: string;
         data?: { translationKo: string | null };
       };
       if (!res.ok) {
         toast.error(json.message ?? json.error ?? `HTTP ${res.status}`, {
-          description:
-            res.status === 503
-              ? 'Vercel 환경 변수에서 GOOGLE_GENERATIVE_AI_API_KEY 확인 후 다시 시도.'
-              : undefined,
-          duration: 8000,
+          description: json.hint,
+          duration: 12000,
         });
         return;
       }
