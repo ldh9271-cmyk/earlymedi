@@ -1,15 +1,45 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
+import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { LoginForm } from './_components/login-form';
 
 export const metadata = { title: '로그인' };
+export const dynamic = 'force-dynamic';
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { next?: string; sent?: string };
-}): JSX.Element {
+  searchParams: { next?: string; sent?: string; code?: string; error?: string };
+}): Promise<JSX.Element> {
+  // Supabase magic-link / OAuth (PKCE flow) sometimes redirects back to /login
+  // with `?code=...` instead of /auth/landing (Site URL fallback, allowlist
+  // mismatches, etc). Handle it here so the user doesn't see the login form
+  // again with a code in the URL.
+  if (searchParams.code) {
+    try {
+      const supabase = createSupabaseServerClient();
+      const { error } = await supabase.auth.exchangeCodeForSession(searchParams.code);
+      if (!error) {
+        // Session cookies are set; figure out the real destination. `next` may
+        // point at /auth/landing (a transient client page) — collapse that to
+        // the canonical post-login route.
+        let dest = searchParams.next ?? '/select-org';
+        if (dest.startsWith('/auth/landing')) dest = '/select-org';
+        redirect(dest);
+      }
+      // On exchange error, fall through to render the login form.
+    } catch (err) {
+      // next/navigation `redirect()` throws internally — re-throw so the
+      // redirect actually happens. Anything else (e.g. missing env) just
+      // falls through to the form.
+      if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err;
+      // eslint-disable-next-line no-console
+      console.warn('[login] code exchange failed:', err);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
