@@ -160,8 +160,11 @@ export function ConversationPane(): JSX.Element {
         </div>
       </div>
 
+      {/* Messenger-style stack: scroll fills the column, content is anchored
+          to the bottom so the most recent message sits right above the
+          composer (no gaping whitespace when there are only 1-2 messages). */}
       <ScrollArea className="flex-1">
-        <div className="space-y-2 px-4 py-4">
+        <div className="flex min-h-full flex-col justify-end gap-2 px-4 py-4">
           {data.messages.map((m) => (
             <MessageBubble
               key={m.id}

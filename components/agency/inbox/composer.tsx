@@ -121,7 +121,7 @@ export function Composer({
   }
 
   return (
-    <div className="space-y-2 border-t bg-background p-3">
+    <div className="space-y-1.5 border-t bg-background px-3 py-2">
       {quickReplies && quickReplies.length > 0 ? (
         <div className="flex flex-wrap gap-1">
           {quickReplies.map((q) => (
