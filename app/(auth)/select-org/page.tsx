@@ -26,17 +26,34 @@ export default async function SelectOrgPage({
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
 
-  const memberships = await db
-    .select({
-      orgId: organizations.id,
-      orgName: organizations.name,
-      accountType: organizations.accountType,
-      role: orgMemberships.role,
-      status: orgMemberships.status,
-    })
-    .from(orgMemberships)
-    .innerJoin(organizations, eq(orgMemberships.organizationId, organizations.id))
-    .where(eq(orgMemberships.userId, auth.user.id));
+  // Graceful fallback: if DATABASE_URL is missing or the schema hasn't been
+  // migrated yet (fresh Supabase project), don't crash the page — show the
+  // empty state so the user can still see a working login flow.
+  let memberships: Array<{
+    orgId: string;
+    orgName: string;
+    accountType: 'agency' | 'medical' | 'freelancer' | 'non_medical';
+    role: string;
+    status: string;
+  }> = [];
+  let dbError: string | null = null;
+  try {
+    memberships = await db
+      .select({
+        orgId: organizations.id,
+        orgName: organizations.name,
+        accountType: organizations.accountType,
+        role: orgMemberships.role,
+        status: orgMemberships.status,
+      })
+      .from(orgMemberships)
+      .innerJoin(organizations, eq(orgMemberships.organizationId, organizations.id))
+      .where(eq(orgMemberships.userId, auth.user.id));
+  } catch (err) {
+    dbError = err instanceof Error ? err.message : 'unknown DB error';
+    // eslint-disable-next-line no-console
+    console.warn('[select-org] DB query failed, showing empty state:', dbError);
+  }
 
   const active = memberships.filter((m) => m.status === 'active');
 
