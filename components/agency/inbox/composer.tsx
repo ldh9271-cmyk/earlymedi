@@ -23,7 +23,10 @@ export function Composer({
   contactLocale: string | null;
 }): JSX.Element {
   const [text, setText] = useState('');
-  const [suggestionsExpanded, setSuggestionsExpanded] = useState(false);
+  // AI 추천 답변 — expanded by default so the agent sees all 3–5 tones
+  // the moment they open a conversation. Toggleable to claw back vertical
+  // space when the agent wants to focus on a long inbound message.
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { setAssistantOpen, isAssistantOpen, autoTranslate } = useInboxStore();
   const queryClient = useQueryClient();
@@ -143,9 +146,10 @@ export function Composer({
         </div>
       ) : null}
 
-      {/* AI suggested replies — collapsed by default to keep the textarea
-          right next to the conversation. Click the chevron to expand and
-          see the 3 tone-variant cards. */}
+      {/* AI suggested replies — expanded by default, 3–5 tone cards.
+          Clicking a card drops it into the textarea but keeps the panel
+          open so the agent can still A/B between tones. The chevron
+          collapses for vertical-space relief when needed. */}
       {suggestionsLoading ? (
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
           <Wand2 className="h-3 w-3 animate-pulse text-hospitality-500" />
@@ -163,10 +167,13 @@ export function Composer({
               <Wand2 className="h-3 w-3" />
               AI 추천 답변 {suggestions.length}개
             </span>
+            {/* Chevron points the direction the panel will move when
+                clicked: ChevronUp when expanded (collapse upward),
+                ChevronDown when collapsed (expand downward). */}
             {suggestionsExpanded ? (
-              <ChevronDown className="h-3.5 w-3.5" />
-            ) : (
               <ChevronUp className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5" />
             )}
           </button>
           {suggestionsExpanded ? (
@@ -187,7 +194,9 @@ export function Composer({
                   type="button"
                   onClick={() => {
                     setText(s.text);
-                    setSuggestionsExpanded(false);
+                    // Keep the panel open so the agent can compare tones
+                    // even after dropping one in. They can edit then send
+                    // (or pick a different tone) without re-expanding.
                     textareaRef.current?.focus();
                   }}
                   className="group flex w-full items-start gap-2 rounded-lg border bg-muted/20 px-3 py-2 text-left text-xs transition hover:border-hospitality-300 hover:bg-hospitality-50"

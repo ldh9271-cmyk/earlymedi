@@ -25,10 +25,11 @@ const Query = z.object({
 /**
  * GET /api/agency/inbox/{id}/suggested-replies
  *
- * Returns three on-tone reply suggestions for the active conversation —
- * one per tone (concise / friendly / luxury) — so the agent can pick the
- * one that fits the moment. Each call is a fresh AI generation; we keep
- * them short so latency stays under ~2-3s.
+ * Returns five on-tone reply suggestions for the active conversation —
+ * one per tone (concise / friendly / luxury / empathetic / detailed) —
+ * so the agent can pick whichever fits the moment. Each suggestion is a
+ * separate parallel AI call; total latency stays under ~3s thanks to
+ * Promise.allSettled fan-out.
  */
 export async function GET(
   request: Request,
@@ -99,16 +100,22 @@ export async function GET(
     .map((g) => `${g.source} (${g.srcLoc}) → ${g.target} (${g.tgtLoc})`)
     .join('\n');
 
-  const tones: Array<'concise' | 'friendly' | 'luxury'> = ['concise', 'friendly', 'luxury'];
+  const tones: Array<
+    'concise' | 'friendly' | 'luxury' | 'empathetic' | 'detailed'
+  > = ['concise', 'friendly', 'empathetic', 'luxury', 'detailed'];
   const toneLabels: Record<typeof tones[number], string> = {
     concise: '간결',
     friendly: '친절',
+    empathetic: '공감',
     luxury: '프리미엄',
+    detailed: '상세',
   };
 
-  // Fan out 3 parallel AI calls — keep them small (maxTokens 220) for
-  // ~1.5s P95 per call; total response stays under ~3s thanks to
-  // parallelism.
+  // Fan out 5 parallel AI calls. Even the longest tone ("detailed",
+  // 70–130 단어) fits comfortably in 384 tokens; smaller tones use the
+  // same ceiling — overflow is much cheaper than premature truncation
+  // and Gemini Flash stops at the natural sentence boundary anyway.
+  // Total response stays under ~3s because all 5 fan out in parallel.
   const results = await Promise.allSettled(
     tones.map(async (tone) => {
       const { system, messages: prompt } = buildReplyMessages(
@@ -134,13 +141,17 @@ export async function GET(
       const res = await aiChat(
         callerFromCtx(access.ctx, { entityType: 'conversation', entityId: params.id }),
         'chat',
-        { system, messages: prompt, temperature: 0.4, maxTokens: 220 },
+        { system, messages: prompt, temperature: 0.4, maxTokens: 384 },
       );
       return { tone, label: toneLabels[tone], text: res.text.trim() };
     }),
   );
 
-  type Suggestion = { tone: 'concise' | 'friendly' | 'luxury'; label: string; text: string };
+  type Suggestion = {
+    tone: 'concise' | 'friendly' | 'luxury' | 'empathetic' | 'detailed';
+    label: string;
+    text: string;
+  };
   const suggestions: Suggestion[] = results
     .map((r) => (r.status === 'fulfilled' ? r.value : null))
     .filter((s): s is Suggestion => s !== null);

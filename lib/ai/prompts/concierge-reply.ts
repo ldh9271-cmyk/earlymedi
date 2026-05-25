@@ -1,7 +1,12 @@
 import type { AiTextMessage } from '../types';
 import type { ChannelKind } from '@/lib/channels/types';
 
-export type ReplyTone = 'concise' | 'friendly' | 'luxury';
+export type ReplyTone =
+  | 'concise'
+  | 'friendly'
+  | 'luxury'
+  | 'empathetic'
+  | 'detailed';
 
 export type ReplyContext = {
   channelKind: ChannelKind;
@@ -20,6 +25,10 @@ const TONE_INSTRUCTIONS: Record<ReplyTone, string> = {
     '40–70 단어 사이의 친절하고 공감적인 답변. 환자의 감정을 인정하고, 부드러운 안내. 이모지는 절제하여 1–2개만.',
   luxury:
     '50–90 단어 사이의 격조 있는 컨시어지 톤. 환자의 시간과 결정을 존중하는 표현. VIP·프리미엄 어휘 활용.',
+  empathetic:
+    '40–70 단어 사이의 공감 우선 답변. 환자의 걱정·불안을 먼저 인정한 뒤("…걱정되시는 마음 충분히 이해합니다") 안심·해결 안내. 의료 우려·통증·후기 불안에 강한 톤.',
+  detailed:
+    '70–130 단어 사이의 상세 안내형 답변. 절차·일정·준비물·예상 비용 범위를 번호 또는 줄바꿈으로 정리. 정보가 많은 견적·상담 질문에 적합. 마지막에 다음 행동 1개.',
 };
 
 const SAFETY_PRINCIPLES = `당신은 한국 보건복지부 등록 외국인환자 유치업체 "EarlyMedi"의 다국어 컨시어지 AI입니다.
