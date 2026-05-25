@@ -13,6 +13,30 @@ import { AiProviderError } from '../types';
 const MODEL_CHAT = process.env.AI_PRIMARY_MODEL ?? 'gemini-2.5-flash';
 const MODEL_VISION = process.env.AI_VISION_MODEL ?? MODEL_CHAT;
 
+// gemini-2.5-flash defaults to "thinking" mode — the model burns
+// internal-reasoning tokens BEFORE producing visible output, and those
+// thinking tokens count against maxTokens. For our use cases
+// (translation + 5-tone reply suggestions) we don't need chain-of-
+// thought reasoning, and leaving thinking on means a 384-token budget
+// gets eaten by thinking with only ~30 tokens left for the actual
+// response — that's why suggestions were getting cut mid-sentence
+// ("…한국에서 코 성형에 관심을"). Setting thinkingBudget: 0 disables
+// thinking and gives the model the full budget for the visible answer.
+// Set AI_GEMINI_THINKING_BUDGET=-1 to restore dynamic thinking, or to
+// a positive integer to cap it manually.
+const THINKING_BUDGET = (() => {
+  const raw = process.env.AI_GEMINI_THINKING_BUDGET;
+  if (raw === undefined || raw === '') return 0;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+})();
+
+const PROVIDER_OPTIONS = {
+  google: {
+    thinkingConfig: { thinkingBudget: THINKING_BUDGET },
+  },
+} as const;
+
 function mapMessages(req: ChatRequest): { role: 'system' | 'user' | 'assistant'; content: string }[] {
   const out: { role: 'system' | 'user' | 'assistant'; content: string }[] = [];
   if (req.system) out.push({ role: 'system', content: req.system });
@@ -33,6 +57,7 @@ export const geminiProvider: AiProvider = {
         temperature: req.temperature,
         maxTokens: req.maxTokens,
         abortSignal: opts?.signal,
+        providerOptions: PROVIDER_OPTIONS,
       });
       return {
         text: result.text,
@@ -54,6 +79,7 @@ export const geminiProvider: AiProvider = {
         temperature: req.temperature,
         maxTokens: req.maxTokens,
         abortSignal: opts?.signal,
+        providerOptions: PROVIDER_OPTIONS,
       });
       for await (const chunk of result.textStream) {
         yield chunk;
@@ -84,6 +110,7 @@ export const geminiProvider: AiProvider = {
         temperature: req.temperature ?? 0,
         maxTokens: req.maxTokens,
         abortSignal: opts?.signal,
+        providerOptions: PROVIDER_OPTIONS,
       });
       return {
         text: result.text,

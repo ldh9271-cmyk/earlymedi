@@ -111,11 +111,12 @@ export async function GET(
     detailed: '상세',
   };
 
-  // Fan out 5 parallel AI calls. Even the longest tone ("detailed",
-  // 70–130 단어) fits comfortably in 384 tokens; smaller tones use the
-  // same ceiling — overflow is much cheaper than premature truncation
-  // and Gemini Flash stops at the natural sentence boundary anyway.
-  // Total response stays under ~3s because all 5 fan out in parallel.
+  // Fan out 5 parallel AI calls. maxTokens 1024 gives the detailed tone
+  // (70–130 단어 ≈ ~500 tokens in Korean) full headroom and survives
+  // even if AI_GEMINI_THINKING_BUDGET is later raised — the provider
+  // disables thinking by default so the budget is almost entirely
+  // available for the visible answer. Total response stays under ~3s
+  // because all 5 fan out in parallel.
   const results = await Promise.allSettled(
     tones.map(async (tone) => {
       const { system, messages: prompt } = buildReplyMessages(
@@ -141,7 +142,7 @@ export async function GET(
       const res = await aiChat(
         callerFromCtx(access.ctx, { entityType: 'conversation', entityId: params.id }),
         'chat',
-        { system, messages: prompt, temperature: 0.4, maxTokens: 384 },
+        { system, messages: prompt, temperature: 0.4, maxTokens: 1024 },
       );
       return { tone, label: toneLabels[tone], text: res.text.trim() };
     }),
