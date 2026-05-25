@@ -25,11 +25,17 @@ const Query = z.object({
 /**
  * GET /api/agency/inbox/{id}/suggested-replies
  *
- * Returns five on-tone reply suggestions for the active conversation —
- * one per tone (concise / friendly / luxury / empathetic / detailed) —
- * so the agent can pick whichever fits the moment. Each suggestion is a
- * separate parallel AI call; total latency stays under ~3s thanks to
- * Promise.allSettled fan-out.
+ * Returns two on-tone reply suggestions for the active conversation —
+ * friendly (warm conversational) + detailed (itemized info-dense). The
+ * pair was picked after the agent saw the full content of all five
+ * tones and realized 친절+상세 cover ~90% of medical-tourism inquiries:
+ * one for chit-chat / reassurance, one for quote / schedule / 준비물.
+ *
+ * 간결/공감/프리미엄 톤은 ReplyTone 타입과 프롬프트에 남겨두었습니다
+ * (필요하면 이 배열에 추가해 즉시 부활 가능).
+ *
+ * Each suggestion is a separate parallel AI call; total latency stays
+ * well under 2s thanks to Promise.allSettled fan-out + only 2 calls.
  */
 export async function GET(
   request: Request,
@@ -100,9 +106,14 @@ export async function GET(
     .map((g) => `${g.source} (${g.srcLoc}) → ${g.target} (${g.tgtLoc})`)
     .join('\n');
 
+  // Two complementary tones cover most medical-tourism inquiries:
+  //   friendly  → warm conversational reply for chit-chat / reassurance
+  //   detailed  → itemized info-dense reply for quote / schedule / 준비물
+  // To re-enable the dropped tones, add them back to this array (the
+  // prompt + label tables below still support all five).
   const tones: Array<
     'concise' | 'friendly' | 'luxury' | 'empathetic' | 'detailed'
-  > = ['concise', 'friendly', 'empathetic', 'luxury', 'detailed'];
+  > = ['friendly', 'detailed'];
   const toneLabels: Record<typeof tones[number], string> = {
     concise: '간결',
     friendly: '친절',
@@ -111,12 +122,11 @@ export async function GET(
     detailed: '상세',
   };
 
-  // Fan out 5 parallel AI calls. maxTokens 1024 gives the detailed tone
+  // Fan out 2 parallel AI calls. maxTokens 1024 gives the detailed tone
   // (70–130 단어 ≈ ~500 tokens in Korean) full headroom and survives
   // even if AI_GEMINI_THINKING_BUDGET is later raised — the provider
   // disables thinking by default so the budget is almost entirely
-  // available for the visible answer. Total response stays under ~3s
-  // because all 5 fan out in parallel.
+  // available for the visible answer. Total response stays under ~2s.
   const results = await Promise.allSettled(
     tones.map(async (tone) => {
       const { system, messages: prompt } = buildReplyMessages(
