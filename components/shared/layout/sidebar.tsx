@@ -1,12 +1,9 @@
-'use client';
-
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { Logo } from '@/components/shared/brand/logo';
 import type { AccountType } from '@/lib/auth/account-types';
 import { ACCOUNT_TYPE_LABEL_KO } from '@/lib/auth/account-types';
+import { SidebarLink } from './sidebar-link';
 
 export type SidebarItem = {
   href: string;
@@ -20,6 +17,13 @@ export type SidebarSection = {
   items: SidebarItem[];
 };
 
+/**
+ * Server component sidebar shell. Each menu item is rendered as a
+ * client-side <SidebarLink> so that `usePathname()` can highlight the
+ * currently active route without forcing the whole sidebar — which
+ * receives function-typed LucideIcon refs as props — to cross the
+ * server/client boundary.
+ */
 export function Sidebar({
   accountType,
   orgName,
@@ -29,13 +33,10 @@ export function Sidebar({
   accountType: AccountType;
   orgName: string;
   sections: SidebarSection[];
-  /** Server-side fallback only — the real active path is read from
-   *  usePathname() so client-side navigation between menu items keeps
-   *  the highlight in sync without a server round-trip. */
+  /** Fallback for the initial SSR paint. The client SidebarLink overrides
+   *  this from usePathname() as soon as it hydrates. */
   currentPath?: string;
 }): JSX.Element {
-  const livePathname = usePathname();
-  const path = livePathname ?? currentPath ?? '';
   const accentClass = {
     agency: 'border-l-brand-600',
     freelancer: 'border-l-hospitality-500',
@@ -69,30 +70,20 @@ export function Sidebar({
               </div>
             ) : null}
             <ul className="space-y-0.5">
-              {section.items.map((item) => {
-                const active = path === item.href || path.startsWith(`${item.href}/`);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        'group flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-                        active
-                          ? 'bg-secondary font-medium text-foreground'
-                          : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
-                      )}
-                    >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{item.label}</span>
-                      {item.badge !== undefined ? (
-                        <span className="ml-auto rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold">
-                          {item.badge}
-                        </span>
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
+              {section.items.map((item) => (
+                <li key={item.href}>
+                  <SidebarLink
+                    href={item.href}
+                    label={item.label}
+                    Icon={item.icon}
+                    badge={item.badge}
+                    fallbackActive={
+                      !!currentPath &&
+                      (currentPath === item.href || currentPath.startsWith(`${item.href}/`))
+                    }
+                  />
+                </li>
+              ))}
             </ul>
           </div>
         ))}
