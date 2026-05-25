@@ -4,12 +4,13 @@ import { generateText, streamText } from 'ai';
 import type { AiProvider, ChatRequest } from '../types';
 import { AiProviderError } from '../types';
 
-// Default to a model that is GA on the free Gemini API key tier. 2.5-pro
-// is paywalled on most projects; flash is fast, free-tier-enabled, and
-// more than adequate for translation / classification / chat replies.
+// Default to gemini-2.5-flash — currently the newest GA model on the
+// free-tier Gemini API. gemini-2.0-flash-001 was deprecated for new
+// users in May 2026 (Google: "This model is no longer available to
+// new users. Please update your code to use a newer model").
 // Override with AI_PRIMARY_MODEL=gemini-2.5-pro once the org's billing
 // is enabled in the GCP project that issued the key.
-const MODEL_CHAT = process.env.AI_PRIMARY_MODEL ?? 'gemini-2.0-flash-001';
+const MODEL_CHAT = process.env.AI_PRIMARY_MODEL ?? 'gemini-2.5-flash';
 const MODEL_VISION = process.env.AI_VISION_MODEL ?? MODEL_CHAT;
 
 function mapMessages(req: ChatRequest): { role: 'system' | 'user' | 'assistant'; content: string }[] {

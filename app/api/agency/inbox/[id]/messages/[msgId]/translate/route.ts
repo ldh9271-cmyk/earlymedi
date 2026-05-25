@@ -105,8 +105,14 @@ export async function POST(
           if (isAnthropicNoise) {
             hint =
               'Gemini 호출 자체가 실패해 Claude 폴백을 시도했지만 ANTHROPIC_API_KEY도 없습니다. ① Google Cloud Console에서 EarlyMedi 프로젝트의 "Generative Language API"가 활성화되어 있는지 확인 (console.cloud.google.com/apis/library/generativelanguage.googleapis.com). ② aistudio.google.com/api-keys 에서 "+ API 키 만들기"로 키를 다시 발급해 새 키로 교체. ③ Vercel Redeploy (캐시 OFF).';
+          } else if (
+            lower.includes('no longer available') ||
+            lower.includes('deprecated')
+          ) {
+            hint =
+              '이 모델은 신규 사용자에게 제공이 중단되었습니다. AI_PRIMARY_MODEL을 gemini-2.5-flash (또는 gemini-2.0-flash) 로 설정해 보세요. 코드 기본값이 이미 변경되어 있다면 Vercel을 Build Cache OFF로 재배포해 주세요.';
           } else if (lower.includes('model') || lower.includes('not found')) {
-            hint = 'AI_PRIMARY_MODEL을 gemini-2.0-flash-001 또는 gemini-1.5-flash-latest로 시도해 보세요.';
+            hint = 'AI_PRIMARY_MODEL을 gemini-2.5-flash 또는 gemini-1.5-flash-latest로 시도해 보세요.';
           } else if (
             lower.includes('api key') ||
             lower.includes('unauthorized') ||
