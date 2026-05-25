@@ -204,7 +204,14 @@ export function Composer({
                   <span className="mt-0.5 shrink-0 rounded-full bg-hospitality-100 px-1.5 py-0.5 text-[9px] font-bold text-hospitality-800">
                     {s.label}
                   </span>
-                  <span className="line-clamp-2 text-foreground/90">{s.text}</span>
+                  {/* Full preview — no line-clamp. Agents need to read the
+                      whole suggestion to compare tones; clipping mid-
+                      sentence ("…한국에서 코 성형에 관심을") made the chips
+                      useless. min-w-0 lets the flex item shrink under the
+                      parent width so long lines wrap instead of overflowing. */}
+                  <span className="min-w-0 flex-1 whitespace-pre-wrap break-words leading-relaxed text-foreground/90">
+                    {s.text}
+                  </span>
                 </button>
               ))}
             </div>
