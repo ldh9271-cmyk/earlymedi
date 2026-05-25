@@ -69,6 +69,32 @@ export function ConversationPane(): JSX.Element {
     queryClient.invalidateQueries({ queryKey: ['inbox'] });
   }, [selectedConversationId, queryClient]);
 
+  // Auto-translate any inbound messages on this conversation that don't
+  // have a Korean translation yet. Fires once per conversation open. Free
+  // for messages created when Gemini is now configured but were skipped
+  // when it wasn't. Best-effort: on failure the operator can still hit
+  // the manual "🌐 번역하기" pill under each bubble.
+  useEffect(() => {
+    if (!selectedConversationId) return;
+    let cancelled = false;
+    fetch(`/api/agency/inbox/${selectedConversationId}/backfill-translations`, {
+      method: 'POST',
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (cancelled || !json) return;
+        if (typeof json.translated === 'number' && json.translated > 0) {
+          // Translations landed — refresh the pane so the new
+          // translation_ko cards show up immediately.
+          queryClient.invalidateQueries({ queryKey: ['conversation', selectedConversationId] });
+        }
+      })
+      .catch(() => {});
+    return (): void => {
+      cancelled = true;
+    };
+  }, [selectedConversationId, queryClient]);
+
   const stageMut = useMutation({
     mutationFn: async (stage: 'lead' | 'qualified' | 'case' | 'quoted' | 'booked' | 'archived') => {
       if (!selectedConversationId) throw new Error('no conversation');

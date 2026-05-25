@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Send, Sparkles, Wand2 } from 'lucide-react';
+import { Send, Sparkles, Wand2, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/shared/ui/button';
 import { useInboxStore } from '@/lib/stores/inbox-store';
@@ -23,6 +23,7 @@ export function Composer({
   contactLocale: string | null;
 }): JSX.Element {
   const [text, setText] = useState('');
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { setAssistantOpen, isAssistantOpen, autoTranslate } = useInboxStore();
   const queryClient = useQueryClient();
@@ -142,48 +143,63 @@ export function Composer({
         </div>
       ) : null}
 
-      {/* AI suggested replies — 3 different tones. Click a chip to drop
-          its text into the textarea. Header's "AI 번역" toggle
-          controls whether the suggestion gets translated on send. */}
+      {/* AI suggested replies — collapsed by default to keep the textarea
+          right next to the conversation. Click the chevron to expand and
+          see the 3 tone-variant cards. */}
       {suggestionsLoading ? (
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
           <Wand2 className="h-3 w-3 animate-pulse text-hospitality-500" />
           AI가 답변을 생각 중…
         </div>
       ) : suggestions && suggestions.length > 0 ? (
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Wand2 className="h-3 w-3 text-hospitality-500" />
-              AI 추천 답변
+        <div className="space-y-1">
+          <button
+            type="button"
+            onClick={() => setSuggestionsExpanded((v) => !v)}
+            className="flex w-full items-center justify-between rounded-md bg-hospitality-50/60 px-2.5 py-1 text-[11px] font-medium text-hospitality-800 transition hover:bg-hospitality-100/60"
+            title={suggestionsExpanded ? '접기' : 'AI 추천 답변 보기'}
+          >
+            <span className="flex items-center gap-1.5">
+              <Wand2 className="h-3 w-3" />
+              AI 추천 답변 {suggestions.length}개
             </span>
-            <button
-              type="button"
-              onClick={() => refetchSuggestions()}
-              className="text-muted-foreground hover:text-foreground"
-              title="다시 추천"
-            >
-              ⟳ 다시
-            </button>
-          </div>
-          <div className="space-y-1">
-            {suggestions.map((s) => (
-              <button
-                key={s.tone}
-                type="button"
-                onClick={() => {
-                  setText(s.text);
-                  textareaRef.current?.focus();
-                }}
-                className="group flex w-full items-start gap-2 rounded-lg border bg-muted/20 px-3 py-2 text-left text-xs transition hover:border-hospitality-300 hover:bg-hospitality-50"
-              >
-                <span className="mt-0.5 shrink-0 rounded-full bg-hospitality-100 px-1.5 py-0.5 text-[9px] font-bold text-hospitality-800">
-                  {s.label}
-                </span>
-                <span className="line-clamp-2 text-foreground/90">{s.text}</span>
-              </button>
-            ))}
-          </div>
+            {suggestionsExpanded ? (
+              <ChevronDown className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronUp className="h-3.5 w-3.5" />
+            )}
+          </button>
+          {suggestionsExpanded ? (
+            <div className="space-y-1 pt-1">
+              <div className="flex items-center justify-end text-[10px] uppercase tracking-wider text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={() => refetchSuggestions()}
+                  className="text-muted-foreground hover:text-foreground"
+                  title="다시 추천"
+                >
+                  ⟳ 다시 추천
+                </button>
+              </div>
+              {suggestions.map((s) => (
+                <button
+                  key={s.tone}
+                  type="button"
+                  onClick={() => {
+                    setText(s.text);
+                    setSuggestionsExpanded(false);
+                    textareaRef.current?.focus();
+                  }}
+                  className="group flex w-full items-start gap-2 rounded-lg border bg-muted/20 px-3 py-2 text-left text-xs transition hover:border-hospitality-300 hover:bg-hospitality-50"
+                >
+                  <span className="mt-0.5 shrink-0 rounded-full bg-hospitality-100 px-1.5 py-0.5 text-[9px] font-bold text-hospitality-800">
+                    {s.label}
+                  </span>
+                  <span className="line-clamp-2 text-foreground/90">{s.text}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
