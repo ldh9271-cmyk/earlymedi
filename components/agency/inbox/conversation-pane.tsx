@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Inbox as InboxIcon, MoreHorizontal, Languages } from 'lucide-react';
+import { toast } from 'sonner';
+import { Inbox as InboxIcon, MoreHorizontal, Languages, RefreshCw } from 'lucide-react';
 import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { ChannelBadge } from './channel-badge';
 import { MessageBubble } from './message-bubble';
@@ -163,6 +164,11 @@ export function ConversationPane(): JSX.Element {
             before delivery; only the translated text reaches the patient. */}
         <AutoTranslateToggle contactLocale={data.conversation.contactLocale} />
 
+        {/* Force re-translate everything on this thread. Useful when
+            translations stored before the maxTokens fix come back as
+            truncated stubs ("안녕하세요,"). */}
+        <RetranslateAllButton conversationId={data.conversation.id} />
+
         <div className="ml-auto flex items-center gap-1.5">
           {STAGES.map((s) => {
             const active = data.conversation.stage === s.key;
@@ -216,6 +222,69 @@ export function ConversationPane(): JSX.Element {
  * sees the Korean original. When the patient is already Korean-speaking
  * the button shows the neutral "ko" state since no translation happens.
  */
+/**
+ * "전체 다시 번역" — POSTs to backfill-translations?force=1 which redoes
+ * every inbound non-Korean message on this thread regardless of whether
+ * a translation already exists. Used when old translations were
+ * truncated by the previous (too-small) maxTokens budget.
+ */
+function RetranslateAllButton({ conversationId }: { conversationId: string }): JSX.Element {
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState(false);
+
+  async function onClick(): Promise<void> {
+    setBusy(true);
+    try {
+      const res = await fetch(
+        `/api/agency/inbox/${conversationId}/backfill-translations?force=1`,
+        { method: 'POST' },
+      );
+      const json = (await res.json().catch(() => ({}))) as {
+        translated?: number;
+        reason?: string;
+        error?: string;
+      };
+      if (!res.ok) {
+        toast.error(json.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      if (json.reason === 'env_missing') {
+        toast.error('GOOGLE_GENERATIVE_AI_API_KEY 미설정');
+        return;
+      }
+      if (typeof json.translated === 'number') {
+        if (json.translated > 0) {
+          toast.success(`${json.translated}개 메시지 재번역 완료`, { duration: 2500 });
+          queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] });
+        } else {
+          toast.message('재번역할 메시지가 없습니다');
+        }
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '재번역 실패');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
+        'border-border bg-card text-muted-foreground hover:border-hospitality-300 hover:bg-hospitality-50 hover:text-hospitality-800',
+        'disabled:cursor-wait disabled:opacity-60',
+      )}
+      title="이 대화방의 모든 외국어 메시지를 다시 번역 (잘린 번역 복구용)"
+    >
+      <RefreshCw className={cn('h-3 w-3', busy && 'animate-spin')} />
+      <span>{busy ? '재번역 중…' : '전체 다시 번역'}</span>
+    </button>
+  );
+}
+
 function AutoTranslateToggle({ contactLocale }: { contactLocale: string | null }): JSX.Element {
   const { autoTranslate, setAutoTranslate } = useInboxStore();
   const patientIsKorean = !contactLocale || contactLocale.startsWith('ko');

@@ -26,12 +26,17 @@ import { callerFromCtx } from '@/lib/ai/router';
  * after this returns so subsequent calls pick up where we left off.
  */
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } },
 ): Promise<Response> {
   if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     return NextResponse.json({ ok: false, reason: 'env_missing', translated: 0 }, { status: 200 });
   }
+
+  // ?force=1 → re-translate ALL inbound non-Korean messages on this thread,
+  // even ones that already have translation_ko set. Used by the "전체 다시
+  // 번역" button to redo old truncated translations after the maxTokens fix.
+  const force = new URL(request.url).searchParams.get('force') === '1';
 
   const access = await tryAccess({ allowedAccountTypes: ['agency'] });
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
@@ -93,8 +98,10 @@ export async function POST(
     };
 
     // Pick the most recent messages on this conversation that look like
-    // they SHOULD be translated but aren't:
+    // they SHOULD be translated but aren't (or, when force=1, all
+    // non-Korean inbound messages regardless of existing translation):
     //   - inbound + non-Korean source AND translation_ko is null
+    //   - OR (force mode) inbound + non-Korean regardless of translation_ko
     const candidates = await db
       .select({
         id: messages.id,
@@ -107,7 +114,7 @@ export async function POST(
           eq(messages.organizationId, access.ctx.orgId),
           eq(messages.conversationId, params.id),
           eq(messages.direction, 'inbound'),
-          isNull(messages.translationKo),
+          ...(force ? [] : [isNull(messages.translationKo)]),
           or(
             isNull(messages.bodyLocale),
             sql`${messages.bodyLocale} <> 'ko'`,
@@ -131,6 +138,8 @@ export async function POST(
         if (!m.body.trim()) return false;
         const r = await translateInboundMessage(caller, m.body, m.bodyLocale ?? undefined, ctx);
         if (!r.translationKo && !r.translationEn) return false;
+        // Force mode skips the isNull guard so old truncated translations
+        // get overwritten with the fresh, context-aware ones.
         await db
           .update(messages)
           .set({
@@ -138,7 +147,11 @@ export async function POST(
             translationEn: r.translationEn,
             bodyLocale: m.bodyLocale ?? r.detectedLocale,
           })
-          .where(and(eq(messages.id, m.id), isNull(messages.translationKo)));
+          .where(
+            force
+              ? eq(messages.id, m.id)
+              : and(eq(messages.id, m.id), isNull(messages.translationKo)),
+          );
         return true;
       }),
     );

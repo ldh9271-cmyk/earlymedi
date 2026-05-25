@@ -90,7 +90,14 @@ export async function translateText(
       system,
       messages,
       temperature: 0.2,
-      maxTokens: Math.min(2000, Math.ceil(text.length * 3)),
+      // Always generous — translations were being truncated to "안녕하세요"
+      // when the source was a short non-Latin string (Chinese / Russian)
+      // because the old formula `text.length * 3` underestimated how
+      // many Korean tokens are needed. A short Chinese sentence costs
+      // ~10 input tokens but a faithful Korean rendering can be 60+
+      // tokens. Cap at 4096 to stay well within Gemini's free-tier
+      // per-request output limit while giving the model plenty of headroom.
+      maxTokens: 4096,
     });
     const out = res.text.trim();
     return out || null;

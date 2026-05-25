@@ -122,12 +122,25 @@ export function MessageBubble({ message }: { message: BubbleMessage }): JSX.Elem
 
       {/* AI translation bubble — same size as the primary bubble so the
           conversation reads like a normal chat thread. A small "AI 번역"
-          chip floats above identifying the source. */}
+          chip floats above identifying the source. A "다시 번역" link sits
+          to the right so an operator can force-refresh a translation that
+          looks truncated/wrong (older rows were capped at ~120 tokens by
+          a stale formula before we raised maxTokens to 4096). */}
       {showInboundTranslation ? (
         <>
-          <span className="flex items-center gap-1 text-[10px] font-medium text-hospitality-700/80">
+          <span className="flex items-center gap-1.5 text-[10px] font-medium text-hospitality-700/80">
             <Languages className="h-3 w-3" />
             AI 번역 {sourceLabel ? `· ${sourceLabel} → KO` : '· KO'}
+            <button
+              type="button"
+              onClick={handleRetryTranslate}
+              disabled={retrying}
+              className="ml-1 inline-flex items-center gap-0.5 rounded px-1 text-hospitality-700/70 hover:bg-hospitality-100 hover:text-hospitality-900 disabled:opacity-50"
+              title="이 번역이 잘리거나 어색하면 다시 번역"
+            >
+              <RefreshCw className={cn('h-2.5 w-2.5', retrying && 'animate-spin')} />
+              {retrying ? '…' : '다시'}
+            </button>
           </span>
           <div className="max-w-[78%] rounded-2xl rounded-bl-md border border-hospitality-200 bg-hospitality-50 px-3 py-2 text-sm leading-relaxed text-hospitality-950 shadow-sm">
             <div className="whitespace-pre-wrap break-words">{message.translationKo}</div>
