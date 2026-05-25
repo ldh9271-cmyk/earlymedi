@@ -6,6 +6,7 @@ import { tryAccess } from '@/lib/auth/route-guards';
 import { withRls } from '@/lib/auth/rls-context';
 import { db } from '@/lib/db/client';
 import { messages } from '@/drizzle/schema/messages';
+import { conversations } from '@/drizzle/schema/conversations';
 import { translateInboundMessage } from '@/lib/ai/translation';
 import { callerFromCtx } from '@/lib/ai/router';
 
@@ -36,13 +37,64 @@ export async function POST(
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
 
   return await withRls(access.ctx, async () => {
+    // Fetch the conversation's contact info so the prompt can use it for
+    // tone/honorific decisions.
+    const [conv] = await db
+      .select({
+        contactDisplayName: conversations.contactDisplayName,
+        contactCountryCode: conversations.contactCountryCode,
+        contactLocale: conversations.contactLocale,
+      })
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.id, params.id),
+          eq(conversations.organizationId, access.ctx.orgId),
+        ),
+      )
+      .limit(1);
+
+    // Fetch the last 6 already-translated messages as conversation
+    // context. Backfill candidates use this so the AI doesn't keep
+    // re-translating the same procedure name three different ways.
+    const historyRows = await db
+      .select({
+        direction: messages.direction,
+        body: messages.body,
+        bodyLocale: messages.bodyLocale,
+        translationKo: messages.translationKo,
+      })
+      .from(messages)
+      .where(
+        and(
+          eq(messages.organizationId, access.ctx.orgId),
+          eq(messages.conversationId, params.id),
+        ),
+      )
+      .orderBy(desc(messages.sentAt))
+      .limit(6);
+    const history = historyRows.reverse().map((m) => ({
+      direction: (m.direction === 'outbound' ? 'outbound' : 'inbound') as
+        | 'inbound'
+        | 'outbound',
+      body: m.body,
+      bodyLocale: m.bodyLocale,
+      translationKo: m.translationKo,
+    }));
+    const ctx = {
+      history,
+      contact: conv
+        ? {
+            displayName: conv.contactDisplayName,
+            countryCode: conv.contactCountryCode,
+            locale: conv.contactLocale,
+          }
+        : undefined,
+    };
+
     // Pick the most recent messages on this conversation that look like
     // they SHOULD be translated but aren't:
     //   - inbound + non-Korean source AND translation_ko is null
-    //   - OR outbound + Korean source AND translation_en is null (so
-    //     the operator's own Korean reply gets an English mirror for
-    //     review). We skip outbound translation backfill for now to
-    //     avoid double-billing — only inbound is the visible win.
     const candidates = await db
       .select({
         id: messages.id,
@@ -77,7 +129,7 @@ export async function POST(
     const results = await Promise.allSettled(
       candidates.map(async (m) => {
         if (!m.body.trim()) return false;
-        const r = await translateInboundMessage(caller, m.body, m.bodyLocale ?? undefined);
+        const r = await translateInboundMessage(caller, m.body, m.bodyLocale ?? undefined, ctx);
         if (!r.translationKo && !r.translationEn) return false;
         await db
           .update(messages)

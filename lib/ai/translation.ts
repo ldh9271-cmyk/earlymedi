@@ -1,6 +1,9 @@
 import 'server-only';
 import { aiChat, type callerFromCtx } from './router';
-import { buildTranslationMessages } from './prompts/translation';
+import {
+  buildTranslationMessages,
+  type ConversationContextMsg,
+} from './prompts/translation';
 
 type Caller = ReturnType<typeof callerFromCtx>;
 
@@ -15,7 +18,6 @@ export function detectLocale(text: string): 'ko' | 'en' | 'other' {
   let latin = 0;
   for (let i = 0; i < text.length; i++) {
     const code = text.charCodeAt(i);
-    // Hangul syllables block (AC00-D7AF) + Hangul Jamo (1100-11FF) + Compat (3130-318F)
     if (
       (code >= 0xac00 && code <= 0xd7af) ||
       (code >= 0x1100 && code <= 0x11ff) ||
@@ -23,8 +25,8 @@ export function detectLocale(text: string): 'ko' | 'en' | 'other' {
     ) {
       hangul++;
     } else if (
-      (code >= 0x41 && code <= 0x5a) || // A-Z
-      (code >= 0x61 && code <= 0x7a) // a-z
+      (code >= 0x41 && code <= 0x5a) ||
+      (code >= 0x61 && code <= 0x7a)
     ) {
       latin++;
     }
@@ -34,28 +36,42 @@ export function detectLocale(text: string): 'ko' | 'en' | 'other' {
   return 'other';
 }
 
+export type TranslationContext = {
+  /** Recent conversation history, oldest-first. Used to keep terminology
+   *  consistent across the thread. */
+  history?: ConversationContextMsg[];
+  /** Patient metadata so the AI can pick the right honorifics/register. */
+  contact?: {
+    displayName?: string | null;
+    countryCode?: string | null;
+    locale?: string | null;
+  };
+  /** Optional org-defined glossary (medical term → preferred translation). */
+  glossarySnippet?: string;
+};
+
 /**
  * Translate `text` into `targetLocale` using the AI router (Gemini primary,
- * Claude fallback). Auto-detects source locale when `sourceLocale` is omitted.
+ * Claude fallback). Context-aware: when called with `ctx.history`, the
+ * prompt includes the last few messages so the model keeps the same
+ * vocabulary and tone across turns.
  *
- * Two return modes via the `throwOnError` flag:
- *   - false (default): null on failure (best-effort path used by
+ * Two error modes:
+ *   - default: null on failure (best-effort path used by
  *     translateInboundMessage so a Gemini outage never blocks message
  *     persistence)
- *   - true: re-throws the underlying provider error, so the manual
- *     "다시 번역" button can show what's actually wrong (model not
- *     found, key invalid, quota, etc.)
+ *   - throwOnError=true: re-throws so the manual "다시 번역" button can
+ *     surface what's actually wrong
  */
 export async function translateText(
   caller: Caller,
   text: string,
   targetLocale: 'ko' | 'en',
   sourceLocale?: string,
-  options?: { throwOnError?: boolean },
+  options?: { throwOnError?: boolean; ctx?: TranslationContext },
 ): Promise<string | null> {
   if (!text.trim()) return null;
 
-  // Skip work if source and target are the same language already.
   const detected = sourceLocale ?? detectLocale(text);
   if (detected === targetLocale) return null;
 
@@ -64,6 +80,9 @@ export async function translateText(
     sourceLocale: sourceLocale ?? detected,
     targetLocale,
     domain: 'medical',
+    conversationContext: options?.ctx?.history,
+    contactHint: options?.ctx?.contact,
+    glossarySnippet: options?.ctx?.glossarySnippet,
   });
 
   try {
@@ -86,20 +105,21 @@ export async function translateText(
 /**
  * Translate an inbound message into BOTH Korean (for staff) and English
  * (for non-Korean staff) when those aren't already the source language.
- * Returns whichever fields were filled — pass them straight to the
- * messages.translationKo / translationEn columns.
+ *
+ * Pass `ctx.history` (oldest-first) to make the translation consistent
+ * with previous turns in the conversation.
  */
 export async function translateInboundMessage(
   caller: Caller,
   text: string,
   sourceLocale?: string,
+  ctx?: TranslationContext,
 ): Promise<{ translationKo: string | null; translationEn: string | null; detectedLocale: 'ko' | 'en' | 'other' }> {
   const detected = sourceLocale ? (sourceLocale as 'ko' | 'en' | 'other') : detectLocale(text);
 
-  // Parallel translation for the languages we *don't* already have.
   const [koPromise, enPromise] = [
-    detected === 'ko' ? Promise.resolve<string | null>(null) : translateText(caller, text, 'ko', detected),
-    detected === 'en' ? Promise.resolve<string | null>(null) : translateText(caller, text, 'en', detected),
+    detected === 'ko' ? Promise.resolve<string | null>(null) : translateText(caller, text, 'ko', detected, { ctx }),
+    detected === 'en' ? Promise.resolve<string | null>(null) : translateText(caller, text, 'en', detected, { ctx }),
   ];
 
   const [translationKo, translationEn] = await Promise.all([koPromise, enPromise]);

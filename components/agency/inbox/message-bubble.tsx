@@ -120,15 +120,19 @@ export function MessageBubble({ message }: { message: BubbleMessage }): JSX.Elem
         <div className="whitespace-pre-wrap break-words">{message.body}</div>
       </div>
 
-      {/* AI translation row */}
+      {/* AI translation bubble — same size as the primary bubble so the
+          conversation reads like a normal chat thread. A small "AI 번역"
+          chip floats above identifying the source. */}
       {showInboundTranslation ? (
-        <div className="max-w-[78%] rounded-2xl bg-hospitality-50/80 px-3 py-1.5 text-xs leading-relaxed text-hospitality-900">
-          <div className="mb-0.5 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-hospitality-700/80">
-            <Languages className="h-2.5 w-2.5" />
+        <>
+          <span className="flex items-center gap-1 text-[10px] font-medium text-hospitality-700/80">
+            <Languages className="h-3 w-3" />
             AI 번역 {sourceLabel ? `· ${sourceLabel} → KO` : '· KO'}
+          </span>
+          <div className="max-w-[78%] rounded-2xl rounded-bl-md border border-hospitality-200 bg-hospitality-50 px-3 py-2 text-sm leading-relaxed text-hospitality-950 shadow-sm">
+            <div className="whitespace-pre-wrap break-words">{message.translationKo}</div>
           </div>
-          <div className="whitespace-pre-wrap break-words">{message.translationKo}</div>
-        </div>
+        </>
       ) : inboundNeedsTranslation ? (
         // Translation hasn't landed yet — show a retry button with the
         // language hint so the operator can fire it manually.
@@ -145,13 +149,15 @@ export function MessageBubble({ message }: { message: BubbleMessage }): JSX.Elem
       ) : null}
 
       {showOutboundOriginal ? (
-        <div className="max-w-[78%] rounded-2xl bg-brand-50/70 px-3 py-1.5 text-xs leading-relaxed text-brand-900">
-          <div className="mb-0.5 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-brand-700/80">
-            <Languages className="h-2.5 w-2.5" />
+        <>
+          <span className="flex items-center gap-1 text-[10px] font-medium text-brand-700/80">
+            <Languages className="h-3 w-3" />
             내 한국어 원문
+          </span>
+          <div className="max-w-[78%] rounded-2xl rounded-br-md border border-brand-200 bg-brand-50 px-3 py-2 text-sm leading-relaxed text-brand-950 shadow-sm">
+            <div className="whitespace-pre-wrap break-words">{message.translationKo}</div>
           </div>
-          <div className="whitespace-pre-wrap break-words">{message.translationKo}</div>
-        </div>
+        </>
       ) : null}
 
       {/* Footer row: timestamp + status + risk flags */}

@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { channels } from '@/drizzle/schema/channels';
 import { conversations } from '@/drizzle/schema/conversations';
@@ -121,11 +121,38 @@ export async function routeIncomingMessage(input: IncomingMessage): Promise<Rout
     .returning({ id: messages.id });
   if (!msg) throw new Error('message_create_failed');
 
-  // 3b. Real-time AI translation (best-effort). Runs in the same request
-  //     so the next /api/agency/inbox poll returns translations attached.
+  // 3b. Real-time AI translation (best-effort). Context-aware: we fetch
+  //     the last 6 messages on this conversation so the model keeps the
+  //     same terminology (e.g. "코 성형" vs "rhinoplasty") across turns.
   //     Failures are swallowed — message stays visible without translation
   //     rather than blocking inbox display.
   try {
+    const historyRows = await db
+      .select({
+        direction: messages.direction,
+        body: messages.body,
+        bodyLocale: messages.bodyLocale,
+        translationKo: messages.translationKo,
+      })
+      .from(messages)
+      .where(
+        and(
+          eq(messages.organizationId, input.organizationId),
+          eq(messages.conversationId, conversationId),
+        ),
+      )
+      .orderBy(desc(messages.sentAt))
+      .limit(6);
+    const history = historyRows
+      .filter((m) => m.body && m.body !== input.body)
+      .reverse()
+      .map((m) => ({
+        direction: (m.direction === 'outbound' ? 'outbound' : 'inbound') as 'inbound' | 'outbound',
+        body: m.body,
+        bodyLocale: m.bodyLocale,
+        translationKo: m.translationKo,
+      }));
+
     const result = await translateInboundMessage(
       callerFromCtx({ orgId: input.organizationId, userId: null }, {
         entityType: 'message',
@@ -133,6 +160,14 @@ export async function routeIncomingMessage(input: IncomingMessage): Promise<Rout
       }),
       input.body,
       input.bodyLocale,
+      {
+        history,
+        contact: {
+          displayName: input.contact.displayName ?? null,
+          countryCode: input.contact.countryCode ?? null,
+          locale: input.contact.locale ?? null,
+        },
+      },
     );
     if (result.translationKo || result.translationEn) {
       await db
