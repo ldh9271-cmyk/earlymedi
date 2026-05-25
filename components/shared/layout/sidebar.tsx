@@ -70,20 +70,29 @@ export function Sidebar({
               </div>
             ) : null}
             <ul className="space-y-0.5">
-              {section.items.map((item) => (
-                <li key={item.href}>
-                  <SidebarLink
-                    href={item.href}
-                    label={item.label}
-                    Icon={item.icon}
-                    badge={item.badge}
-                    fallbackActive={
-                      !!currentPath &&
-                      (currentPath === item.href || currentPath.startsWith(`${item.href}/`))
-                    }
-                  />
-                </li>
-              ))}
+              {section.items.map((item) => {
+                // Pre-render the icon to a JSX node on the SERVER. React
+                // elements ARE serializable across the server→client
+                // boundary; passing the raw LucideIcon component function
+                // is not, and crashes the page with "Application error".
+                const Icon = item.icon;
+                const iconNode = <Icon className="h-4 w-4 shrink-0" />;
+                return (
+                  <li key={item.href}>
+                    <SidebarLink
+                      href={item.href}
+                      label={item.label}
+                      iconNode={iconNode}
+                      badge={item.badge}
+                      fallbackActive={
+                        !!currentPath &&
+                        (currentPath === item.href ||
+                          currentPath.startsWith(`${item.href}/`))
+                      }
+                    />
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ))}
