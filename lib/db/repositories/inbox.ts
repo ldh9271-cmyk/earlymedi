@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '../client';
 import { conversations } from '@/drizzle/schema/conversations';
 import { channels } from '@/drizzle/schema/channels';
@@ -47,14 +47,18 @@ export async function listInboxConversations(
     eq(conversations.isArchived, false),
   ];
 
+  // Use drizzle's inArray() helper — sql`= ANY(${jsArray})` doesn't
+  // serialize JS arrays to a Postgres array literal (postgres-js complains
+  // 'malformed array literal: "kakao"'). inArray expands to (a IN (b,c,d))
+  // which postgres-js parameterises correctly.
   if (filter.channelKinds && filter.channelKinds.length > 0) {
-    whereParts.push(sql`${channels.kind} = ANY(${filter.channelKinds})`);
+    whereParts.push(inArray(channels.kind, filter.channelKinds));
   }
   if (filter.stages && filter.stages.length > 0) {
-    whereParts.push(sql`${conversations.stage} = ANY(${filter.stages})`);
+    whereParts.push(inArray(conversations.stage, filter.stages));
   }
   if (filter.countryCodes && filter.countryCodes.length > 0) {
-    whereParts.push(sql`${conversations.contactCountryCode} = ANY(${filter.countryCodes})`);
+    whereParts.push(inArray(conversations.contactCountryCode, filter.countryCodes));
   }
   if (filter.unreadOnly) {
     whereParts.push(sql`${conversations.unreadCount} > 0`);
