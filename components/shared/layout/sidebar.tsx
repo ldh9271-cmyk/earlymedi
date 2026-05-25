@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { Logo } from '@/components/shared/brand/logo';
@@ -26,8 +29,13 @@ export function Sidebar({
   accountType: AccountType;
   orgName: string;
   sections: SidebarSection[];
-  currentPath: string;
+  /** Server-side fallback only — the real active path is read from
+   *  usePathname() so client-side navigation between menu items keeps
+   *  the highlight in sync without a server round-trip. */
+  currentPath?: string;
 }): JSX.Element {
+  const livePathname = usePathname();
+  const path = livePathname ?? currentPath ?? '';
   const accentClass = {
     agency: 'border-l-brand-600',
     freelancer: 'border-l-hospitality-500',
@@ -62,8 +70,7 @@ export function Sidebar({
             ) : null}
             <ul className="space-y-0.5">
               {section.items.map((item) => {
-                const active =
-                  currentPath === item.href || currentPath.startsWith(`${item.href}/`);
+                const active = path === item.href || path.startsWith(`${item.href}/`);
                 return (
                   <li key={item.href}>
                     <Link
