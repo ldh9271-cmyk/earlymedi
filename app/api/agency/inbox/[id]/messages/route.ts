@@ -56,9 +56,14 @@ export async function POST(request: Request, { params }: { params: { id: string 
     if (!conv) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
     // 0. (Optional) AI translation: when the agent typed Korean but the
-    //    patient's contactLocale isn't Korean, translate before delivery.
-    //    The original Korean is preserved in translationKo for the agent
-    //    to see; the translated text becomes the outbound body.
+    //    patient's contactLocale isn't Korean, translate INTO the patient's
+    //    actual language (zh / ja / ru / en / ...) before delivery. The
+    //    agent's original Korean is preserved in translationKo so the
+    //    inbox shows what they actually wrote under the outbound bubble.
+    //
+    //    History: this used to hard-clamp `target` to 'en' for every non-
+    //    Korean patient — Chinese patients received English replies. Now
+    //    patientLocale flows through unchanged.
     const agentLocale = parsed.data.bodyLocale;
     const patientLocale = conv.contactLocale ?? null;
     let outboundBody = parsed.data.body;
@@ -66,24 +71,29 @@ export async function POST(request: Request, { params }: { params: { id: string 
     let translationKoForRow: string | null = null;
     let translationEnForRow: string | null = null;
 
-    if (parsed.data.translateBeforeSend && patientLocale && patientLocale !== agentLocale) {
-      const target: 'ko' | 'en' = patientLocale.startsWith('ko') ? 'ko' : 'en';
+    const baseTag = (s: string): string =>
+      s.split(/[-_]/)[0]?.toLowerCase() ?? s.toLowerCase();
+
+    if (
+      parsed.data.translateBeforeSend &&
+      patientLocale &&
+      baseTag(patientLocale) !== baseTag(agentLocale)
+    ) {
       const translated = await translateText(
         callerFromCtx(access.ctx, { entityType: 'message' }),
         parsed.data.body,
-        target,
+        patientLocale,
         agentLocale,
       );
       if (translated) {
         outboundBody = translated;
-        outboundLocale = target;
-        // Preserve the original so the agent sees what they actually wrote.
-        if (agentLocale.startsWith('ko')) translationKoForRow = parsed.data.body;
-        if (agentLocale.startsWith('en')) translationEnForRow = parsed.data.body;
-        // And mirror the translated text into the *other* lookup column
-        // so the conversation pane can flip between original/translation.
-        if (target === 'ko') translationKoForRow = translated;
-        if (target === 'en') translationEnForRow = translated;
+        outboundLocale = patientLocale;
+        // Keep the agent's original so the "내 한국어 원문" card under the
+        // outbound bubble shows what they actually typed. Only ko/en have
+        // dedicated columns; for other agent source languages the original
+        // would simply not be displayed (rare — agents work in Korean).
+        if (baseTag(agentLocale) === 'ko') translationKoForRow = parsed.data.body;
+        else if (baseTag(agentLocale) === 'en') translationEnForRow = parsed.data.body;
       }
     } else {
       // No outbound translation — but auto-fill the opposite-language

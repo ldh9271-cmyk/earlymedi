@@ -12,6 +12,12 @@ type Caller = ReturnType<typeof callerFromCtx>;
  * Fast, deterministic, no API call. Returns the more probable BCP-47
  * locale tag (ko / en / other) without committing to non-Korean specifics.
  */
+/** Normalize a BCP-47 tag to its base language tag for equality checks
+ *  ('zh' / 'zh-CN' / 'zh-Hans' all become 'zh'). */
+function baseTag(loc: string): string {
+  return loc.split(/[-_]/)[0]?.toLowerCase() ?? loc.toLowerCase();
+}
+
 export function detectLocale(text: string): 'ko' | 'en' | 'other' {
   if (!text) return 'other';
   let hangul = 0;
@@ -56,6 +62,13 @@ export type TranslationContext = {
  * prompt includes the last few messages so the model keeps the same
  * vocabulary and tone across turns.
  *
+ * `targetLocale` accepts any BCP-47 base or region tag — 'ko', 'en',
+ * 'zh', 'zh-CN', 'ja', 'ru', etc. — and Gemini handles the rendering.
+ * It was previously typed `'ko' | 'en'`, which silently funneled every
+ * non-Korean patient (Chinese / Japanese / Russian) into English on the
+ * outbound auto-translate path. Now the patient's contactLocale flows
+ * through unchanged.
+ *
  * Two error modes:
  *   - default: null on failure (best-effort path used by
  *     translateInboundMessage so a Gemini outage never blocks message
@@ -66,14 +79,18 @@ export type TranslationContext = {
 export async function translateText(
   caller: Caller,
   text: string,
-  targetLocale: 'ko' | 'en',
+  targetLocale: string,
   sourceLocale?: string,
   options?: { throwOnError?: boolean; ctx?: TranslationContext },
 ): Promise<string | null> {
   if (!text.trim()) return null;
 
   const detected = sourceLocale ?? detectLocale(text);
-  if (detected === targetLocale) return null;
+  // Compare base tags so 'zh' / 'zh-CN' / 'zh-Hans' are treated as the
+  // same language and we don't waste an API call re-translating to
+  // itself. detectLocale returns only 'ko' | 'en' | 'other', so for
+  // exotic source languages the 'other' side never collides.
+  if (baseTag(detected) === baseTag(targetLocale)) return null;
 
   const { system, messages } = buildTranslationMessages({
     text,
