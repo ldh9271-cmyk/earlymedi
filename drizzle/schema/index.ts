@@ -42,3 +42,6 @@ export * from './visa';
 // Phase 8 — aftercare
 export * from './recovery-enums';
 export * from './recovery';
+
+// Partner facilities & availability (non-medical partners' inventory)
+export * from './partner-facilities';

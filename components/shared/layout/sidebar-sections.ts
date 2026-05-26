@@ -149,7 +149,8 @@ export const partnerSections: SidebarSection[] = [
       { href: '/partner/inbox', label: '통합 인박스', icon: Inbox },
       { href: '/partner/channels', label: '채널 연결', icon: Plug },
       { href: '/partner/bookings', label: '부킹', icon: TicketCheck },
-      { href: '/partner/availability', label: '가용성', icon: Calendar },
+      { href: '/partner/facilities', label: '시설 등록', icon: Hospital },
+      { href: '/partner/availability', label: '가용성 캘린더', icon: Calendar },
     ],
   },
   {
