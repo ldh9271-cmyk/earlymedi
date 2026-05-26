@@ -35,17 +35,24 @@ function buildSchema(alreadyAuthed: boolean) {
       .min(8, '연락처를 입력해 주세요')
       .max(40)
       .regex(/^[0-9+\-\s()]+$/, '숫자·+·-·괄호만 사용해 주세요'),
+    // gender + birthYear are optional analytics fields. react-hook-form
+    // returns `null` for an unchecked radio group (not undefined!), so
+    // we need .nullable() on top of .optional() to accept both. Without
+    // it the form silently fails with "Expected 'male'|'female'|...,
+    // received null" — which is exactly what bit us before.
     gender: z
       .union([
         z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
         z.literal(''),
       ])
+      .nullable()
       .optional(),
     birthYear: z
       .union([
         z.string().regex(/^\d{4}$/, '4자리 연도 (예: 1990)'),
         z.literal(''),
       ])
+      .nullable()
       .optional(),
   };
 
