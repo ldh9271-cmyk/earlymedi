@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
@@ -168,6 +169,47 @@ export function QuickSignupForm({
   const accountType = watch('accountType');
   const showPartnerSubtype = accountType === 'non_medical';
 
+  /**
+   * Called by handleSubmit when validation FAILS. Without this, react-hook-
+   * form just silently refuses to fire onSubmit, leaving the operator to
+   * stare at an unresponsive button. We surface a toast + scroll to the
+   * first error so the failure mode is never silent.
+   */
+  function onInvalid(formErrors: FieldErrors<FormValues>): void {
+    const labels: Record<string, string> = {
+      accountType: '카테고리',
+      orgName: '회사 이름',
+      representativeName: '담당자 이름',
+      contactPhone: '연락처',
+      email: '이메일',
+      password: '비밀번호',
+      passwordConfirm: '비밀번호 확인',
+      birthYear: '출생연도',
+    };
+    const missingFields = Object.keys(formErrors).filter((k) => labels[k]);
+    if (missingFields.length > 0) {
+      const list = missingFields.map((k) => labels[k]).join(', ');
+      toast.error(`입력을 확인해 주세요: ${list}`, { duration: 6000 });
+    } else {
+      toast.error('입력 양식에 오류가 있습니다. 빨간 메시지를 확인해 주세요.');
+    }
+    // Scroll the first error into view so the message is visible.
+    const firstErrorKey = Object.keys(formErrors)[0];
+    if (firstErrorKey) {
+      const ids: Record<string, string> = {
+        orgName: 'orgName',
+        representativeName: 'representativeName',
+        contactPhone: 'contactPhone',
+        email: 'signup-email',
+        password: 'signup-password',
+        passwordConfirm: 'signup-password-confirm',
+        birthYear: 'birthYear',
+      };
+      const id = ids[firstErrorKey];
+      if (id) document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
   function onSubmit(values: FormValues): void {
     setServerError(null);
     startTransition(async () => {
@@ -242,7 +284,7 @@ export function QuickSignupForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-5">
       {/* Account type selection */}
       <div className="space-y-2">
         <Label>카테고리 선택</Label>
@@ -458,6 +500,39 @@ export function QuickSignupForm({
           </p>
         </div>
       )}
+
+      {/* Validation summary — surfaces ALL field errors in one place so
+          the operator never has to hunt for why submit isn't progressing. */}
+      {Object.keys(errors).length > 0 ? (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
+          <div className="flex items-center gap-1.5 font-semibold text-destructive">
+            <AlertCircle className="h-3.5 w-3.5" />
+            아래 항목을 확인해 주세요
+          </div>
+          <ul className="mt-1 list-disc pl-5 text-xs text-destructive/90">
+            {Object.entries(errors).map(([key, err]) => {
+              const label =
+                ({
+                  accountType: '카테고리',
+                  orgName: '회사 이름',
+                  representativeName: '담당자 이름',
+                  contactPhone: '연락처',
+                  email: '이메일',
+                  password: '비밀번호',
+                  passwordConfirm: '비밀번호 확인',
+                  birthYear: '출생연도',
+                } as Record<string, string>)[key] ?? key;
+              const msg =
+                (err as { message?: string } | undefined)?.message ?? '값을 확인해 주세요';
+              return (
+                <li key={key}>
+                  <strong>{label}</strong>: {msg}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
 
       {serverError ? (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
