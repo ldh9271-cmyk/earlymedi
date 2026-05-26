@@ -34,6 +34,7 @@ export const PUBLIC_PREFIXES = [
   '/signup',
   '/select-org',
   '/master', // master account control panel — does its own auth check inside
+  '/account', // password reset / profile pages — public so reset emails work even without an active-org cookie
   '/invite',
   '/verify-email',
   '/api/auth',
