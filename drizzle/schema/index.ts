@@ -45,3 +45,5 @@ export * from './recovery';
 
 // Partner facilities & availability (non-medical partners' inventory)
 export * from './partner-facilities';
+// Partner services / menu (priced add-on items)
+export * from './partner-services';
