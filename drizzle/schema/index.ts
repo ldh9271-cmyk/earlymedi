@@ -47,3 +47,5 @@ export * from './recovery';
 export * from './partner-facilities';
 // Partner services / menu (priced add-on items)
 export * from './partner-services';
+// Partner bookings (reservations referencing facilities + services)
+export * from './partner-bookings';
