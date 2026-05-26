@@ -20,6 +20,7 @@ export default async function FreelancerLayout({ children }: { children: React.R
       userEmail={ctx.email}
       sections={freelancerSections}
       currentPath={pathname}
+      isMaster={ctx.isMaster}
     >
       {children}
     </AppShell>

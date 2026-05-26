@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation';
-import { eq } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { db } from '@/lib/db/client';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { organizations } from '@/drizzle/schema/organizations';
 import { ACCOUNT_TYPE_COLOR, ACCOUNT_TYPE_LABEL_KO, ACCOUNT_TYPE_TO_PREFIX } from '@/lib/auth/account-types';
+import { isMasterEmail } from '@/lib/auth/master';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
@@ -26,6 +27,8 @@ export default async function SelectOrgPage({
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
 
+  const isMaster = isMasterEmail(auth.user.email ?? '');
+
   // Graceful fallback: if DATABASE_URL is missing or the schema hasn't been
   // migrated yet (fresh Supabase project), don't crash the page — show the
   // empty state so the user can still see a working login flow.
@@ -38,17 +41,36 @@ export default async function SelectOrgPage({
   }> = [];
   let dbError: string | null = null;
   try {
-    memberships = await db
-      .select({
-        orgId: organizations.id,
-        orgName: organizations.name,
-        accountType: organizations.accountType,
-        role: orgMemberships.role,
-        status: orgMemberships.status,
-      })
-      .from(orgMemberships)
-      .innerJoin(organizations, eq(orgMemberships.organizationId, organizations.id))
-      .where(eq(orgMemberships.userId, auth.user.id));
+    if (isMaster) {
+      // Master sees ALL organizations regardless of org_memberships rows.
+      // We synthesize the same shape the normal path produces so the
+      // render code below doesn't have to branch.
+      const allOrgs = await db
+        .select({
+          orgId: organizations.id,
+          orgName: organizations.name,
+          accountType: organizations.accountType,
+        })
+        .from(organizations)
+        .orderBy(asc(organizations.accountType), asc(organizations.name));
+      memberships = allOrgs.map((o) => ({
+        ...o,
+        role: 'master',
+        status: 'active',
+      }));
+    } else {
+      memberships = await db
+        .select({
+          orgId: organizations.id,
+          orgName: organizations.name,
+          accountType: organizations.accountType,
+          role: orgMemberships.role,
+          status: orgMemberships.status,
+        })
+        .from(orgMemberships)
+        .innerJoin(organizations, eq(orgMemberships.organizationId, organizations.id))
+        .where(eq(orgMemberships.userId, auth.user.id));
+    }
   } catch (err) {
     dbError = err instanceof Error ? err.message : 'unknown DB error';
     // eslint-disable-next-line no-console
@@ -61,12 +83,18 @@ export default async function SelectOrgPage({
     return (
       <EmptyState
         icon={Building2}
-        title="가입된 조직이 없습니다"
-        description="간편 가입(30초)으로 첫 조직을 만드세요. 환자 10명까지 무료 체험."
+        title={isMaster ? '플랫폼에 조직이 아직 없습니다' : '가입된 조직이 없습니다'}
+        description={
+          isMaster
+            ? '마스터 모드입니다. 조직이 한 곳이라도 생성되면 모두 여기에 표시됩니다.'
+            : '간편 가입(30초)으로 첫 조직을 만드세요. 환자 10명까지 무료 체험.'
+        }
         action={
-          <Link href="/signup">
-            <Button variant="brand">간편 가입하고 시작하기 →</Button>
-          </Link>
+          isMaster ? undefined : (
+            <Link href="/signup">
+              <Button variant="brand">간편 가입하고 시작하기 →</Button>
+            </Link>
+          )
         }
       />
     );
@@ -75,11 +103,24 @@ export default async function SelectOrgPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">활성 조직 선택</h1>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {isMaster ? '마스터 모드 — 조직 선택' : '활성 조직 선택'}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          한 사용자가 여러 카테고리의 조직에 소속될 수 있습니다. 들어갈 조직을 선택하세요.
+          {isMaster
+            ? `플랫폼의 모든 조직 ${active.length}개가 표시됩니다. 선택한 조직의 owner 권한으로 진입합니다.`
+            : '한 사용자가 여러 카테고리의 조직에 소속될 수 있습니다. 들어갈 조직을 선택하세요.'}
         </p>
       </div>
+
+      {isMaster ? (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm">
+          <span className="font-semibold text-destructive">🔐 마스터 모드 활성</span>
+          <span className="ml-2 text-destructive/80">
+            모든 조직 데이터에 owner 권한으로 접근합니다. 모든 동작은 audit log에 기록됩니다.
+          </span>
+        </div>
+      ) : null}
 
       {searchParams.denied ? (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">

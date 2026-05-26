@@ -20,6 +20,7 @@ export default async function MedicalLayout({ children }: { children: React.Reac
       userEmail={ctx.email}
       sections={medicalSections}
       currentPath={pathname}
+      isMaster={ctx.isMaster}
     >
       {children}
     </AppShell>

@@ -20,6 +20,7 @@ export default async function PartnerLayout({ children }: { children: React.Reac
       userEmail={ctx.email}
       sections={partnerSections}
       currentPath={pathname}
+      isMaster={ctx.isMaster}
     >
       {children}
     </AppShell>

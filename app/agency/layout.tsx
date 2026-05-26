@@ -20,6 +20,7 @@ export default async function AgencyLayout({ children }: { children: React.React
       userEmail={ctx.email}
       sections={agencySections}
       currentPath={pathname}
+      isMaster={ctx.isMaster}
     >
       {children}
     </AppShell>

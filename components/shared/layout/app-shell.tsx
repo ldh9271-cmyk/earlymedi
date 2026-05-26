@@ -1,5 +1,6 @@
 import { Sidebar, type SidebarSection } from './sidebar';
 import { Topbar } from './topbar';
+import { MasterBanner } from './master-banner';
 import { TrialBanner } from '@/components/shared/trial-banner';
 import type { AccountType } from '@/lib/auth/account-types';
 
@@ -11,6 +12,7 @@ export function AppShell({
   userName,
   sections,
   currentPath,
+  isMaster,
   children,
 }: {
   accountType: AccountType;
@@ -21,6 +23,10 @@ export function AppShell({
   userName?: string;
   sections: SidebarSection[];
   currentPath: string;
+  /** True when the authenticated user is on the MASTER_EMAILS allowlist
+   *  and is impersonating this org. Renders a red banner above all other
+   *  content so the operator never forgets they're acting cross-tenant. */
+  isMaster?: boolean;
   children: React.ReactNode;
 }): JSX.Element {
   return (
@@ -33,6 +39,9 @@ export function AppShell({
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar accountType={accountType} userEmail={userEmail} userName={userName} />
+        {/* Master banner sits ABOVE the trial banner so the cross-tenant
+            warning is the first thing the operator sees. */}
+        {isMaster ? <MasterBanner orgName={orgName} accountType={accountType} /> : null}
         {/* Trial banner lives as its own slim bar between Topbar and main so
             full-height pages (e.g. /agency/inbox with `-m-6` negative margin)
             don't have to subtract its height from their viewport calc. */}

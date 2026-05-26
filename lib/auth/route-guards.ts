@@ -8,6 +8,7 @@ import { organizations } from '@/drizzle/schema/organizations';
 import type { AccountType } from './account-types';
 import { ACTIVE_ORG_HEADER } from './active-org';
 import { createSupabaseServerClient } from './supabase-server';
+import { isMasterEmail } from './master';
 
 export type RouteContext = {
   userId: string;
@@ -15,6 +16,11 @@ export type RouteContext = {
   orgId: string;
   accountType: AccountType;
   membershipRole: 'owner' | 'admin' | 'manager' | 'member' | 'viewer';
+  /** True when the authenticated email is on the MASTER_EMAILS allowlist
+   *  and is impersonating this org. Master can READ + WRITE as if they
+   *  were an owner of the impersonated org; the UI shows a red banner so
+   *  the operator can never forget they're acting on someone else's data. */
+  isMaster?: boolean;
 };
 
 /**
@@ -39,6 +45,33 @@ export async function requireAccess(opts: {
   const activeOrgId = headers().get(ACTIVE_ORG_HEADER);
   if (!activeOrgId) {
     redirect('/select-org');
+  }
+
+  const email = auth.user.email ?? '';
+  const master = isMasterEmail(email);
+
+  // Master bypass: skip the membership join and read the org directly.
+  // The URL prefix check still ran in middleware (cookie's accountType
+  // had to match the URL), so we can trust the impersonated accountType
+  // here. We grant membershipRole='owner' so role-gated UI works.
+  if (master) {
+    const [org] = await db
+      .select({ accountType: organizations.accountType })
+      .from(organizations)
+      .where(eq(organizations.id, activeOrgId))
+      .limit(1);
+    if (!org) redirect('/select-org');
+    if (!opts.allowedAccountTypes.includes(org.accountType)) {
+      redirect('/select-org?denied=1');
+    }
+    return {
+      userId: auth.user.id,
+      email,
+      orgId: activeOrgId,
+      accountType: org.accountType,
+      membershipRole: 'owner',
+      isMaster: true,
+    };
   }
 
   const rows = await db
@@ -69,7 +102,7 @@ export async function requireAccess(opts: {
 
   return {
     userId: auth.user.id,
-    email: auth.user.email ?? '',
+    email,
     orgId: row.orgId,
     accountType: row.accountType,
     membershipRole: row.role,
@@ -86,6 +119,35 @@ export async function tryAccess(opts: {
 
   const activeOrgId = headers().get(ACTIVE_ORG_HEADER);
   if (!activeOrgId) return { ok: false, status: 403, reason: 'no_active_org' };
+
+  const email = auth.user.email ?? '';
+  const master = isMasterEmail(email);
+
+  // Master bypass — mirror of requireAccess(). See the docstring there
+  // for rationale. The check still requires the org to exist and its
+  // accountType to be in allowedAccountTypes.
+  if (master) {
+    const [org] = await db
+      .select({ accountType: organizations.accountType })
+      .from(organizations)
+      .where(eq(organizations.id, activeOrgId))
+      .limit(1);
+    if (!org) return { ok: false, status: 403, reason: 'org_not_found' };
+    if (!opts.allowedAccountTypes.includes(org.accountType)) {
+      return { ok: false, status: 403, reason: 'account_type_not_allowed' };
+    }
+    return {
+      ok: true,
+      ctx: {
+        userId: auth.user.id,
+        email,
+        orgId: activeOrgId,
+        accountType: org.accountType,
+        membershipRole: 'owner',
+        isMaster: true,
+      },
+    };
+  }
 
   const rows = await db
     .select({
@@ -115,7 +177,7 @@ export async function tryAccess(opts: {
     ok: true,
     ctx: {
       userId: auth.user.id,
-      email: auth.user.email ?? '',
+      email,
       orgId: row.orgId,
       accountType: row.accountType,
       membershipRole: row.role,
