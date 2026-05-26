@@ -29,6 +29,17 @@ export default async function SelectOrgPage({
 
   const isMaster = isMasterEmail(auth.user.email ?? '');
 
+  // Masters have a dedicated control panel at /master that lists all
+  // orgs grouped by category. Send them there unless `?denied=1` (which
+  // means they tried to access a forbidden URL — keep them here so the
+  // error message is visible).
+  if (isMaster && !searchParams.denied) {
+    const next = searchParams.next
+      ? `/master?next=${encodeURIComponent(searchParams.next)}`
+      : '/master';
+    redirect(next);
+  }
+
   // Graceful fallback: if DATABASE_URL is missing or the schema hasn't been
   // migrated yet (fresh Supabase project), don't crash the page — show the
   // empty state so the user can still see a working login flow.

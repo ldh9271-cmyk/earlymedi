@@ -35,10 +35,10 @@ export function MasterBanner({
           <span className="font-medium">{ACCOUNT_TYPE_LABEL_KO[accountType]}</span>로 보는 중
         </span>
         <Link
-          href="/select-org"
+          href="/master"
           className="ml-auto inline-flex items-center rounded-md border border-destructive/40 bg-background/60 px-2 py-0.5 text-[11px] font-medium text-destructive hover:bg-background"
         >
-          다른 조직으로 전환 →
+          🏠 마스터 홈
         </Link>
       </div>
     </div>

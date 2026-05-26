@@ -33,6 +33,7 @@ export const PUBLIC_PREFIXES = [
   '/login',
   '/signup',
   '/select-org',
+  '/master', // master account control panel — does its own auth check inside
   '/invite',
   '/verify-email',
   '/api/auth',
