@@ -8,7 +8,9 @@ import { db } from '@/lib/db/client';
 import { quickReplies } from '@/drizzle/schema/messages';
 
 export async function GET(): Promise<Response> {
-  const access = await tryAccess({ allowedAccountTypes: ['agency', 'medical'] });
+  const access = await tryAccess({
+    allowedAccountTypes: ['agency', 'medical', 'non_medical', 'freelancer'],
+  });
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
 
   const rows = await withRls(access.ctx, () =>

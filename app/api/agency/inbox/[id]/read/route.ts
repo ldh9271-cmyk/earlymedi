@@ -9,7 +9,9 @@ import { conversations } from '@/drizzle/schema/conversations';
 import { messages } from '@/drizzle/schema/messages';
 
 export async function POST(_request: Request, { params }: { params: { id: string } }): Promise<Response> {
-  const access = await tryAccess({ allowedAccountTypes: ['agency', 'medical'] });
+  const access = await tryAccess({
+    allowedAccountTypes: ['agency', 'medical', 'non_medical', 'freelancer'],
+  });
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
 
   return await withRls(access.ctx, async () => {

@@ -38,7 +38,9 @@ export async function POST(
   // 번역" button to redo old truncated translations after the maxTokens fix.
   const force = new URL(request.url).searchParams.get('force') === '1';
 
-  const access = await tryAccess({ allowedAccountTypes: ['agency', 'medical'] });
+  const access = await tryAccess({
+    allowedAccountTypes: ['agency', 'medical', 'non_medical', 'freelancer'],
+  });
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
 
   return await withRls(access.ctx, async () => {

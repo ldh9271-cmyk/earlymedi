@@ -6,7 +6,9 @@ import { withRls } from '@/lib/auth/rls-context';
 import { loadConversationDetail } from '@/lib/db/repositories/inbox';
 
 export async function GET(_request: Request, { params }: { params: { id: string } }): Promise<Response> {
-  const access = await tryAccess({ allowedAccountTypes: ['agency', 'medical'] });
+  const access = await tryAccess({
+    allowedAccountTypes: ['agency', 'medical', 'non_medical', 'freelancer'],
+  });
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
 
   const detail = await withRls(access.ctx, () => loadConversationDetail(access.ctx.orgId, params.id));

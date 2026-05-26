@@ -17,10 +17,12 @@ const Query = z.object({
 });
 
 export async function GET(request: Request): Promise<Response> {
-  // Account-type allowlist intentionally includes 'medical' — hospitals
-  // run their own KakaoTalk/LINE/WhatsApp inboxes for direct patient
-  // inquiries, sharing the entire inbox stack with agencies.
-  const access = await tryAccess({ allowedAccountTypes: ['agency', 'medical'] });
+  // All four account types share this inbox stack — agencies, hospitals,
+  // non-medical partners (hotels, spas, etc.), and freelancers all run
+  // their own KakaoTalk/LINE/WhatsApp inboxes for direct inquiries.
+  const access = await tryAccess({
+    allowedAccountTypes: ['agency', 'medical', 'non_medical', 'freelancer'],
+  });
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
 
   const url = new URL(request.url);

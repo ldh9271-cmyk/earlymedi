@@ -19,7 +19,9 @@ export async function POST(
   _req: Request,
   { params }: { params: { id: string; msgId: string } },
 ): Promise<Response> {
-  const access = await tryAccess({ allowedAccountTypes: ['agency', 'medical'] });
+  const access = await tryAccess({
+    allowedAccountTypes: ['agency', 'medical', 'non_medical', 'freelancer'],
+  });
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
 
   // Early-exit with a concrete error BEFORE we even attempt the AI call,

@@ -82,6 +82,10 @@ export const freelancerSections: SidebarSection[] = [
   {
     items: [
       { href: '/freelancer/dashboard', label: '대시보드', icon: BarChart3 },
+      // 송객·통역·코디·인플루언서도 잠재 환자/고객과 KakaoTalk 등으로
+      // 직접 소통하는 경우가 많아 동일 메신저 스택 제공.
+      { href: '/freelancer/inbox', label: '통합 인박스', icon: Inbox },
+      { href: '/freelancer/channels', label: '채널 연결', icon: Plug },
       { href: '/freelancer/cases', label: '내 케이스', icon: ListChecks },
       { href: '/freelancer/commissions', label: '커미션', icon: Wallet },
     ],
@@ -138,6 +142,12 @@ export const partnerSections: SidebarSection[] = [
   {
     items: [
       { href: '/partner/dashboard', label: '대시보드', icon: BarChart3 },
+      // 호텔·스파·식당도 외국인 게스트가 KakaoTalk·WhatsApp으로 직접
+      // 예약·문의해오는 채널이 많아 agency/medical과 동일하게 통합
+      // 인박스 + 채널 연결 제공. API 권한도 ['agency','medical','non_medical']로
+      // 동일하게 풀어둠.
+      { href: '/partner/inbox', label: '통합 인박스', icon: Inbox },
+      { href: '/partner/channels', label: '채널 연결', icon: Plug },
       { href: '/partner/bookings', label: '부킹', icon: TicketCheck },
       { href: '/partner/availability', label: '가용성', icon: Calendar },
     ],
