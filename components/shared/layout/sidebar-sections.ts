@@ -102,6 +102,12 @@ export const medicalSections: SidebarSection[] = [
   {
     items: [
       { href: '/medical/dashboard', label: '대시보드', icon: BarChart3 },
+      // 병원도 환자가 직접 KakaoTalk·WhatsApp·LINE 등으로 문의해오는
+      // 케이스가 많아 통합 인박스 + 채널 연결을 agency와 동일하게 제공.
+      // API 라우트는 /api/agency/inbox/* 그대로 공유하지만 권한 가드를
+      // ['agency','medical']로 풀어 둠.
+      { href: '/medical/inbox', label: '통합 인박스', icon: Inbox },
+      { href: '/medical/channels', label: '채널 연결', icon: Plug },
       { href: '/medical/rfqs', label: 'RFQ 인박스', icon: Inbox },
       { href: '/medical/patients', label: '환자', icon: UserCircle },
       { href: '/medical/calendar', label: '예약 캘린더', icon: Calendar },

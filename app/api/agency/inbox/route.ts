@@ -17,7 +17,10 @@ const Query = z.object({
 });
 
 export async function GET(request: Request): Promise<Response> {
-  const access = await tryAccess({ allowedAccountTypes: ['agency'] });
+  // Account-type allowlist intentionally includes 'medical' — hospitals
+  // run their own KakaoTalk/LINE/WhatsApp inboxes for direct patient
+  // inquiries, sharing the entire inbox stack with agencies.
+  const access = await tryAccess({ allowedAccountTypes: ['agency', 'medical'] });
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
 
   const url = new URL(request.url);

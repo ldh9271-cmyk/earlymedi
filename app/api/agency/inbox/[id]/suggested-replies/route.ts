@@ -41,7 +41,7 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } },
 ): Promise<Response> {
-  const access = await tryAccess({ allowedAccountTypes: ['agency'] });
+  const access = await tryAccess({ allowedAccountTypes: ['agency', 'medical'] });
   if (!access.ok) return NextResponse.json({ error: access.reason }, { status: access.status });
 
   const url = new URL(request.url);
