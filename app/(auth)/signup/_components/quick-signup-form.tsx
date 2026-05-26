@@ -22,11 +22,18 @@ const CURRENT_YEAR = new Date().getFullYear();
  */
 function buildSchema(alreadyAuthed: boolean) {
   const orgBlock = {
+    // Zod's `required_error` fires when the value is `undefined`, but
+    // react-hook-form gives us `null` for an un-clicked radio group.
+    // Setting `invalid_type_error` covers the null path with the same
+    // friendly Korean message so users never see "Expected 'medical' |
+    // 'agency' | 'non_medical' | 'freelancer', received null".
     accountType: z.enum(['medical', 'agency', 'non_medical', 'freelancer'], {
       required_error: '카테고리를 선택해 주세요',
+      invalid_type_error: '카테고리를 선택해 주세요',
     }),
     partnerSubtype: z
       .enum(['hotel', 'spa', 'salon', 'studio', 'restaurant', 'transport', 'tour', 'shopping', 'wellness', 'other'])
+      .nullable()
       .optional(),
     orgName: z.string().min(2, '회사명은 2자 이상').max(120),
     representativeName: z.string().min(2, '담당자명은 2자 이상').max(80),
@@ -509,7 +516,10 @@ export function QuickSignupForm({
       )}
 
       {/* Validation summary — surfaces ALL field errors in one place so
-          the operator never has to hunt for why submit isn't progressing. */}
+          the operator never has to hunt for why submit isn't progressing.
+          Raw Zod "Expected X, received Y" messages are filtered into a
+          generic Korean message — the schema should set its own friendly
+          messages, but this is a safety net. */}
       {Object.keys(errors).length > 0 ? (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
           <div className="flex items-center gap-1.5 font-semibold text-destructive">
@@ -529,8 +539,13 @@ export function QuickSignupForm({
                   passwordConfirm: '비밀번호 확인',
                   birthYear: '출생연도',
                 } as Record<string, string>)[key] ?? key;
-              const msg =
-                (err as { message?: string } | undefined)?.message ?? '값을 확인해 주세요';
+              const rawMsg =
+                (err as { message?: string } | undefined)?.message ?? '';
+              const isRawZod =
+                /^Expected\s/.test(rawMsg) ||
+                /received (null|undefined)/.test(rawMsg) ||
+                /Required/i.test(rawMsg);
+              const msg = isRawZod ? '값을 선택하거나 입력해 주세요' : rawMsg;
               return (
                 <li key={key}>
                   <strong>{label}</strong>: {msg}
