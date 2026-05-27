@@ -183,13 +183,26 @@ export async function routeIncomingMessage(input: IncomingMessage): Promise<Rout
     // swallow — translation is non-essential
   }
 
-  // 4. Bump conversation counters atomically
+  // 4. Bump conversation counters atomically + keep contactLocale in
+  //    sync with whatever language the patient is actually using right
+  //    now. The OLD Kakao webhook hardcoded contactLocale='ko' even for
+  //    Chinese patients, which silently broke outbound auto-translate
+  //    (agent's Korean reply got "patient is also Korean → skip
+  //    translation"). Going forward we ratchet the conversation's
+  //    contactLocale up to whatever the latest inbound message detects
+  //    as. Skips ambiguous 'other' / undefined so emoji-only replies
+  //    don't reset a known locale.
+  const localePatch: { contactLocale?: string } = {};
+  if (input.bodyLocale && input.bodyLocale !== 'other') {
+    localePatch.contactLocale = input.bodyLocale;
+  }
   await db
     .update(conversations)
     .set({
       unreadCount: sql`${conversations.unreadCount} + 1`,
       lastInboundAt: sentAt,
       updatedAt: new Date(),
+      ...localePatch,
     })
     .where(eq(conversations.id, conversationId));
 

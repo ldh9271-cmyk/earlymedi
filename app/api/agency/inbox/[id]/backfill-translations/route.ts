@@ -176,6 +176,38 @@ export async function POST(
     const translated = results.filter(
       (r) => r.status === 'fulfilled' && r.value === true,
     ).length;
+
+    // In force mode, sync the conversation's contactLocale to whatever
+    // language we just detected in the most recent inbound message.
+    // Fixes outbound auto-translate, which had been silently skipping
+    // because the conversation was mislabeled 'ko'. We pull the latest
+    // message's now-corrected body_locale rather than detecting again.
+    if (force) {
+      const [latest] = await db
+        .select({ bodyLocale: messages.bodyLocale })
+        .from(messages)
+        .where(
+          and(
+            eq(messages.organizationId, access.ctx.orgId),
+            eq(messages.conversationId, params.id),
+            eq(messages.direction, 'inbound'),
+          ),
+        )
+        .orderBy(desc(messages.sentAt))
+        .limit(1);
+      if (latest?.bodyLocale && latest.bodyLocale !== 'other') {
+        await db
+          .update(conversations)
+          .set({ contactLocale: latest.bodyLocale, updatedAt: new Date() })
+          .where(
+            and(
+              eq(conversations.id, params.id),
+              eq(conversations.organizationId, access.ctx.orgId),
+            ),
+          );
+      }
+    }
+
     return NextResponse.json({ ok: true, translated });
   });
 }
