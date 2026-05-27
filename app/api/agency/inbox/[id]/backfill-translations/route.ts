@@ -99,11 +99,15 @@ export async function POST(
         : undefined,
     };
 
-    // Pick the most recent messages on this conversation that look like
-    // they SHOULD be translated but aren't (or, when force=1, all
-    // non-Korean inbound messages regardless of existing translation):
-    //   - inbound + non-Korean source AND translation_ko is null
-    //   - OR (force mode) inbound + non-Korean regardless of translation_ko
+    // Pick the most recent messages on this conversation:
+    //   - default mode: inbound + body_locale != 'ko' AND translation_ko is null
+    //   - force mode: ALL inbound, including ones mislabeled as 'ko'
+    //
+    // Why force drops the body_locale filter too: the old Kakao webhook
+    // hardcoded body_locale='ko' even when the actual content was
+    // Chinese. Those rows would otherwise be skipped here forever even
+    // though they're the exact ones that need re-translating. force=1
+    // lets the operator recover them.
     const candidates = await db
       .select({
         id: messages.id,
@@ -116,11 +120,15 @@ export async function POST(
           eq(messages.organizationId, access.ctx.orgId),
           eq(messages.conversationId, params.id),
           eq(messages.direction, 'inbound'),
-          ...(force ? [] : [isNull(messages.translationKo)]),
-          or(
-            isNull(messages.bodyLocale),
-            sql`${messages.bodyLocale} <> 'ko'`,
-          ),
+          ...(force
+            ? []
+            : [
+                isNull(messages.translationKo),
+                or(
+                  isNull(messages.bodyLocale),
+                  sql`${messages.bodyLocale} <> 'ko'`,
+                ),
+              ]),
         ),
       )
       .orderBy(desc(messages.sentAt))
@@ -135,19 +143,26 @@ export async function POST(
     // Translate in parallel — Gemini Flash handles concurrent calls fine,
     // and even with 20 messages this finishes well within Vercel's
     // function timeout (Hobby tier 10s; Pro tier 60s).
+    //
+    // Force mode IGNORES the stored body_locale and lets the translator
+    // re-detect from the actual content. Necessary because the original
+    // Kakao webhook hardcoded 'ko', so mislabeled Chinese/Japanese
+    // messages will keep getting wrong translations if we trust the
+    // stored locale.
     const results = await Promise.allSettled(
       candidates.map(async (m) => {
         if (!m.body.trim()) return false;
-        const r = await translateInboundMessage(caller, m.body, m.bodyLocale ?? undefined, ctx);
+        const sourceLocaleHint = force ? undefined : m.bodyLocale ?? undefined;
+        const r = await translateInboundMessage(caller, m.body, sourceLocaleHint, ctx);
         if (!r.translationKo && !r.translationEn) return false;
-        // Force mode skips the isNull guard so old truncated translations
-        // get overwritten with the fresh, context-aware ones.
         await db
           .update(messages)
           .set({
             translationKo: r.translationKo,
             translationEn: r.translationEn,
-            bodyLocale: m.bodyLocale ?? r.detectedLocale,
+            // Always write the freshly-detected locale in force mode
+            // so the row is correctly labeled going forward.
+            bodyLocale: force ? r.detectedLocale : m.bodyLocale ?? r.detectedLocale,
           })
           .where(
             force

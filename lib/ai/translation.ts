@@ -18,16 +18,39 @@ function baseTag(loc: string): string {
   return loc.split(/[-_]/)[0]?.toLowerCase() ?? loc.toLowerCase();
 }
 
-export function detectLocale(text: string): 'ko' | 'en' | 'other' {
+/**
+ * Lightweight character-distribution language detector. Counts the
+ * Unicode blocks present in `text` and returns the dominant language
+ * code. Used to label inbound messages before persisting so the inbox
+ * shows the right "AI 번역 · ZH → KO" chip and the AI translator can
+ * route the source through the correct prompt.
+ *
+ * Detection order (specificity beats raw count):
+ *   - Hangul block → 'ko'  (Korean)
+ *   - Cyrillic block → 'ru'  (Russian; covers Belarusian/Ukrainian etc.)
+ *   - Hiragana/Katakana → 'ja'  (Japanese; kana never appears in pure Chinese)
+ *   - CJK Han only (no kana) → 'zh'  (Chinese; Japanese kanji-only is rare)
+ *   - Latin → 'en'
+ *   - empty/unclassifiable → 'other'
+ *
+ * Why specificity-first instead of pure count: a Japanese sentence often
+ * has more Han characters than kana, but the presence of even one kana
+ * char is a strong Japanese signal. Same idea for Hangul (single Korean
+ * particle in a mostly-English sentence still indicates Korean intent).
+ */
+export function detectLocale(text: string): 'ko' | 'en' | 'zh' | 'ja' | 'ru' | 'other' {
   if (!text) return 'other';
   let hangul = 0;
   let latin = 0;
+  let cyrillic = 0;
+  let kana = 0;
+  let han = 0;
   for (let i = 0; i < text.length; i++) {
     const code = text.charCodeAt(i);
     if (
-      (code >= 0xac00 && code <= 0xd7af) ||
-      (code >= 0x1100 && code <= 0x11ff) ||
-      (code >= 0x3130 && code <= 0x318f)
+      (code >= 0xac00 && code <= 0xd7af) || // Hangul Syllables
+      (code >= 0x1100 && code <= 0x11ff) || // Hangul Jamo
+      (code >= 0x3130 && code <= 0x318f) // Hangul Compatibility Jamo
     ) {
       hangul++;
     } else if (
@@ -35,9 +58,28 @@ export function detectLocale(text: string): 'ko' | 'en' | 'other' {
       (code >= 0x61 && code <= 0x7a)
     ) {
       latin++;
+    } else if (
+      (code >= 0x0400 && code <= 0x04ff) || // Cyrillic
+      (code >= 0x0500 && code <= 0x052f) // Cyrillic Supplement
+    ) {
+      cyrillic++;
+    } else if (
+      (code >= 0x3040 && code <= 0x309f) || // Hiragana
+      (code >= 0x30a0 && code <= 0x30ff) // Katakana
+    ) {
+      kana++;
+    } else if (
+      (code >= 0x4e00 && code <= 0x9fff) || // CJK Unified Ideographs (Hanzi/Kanji/Hanja)
+      (code >= 0x3400 && code <= 0x4dbf) // CJK Extension A
+    ) {
+      han++;
     }
   }
+  // Specificity ordering — see fn-doc above.
   if (hangul > 0 && hangul >= latin / 3) return 'ko';
+  if (cyrillic > 0) return 'ru';
+  if (kana > 0) return 'ja';
+  if (han > 0) return 'zh';
   if (latin > 0) return 'en';
   return 'other';
 }
@@ -138,9 +180,30 @@ export async function translateInboundMessage(
   text: string,
   sourceLocale?: string,
   ctx?: TranslationContext,
-): Promise<{ translationKo: string | null; translationEn: string | null; detectedLocale: 'ko' | 'en' | 'other' }> {
-  const detected = sourceLocale ? (sourceLocale as 'ko' | 'en' | 'other') : detectLocale(text);
+): Promise<{
+  translationKo: string | null;
+  translationEn: string | null;
+  detectedLocale: 'ko' | 'en' | 'zh' | 'ja' | 'ru' | 'other';
+}> {
+  // Normalize caller-provided source locale into the same enum that
+  // detectLocale returns. Anything outside the known set falls back
+  // to auto-detection so a mislabeled message still gets routed
+  // correctly (the Kakao webhook used to hardcode 'ko' for every
+  // incoming message — Chinese inquiries got marked as Korean and
+  // skipped translation entirely).
+  const known = ['ko', 'en', 'zh', 'ja', 'ru', 'other'] as const;
+  type Known = (typeof known)[number];
+  const normalized = sourceLocale
+    ? (known.includes(sourceLocale.toLowerCase() as Known)
+        ? (sourceLocale.toLowerCase() as Known)
+        : null)
+    : null;
+  const detected = normalized ?? detectLocale(text);
 
+  // Skip ko→ko / en→en — every other source language still gets
+  // translated into BOTH Korean (for Korean staff) and English (for
+  // English-speaking staff). For 'other' we still do both: AI gets
+  // sourceLocale='other' and figures it out from the actual content.
   const [koPromise, enPromise] = [
     detected === 'ko' ? Promise.resolve<string | null>(null) : translateText(caller, text, 'ko', detected, { ctx }),
     detected === 'en' ? Promise.resolve<string | null>(null) : translateText(caller, text, 'en', detected, { ctx }),

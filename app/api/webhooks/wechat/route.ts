@@ -8,6 +8,7 @@ import { channels } from '@/drizzle/schema/channels';
 import { auditLogs } from '@/drizzle/schema/audit';
 import { decryptPii } from '@/lib/encryption/pgcrypto';
 import { routeIncomingMessage } from '@/lib/channels/inbox-router';
+import { detectLocale } from '@/lib/ai/translation';
 
 /**
  * WeChat Official Account webhook.
@@ -236,6 +237,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // WeChat 1:1 chat — threadId == sender openid (same shape as Kakao).
   const sentAt = createTime ? new Date(Number(createTime) * 1000) : new Date();
 
+  // Auto-detect actual language from message text. WeChat OA users
+  // ARE overwhelmingly Chinese (channel is China-only), so 'zh' is the
+  // sane default — but Korean expats in Shanghai sometimes message in
+  // Korean, and a Russian living in Beijing might message in Russian.
+  // detectLocale catches these. Falls back to 'zh' when content is
+  // ambiguous (emoji-only, sticker) since the channel context is China.
+  const detected = detectLocale(content);
+  const bodyLocale = detected === 'other' ? 'zh' : detected;
   try {
     await routeIncomingMessage({
       organizationId: orgId,
@@ -248,11 +257,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // would require an extra access-token call to /user/info. Skip
         // for v1; the operator can rename the contact in the inbox.
         displayName: undefined,
-        locale: 'zh',
+        locale: bodyLocale,
         countryCode: 'CN',
       },
       body: content,
-      bodyLocale: 'zh',
+      bodyLocale,
       sentAt,
       raw: { msgType, toUser, msgId, createTime },
     });

@@ -6,6 +6,7 @@ import { db } from '@/lib/db/client';
 import { channels } from '@/drizzle/schema/channels';
 import { auditLogs } from '@/drizzle/schema/audit';
 import { routeIncomingMessage } from '@/lib/channels/inbox-router';
+import { detectLocale } from '@/lib/ai/translation';
 
 /**
  * KakaoTalk channel webhook receiver.
@@ -85,7 +86,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(kakaoSkillReply('확인했습니다. 곧 답변드리겠습니다 🙏'));
   }
 
-  // Route into inbox
+  // Route into inbox. CRITICAL: don't hardcode bodyLocale to 'ko' —
+  // KakaoTalk is the dominant Korean channel but foreign patients
+  // routinely DM Korean clinics in Chinese / Japanese / Russian /
+  // English. Auto-detect from the message content so the AI translator
+  // gets the right source language (otherwise Chinese text labeled as
+  // 'ko' would skip the ko→? translation entirely, leaving Korean
+  // staff to read raw Chinese with no AI assist).
+  //
+  // countryCode stays 'KR' because the channel itself is Korean; the
+  // patient's nationality is unknown until they tell us.
+  const detected = detectLocale(parsed.text);
+  const bodyLocale = detected === 'other' ? undefined : detected;
   try {
     await routeIncomingMessage({
       organizationId: orgId,
@@ -95,11 +107,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       contact: {
         externalId: parsed.userId,
         displayName: parsed.userName,
-        locale: 'ko',
+        locale: bodyLocale,
         countryCode: 'KR',
       },
       body: parsed.text,
-      bodyLocale: 'ko',
+      bodyLocale,
       sentAt: new Date(),
       raw: body,
     });
