@@ -35,11 +35,15 @@ export const users = pgTable(
     phone: text('phone'),
 
     // Demographics — collected at signup for marketing analytics + KOIHA
-    // statistical reporting. Optional; users can decline ('prefer_not_to_say').
+    // statistical reporting. ALL OPTIONAL — "선택 수집" per the Kakao
+    // Channel PII review policy (사용자가 응답 안 해도 가입 진행).
     // age_range is denormalized from birth_year for fast filtering; the
     // signup server action keeps them in sync.
+    // 생일은 한국 컨벤션을 따라 월/일만 별도 저장 (연도는 birth_year).
     gender: text('gender'), // 'male' | 'female' | 'other' | 'prefer_not_to_say'
     birthYear: integer('birth_year'),
+    birthMonth: integer('birth_month'), // 1-12
+    birthDay: integer('birth_day'), // 1-31
     ageRange: text('age_range'), // 'under_20' | '20s' | '30s' | '40s' | '50s' | '60s' | '70_plus'
 
     // Per-user feature flags (admin overrides)

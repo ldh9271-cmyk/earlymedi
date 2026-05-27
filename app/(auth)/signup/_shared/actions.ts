@@ -78,7 +78,8 @@ const QuickSignupSchema = z.object({
   orgName: z.string().min(2, '회사명은 2자 이상').max(120),
   representativeName: z.string().min(2, '담당자명은 2자 이상').max(80),
   contactPhone: z.string().min(8, '연락처를 입력해 주세요').max(40),
-  // Demographics — optional, defaults to null for users who decline.
+  // Demographics — ALL optional ("선택 수집" per Kakao Channel PII policy).
+  // Users can decline every field and still complete signup.
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).nullable().optional(),
   birthYear: z
     .number()
@@ -87,6 +88,11 @@ const QuickSignupSchema = z.object({
     .max(new Date().getFullYear() - 10, '최소 10세 이상')
     .nullable()
     .optional(),
+  // 생일은 월/일만 (연도 분리 — 한국 컨벤션). 둘 다 NULL이거나 둘 다
+  // 값이 있어야 의미가 있지만, 한쪽만 채워도 거부하지 않고 받아둠
+  // (저장 시 한쪽이 null이면 다른 한쪽도 null로 정규화).
+  birthMonth: z.number().int().min(1).max(12).nullable().optional(),
+  birthDay: z.number().int().min(1).max(31).nullable().optional(),
 });
 
 export type QuickSignupInput = z.infer<typeof QuickSignupSchema>;
@@ -143,6 +149,13 @@ export async function quickSignupAction(rawInput: QuickSignupInput): Promise<str
   // analytics queries can filter on either column without inconsistency.
   const ageRange = ageRangeFromBirthYear(input.birthYear ?? null);
 
+  // Normalize 생일: 월·일 중 하나라도 빠지면 양쪽 다 NULL로 (불완전한
+  // 생일은 의미가 없고 잘못된 추론을 유도).
+  const birthMonthNorm =
+    input.birthMonth != null && input.birthDay != null ? input.birthMonth : null;
+  const birthDayNorm =
+    input.birthMonth != null && input.birthDay != null ? input.birthDay : null;
+
   // 1. users row (mirror of auth.users for FK targets)
   await db
     .insert(users)
@@ -155,6 +168,8 @@ export async function quickSignupAction(rawInput: QuickSignupInput): Promise<str
       timezone: 'Asia/Seoul',
       gender: input.gender ?? null,
       birthYear: input.birthYear ?? null,
+      birthMonth: birthMonthNorm,
+      birthDay: birthDayNorm,
       ageRange,
     })
     .onConflictDoUpdate({
@@ -164,6 +179,8 @@ export async function quickSignupAction(rawInput: QuickSignupInput): Promise<str
         phone: input.contactPhone,
         gender: input.gender ?? null,
         birthYear: input.birthYear ?? null,
+        birthMonth: birthMonthNorm,
+        birthDay: birthDayNorm,
         ageRange,
         updatedAt: new Date(),
       },

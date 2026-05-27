@@ -61,6 +61,22 @@ function buildSchema(alreadyAuthed: boolean) {
       ])
       .nullable()
       .optional(),
+    // 생일 (월/일) — 한국 관습대로 연도 분리. 둘 다 선택 입력이라
+    // 빈 문자열도 허용. select 컴포넌트의 default value가 ''라 처리 필요.
+    birthMonth: z
+      .union([
+        z.string().regex(/^([1-9]|1[0-2])$/, '1-12 사이의 월'),
+        z.literal(''),
+      ])
+      .nullable()
+      .optional(),
+    birthDay: z
+      .union([
+        z.string().regex(/^([1-9]|[12]\d|3[01])$/, '1-31 사이의 일'),
+        z.literal(''),
+      ])
+      .nullable()
+      .optional(),
   };
 
   if (alreadyAuthed) {
@@ -199,6 +215,8 @@ export function QuickSignupForm({
       password: '비밀번호',
       passwordConfirm: '비밀번호 확인',
       birthYear: '출생연도',
+      birthMonth: '생일 (월)',
+      birthDay: '생일 (일)',
     };
     const missingFields = Object.keys(formErrors).filter((k) => labels[k]);
     if (missingFields.length > 0) {
@@ -263,6 +281,12 @@ export function QuickSignupForm({
         const birthYearStr =
           typeof values.birthYear === 'string' ? values.birthYear.trim() : '';
         const birthYearNum = birthYearStr ? Number(birthYearStr) : null;
+        const birthMonthStr =
+          typeof values.birthMonth === 'string' ? values.birthMonth.trim() : '';
+        const birthMonthNum = birthMonthStr ? Number(birthMonthStr) : null;
+        const birthDayStr =
+          typeof values.birthDay === 'string' ? values.birthDay.trim() : '';
+        const birthDayNum = birthDayStr ? Number(birthDayStr) : null;
         const genderRaw = (values.gender ?? '') as string;
         const gender =
           genderRaw === 'male' ||
@@ -280,6 +304,8 @@ export function QuickSignupForm({
           contactPhone: values.contactPhone,
           gender,
           birthYear: birthYearNum,
+          birthMonth: birthMonthNum,
+          birthDay: birthDayNum,
         });
         router.replace(dest);
       } catch (err) {
@@ -433,6 +459,47 @@ export function QuickSignupForm({
             <p className="text-xs text-destructive">{errors.birthYear.message}</p>
           ) : null}
         </div>
+
+        {/* 생일 — 월/일 (연도 분리). 카카오 채널 PII 정책에 맞춰
+            "선택 수집"으로 명시. select 디폴트가 빈 옵션이라 응답
+            안 하면 그대로 null로 저장됨. */}
+        <div className="space-y-1.5">
+          <Label htmlFor="birthMonth" className="text-xs">생일</Label>
+          <div className="flex items-center gap-2">
+            <select
+              id="birthMonth"
+              {...register('birthMonth')}
+              className="h-9 w-20 rounded-md border border-input bg-background px-2 text-sm"
+            >
+              <option value="">월</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                <option key={m} value={String(m)}>
+                  {m}월
+                </option>
+              ))}
+            </select>
+            <select
+              id="birthDay"
+              {...register('birthDay')}
+              className="h-9 w-20 rounded-md border border-input bg-background px-2 text-sm"
+            >
+              <option value="">일</option>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                <option key={d} value={String(d)}>
+                  {d}일
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-muted-foreground">선택 입력</span>
+          </div>
+          {(errors as Record<string, { message?: string } | undefined>).birthMonth ||
+          (errors as Record<string, { message?: string } | undefined>).birthDay ? (
+            <p className="text-xs text-destructive">
+              {(errors as Record<string, { message?: string }>).birthMonth?.message ??
+                (errors as Record<string, { message?: string }>).birthDay?.message}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       {/* Email + password — required for fresh signups; read-only when
@@ -538,6 +605,8 @@ export function QuickSignupForm({
                   password: '비밀번호',
                   passwordConfirm: '비밀번호 확인',
                   birthYear: '출생연도',
+                  birthMonth: '생일 (월)',
+                  birthDay: '생일 (일)',
                 } as Record<string, string>)[key] ?? key;
               const rawMsg =
                 (err as { message?: string } | undefined)?.message ?? '';
