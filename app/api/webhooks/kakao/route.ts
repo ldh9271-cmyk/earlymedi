@@ -82,12 +82,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     } catch {
       /* swallow */
     }
-    return NextResponse.json({ ok: true, note: 'payload_not_recognised' });
+    return NextResponse.json(kakaoSkillReply('확인했습니다. 곧 답변드리겠습니다 🙏'));
   }
 
   // Route into inbox
   try {
-    const result = await routeIncomingMessage({
+    await routeIncomingMessage({
       organizationId: orgId,
       channelId,
       externalThreadId: parsed.threadId,
@@ -104,14 +104,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       raw: body,
     });
 
-    return NextResponse.json({
-      ok: true,
-      conversationId: result.conversationId,
-      messageId: result.messageId,
-      isNewConversation: result.isNewConversation,
-    });
+    // Kakao i 오픈빌더는 Skill 응답 형식을 엄격하게 요구합니다.
+    // version + template.outputs[] 구조가 아니면 사용자 카톡에 "잠시 후
+    // 다시 시도해주세요" 같은 시스템 오류 메시지가 표시됩니다. 인박스
+    // 라우팅은 위에서 이미 완료됐으므로, 응답은 사용자에게 보일 짧은
+    // 안내문 하나만 돌려줍니다 (상담사가 직접 답변하기 전 임시 대응).
+    return NextResponse.json(
+      kakaoSkillReply(
+        '문의 감사합니다. 상담사가 확인 후 빠르게 답변드리겠습니다 🙏\n' +
+          '— EarlyMedi AI 컨시어지',
+      ),
+    );
   } catch (err) {
-    // Log but still ack 200 so Kakao stays connected.
+    // Log but still ack with valid Skill format so Kakao doesn't surface
+    // an error to the user.
     try {
       await db.insert(auditLogs).values({
         organizationId: orgId,
@@ -128,8 +134,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     } catch {
       /* swallow */
     }
-    return NextResponse.json({ ok: true, note: 'route_failed_logged' });
+    return NextResponse.json(
+      kakaoSkillReply('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'),
+    );
   }
+}
+
+/**
+ * Build a Kakao i 오픈빌더 Skill 응답 envelope. The shape is:
+ *   { version: "2.0", template: { outputs: [{ simpleText: { text } }] } }
+ * Anything else gets rejected by the bot framework and the user sees
+ * a generic "잠시 후 다시 시도해주세요" error in KakaoTalk. We only ever
+ * return one simpleText since our actual reply comes from the agent
+ * later via the outbound /messages route, not inline.
+ */
+function kakaoSkillReply(text: string): {
+  version: '2.0';
+  template: { outputs: Array<{ simpleText: { text: string } }> };
+} {
+  return {
+    version: '2.0',
+    template: {
+      outputs: [{ simpleText: { text } }],
+    },
+  };
 }
 
 type ParsedKakaoMessage = {
