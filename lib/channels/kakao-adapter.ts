@@ -104,13 +104,11 @@ export class KakaoAdapter implements ChannelAdapter {
           '챗봇 ID 미설정 — 채널 연결에서 i 오픈빌더 봇 ID를 입력해 주세요.',
       };
     }
-    if (!creds.botEventApiKey) {
-      return {
-        ok: false,
-        error:
-          'Event API Key 미설정 — i 오픈빌더 > 봇 설정 > API 관리에서 키를 발급해 채널 연결 폼에 입력해 주세요. (메시지는 인박스에 저장됨)',
-      };
-    }
+    // Event API Key is preferred but not strictly required. Some Kakao
+    // i 오픈빌더 bots accept EventAPI calls without an explicit token,
+    // others gate on it. Try whatever we have; the actual API will
+    // return 401 if it really needs one — friendlyKakaoError surfaces
+    // a clear instruction in that case.
 
     // 3. Build the EventAPI request. The user.id MUST be the
     //    botUserKey we captured during the inbound webhook
@@ -130,6 +128,25 @@ export class KakaoAdapter implements ChannelAdapter {
       },
     };
 
+    // Auth header — Kakao's chatbot EventAPI accepts a few different
+    // auth tokens depending on the bot's configuration:
+    //   1. botEventApiKey (i 오픈빌더 > 설정 > API 관리에서 발급)
+    //   2. adminKey (Kakao Developers 앱의 Admin Key) — bot이 같은 앱에
+    //      linked 되어 있을 때
+    //   3. 없음 — 일부 봇은 botId만으로 호출 허용 (public mode)
+    // We try whichever the operator provided; Kakao tells us via 401
+    // which combination is acceptable.
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (creds.botEventApiKey) {
+      headers.Authorization = `KakaoAK ${creds.botEventApiKey}`;
+    } else if (creds.adminKey) {
+      headers.Authorization = `KakaoAK ${creds.adminKey}`;
+    }
+    // If neither key is present, fetch with no Authorization header at
+    // all. Some bots accept this when EventAPI is set to public.
+
     // 4. Fire the request. Kakao responds within ~1s normally. We use
     //    a hard 10s timeout to avoid hanging the agent's UI on a flaky
     //    network.
@@ -139,10 +156,7 @@ export class KakaoAdapter implements ChannelAdapter {
       const res = await fetch(url, {
         method: 'POST',
         signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `KakaoAK ${creds.botEventApiKey}`,
-        },
+        headers,
         body: JSON.stringify(payload),
       });
       clearTimeout(timer);
