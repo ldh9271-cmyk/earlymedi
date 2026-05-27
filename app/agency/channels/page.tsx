@@ -100,7 +100,7 @@ export default async function AgencyChannelsPage(): Promise<JSX.Element> {
       </div>
 
       <div className="rounded-lg border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
-        💡 <strong>참고:</strong> KakaoTalk만 실제 연결이 가능합니다. 다른 7개 채널은 콘솔 자격증명 폼은 보이지만 메시지 수신은 곧 활성화됩니다.
+        💡 <strong>참고:</strong> KakaoTalk · WeChat OA 실제 연결이 가능합니다. 다른 6개 채널은 콘솔 자격증명 폼은 보이지만 메시지 수신은 곧 활성화됩니다.
         WhatsApp · WeChat은 외국 법인 인증으로 가입 승인이 1~4주 걸리는 점 참고하세요.
       </div>
     </div>
