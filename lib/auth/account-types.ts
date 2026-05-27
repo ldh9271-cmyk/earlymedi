@@ -38,6 +38,12 @@ export const PUBLIC_PREFIXES = [
   '/invite',
   '/verify-email',
   '/api/auth',
+  // 외부 메신저(Kakao i 오픈빌더, WeChat OA, LINE 등)가 우리 webhook을
+  // 호출할 때는 Supabase 세션 쿠키가 없으므로 미들웨어 인증을 우회해야
+  // 함. 각 webhook 라우트는 자체적으로 channel id + signature 검증으로
+  // 보호된다. 이 한 줄을 빼먹으면 Kakao 스킬 테스트가 401 UNAUTHORIZED를
+  // 반환하면서 봇이 작동하지 않는다.
+  '/api/webhooks',
   '/pricing',
   '/about',
   '/legal',
