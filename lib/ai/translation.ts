@@ -75,10 +75,22 @@ export function detectLocale(text: string): 'ko' | 'en' | 'zh' | 'ja' | 'ru' | '
       han++;
     }
   }
-  // Specificity ordering — see fn-doc above.
-  if (hangul > 0 && hangul >= latin / 3) return 'ko';
-  if (cyrillic > 0) return 'ru';
+  // Specificity ordering — kana and cyrillic are unique to one
+  // language, so they win immediately when present.
   if (kana > 0) return 'ja';
+  if (cyrillic > 0) return 'ru';
+
+  // Korean vs Chinese disambiguation — both can have Han characters,
+  // but Korean is overwhelmingly Hangul with occasional Hanja, while
+  // Chinese sometimes quotes Korean words (e.g. "(또는 = 或者)").
+  // For 'ko' to win we need BOTH:
+  //   (a) hangul outnumbers han  — kills the case where a single
+  //       Korean word is quoted inside a long Chinese sentence
+  //   (b) hangul is substantial vs latin (latin / 3 floor) — kills the
+  //       case where one Korean character appears in a long English
+  //       sentence
+  if (hangul > 0 && hangul > han && hangul >= latin / 3) return 'ko';
+
   if (han > 0) return 'zh';
   if (latin > 0) return 'en';
   return 'other';
