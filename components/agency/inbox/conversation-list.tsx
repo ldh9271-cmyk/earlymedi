@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Inbox, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/shared/ui/input';
@@ -65,9 +65,41 @@ export function ConversationList({ initialId }: { initialId?: string }): JSX.Ele
     retry: 1,
   });
 
-  // Auto-pick initial conversation on first render
+  // Auto-pick initial conversation on FIRST render only.
+  //
+  // History: this used to fire on every render where selectedConversationId
+  // became null, which trapped mobile users — after tapping "← 대화 목록"
+  // to clear the selection, this effect re-selected the same conversation
+  // and bounced them right back into it. Now we guard with a ref so it
+  // runs at most once per mount.
+  //
+  // Viewport behavior:
+  //   - Desktop (≥ md): always auto-pick the first conversation so the
+  //     middle pane isn't blank — matches Gmail / Slack default.
+  //   - Mobile (< md): NEVER auto-pick. The list is the entry point;
+  //     user explicitly taps a row to drill into a conversation. Except
+  //     when they arrived via ?c= deep-link (notification / shared URL),
+  //     in which case we still honor it.
+  const autoSelectedRef = useRef(false);
   useEffect(() => {
-    if (initialId && !selectedConversationId) setSelectedConversationId(initialId);
+    if (autoSelectedRef.current) return;
+    if (!initialId || selectedConversationId) return;
+
+    // Latch immediately — even if we decide NOT to select (mobile), we
+    // still want to prevent the effect from re-running after the user
+    // clears the selection via the back button.
+    autoSelectedRef.current = true;
+
+    const isDesktop =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(min-width: 768px)').matches;
+    const explicitFromUrl =
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('c') === initialId;
+
+    if (explicitFromUrl || isDesktop) {
+      setSelectedConversationId(initialId);
+    }
   }, [initialId, selectedConversationId, setSelectedConversationId]);
 
   // Listen for refresh requests from the Supabase Realtime channel
