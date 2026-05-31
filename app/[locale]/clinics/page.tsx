@@ -1,0 +1,197 @@
+import Link from 'next/link';
+import { Search, MapPin, Star, ArrowRight, Sparkles } from 'lucide-react';
+import { eq, sql } from 'drizzle-orm';
+import type { PublicLocale } from '@/lib/i18n/locales';
+import { getDictionary } from '@/lib/i18n/get-dictionary';
+import { db } from '@/lib/db/client';
+import { hospitals } from '@/drizzle/schema/hospitals';
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * Patient-facing clinic catalog. Pulls from the existing `hospitals`
+ * table — the same rows the agencies use in their marketplace, just
+ * filtered for public display (active + has minimum required fields).
+ *
+ * RLS note: this is a public page so we run the query without an
+ * `app.current_org_id` setting. The hospitals table's RLS policy lets
+ * the postgres role read all rows; restrictive policies should be added
+ * once we have a `is_public` column to gate visibility per row.
+ *
+ * Phase 1 limitations (intentional):
+ *   - No filtering UI yet (category buttons link to filtered views in
+ *     Phase 2)
+ *   - No reviews / ratings (data not yet collected)
+ *   - No pricing display
+ *   - First 50 results, no pagination
+ */
+export default async function ClinicsListPage({
+  params,
+  searchParams,
+}: {
+  params: { locale: PublicLocale };
+  searchParams: { category?: string };
+}): Promise<JSX.Element> {
+  const dict = await getDictionary(params.locale);
+
+  let rows: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    countryCode: string;
+    primaryCategories: string[];
+  }> = [];
+  let dbError: string | null = null;
+  try {
+    const fetched = await db
+      .select({
+        id: hospitals.id,
+        name: hospitals.name,
+        slug: hospitals.slug,
+        countryCode: hospitals.countryCode,
+        primaryCategories: hospitals.primaryCategories,
+      })
+      .from(hospitals)
+      .where(eq(hospitals.countryCode, 'KR'))
+      .orderBy(sql`${hospitals.createdAt} desc`)
+      .limit(50);
+    rows = fetched.map((r) => ({
+      ...r,
+      primaryCategories: (r.primaryCategories ?? []) as string[],
+    }));
+  } catch (err) {
+    dbError = err instanceof Error ? err.message : 'db_error';
+  }
+
+  // Optional category filter from query string. Defensive — unknown
+  // categories just return the unfiltered list rather than empty.
+  const categoryFilter = searchParams.category;
+  const filtered = categoryFilter
+    ? rows.filter((h) => h.primaryCategories.includes(categoryFilter))
+    : rows;
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          {dict.nav.clinics}
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
+          {dict.featured.subtitle}
+        </p>
+      </header>
+
+      {/* Lightweight search bar — actual full-text search is Phase 2. */}
+      <div className="relative mb-6 max-w-xl">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="search"
+          placeholder={dict.nav.clinics}
+          className="h-11 w-full rounded-md border border-input bg-card pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+        />
+      </div>
+
+      {dbError ? (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {dbError}
+        </div>
+      ) : null}
+
+      {filtered.length === 0 ? (
+        <EmptyClinics dict={dict} locale={params.locale} />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((h) => (
+            <ClinicCard
+              key={h.id}
+              hospital={h}
+              locale={params.locale}
+              learnMoreLabel={dict.common.learnMore}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ClinicCard({
+  hospital,
+  locale,
+  learnMoreLabel,
+}: {
+  hospital: {
+    id: string;
+    name: string;
+    slug: string;
+    countryCode: string;
+    primaryCategories: string[];
+  };
+  locale: PublicLocale;
+  learnMoreLabel: string;
+}): JSX.Element {
+  return (
+    <Link
+      href={`/${locale}/clinics/${hospital.slug}`}
+      className="group block overflow-hidden rounded-xl border bg-card transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
+    >
+      {/* Photo placeholder — gradient until real images land. */}
+      <div className="aspect-[16/10] bg-gradient-to-br from-brand-100 via-hospitality-100 to-care-100" />
+      <div className="space-y-2 p-4">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-base font-semibold leading-tight">{hospital.name}</h3>
+          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
+            {hospital.countryCode}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {hospital.primaryCategories.slice(0, 3).map((cat) => (
+            <span
+              key={cat}
+              className="rounded-full border bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground"
+            >
+              {cat}
+            </span>
+          ))}
+        </div>
+        <div className="flex items-center justify-between pt-1 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Star className="h-3 w-3 text-amber-500" />
+            <span>—</span>
+          </span>
+          <span className="inline-flex items-center gap-0.5 font-medium text-brand-700 group-hover:text-brand-900">
+            {learnMoreLabel}
+            <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function EmptyClinics({
+  dict,
+  locale,
+}: {
+  dict: Awaited<ReturnType<typeof getDictionary>>;
+  locale: PublicLocale;
+}): JSX.Element {
+  return (
+    <div className="rounded-lg border-2 border-dashed bg-muted/20 px-6 py-12 text-center">
+      <MapPin className="mx-auto h-10 w-10 text-muted-foreground/40" />
+      <h3 className="mt-3 text-base font-semibold">
+        {dict.common.error}
+      </h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {dict.featured.subtitle}
+      </p>
+      <Link
+        href={`/${locale}/inquiry`}
+        className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
+      >
+        <Sparkles className="h-4 w-4" />
+        {dict.inquiryCta.submit}
+      </Link>
+    </div>
+  );
+}
