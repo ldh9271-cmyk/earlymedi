@@ -33,16 +33,19 @@ export default function LoginPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">로그인</h1>
+        <span className="inline-block rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-brand-700">
+          의료관광 사업자 전용
+        </span>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight">사업자 로그인</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          이메일로 매직링크를 받아 안전하게 접속하세요.
+          의료기관 · 유치업체 · 파트너업체 · 프리랜서를 위한 통합 콘솔입니다.
         </p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">시작하기</CardTitle>
-          <CardDescription>본인 카테고리를 선택해 가입하거나, 기존 계정으로 로그인합니다.</CardDescription>
+          <CardDescription>기존 사업자 계정으로 로그인하거나 새로 가입하세요.</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login">
@@ -80,6 +83,22 @@ export default function LoginPage({
           </Tabs>
         </CardContent>
       </Card>
+
+      <div className="rounded-lg border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground">환자이신가요?</p>
+        <p className="mt-0.5">
+          환자 포털에서 매직링크로 안전하게 로그인하실 수 있습니다.
+        </p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Link href="/kr/login" className="underline-offset-2 hover:underline">한국어</Link>
+          <span>·</span>
+          <Link href="/en/login" className="underline-offset-2 hover:underline">English</Link>
+          <span>·</span>
+          <Link href="/zh/login" className="underline-offset-2 hover:underline">中文</Link>
+          <span>·</span>
+          <Link href="/ja/login" className="underline-offset-2 hover:underline">日本語</Link>
+        </div>
+      </div>
 
       <p className="text-center text-xs text-muted-foreground">
         가입 시{' '}

@@ -49,13 +49,16 @@ export function PublicHeader({
           ))}
         </nav>
 
-        {/* Right cluster — locale switch + sign-in. Login takes them to
-            the existing B2B auth flow; patients don't currently need
-            their own account (Phase 2+ will add patient PWA accounts). */}
+        {/* Right cluster — locale switch + sign-in. The /[locale]/login
+            page is patient-only (magic link, no signup), separate from
+            the B2B /login flow under the (auth) group. Routing patients
+            there avoids exposing operator-targeted copy ("Free for first
+            10 patients", account-type picker, etc.) which used to
+            confuse foreign visitors clicking this link. */}
         <div className="ml-auto flex items-center gap-2">
           <LocaleSwitcher current={locale} />
           <Link
-            href="/login"
+            href={`/${locale}/login`}
             className="hidden rounded-md border border-input bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground sm:inline-block"
           >
             {dict.nav.login}
