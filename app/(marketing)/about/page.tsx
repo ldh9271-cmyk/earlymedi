@@ -3,7 +3,7 @@ export const metadata = { title: '소개' };
 export default function AboutPage(): JSX.Element {
   return (
     <main className="prose mx-auto max-w-3xl px-6 py-16">
-      <h1>EarlyMedi AI Concierge</h1>
+      <h1>KoreaGlowUp AI Concierge</h1>
       <p>환자의 첫 문의부터 귀국 후 케어까지, 한 손에서 끝나는 의료관광.</p>
       <p>
         한국 보건복지부 등록 외국인환자 유치업자, 협력 의료기관, 회복호텔·스파·미용실·사진관·식당·교통·관광

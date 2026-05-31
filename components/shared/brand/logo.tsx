@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils/cn';
 
 /**
- * EarlyMedi AI Concierge wordmark.
+ * KoreaGlowUp AI Concierge wordmark.
  *
- *   Early       — brand-600 (Indigo), font-extrabold
- *   Medi        — foreground, font-semibold
+ *   Korea       — brand-600 (Indigo), font-extrabold
+ *   GlowUp      — foreground, font-semibold
  *   AI Concierge — hospitality-500 (Amber), font-medium accent
  *
  * Sizes:
@@ -33,8 +33,8 @@ export function Logo({
   return (
     <span className={cn('inline-flex flex-col leading-tight', className)}>
       <span className={cn('font-display tracking-tight', sizeClass)}>
-        <span className="font-extrabold text-brand-600">Early</span>
-        <span className="font-semibold text-foreground">Medi</span>{' '}
+        <span className="font-extrabold text-brand-600">Korea</span>
+        <span className="font-semibold text-foreground">GlowUp</span>{' '}
         <span className="font-medium text-hospitality-500">AI Concierge</span>
       </span>
       {showTagline ? (
@@ -53,9 +53,9 @@ export function LogoMark({ className }: { className?: string }): JSX.Element {
         'inline-flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white',
         className,
       )}
-      aria-label="EarlyMedi"
+      aria-label="KoreaGlowUp"
     >
-      E
+      K
     </span>
   );
 }

@@ -20,7 +20,7 @@ export function Topbar({
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/95 px-5 backdrop-blur">
       <div className="flex items-center gap-2 text-sm text-muted-foreground md:hidden">
-        EarlyMedi AI Concierge
+        K-Glowup AI Concierge
       </div>
 
       <Badge variant={color} className="hidden md:inline-flex">

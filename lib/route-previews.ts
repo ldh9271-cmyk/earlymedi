@@ -17,8 +17,8 @@ const AGENCY_WORKING: RoutePreview['workingLinks'] = [
   { href: '/agency/patients', label: '환자 CRM' },
   { href: '/agency/cases', label: '케이스' },
   { href: '/agency/hospitals', label: '병원 마켓플레이스' },
-  { href: '/agency/recovery', label: 'EarlyCare 사후관리' },
-  { href: '/agency/insights', label: 'EarlyInsight 분석' },
+  { href: '/agency/recovery', label: 'GlowCare 사후관리' },
+  { href: '/agency/insights', label: 'GlowInsight 분석' },
 ];
 
 const MEDICAL_WORKING: RoutePreview['workingLinks'] = [
@@ -156,7 +156,7 @@ export const ROUTE_PREVIEWS: Record<string, RoutePreview> = {
   },
   '/agency/billing': {
     title: '요금제 · 청구서',
-    description: 'EarlyMedi 자체의 구독 요금제 · 사용량 · 청구서를 확인하고 결제 수단을 관리합니다.',
+    description: 'KoreaGlowUp 자체의 구독 요금제 · 사용량 · 청구서를 확인하고 결제 수단을 관리합니다.',
     bullets: [
       '현재 플랜 + 무료 체험 잔량 (10명 중 X명)',
       '사용량 메트릭 (환자 · AI 호출 · 메시지 · 비자 처리)',
@@ -273,7 +273,7 @@ export const ROUTE_PREVIEWS: Record<string, RoutePreview> = {
   },
   '/medical/billing': {
     title: '잔액 · 사용량',
-    description: 'EarlyMedi PAYG 잔액과 시술 차트 자동 채움 · AI Vision · STT 사용량을 확인합니다.',
+    description: 'KoreaGlowUp PAYG 잔액과 시술 차트 자동 채움 · AI Vision · STT 사용량을 확인합니다.',
     bullets: [
       '현재 선불 잔액 + 자동 충전 설정',
       '사용량 메트릭 (차트 자동 채움 · AI Vision · STT · 통역)',
@@ -345,7 +345,7 @@ export const ROUTE_PREVIEWS: Record<string, RoutePreview> = {
     bullets: [
       '대화 로그 · 추천 코드 클릭 시점 자동 첨부',
       '에이전시 응답 SLA 추적',
-      '제3자 중재 요청 (EarlyMedi 운영팀)',
+      '제3자 중재 요청 (KoreaGlowUp 운영팀)',
       '판정 결과 + 정산 자동 반영',
     ],
     workingLinks: FREELANCER_WORKING,
@@ -396,7 +396,7 @@ export const ROUTE_PREVIEWS: Record<string, RoutePreview> = {
     description: '환자 시술별로 제공 불가한 서비스를 등록하면 부킹 시 자동으로 차단됩니다.',
     bullets: [
       '시술-제약 매트릭스 (예: 보톡스 → 24시간 사우나 금지)',
-      'EarlyMedi 의료 자문단 검증 데이터 활용',
+      'KoreaGlowUp 의료 자문단 검증 데이터 활용',
       '환자 PWA로 자동 안내 메시지',
       '제약 위반 시 자동 감지 + 알림',
     ],
@@ -429,7 +429,7 @@ export const ROUTE_PREVIEWS: Record<string, RoutePreview> = {
   },
   '/partner/billing': {
     title: '청구서',
-    description: 'EarlyMedi 구독 요금제와 사용량 · 청구서를 확인합니다.',
+    description: 'KoreaGlowUp 구독 요금제와 사용량 · 청구서를 확인합니다.',
     bullets: [
       '현재 플랜 + 무료 체험 잔량',
       '사용량 메트릭',

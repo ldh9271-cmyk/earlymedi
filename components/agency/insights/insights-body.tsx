@@ -57,7 +57,7 @@ const MOCK_COUNTRY = [
 ];
 
 const MOCK_TOP_HOSPITALS = [
-  { name: '얼리메디 데모 성형외과', gmv: 184_000_000, fee: 51_200_000, cases: 21 },
+  { name: 'KoreaGlowUp 데모 성형외과', gmv: 184_000_000, fee: 51_200_000, cases: 21 },
   { name: 'Seoul Aesthetic Clinic', gmv: 142_000_000, fee: 38_800_000, cases: 17 },
   { name: 'K-Hair Restoration', gmv: 86_000_000, fee: 21_500_000, cases: 12 },
   { name: 'Gangnam Skin Lab', gmv: 64_000_000, fee: 12_800_000, cases: 18 },
@@ -151,7 +151,7 @@ export function InsightsBody(): JSX.Element {
         <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           유치업체 운영 · 2026-05 (지난 30일 기준)
         </div>
-        <h1 className="text-3xl font-bold tracking-tight md:text-[40px] md:leading-[1.1]">EarlyInsight 분석</h1>
+        <h1 className="text-3xl font-bold tracking-tight md:text-[40px] md:leading-[1.1]">GlowInsight 분석</h1>
         <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
           채널·국가별 CAC/LTV, Lead → 정산 완료 전환 퍼널, 병원·프리랜서 리더보드, 그리고 MRR/ARR 운영 지표를 한 화면에서 추적합니다.
         </p>

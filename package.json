@@ -1,8 +1,8 @@
 {
-  "name": "earlymedi-concierge",
+  "name": "koreaglowup-concierge",
   "version": "0.1.0",
   "private": true,
-  "description": "EarlyMedi AI Concierge — 환자의 첫 문의부터 귀국 후 케어까지, 한 손에서 끝나는 의료관광",
+  "description": "KoreaGlowUp AI Concierge — 환자의 첫 문의부터 귀국 후 케어까지, 한 손에서 끝나는 의료관광",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

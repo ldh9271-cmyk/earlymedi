@@ -16,7 +16,7 @@ import type {
  * Real KakaoTalk adapter — calls the Kakao i 오픈빌더 Event API to push
  * an agent reply back into the user's channel chat. Replaces the
  * BaseMockAdapter for the 'kakao' kind so messages typed in
- * EarlyMedi's inbox actually reach the patient's KakaoTalk.
+ * KoreaGlowUp's inbox actually reach the patient's KakaoTalk.
  *
  * Why EventAPI specifically:
  *   - Free (no per-message cost like 친구톡 / 알림톡)
@@ -30,7 +30,7 @@ import type {
  *      `{{value.text}}` as the body. This is how the EventAPI payload
  *      flows to the user's chat.
  *   2. In i 오픈빌더 > 설정 > API 관리, generate an Event API key.
- *   3. In EarlyMedi > 채널 연결 > KakaoTalk > 재연결, paste the
+ *   3. In KoreaGlowUp > 채널 연결 > KakaoTalk > 재연결, paste the
  *      bot ID and the Event API key into the new credential fields.
  *
  * Failure handling:

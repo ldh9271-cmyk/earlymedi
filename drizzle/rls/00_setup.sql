@@ -1,5 +1,5 @@
 -- ──────────────────────────────────────────────────────────────────
--- EarlyMedi RLS — bootstrap
+-- KoreaGlowUp RLS — bootstrap
 --
 -- The system has THREE layers of authorization, applied in order:
 --   1. Next.js 5-step middleware (lib/auth/middleware.ts)

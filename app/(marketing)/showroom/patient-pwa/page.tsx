@@ -56,7 +56,7 @@ const TILES = [
   {
     icon: HeartPulse,
     href: '#recovery',
-    title: 'EarlyCare 회복',
+    title: 'GlowCare 회복',
     body: '사진·통증 체크인 · 의사 메시지 · 화상 재진',
     badge: 'D+3 사진',
     badgeVariant: 'care' as const,
@@ -99,7 +99,7 @@ export default function ShowroomPatientPwaPage(): JSX.Element {
               <Sparkles className="h-3 w-3" />
               현재 단계 · 시술 D-3
             </div>
-            <div className="mt-3 text-3xl font-bold leading-tight md:text-4xl">코재수술 · 얼리메디 데모 성형외과</div>
+            <div className="mt-3 text-3xl font-bold leading-tight md:text-4xl">코재수술 · KoreaGlowUp 데모 성형외과</div>
             <div className="mt-1 text-sm text-white/80">2026-06-10 입국 · 2026-06-20 출국 · C-3-3 비자 승인</div>
           </div>
           <Button className="rounded-full bg-white text-brand-700 hover:bg-white/90">전체 일정 보기</Button>

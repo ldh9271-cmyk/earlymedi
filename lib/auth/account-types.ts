@@ -1,5 +1,5 @@
 /**
- * The 4 actors of the EarlyMedi system.
+ * The 4 actors of the KoreaGlowUp system.
  * Every authenticated request must resolve to one of these via active org.
  */
 

@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { HeartPulse, AlertTriangle } from 'lucide-react';
 import { formatLocal } from '@/lib/utils/date';
 
-export const metadata = { title: 'EarlyCare 사후관리' };
+export const metadata = { title: 'GlowCare 사후관리' };
 
 const SEVERITY_VARIANT: Record<string, 'brand' | 'hospitality' | 'destructive'> = {
   info: 'brand',
@@ -37,7 +37,7 @@ export default async function RecoveryPage(): Promise<JSX.Element> {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">EarlyCare 사후관리</h1>
+        <h1 className="text-2xl font-bold tracking-tight">GlowCare 사후관리</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           D+1 / D+3 / D+7 / D+14 / D+30 / D+90 / D+180 / D+365 자동 체크인 — 환자 현지 10:00 발송.
           무응답·통증·사진 이상 신호는 자동 에스컬레이션.

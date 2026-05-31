@@ -43,7 +43,7 @@ const PERSONAS: Persona[] = [
       },
       {
         role: 'agent',
-        body: '안녕하세요 雪 님, EarlyMedi입니다. 어떤 시술을 고려 중이신지 말씀해 주실 수 있을까요?',
+        body: '안녕하세요 雪 님, KoreaGlowUp입니다. 어떤 시술을 고려 중이신지 말씀해 주실 수 있을까요?',
         locale: 'ko',
         minutesAgo: 32,
       },

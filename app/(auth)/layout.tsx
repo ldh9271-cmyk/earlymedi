@@ -8,8 +8,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }):
       <div className="hidden flex-col justify-between bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900 p-12 text-white lg:flex">
         <Link href="/" className="inline-block">
           <span className="text-xl font-display font-bold">
-            <span className="font-extrabold">Early</span>
-            <span className="font-semibold">Medi</span>{' '}
+            <span className="font-extrabold">Korea</span>
+            <span className="font-semibold">GlowUp</span>{' '}
             <span className="font-medium text-hospitality-200">AI Concierge</span>
           </span>
         </Link>
@@ -33,7 +33,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }):
         </div>
 
         <p className="text-xs text-white/50">
-          © {new Date().getFullYear()} EarlyMedi · 의료법 27조의2 외국인환자 유치 광고 가이드라인 준수
+          © {new Date().getFullYear()} KoreaGlowUp · 의료법 27조의2 외국인환자 유치 광고 가이드라인 준수
         </p>
       </div>
 

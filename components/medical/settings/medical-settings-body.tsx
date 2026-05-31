@@ -63,10 +63,10 @@ export function MedicalSettingsBody(): JSX.Element {
             }
           >
             <SettingsRow label="병원명" hint="환자에게 노출되는 명칭">
-              <Input defaultValue="얼리메디 데모 성형외과" className="rounded-md" />
+              <Input defaultValue="KoreaGlowUp 데모 성형외과" className="rounded-md" />
             </SettingsRow>
             <SettingsRow label="의료법인명">
-              <Input defaultValue="의료법인 얼리메디 데모" className="rounded-md" />
+              <Input defaultValue="의료법인 KoreaGlowUp 데모" className="rounded-md" />
             </SettingsRow>
             <SettingsRow label="사업자등록번호">
               <Input defaultValue="987-65-43210" className="rounded-md font-mono" />
@@ -202,7 +202,7 @@ export function MedicalSettingsBody(): JSX.Element {
             <SettingsRow label="정산 계좌">
               <div className="space-y-1">
                 <div className="font-mono text-sm">신한은행 100-987-654321</div>
-                <div className="text-[11px] text-muted-foreground">예금주: 의료법인 얼리메디 데모</div>
+                <div className="text-[11px] text-muted-foreground">예금주: 의료법인 KoreaGlowUp 데모</div>
               </div>
             </SettingsRow>
             <SettingsRow label="세금계산서 발행" hint="홈택스 e세로 연동">
@@ -220,7 +220,7 @@ export function MedicalSettingsBody(): JSX.Element {
             description="여러 에이전시와 동시에 협력 가능. 각 계약은 송객 수수료율·예약금 정책·정산 주기가 다를 수 있습니다."
             action={<Button variant="care" className="rounded-full">+ 계약 추가</Button>}
           >
-            <ContractRow name="얼리메디 데모 에이전시" rate="성형 30% · 피부 20%" deposit="20% percentage" status="active" expiresIn="11개월" />
+            <ContractRow name="KoreaGlowUp 데모 에이전시" rate="성형 30% · 피부 20%" deposit="20% percentage" status="active" expiresIn="11개월" />
             <ContractRow name="K-Beauty Tour Co." rate="성형 28% · 피부 18%" deposit="₩500,000 fixed" status="active" expiresIn="3개월" />
             <ContractRow name="Asia Health Group" rate="성형 32%" deposit="off" status="pending_sign" expiresIn="대기" />
           </SettingsCard>

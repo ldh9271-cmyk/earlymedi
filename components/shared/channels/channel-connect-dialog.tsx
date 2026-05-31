@@ -121,7 +121,7 @@ export function ChannelConnectDialog({
                       에 로그인해 앱을 생성하고 다음을 확보하세요:
                       <span className="mt-1 block space-y-0.5 pl-3">
                         <span className="block">① 내 애플리케이션 → 앱 설정 → 앱 키 → REST API 키</span>
-                        <span className="block">② 카카오톡 채널 관리자센터에서 채널 ID (@earlymedi)</span>
+                        <span className="block">② 카카오톡 채널 관리자센터에서 채널 ID (@koreaglowup)</span>
                         <span className="block">③ 카카오 비즈니스 인증 (선택 — 메시지 발송 시 필요)</span>
                       </span>
                     </>
@@ -163,7 +163,7 @@ export function ChannelConnectDialog({
                   </Label>
                   <Input
                     id="externalAccountId"
-                    placeholder={kind === 'kakao' ? '@earlymedi' : 'account-id'}
+                    placeholder={kind === 'kakao' ? '@koreaglowup' : 'account-id'}
                     value={externalAccountId}
                     onChange={(e) => setExternalAccountId(e.target.value)}
                     required

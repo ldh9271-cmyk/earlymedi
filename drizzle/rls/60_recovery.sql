@@ -1,5 +1,5 @@
 -- ─────────────────────────────────────────────────────────
--- Phase 8 — EarlyCare aftercare RLS
+-- Phase 8 — GlowCare aftercare RLS
 -- ─────────────────────────────────────────────────────────
 
 ALTER TABLE public.recovery_routine_templates ENABLE ROW LEVEL SECURITY;

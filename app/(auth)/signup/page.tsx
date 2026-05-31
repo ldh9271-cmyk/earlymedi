@@ -108,7 +108,7 @@ export default async function SignupPage({
         </Card>
 
         <div className="rounded-lg border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
-          이미 EarlyMedi 계정이 있으신가요?{' '}
+          이미 KoreaGlowUp 계정이 있으신가요?{' '}
           <Link
             href={`/login?next=/invite/${inviteContext.token}`}
             className="font-medium text-foreground underline"
@@ -124,7 +124,7 @@ export default async function SignupPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">EarlyMedi 가입</h1>
+        <h1 className="text-2xl font-bold tracking-tight">KoreaGlowUp 가입</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {alreadyAuthed
             ? '기본 정보 4가지만 입력하시면 바로 둘러볼 수 있습니다. 환자 10명까지 무료, 그 이후는 유료 전환.'
@@ -149,7 +149,7 @@ export default async function SignupPage({
       <div className="rounded-lg border bg-care-50 px-4 py-3 text-sm text-care-700">
         <p className="font-medium">🎁 무료 체험 안내</p>
         <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs">
-          <li>가입 즉시 EarlyMedi 전체 기능을 둘러볼 수 있습니다.</li>
+          <li>가입 즉시 KoreaGlowUp 전체 기능을 둘러볼 수 있습니다.</li>
           <li>
             <strong>환자 10명까지 등록 무료</strong> — 인박스 · CRM · AI 시술 차트 · 케이스 · 정산 · 사후관리 모두 포함
           </li>

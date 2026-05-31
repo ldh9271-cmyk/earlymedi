@@ -57,7 +57,7 @@ export function FreelancerSettingsBody(): JSX.Element {
               <Input defaultValue="박송객" className="rounded-md" />
             </SettingsRow>
             <SettingsRow label="이메일">
-              <Input defaultValue="demo-freelancer@earlymedi.test" className="rounded-md" />
+              <Input defaultValue="demo-freelancer@koreaglowup.test" className="rounded-md" />
             </SettingsRow>
             <SettingsRow label="휴대전화" hint="WhatsApp/LINE/카카오 알림 매칭에 사용">
               <Input defaultValue="+82 10-XXXX-XXXX" className="rounded-md font-mono" />
@@ -78,7 +78,7 @@ export function FreelancerSettingsBody(): JSX.Element {
             description="여러 에이전시 겸업 가능. 각 소속마다 커미션 정책·PII 공개 범위가 다를 수 있습니다."
             action={<Button variant="hospitality" className="rounded-full">+ 에이전시 추가</Button>}
           >
-            <AffiliationRow name="얼리메디 데모 에이전시" code="DEMO-PARK" rate="송객 수수료의 30%" piiLevel="minimal" status="active" />
+            <AffiliationRow name="KoreaGlowUp 데모 에이전시" code="DEMO-PARK" rate="송객 수수료의 30%" piiLevel="minimal" status="active" />
             <AffiliationRow name="K-Beauty Tour Co." code="PARK-KBT" rate="송객 수수료의 25%" piiLevel="alias_only" status="active" />
             <AffiliationRow name="Asia Health Group" code="—" rate="—" piiLevel="—" status="pending" />
           </SettingsCard>
@@ -90,9 +90,9 @@ export function FreelancerSettingsBody(): JSX.Element {
             description="QR을 스캔하면 다국어 랜딩으로 이동, 환자가 가입하면 자동 귀속됩니다."
             action={<Button variant="outline" className="rounded-full">QR 일괄 다운로드</Button>}
           >
-            <ReferralRow code="DEMO-PARK" agency="얼리메디 데모 에이전시" landing="/r/DEMO-PARK" leads={47} cases={12} />
+            <ReferralRow code="DEMO-PARK" agency="KoreaGlowUp 데모 에이전시" landing="/r/DEMO-PARK" leads={47} cases={12} />
             <ReferralRow code="PARK-KBT" agency="K-Beauty Tour Co." landing="/r/PARK-KBT" leads={18} cases={4} />
-            <ReferralRow code="PARK-IG" agency="얼리메디 데모 에이전시" landing="/r/PARK-IG (Instagram bio)" leads={132} cases={31} />
+            <ReferralRow code="PARK-IG" agency="KoreaGlowUp 데모 에이전시" landing="/r/PARK-IG (Instagram bio)" leads={132} cases={31} />
           </SettingsCard>
         </SettingsSectionAnchor>
 

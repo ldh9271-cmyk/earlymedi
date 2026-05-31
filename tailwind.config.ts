@@ -15,7 +15,7 @@ const config: Config = {
     },
     extend: {
       colors: {
-        // EarlyMedi brand
+        // KoreaGlowUp brand
         brand: {
           DEFAULT: '#4F46E5', // Indigo 600 — 신뢰
           50:  '#EEF2FF',

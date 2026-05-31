@@ -106,7 +106,7 @@ export async function POST(
           let hint: string;
           if (isAnthropicNoise) {
             hint =
-              'Gemini 호출 자체가 실패해 Claude 폴백을 시도했지만 ANTHROPIC_API_KEY도 없습니다. ① Google Cloud Console에서 EarlyMedi 프로젝트의 "Generative Language API"가 활성화되어 있는지 확인 (console.cloud.google.com/apis/library/generativelanguage.googleapis.com). ② aistudio.google.com/api-keys 에서 "+ API 키 만들기"로 키를 다시 발급해 새 키로 교체. ③ Vercel Redeploy (캐시 OFF).';
+              'Gemini 호출 자체가 실패해 Claude 폴백을 시도했지만 ANTHROPIC_API_KEY도 없습니다. ① Google Cloud Console에서 KoreaGlowUp 프로젝트의 "Generative Language API"가 활성화되어 있는지 확인 (console.cloud.google.com/apis/library/generativelanguage.googleapis.com). ② aistudio.google.com/api-keys 에서 "+ API 키 만들기"로 키를 다시 발급해 새 키로 교체. ③ Vercel Redeploy (캐시 OFF).';
           } else if (
             lower.includes('no longer available') ||
             lower.includes('deprecated')

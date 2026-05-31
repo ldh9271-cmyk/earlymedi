@@ -71,7 +71,7 @@ const kr = {
     note: '업로드한 사진은 분석 직후 삭제되며, 동의 없이 저장·공유되지 않습니다.',
   },
   trust: {
-    title: '왜 EarlyMedi인가요?',
+    title: '왜 KoreaGlowUp인가요?',
     items: {
       koiha: {
         title: 'KOIHA 등록 의료기관만',
@@ -87,7 +87,7 @@ const kr = {
       },
       aftercare: {
         title: '귀국 후 케어',
-        desc: 'EarlyCare 사후관리 — 회복 사진 분석, 영상 진료, 응급 연결.',
+        desc: 'GlowCare 사후관리 — 회복 사진 분석, 영상 진료, 응급 연결.',
       },
     },
   },
@@ -117,7 +117,7 @@ const kr = {
     forHospitals: '병원·의원용',
     forPartners: '호텔·파트너용',
     forFreelancers: '프리랜서·코디용',
-    copy: '© 2026 EarlyMedi · 한국 보건복지부 외국인환자 유치 광고 가이드라인 준수',
+    copy: '© 2026 KoreaGlowUp · 한국 보건복지부 외국인환자 유치 광고 가이드라인 준수',
   },
   common: {
     loading: '불러오는 중…',

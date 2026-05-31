@@ -8,7 +8,7 @@ import Link from 'next/link';
  *   - `/(marketing)/*` (pricing, about, legal, showroom — via layout)
  *
  * Sticky `top-0 z-40` with translucent backdrop blur. Logo collapses to
- * "EarlyMedi" on mobile; full "EarlyMedi AI Concierge" on md+. Center
+ * "KoreaGlowUp" on mobile; full "KoreaGlowUp AI Concierge" on md+. Center
  * nav links (의료관광 / 기능 / 요금제 / 데모) hidden below md. The two pill
  * CTAs (로그인 / 무료로 시작) are always visible — they shrink to h-9 text-xs
  * px-3 on mobile so even narrow phones don't wrap them.
@@ -21,8 +21,8 @@ export function SiteNav(): JSX.Element {
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:gap-6 md:px-6 md:py-5">
         <Link href="/" className="shrink-0 whitespace-nowrap text-base font-bold tracking-tight md:text-2xl">
-          <span className="font-extrabold text-brand-600">Early</span>
-          <span className="font-semibold">Medi</span>
+          <span className="font-extrabold text-brand-600">Korea</span>
+          <span className="font-semibold">GlowUp</span>
           <span className="hidden text-hospitality-500 md:inline">{' '}AI Concierge</span>
         </Link>
         <nav className="hidden items-center gap-7 text-lg font-medium md:flex">

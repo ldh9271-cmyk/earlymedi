@@ -18,7 +18,7 @@ export const caseStageEnum = pgEnum('case_stage', [
   'arrived',          // 입국 — patient in-country
   'in_treatment',     // 시술 중
   'post_treatment',   // 시술 완료 — in-country recovery
-  'aftercare',        // 사후관리 — back home, EarlyCare Plus
+  'aftercare',        // 사후관리 — back home, GlowCare Plus
   'closed_won',       // 정산 완료
   'closed_lost',      // 경쟁사·드롭 등으로 미전환
   'closed_cancelled', // 진행 중 취소

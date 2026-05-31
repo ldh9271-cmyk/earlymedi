@@ -60,7 +60,7 @@ const en: Dictionary = {
     note: 'Your photo is deleted immediately after analysis. Never stored or shared without consent.',
   },
   trust: {
-    title: 'Why EarlyMedi?',
+    title: 'Why KoreaGlowUp?',
     items: {
       koiha: {
         title: 'KOIHA-Certified Clinics Only',
@@ -76,7 +76,7 @@ const en: Dictionary = {
       },
       aftercare: {
         title: 'After You Return Home',
-        desc: 'EarlyCare aftercare — recovery photo analysis, video consults, emergency escalation.',
+        desc: 'GlowCare aftercare — recovery photo analysis, video consults, emergency escalation.',
       },
     },
   },
@@ -106,7 +106,7 @@ const en: Dictionary = {
     forHospitals: 'For Clinics',
     forPartners: 'For Hotels & Partners',
     forFreelancers: 'For Freelancers',
-    copy: '© 2026 EarlyMedi · Compliant with Korea MOHW foreign-patient advertising guidelines',
+    copy: '© 2026 KoreaGlowUp · Compliant with Korea MOHW foreign-patient advertising guidelines',
   },
   common: {
     loading: 'Loading…',

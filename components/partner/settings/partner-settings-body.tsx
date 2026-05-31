@@ -71,10 +71,10 @@ export function PartnerSettingsBody(): JSX.Element {
               </div>
             </SettingsRow>
             <SettingsRow label="업체명">
-              <Input defaultValue="얼리메디 회복호텔" className="rounded-md" />
+              <Input defaultValue="KoreaGlowUp 회복호텔" className="rounded-md" />
             </SettingsRow>
             <SettingsRow label="법인명">
-              <Input defaultValue="얼리메디 호스피탈리티" className="rounded-md" />
+              <Input defaultValue="KoreaGlowUp 호스피탈리티" className="rounded-md" />
             </SettingsRow>
             <SettingsRow label="대표자">
               <Input defaultValue="최호텔" className="rounded-md" />
@@ -188,7 +188,7 @@ export function PartnerSettingsBody(): JSX.Element {
             <SettingsRow label="입금 계좌 (KRW)">
               <div className="space-y-1">
                 <div className="font-mono text-sm">우리은행 1002-345-678901</div>
-                <div className="text-[11px] text-muted-foreground">예금주: 얼리메디 호스피탈리티</div>
+                <div className="text-[11px] text-muted-foreground">예금주: KoreaGlowUp 호스피탈리티</div>
               </div>
             </SettingsRow>
             <SettingsRow label="세금계산서 자동 발행">
@@ -203,7 +203,7 @@ export function PartnerSettingsBody(): JSX.Element {
             description="여러 에이전시와 동시에 협력 가능. 각 계약에 다른 커미션·우선 노출 정책 적용."
             action={<Button variant="outline" className="rounded-full">+ 계약 추가</Button>}
           >
-            <PartnerContractRow agency="얼리메디 데모 에이전시" commission="GMV의 15%" priority="우선 노출" status="active" />
+            <PartnerContractRow agency="KoreaGlowUp 데모 에이전시" commission="GMV의 15%" priority="우선 노출" status="active" />
             <PartnerContractRow agency="Asia Health Group" commission="GMV의 12%" priority="기본" status="active" />
             <PartnerContractRow agency="K-Beauty Tour Co." commission="GMV의 10%" priority="기본" status="paused" />
           </SettingsCard>

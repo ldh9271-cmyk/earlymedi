@@ -242,7 +242,7 @@ export type RecoveryPhoto = typeof recoveryPhotos.$inferSelect;
  *   - patient-reported issue (free-text response containing keywords)
  *   - high pain score
  *
- * The agency dashboard pulls these via the EarlyCare board (Phase 8 UI).
+ * The agency dashboard pulls these via the GlowCare board (Phase 8 UI).
  */
 export const recoveryAlerts = pgTable(
   'recovery_alerts',

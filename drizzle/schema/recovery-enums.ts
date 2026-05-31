@@ -1,7 +1,7 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
 
 /**
- * Phase 8 — EarlyCare aftercare enums.
+ * Phase 8 — GlowCare aftercare enums.
  */
 
 export const routineStatusEnum = pgEnum('recovery_routine_status', [

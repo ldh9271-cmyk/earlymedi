@@ -1,4 +1,4 @@
-# EarlyMedi AI Concierge
+# KoreaGlowUp AI Concierge
 
 > 환자의 첫 문의부터 귀국 후 케어까지, 한 손에서 끝나는 의료관광
 
@@ -70,4 +70,4 @@ npm run dev
 
 ## 라이선스
 
-Proprietary © EarlyMedi
+Proprietary © KoreaGlowUp

@@ -12,7 +12,7 @@ export default function PricingPage(): JSX.Element {
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
       <div className="mb-12 text-center">
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">EarlyMedi 요금제</h1>
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">KoreaGlowUp 요금제</h1>
         <p className="mt-2 text-muted-foreground">카테고리별로 적합한 플랜을 선택하세요.</p>
       </div>
 

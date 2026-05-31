@@ -47,7 +47,7 @@ export function ComingSoon({ route }: { route: string }): JSX.Element {
             <Sparkles className="mr-1 h-3 w-3" />
             곧 활성화 예정
           </Badge>
-          <span className="text-xs text-muted-foreground">EarlyMedi 로드맵</span>
+          <span className="text-xs text-muted-foreground">KoreaGlowUp 로드맵</span>
         </div>
         <h1 className="text-2xl font-bold tracking-tight">{preview.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{preview.description}</p>
@@ -102,7 +102,7 @@ export function ComingSoon({ route }: { route: string }): JSX.Element {
       <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
         <span>이 기능에 대한 피드백이나 우선순위 요청이 있으신가요?</span>
         <Link
-          href="mailto:product@earlymedi.com?subject=EarlyMedi%20%EA%B8%B0%EB%8A%A5%20%EC%9A%94%EC%B2%AD"
+          href="mailto:product@koreaglowup.com?subject=KoreaGlowUp%20%EA%B8%B0%EB%8A%A5%20%EC%9A%94%EC%B2%AD"
           className="font-medium text-foreground underline"
         >
           알려주세요 →

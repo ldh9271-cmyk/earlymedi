@@ -1,17 +1,17 @@
 export const metadata = {
-  title: '이용약관 | EarlyMedi',
+  title: '이용약관 | KoreaGlowUp',
   description:
-    'EarlyMedi AI Concierge 서비스의 이용약관 — 회원의 권리와 의무, 회사의 책임 범위, 분쟁 해결 절차를 규정합니다.',
+    'KoreaGlowUp AI Concierge 서비스의 이용약관 — 회원의 권리와 의무, 회사의 책임 범위, 분쟁 해결 절차를 규정합니다.',
 };
 
 const EFFECTIVE_DATE = '2026년 5월 25일';
 const LAST_UPDATED = '2026년 5월 25일';
 const COMPANY_NAME = '주식회사 쉐어아트';
-const SERVICE_NAME = 'EarlyMedi AI Concierge';
-const SUPPORT_EMAIL = 'support@earlymedi.com';
+const SERVICE_NAME = 'KoreaGlowUp AI Concierge';
+const SUPPORT_EMAIL = 'support@koreaglowup.com';
 
 /**
- * Service Terms of Use for the EarlyMedi medical-tourism SaaS.
+ * Service Terms of Use for the KoreaGlowUp medical-tourism SaaS.
  * Required by 「전자상거래법」 제3조 + 「약관규제법」 + KakaoTalk channel
  * business review. Cross-referenced with the privacy policy at /legal/privacy.
  */

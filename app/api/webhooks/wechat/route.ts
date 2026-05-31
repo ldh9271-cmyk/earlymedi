@@ -142,7 +142,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!token) {
     // Credentials missing — channel hasn't finished setup. Don't echo
     // back; WeChat will report verification failure to the operator
-    // and they'll know to check the EarlyMedi connection form first.
+    // and they'll know to check the KoreaGlowUp connection form first.
     return new NextResponse('token_not_configured', { status: 400 });
   }
 

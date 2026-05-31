@@ -52,7 +52,7 @@ export const users = pgTable(
     // Last active org pointer (cached; not authoritative — middleware re-verifies)
     activeOrgId: uuid('active_org_id'),
 
-    isSystemAdmin: boolean('is_system_admin').notNull().default(false), // EarlyMedi staff
+    isSystemAdmin: boolean('is_system_admin').notNull().default(false), // KoreaGlowUp staff
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

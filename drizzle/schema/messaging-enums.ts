@@ -74,7 +74,7 @@ export const messageContentTypeEnum = pgEnum('message_content_type', [
 
 export const senderRoleEnum = pgEnum('sender_role', [
   'patient',
-  'agent', // EarlyMedi staff
+  'agent', // KoreaGlowUp staff
   'ai_concierge',
   'system',
   'partner', // partner-side reply

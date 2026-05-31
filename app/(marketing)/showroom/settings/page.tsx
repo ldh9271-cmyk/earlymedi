@@ -70,10 +70,10 @@ export default function ShowroomSettingsPage(): JSX.Element {
             }
           >
             <SettingsRow label="회사명" hint="환자에게 노출되는 브랜드명">
-              <Input defaultValue="얼리메디 데모 에이전시" className="rounded-md" />
+              <Input defaultValue="KoreaGlowUp 데모 에이전시" className="rounded-md" />
             </SettingsRow>
             <SettingsRow label="법인명" hint="사업자등록증상 상호">
-              <Input defaultValue="주식회사 얼리메디 데모" className="rounded-md" />
+              <Input defaultValue="주식회사 KoreaGlowUp 데모" className="rounded-md" />
             </SettingsRow>
             <SettingsRow label="사업자등록번호">
               <Input defaultValue="123-45-67890" className="rounded-md font-mono" />
@@ -104,7 +104,7 @@ export default function ShowroomSettingsPage(): JSX.Element {
             <NotifRow label="신규 리드 도착" channels={['email', 'kakao']} />
             <NotifRow label="병원 견적 회신" channels={['email', 'web']} />
             <NotifRow label="환자 결제 입금" channels={['email', 'sms']} />
-            <NotifRow label="EarlyCare critical 알림" channels={['email', 'sms', 'kakao']} forced />
+            <NotifRow label="GlowCare critical 알림" channels={['email', 'sms', 'kakao']} forced />
             <NotifRow label="요금제 / 충전 잔액" channels={['email']} />
             <Separator className="my-2" />
             <SettingsRow label="조용한 시간" hint="이 시간에는 critical을 제외한 모든 알림이 묶입니다.">
@@ -149,7 +149,7 @@ export default function ShowroomSettingsPage(): JSX.Element {
               </div>
             </SettingsRow>
             <SettingsRow label="청구 이메일">
-              <Input defaultValue="billing@earlymedi-demo.kr" className="rounded-md" />
+              <Input defaultValue="billing@koreaglowup-demo.kr" className="rounded-md" />
             </SettingsRow>
           </SettingsCard>
         </SettingsSectionAnchor>
@@ -160,21 +160,21 @@ export default function ShowroomSettingsPage(): JSX.Element {
             description="역할: owner · admin · manager · member · viewer. 좌석을 초과하면 멤버 추가가 잠금됩니다."
             action={<Button variant="brand" className="rounded-full">+ 멤버 초대</Button>}
           >
-            <MemberRow name="김유치" email="demo-agency@earlymedi.test" role="owner" />
+            <MemberRow name="김유치" email="demo-agency@koreaglowup.test" role="owner" />
             <MemberRow name="마스터 운영자" email="astoriakr@naver.com" role="owner" tag="master" />
-            <MemberRow name="박매니저" email="manager@earlymedi-demo.kr" role="manager" />
-            <MemberRow name="이코디" email="coord@earlymedi-demo.kr" role="member" />
+            <MemberRow name="박매니저" email="manager@koreaglowup-demo.kr" role="manager" />
+            <MemberRow name="이코디" email="coord@koreaglowup-demo.kr" role="member" />
           </SettingsCard>
         </SettingsSectionAnchor>
 
         <SettingsSectionAnchor id="integrations">
           <SettingsCard title="채널 · 통합" description="10채널 다국어 인박스 + 결제 · 환율 · 메시지 게이트웨이.">
-            <IntegrationRow icon="💬" name="KakaoTalk Channel" status="connected" detail="채널 ID @earlymedi" />
+            <IntegrationRow icon="💬" name="KakaoTalk Channel" status="connected" detail="채널 ID @koreaglowup" />
             <IntegrationRow icon="🟢" name="WhatsApp Business" status="connected" detail="+82 10-XXXX-XXXX" />
-            <IntegrationRow icon="💚" name="LINE Official" status="connected" detail="bot id @earlymedi" />
+            <IntegrationRow icon="💚" name="LINE Official" status="connected" detail="bot id @koreaglowup" />
             <IntegrationRow icon="📷" name="Instagram DM" status="action" detail="페이지 액세스 토큰 만료 임박" />
             <IntegrationRow icon="🐉" name="WeChat OA" status="disconnected" detail="—" />
-            <IntegrationRow icon="📧" name="Resend Email" status="connected" detail="no-reply@earlymedi.com" />
+            <IntegrationRow icon="📧" name="Resend Email" status="connected" detail="no-reply@koreaglowup.com" />
             <IntegrationRow icon="✉️" name="Twilio SMS · WhatsApp" status="connected" detail="account SID AC···7821" />
             <IntegrationRow icon="🗺️" name="Mapbox" status="connected" detail="public token pk.···" />
             <IntegrationRow icon="💱" name="exchangerate-api" status="connected" detail="snapshot 매일 09:00 KST" />
@@ -189,13 +189,13 @@ export default function ShowroomSettingsPage(): JSX.Element {
             <SettingsRow label="홈택스 사업자 등록" hint="세금계산서 e세로 연동">
               <div className="flex items-center gap-2">
                 <Badge variant="care">linked</Badge>
-                <span className="text-xs text-muted-foreground">대표 인증서 ···CN=earlymedi</span>
+                <span className="text-xs text-muted-foreground">대표 인증서 ···CN=koreaglowup</span>
               </div>
             </SettingsRow>
             <SettingsRow label="정산 계좌 (KRW)">
               <div className="space-y-1">
                 <div className="font-mono text-sm">하나은행 123-456789-01234</div>
-                <div className="text-[11px] text-muted-foreground">예금주: 주식회사 얼리메디 데모</div>
+                <div className="text-[11px] text-muted-foreground">예금주: 주식회사 KoreaGlowUp 데모</div>
               </div>
             </SettingsRow>
             <SettingsRow label="해외 송금 (Wise)" hint="외화 정산 시 사용">
@@ -214,7 +214,7 @@ export default function ShowroomSettingsPage(): JSX.Element {
         <SettingsSectionAnchor id="api">
           <SettingsCard
             title="API 키"
-            description="외부 시스템(병원 EMR · 통계 DB · CRM)에서 EarlyMedi에 접근할 때 사용합니다. 30일 무사용 시 자동 회수."
+            description="외부 시스템(병원 EMR · 통계 DB · CRM)에서 KoreaGlowUp에 접근할 때 사용합니다. 30일 무사용 시 자동 회수."
             action={<Button variant="brand" className="rounded-full">+ 새 키 발급</Button>}
           >
             <ApiKeyRow name="병원 EMR 동기화" prefix="em_live_4f9···a82c" lastUsed="2분 전" />

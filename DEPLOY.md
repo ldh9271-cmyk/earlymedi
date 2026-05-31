@@ -41,7 +41,7 @@ vercel
 
 ```
 NEXT_PUBLIC_APP_URL              = https://earlymedi-concierge-xxxx.vercel.app
-NEXT_PUBLIC_APP_NAME             = EarlyMedi AI Concierge
+NEXT_PUBLIC_APP_NAME             = KoreaGlowUp AI Concierge
 NEXT_PUBLIC_SUPABASE_URL         = https://placeholder.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY    = dummy-anon-key-for-preview-only
 SUPABASE_SERVICE_ROLE_KEY        = dummy-service-role-for-preview-only

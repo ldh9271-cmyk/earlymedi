@@ -7,7 +7,7 @@ import 'server-only';
  * email addresses that are allowed to impersonate any organization on
  * the platform regardless of org_memberships rows.
  *
- *   MASTER_EMAILS=ops-lead@earlymedi.com,founder@earlymedi.com
+ *   MASTER_EMAILS=ops-lead@koreaglowup.com,founder@koreaglowup.com
  *
  * The flag is deliberately env-only (not stored in the database) so:
  *   - rotation is a one-line config change in Vercel

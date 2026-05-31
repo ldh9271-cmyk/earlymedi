@@ -133,7 +133,7 @@ function Hero(): JSX.Element {
 }
 
 // ─────────────────────────────────────────────────────────
-// Actor matrix — EarlyMedi unique identity
+// Actor matrix — KoreaGlowUp unique identity
 // ─────────────────────────────────────────────────────────
 
 const ACTORS = [
@@ -287,7 +287,7 @@ const PATIENT_CONTACT_FEATURES: Feature[] = [
   { icon: ClipboardCheck, title: '시술 차트 3단 워크플로우', body: '병원 작성 → 에이전시 검증 → 환자 서명 → finalize → 정산.', tag: '핵심' },
   { icon: CalendarRange, title: '의료관광 패키지 빌더', body: '시술 + 회복일 + 호텔 + 항공 + 관광 자동 조합. 시술 후 제약 자동 충돌 감지.' },
   { icon: Plane, title: '메디컬 비자 (C-3-3 / G-1-10)', body: '초청장 자동 PDF + 카테고리별 체류일 검증 + D-30..D+3 출입국 알림.' },
-  { icon: HeartPulse, title: 'EarlyCare D+N 사후관리', body: '시술별 D+1/3/7/14/30/90/180/365. 환자 현지 10:00 자동 발송.' },
+  { icon: HeartPulse, title: 'GlowCare D+N 사후관리', body: '시술별 D+1/3/7/14/30/90/180/365. 환자 현지 10:00 자동 발송.' },
   { icon: ScanLine, title: '사진 회복 모니터링', body: '환자 사진 → AI 부기·발적·비대칭 감지 → 의사 자동 에스컬레이션.' },
   { icon: Mic, title: '화상 재진 + 통역사 매칭', body: 'Zoom · Daily.co 화상 재진. 환자 모국어 통역사 자동 우선 매칭.' },
   { icon: Globe2, title: '환자 PWA · 9개 언어', body: '한·영·중간/번·일·베·태·아·러. 매직링크로만 접근, 별도 계정 불필요.' },
@@ -474,7 +474,7 @@ function DesignShowroomCard(): JSX.Element {
               </div>
               <h2 className="text-2xl font-bold md:text-3xl">설치 없이 모든 핵심 화면을 데모로</h2>
               <p className="text-sm text-background/70">
-                의료관광 설정 · EarlyInsight 분석 · 의료법 27조의2 컴플라이언스 · 환자 PWA — Supabase 연결 없이 컴포넌트 시각화.
+                의료관광 설정 · GlowInsight 분석 · 의료법 27조의2 컴플라이언스 · 환자 PWA — Supabase 연결 없이 컴포넌트 시각화.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -482,7 +482,7 @@ function DesignShowroomCard(): JSX.Element {
               <ShowroomLink href="/showroom/settings/medical">의료기관 설정</ShowroomLink>
               <ShowroomLink href="/showroom/settings/freelancer">프리랜서 설정</ShowroomLink>
               <ShowroomLink href="/showroom/settings/partner">파트너 설정</ShowroomLink>
-              <ShowroomLink href="/showroom/insights">EarlyInsight 분석</ShowroomLink>
+              <ShowroomLink href="/showroom/insights">GlowInsight 분석</ShowroomLink>
               <ShowroomLink href="/showroom/compliance">컴플라이언스</ShowroomLink>
               <ShowroomLink href="/showroom/patient-pwa">환자 PWA</ShowroomLink>
             </div>
@@ -547,17 +547,17 @@ function Footer(): JSX.Element {
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-10 text-xs text-muted-foreground">
         <div className="space-y-1">
           <div className="text-foreground">
-            <span className="font-extrabold text-brand-600">Early</span>
-            <span className="font-semibold">Medi</span>{' '}
+            <span className="font-extrabold text-brand-600">Korea</span>
+            <span className="font-semibold">GlowUp</span>{' '}
             <span className="text-hospitality-500">AI Concierge</span>
           </div>
-          <div>© {new Date().getFullYear()} EarlyMedi · 의료법 27조의2 외국인환자 유치 광고 가이드라인 준수</div>
+          <div>© {new Date().getFullYear()} KoreaGlowUp · 의료법 27조의2 외국인환자 유치 광고 가이드라인 준수</div>
         </div>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <Link href="/legal/privacy" className="hover:text-foreground">개인정보처리방침</Link>
           <Link href="/legal/terms" className="hover:text-foreground">이용약관</Link>
           <Link href="/legal/medical-ad" className="hover:text-foreground">의료광고 가이드</Link>
-          <a href="mailto:hello@earlymedi.com" className="hover:text-foreground">문의</a>
+          <a href="mailto:hello@koreaglowup.com" className="hover:text-foreground">문의</a>
         </nav>
       </div>
     </footer>

@@ -9,7 +9,7 @@ describe('invite-tokens', () => {
   it('signs and verifies round-trip', async () => {
     const { token, tokenHash } = await signInviteToken({
       organizationId: '00000000-0000-4000-9000-000000000001',
-      invitedEmail: 'invitee@earlymedi.test',
+      invitedEmail: 'invitee@koreaglowup.test',
       role: 'member',
       intendedAccountType: 'freelancer',
       inviteId: 'inv_abc',
@@ -20,14 +20,14 @@ describe('invite-tokens', () => {
 
     const payload = await verifyInviteToken(token);
     expect(payload.organizationId).toBe('00000000-0000-4000-9000-000000000001');
-    expect(payload.invitedEmail).toBe('invitee@earlymedi.test');
+    expect(payload.invitedEmail).toBe('invitee@koreaglowup.test');
     expect(payload.intendedAccountType).toBe('freelancer');
   });
 
   it('rejects tokens with a mutated payload', async () => {
     const { token } = await signInviteToken({
       organizationId: '00000000-0000-4000-9000-000000000001',
-      invitedEmail: 'invitee@earlymedi.test',
+      invitedEmail: 'invitee@koreaglowup.test',
       role: 'member',
       inviteId: 'inv_xyz',
     });

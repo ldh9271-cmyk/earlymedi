@@ -1,20 +1,20 @@
 export const metadata = {
-  title: '개인정보처리방침 | EarlyMedi',
+  title: '개인정보처리방침 | KoreaGlowUp',
   description:
-    'EarlyMedi AI Concierge가 외국인환자와 의료관광 사업자의 개인정보를 어떻게 수집·이용·보호하는지에 대한 공식 처리방침입니다.',
+    'KoreaGlowUp AI Concierge가 외국인환자와 의료관광 사업자의 개인정보를 어떻게 수집·이용·보호하는지에 대한 공식 처리방침입니다.',
 };
 
 const LAST_UPDATED = '2026년 5월 25일';
 const EFFECTIVE_DATE = '2026년 5월 25일';
 const COMPANY_NAME = '주식회사 쉐어아트';
-const SERVICE_NAME = 'EarlyMedi AI Concierge';
+const SERVICE_NAME = 'KoreaGlowUp AI Concierge';
 const PRIVACY_OFFICER_NAME = '이동희';
-const PRIVACY_OFFICER_EMAIL = 'privacy@earlymedi.com';
+const PRIVACY_OFFICER_EMAIL = 'privacy@koreaglowup.com';
 const PRIVACY_OFFICER_PHONE = '02-XXXX-XXXX';
 const COMPANY_ADDRESS = '대한민국 서울특별시'; // TODO: 정식 사업장 주소 입력
 
 /**
- * Korean PIPA-compliant privacy policy for the EarlyMedi medical-tourism SaaS.
+ * Korean PIPA-compliant privacy policy for the KoreaGlowUp medical-tourism SaaS.
  *
  * Required by:
  *  - 개인정보 보호법 제30조 (개인정보 처리방침의 수립 및 공개)

@@ -116,7 +116,7 @@ export default async function InvitePage({
             />
 
             <p className="text-center text-[11px] text-muted-foreground">
-              협력 시작 시 EarlyMedi 이용약관 · 개인정보처리방침에 동의합니다.
+              협력 시작 시 KoreaGlowUp 이용약관 · 개인정보처리방침에 동의합니다.
             </p>
           </CardContent>
         </Card>
@@ -154,7 +154,7 @@ export default async function InvitePage({
           <AcceptInviteForm token={params.token} />
 
           <p className="text-center text-[11px] text-muted-foreground">
-            합류 시 EarlyMedi 이용약관 · 개인정보처리방침에 동의합니다.
+            합류 시 KoreaGlowUp 이용약관 · 개인정보처리방침에 동의합니다.
           </p>
         </CardContent>
       </Card>

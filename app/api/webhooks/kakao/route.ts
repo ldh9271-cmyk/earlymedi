@@ -124,7 +124,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       kakaoSkillReply(
         '문의 감사합니다. 상담사가 확인 후 빠르게 답변드리겠습니다 🙏\n' +
-          '— EarlyMedi AI 컨시어지',
+          '— KoreaGlowUp AI 컨시어지',
       ),
     );
   } catch (err) {

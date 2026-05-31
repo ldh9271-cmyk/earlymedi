@@ -57,7 +57,7 @@ const zh: Dictionary = {
     note: '您上传的照片在分析后立即删除，未经同意不会保存或共享。',
   },
   trust: {
-    title: '为什么选择 EarlyMedi？',
+    title: '为什么选择 KoreaGlowUp？',
     items: {
       koiha: {
         title: '仅 KOIHA 认证医疗机构',
@@ -73,7 +73,7 @@ const zh: Dictionary = {
       },
       aftercare: {
         title: '回国后护理',
-        desc: 'EarlyCare 术后管理 — 恢复照片分析、视频诊疗、紧急联系。',
+        desc: 'GlowCare 术后管理 — 恢复照片分析、视频诊疗、紧急联系。',
       },
     },
   },
@@ -103,7 +103,7 @@ const zh: Dictionary = {
     forHospitals: '医院诊所',
     forPartners: '酒店合作伙伴',
     forFreelancers: '自由职业者',
-    copy: '© 2026 EarlyMedi · 遵守韩国保健福祉部外国患者诱致广告指南',
+    copy: '© 2026 KoreaGlowUp · 遵守韩国保健福祉部外国患者诱致广告指南',
   },
   common: {
     loading: '加载中…',

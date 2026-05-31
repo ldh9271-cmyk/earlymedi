@@ -59,7 +59,7 @@ const ja: Dictionary = {
     note: 'アップロードした写真は分析後すぐ削除されます。同意なしに保存・共有しません。',
   },
   trust: {
-    title: 'なぜEarlyMediなのか？',
+    title: 'なぜKoreaGlowUpなのか？',
     items: {
       koiha: {
         title: 'KOIHA登録医療機関のみ',
@@ -75,7 +75,7 @@ const ja: Dictionary = {
       },
       aftercare: {
         title: '帰国後のケア',
-        desc: 'EarlyCareアフターケア — 回復写真分析、ビデオ診療、緊急連絡。',
+        desc: 'GlowCareアフターケア — 回復写真分析、ビデオ診療、緊急連絡。',
       },
     },
   },
@@ -105,7 +105,7 @@ const ja: Dictionary = {
     forHospitals: '病院・クリニック向け',
     forPartners: 'ホテル・パートナー向け',
     forFreelancers: 'フリーランス向け',
-    copy: '© 2026 EarlyMedi · 韓国保健福祉部の外国人患者誘致広告ガイドライン遵守',
+    copy: '© 2026 KoreaGlowUp · 韓国保健福祉部の外国人患者誘致広告ガイドライン遵守',
   },
   common: {
     loading: '読み込み中…',

@@ -38,7 +38,7 @@ export function useInboxRealtime(organizationId: string | null): void {
             const preview = next.body?.slice(0, 80) ?? '새 메시지';
             toast('📨 새 메시지', { description: preview });
             if (typeof window !== 'undefined' && document.visibilityState === 'hidden') {
-              tryBrowserNotification('EarlyMedi · 새 메시지', preview);
+              tryBrowserNotification('KoreaGlowUp · 새 메시지', preview);
             }
           }
         },

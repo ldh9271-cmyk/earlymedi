@@ -17,7 +17,7 @@ import { channelKindEnum, channelStatusEnum } from './messaging-enums';
  *
  * One row per integrated messaging account that an Agency owns.
  * Examples:
- *   - Agency "얼리메디" + KakaoTalk channel @earlymedi
+ *   - Agency "KoreaGlowUp" + KakaoTalk channel @koreaglowup
  *   - Same Agency + Instagram DM business account
  *   - Same Agency + WhatsApp Business sender 010-...
  *

@@ -9,7 +9,7 @@ export { CHANNEL_DISPLAY, ALL_CHANNEL_KINDS } from './types';
  * channel. The router resolves the adapter by `kind` and delegates.
  *
  * Real adapters wired in: kakao (via i 오픈빌더 EventAPI). Other channels
- * still use BaseMockAdapter — agent replies get stored in EarlyMedi DB but
+ * still use BaseMockAdapter — agent replies get stored in KoreaGlowUp DB but
  * don't push back to the user's messenger. Replace each one with a real
  * impl as the corresponding platform's API access is set up.
  */

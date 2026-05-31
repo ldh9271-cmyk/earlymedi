@@ -56,7 +56,7 @@ export const agencySections: SidebarSection[] = [
       { href: '/agency/packages', label: '의료관광 패키지', icon: Layers },
       { href: '/agency/calendar', label: '마스터 캘린더', icon: Calendar },
       { href: '/agency/visa', label: '비자 · 여행 서류', icon: Plane },
-      { href: '/agency/recovery', label: 'EarlyCare 사후관리', icon: HeartPulse },
+      { href: '/agency/recovery', label: 'GlowCare 사후관리', icon: HeartPulse },
     ],
   },
   {
@@ -64,7 +64,7 @@ export const agencySections: SidebarSection[] = [
     items: [
       { href: '/agency/payments', label: '결제', icon: CreditCard },
       { href: '/agency/commissions', label: '커미션 분배', icon: Wallet },
-      { href: '/agency/insights', label: 'EarlyInsight 분석', icon: BarChart3 },
+      { href: '/agency/insights', label: 'GlowInsight 분석', icon: BarChart3 },
       { href: '/agency/billing', label: '요금제 · 청구서', icon: ReceiptText },
     ],
   },
