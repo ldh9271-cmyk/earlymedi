@@ -1,0 +1,141 @@
+<!--
+  Supabase template — Confirm signup
+  Subject: [KoreaGlowUp] 이메일 인증 · Verify your email · 邮箱验证 · メール認証
+
+  Variables used:
+    {{ .ConfirmationURL }} — verification link (Supabase substitutes)
+
+  Design notes:
+    - Inline CSS only (Gmail / Outlook strip <style>)
+    - Table-based layout for Outlook compatibility
+    - Max-width 560px (fits in narrow Gmail preview pane)
+    - Brand-600 #4F46E5 button matches in-app primary
+    - 4 languages in stacked sections — patient picks the one they read
+-->
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KoreaGlowUp · 이메일 인증</title>
+  </head>
+  <body style="margin:0; padding:0; background-color:#f8fafc; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color:#0f172a;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc; padding:32px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px; background-color:#ffffff; border-radius:16px; box-shadow:0 1px 3px rgba(0,0,0,0.04); overflow:hidden;">
+
+            <!-- Header / wordmark -->
+            <tr>
+              <td style="padding:28px 32px 0 32px; text-align:left;">
+                <div style="font-size:20px; font-weight:700; letter-spacing:-0.01em;">
+                  <span style="color:#4F46E5; font-weight:800;">Korea</span><span style="color:#0f172a;">GlowUp</span>
+                  <span style="color:#f59e0b; font-weight:500; font-size:14px; margin-left:6px;">AI Concierge</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Hero -->
+            <tr>
+              <td style="padding:24px 32px 8px 32px;">
+                <h1 style="margin:0 0 8px 0; font-size:22px; line-height:1.3; color:#0f172a;">
+                  거의 다 됐어요! 🎉
+                </h1>
+                <p style="margin:0; font-size:14px; color:#475569;">
+                  KoreaGlowUp 환자 계정 가입을 확인해주세요. 아래 버튼을 클릭하시면 본인 확인이 완료됩니다.
+                </p>
+              </td>
+            </tr>
+
+            <!-- CTA button -->
+            <tr>
+              <td style="padding:24px 32px;" align="center">
+                <a href="{{ .ConfirmationURL }}"
+                   style="display:inline-block; padding:14px 32px; background-color:#4F46E5; color:#ffffff; font-size:15px; font-weight:600; text-decoration:none; border-radius:8px; box-shadow:0 1px 2px rgba(79,70,229,0.2);">
+                  이메일 인증하기 · Verify Email
+                </a>
+              </td>
+            </tr>
+
+            <!-- Fallback link -->
+            <tr>
+              <td style="padding:0 32px 24px 32px;">
+                <p style="margin:0; font-size:11px; color:#94a3b8; word-break:break-all;">
+                  버튼이 동작하지 않으면 아래 링크를 브라우저에 붙여넣어 주세요:<br />
+                  <a href="{{ .ConfirmationURL }}" style="color:#4F46E5; text-decoration:underline;">{{ .ConfirmationURL }}</a>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Divider -->
+            <tr>
+              <td style="padding:0 32px;">
+                <hr style="border:none; border-top:1px solid #e2e8f0; margin:0;" />
+              </td>
+            </tr>
+
+            <!-- 한국어 -->
+            <tr>
+              <td style="padding:20px 32px 0 32px;">
+                <p style="margin:0 0 8px 0; font-size:11px; font-weight:700; letter-spacing:0.08em; color:#94a3b8; text-transform:uppercase;">🇰🇷 한국어</p>
+                <p style="margin:0; font-size:13px; line-height:1.6; color:#334155;">
+                  안녕하세요. KoreaGlowUp 가입을 신청해 주셔서 감사합니다. 본인 확인을 위해 위 버튼을
+                  클릭해 주세요. 인증이 완료되면 진료 일정·결제·회복 알림을 한 곳에서 받아보실 수 있습니다.
+                  본인이 가입한 적이 없다면 이 메일을 무시하세요.
+                </p>
+              </td>
+            </tr>
+
+            <!-- English -->
+            <tr>
+              <td style="padding:20px 32px 0 32px;">
+                <p style="margin:0 0 8px 0; font-size:11px; font-weight:700; letter-spacing:0.08em; color:#94a3b8; text-transform:uppercase;">🇬🇧 English</p>
+                <p style="margin:0; font-size:13px; line-height:1.6; color:#334155;">
+                  Hi there — thanks for signing up to KoreaGlowUp! Please tap the button above to verify
+                  your email. Once verified, you'll get appointments, payments, and recovery alerts in
+                  one place. If you didn't sign up, just ignore this message.
+                </p>
+              </td>
+            </tr>
+
+            <!-- 中文 -->
+            <tr>
+              <td style="padding:20px 32px 0 32px;">
+                <p style="margin:0 0 8px 0; font-size:11px; font-weight:700; letter-spacing:0.08em; color:#94a3b8; text-transform:uppercase;">🇨🇳 中文</p>
+                <p style="margin:0; font-size:13px; line-height:1.6; color:#334155;">
+                  您好，感谢您注册 KoreaGlowUp！请点击上方按钮验证您的邮箱。验证完成后，您可以在一处管理
+                  预约、付款和康复提醒。如非本人注册，请忽略此邮件。
+                </p>
+              </td>
+            </tr>
+
+            <!-- 日本語 -->
+            <tr>
+              <td style="padding:20px 32px 28px 32px;">
+                <p style="margin:0 0 8px 0; font-size:11px; font-weight:700; letter-spacing:0.08em; color:#94a3b8; text-transform:uppercase;">🇯🇵 日本語</p>
+                <p style="margin:0; font-size:13px; line-height:1.6; color:#334155;">
+                  KoreaGlowUp にご登録いただきありがとうございます。上のボタンをタップしてメールアドレスを
+                  ご確認ください。確認完了後、予約・お支払い・回復の通知をひとつにまとめて管理できます。
+                  心当たりがない場合は、このメールを無視してください。
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="background-color:#f1f5f9; padding:20px 32px; border-top:1px solid #e2e8f0;">
+                <p style="margin:0 0 6px 0; font-size:11px; color:#64748b; line-height:1.5;">
+                  © 2026 KoreaGlowUp · 한국 보건복지부 외국인환자 유치 광고 가이드라인 준수
+                </p>
+                <p style="margin:0; font-size:11px; color:#94a3b8; line-height:1.5;">
+                  Need help? <a href="https://earlymedi.vercel.app/kr/inquiry" style="color:#4F46E5; text-decoration:none;">support@koreaglowup.com</a>
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

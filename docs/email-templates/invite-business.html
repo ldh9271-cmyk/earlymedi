@@ -1,0 +1,95 @@
+<!--
+  Supabase template — Invite user
+  Subject: [KoreaGlowUp] 팀 초대 · Team invitation
+
+  Triggered when:
+    - Agency/Medical/Partner/Freelancer admin invites a team member
+    - via /agency/team page or freelancer-invites-actions.ts
+    - Note: this is B2B-only — patient signup doesn't use the Invite flow
+-->
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KoreaGlowUp · 팀 초대</title>
+  </head>
+  <body style="margin:0; padding:0; background-color:#f8fafc; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color:#0f172a;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc; padding:32px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px; background-color:#ffffff; border-radius:16px; box-shadow:0 1px 3px rgba(0,0,0,0.04); overflow:hidden;">
+
+            <tr>
+              <td style="padding:28px 32px 0 32px;">
+                <div style="font-size:20px; font-weight:700; letter-spacing:-0.01em;">
+                  <span style="color:#4F46E5; font-weight:800;">Korea</span><span style="color:#0f172a;">GlowUp</span>
+                  <span style="color:#f59e0b; font-weight:500; font-size:14px; margin-left:6px;">AI Concierge</span>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:24px 32px 8px 32px;">
+                <h1 style="margin:0 0 8px 0; font-size:22px; line-height:1.3; color:#0f172a;">
+                  팀에 초대받으셨어요 👋
+                </h1>
+                <p style="margin:0; font-size:14px; color:#475569;">
+                  KoreaGlowUp 의료관광 콘솔에서 팀에 합류하시려면 아래 버튼을 클릭하세요.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:24px 32px;" align="center">
+                <a href="{{ .ConfirmationURL }}"
+                   style="display:inline-block; padding:14px 32px; background-color:#4F46E5; color:#ffffff; font-size:15px; font-weight:600; text-decoration:none; border-radius:8px;">
+                  초대 수락 · Accept Invitation
+                </a>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:0 32px 24px 32px;">
+                <p style="margin:0; font-size:11px; color:#94a3b8; word-break:break-all;">
+                  버튼이 동작하지 않으면 아래 링크를 브라우저에 붙여넣어 주세요:<br />
+                  <a href="{{ .ConfirmationURL }}" style="color:#4F46E5; text-decoration:underline;">{{ .ConfirmationURL }}</a>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:0 32px;">
+                <hr style="border:none; border-top:1px solid #e2e8f0; margin:0;" />
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:20px 32px 28px 32px;">
+                <p style="margin:0 0 10px 0; font-size:13px; line-height:1.6; color:#334155;">
+                  <strong>KoreaGlowUp</strong>는 한국 보건복지부 등록 외국인환자 유치 의료관광 운영자(병원·에이전시·파트너업체·프리랜서)를 위한 AI 기반 통합 SaaS 입니다.
+                </p>
+                <p style="margin:0; font-size:13px; line-height:1.6; color:#334155;">
+                  팀 콘솔에서 환자 CRM·다국어 통합 인박스·시술 차트·정산·사후관리를 함께 운영하실 수 있습니다.
+                  초대 링크는 <strong>72시간 후 만료</strong>됩니다.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="background-color:#f1f5f9; padding:20px 32px; border-top:1px solid #e2e8f0;">
+                <p style="margin:0 0 6px 0; font-size:11px; color:#64748b; line-height:1.5;">
+                  © 2026 KoreaGlowUp · 한국 보건복지부 외국인환자 유치 광고 가이드라인 준수
+                </p>
+                <p style="margin:0; font-size:11px; color:#94a3b8; line-height:1.5;">
+                  Need help? <a href="mailto:support@koreaglowup.com" style="color:#4F46E5; text-decoration:none;">support@koreaglowup.com</a>
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
