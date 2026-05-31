@@ -6,6 +6,7 @@ import {
 } from './account-types';
 import { createSupabaseMiddlewareClient } from './supabase-middleware';
 import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_HEADER } from './active-org-constants';
+import { PATIENT_DOMAINS, detectLocaleFromAcceptLanguage } from '@/lib/i18n/locales';
 
 /**
  * 5-step authorization middleware.
@@ -34,6 +35,28 @@ import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_HEADER } from './active-org-constants';
  */
 export async function fiveStepAuth(request: NextRequest): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname;
+
+  // ── Patient-domain root redirect ────────────────────────────────────
+  // glowuptour.com (and future patient-facing brand domains) treat `/`
+  // as the patient portal entrance. Sniff Accept-Language and forward
+  // to the best-matching locale prefix so foreign visitors land on
+  // their language without an extra click.
+  //
+  // earlymedi.vercel.app / localhost / preview URLs keep `/` pointing
+  // at the existing B2B marketing page — operators bookmark that.
+  if (pathname === '/') {
+    const hostHeader = (request.headers.get('host') ?? '').toLowerCase();
+    // Strip any :port (e.g. localhost:3000) for the membership check.
+    const host = hostHeader.split(':')[0] ?? '';
+    if (PATIENT_DOMAINS.has(host)) {
+      const locale = detectLocaleFromAcceptLanguage(
+        request.headers.get('accept-language'),
+      );
+      const url = request.nextUrl.clone();
+      url.pathname = `/${locale}`;
+      return NextResponse.redirect(url);
+    }
+  }
 
   // Public paths bypass entirely.
   if (isPublic(pathname)) {
