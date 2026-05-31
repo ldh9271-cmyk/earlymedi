@@ -48,7 +48,7 @@ function Hero({ locale, dict }: { locale: PublicLocale; dict: Dictionary }): JSX
   ];
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 via-background to-hospitality-50">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+      <div className="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6 sm:pb-20 sm:pt-8 lg:pb-24 lg:pt-10">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div className="space-y-6">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-800">
