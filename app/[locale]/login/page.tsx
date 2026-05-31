@@ -63,13 +63,22 @@ export default async function PatientLoginPage({
         </div>
 
         <div className="space-y-3 rounded-xl border bg-muted/30 px-4 py-3 text-center text-xs text-muted-foreground">
-          <p>{dict.login.noAccount}</p>
-          <Link
-            href={`/${locale}/inquiry`}
-            className="font-medium text-foreground underline-offset-4 hover:underline"
-          >
-            {dict.login.goInquiry}
-          </Link>
+          <p>{dict.signup.haveAccount === '이미 계정이 있으신가요?' ? '아직 계정이 없으신가요?' : dict.login.noAccount}</p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href={`/${locale}/signup`}
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              {dict.signup.submitCta} →
+            </Link>
+            <span className="text-muted-foreground/40">·</span>
+            <Link
+              href={`/${locale}/inquiry`}
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              {dict.login.goInquiry}
+            </Link>
+          </div>
         </div>
 
         <div className="space-y-2 border-t pt-4 text-center text-[11px] text-muted-foreground">
