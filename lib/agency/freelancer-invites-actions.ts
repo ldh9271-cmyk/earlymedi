@@ -126,7 +126,7 @@ export async function sendFreelancerInviteAction(
 
         // 4. Build shareable URL
         const host =
-          headers().get('host') ?? process.env.NEXT_PUBLIC_APP_URL ?? 'koreaglowup.vercel.app';
+          headers().get('host') ?? process.env.NEXT_PUBLIC_APP_URL ?? 'earlymedi.vercel.app';
         const proto = host.includes('localhost') ? 'http' : 'https';
         const inviteUrl = `${proto}://${host}/invite/${token}`;
 
@@ -244,7 +244,7 @@ export async function listFreelancerAffiliationsAction(): Promise<{
   // now show a placeholder and let the operator re-send. Future
   // improvement: store the URL alongside the hash in metadata.
   const host =
-    headers().get('host') ?? process.env.NEXT_PUBLIC_APP_URL ?? 'koreaglowup.vercel.app';
+    headers().get('host') ?? process.env.NEXT_PUBLIC_APP_URL ?? 'earlymedi.vercel.app';
   const proto = host.includes('localhost') ? 'http' : 'https';
 
   return {
