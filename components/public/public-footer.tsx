@@ -16,8 +16,8 @@ export function PublicFooter({
           {/* Brand + tagline */}
           <div className="lg:col-span-1">
             <div className="text-base font-bold">
-              <span className="font-extrabold">Early</span>
-              <span className="font-semibold">Medi</span>
+              <span className="font-extrabold text-brand-600">Korea</span>
+              <span className="font-semibold">GlowUp</span>
             </div>
             <p className="mt-2 max-w-xs text-xs text-muted-foreground">{dict.footer.tagline}</p>
           </div>

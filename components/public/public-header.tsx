@@ -31,8 +31,8 @@ export function PublicHeader({
           href={`/${locale}`}
           className="text-base font-bold tracking-tight text-foreground"
         >
-          <span className="font-extrabold">Early</span>
-          <span className="font-semibold">Medi</span>
+          <span className="font-extrabold text-brand-600">Korea</span>
+          <span className="font-semibold">GlowUp</span>
         </Link>
 
         {/* Desktop nav — hidden on small screens; mobile gets the hamburger

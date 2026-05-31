@@ -134,7 +134,7 @@ export async function sendTeamInviteAction(
 
   // Build shareable URL. Origin from request headers when available;
   // falls back to env so this also works in tests.
-  const host = headers().get('host') ?? process.env.NEXT_PUBLIC_APP_URL ?? 'earlymedi.vercel.app';
+  const host = headers().get('host') ?? process.env.NEXT_PUBLIC_APP_URL ?? 'koreaglowup.vercel.app';
   const proto = host.includes('localhost') ? 'http' : 'https';
   const inviteUrl = `${proto}://${host}/invite/${token}`;
 
