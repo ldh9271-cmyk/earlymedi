@@ -55,3 +55,6 @@ export * from './freelancer-referral-codes';
 
 // Master-curated B2C category & procedure landing mappings
 export * from './category-listings';
+
+// Per-locale (kr/en/zh/ja) hospital content overrides
+export * from './hospital-locale-content';

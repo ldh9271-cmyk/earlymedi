@@ -22,10 +22,15 @@ export async function uploadHospitalImage({
   hospitalId,
   purpose,
   file,
+  locale,
 }: {
   hospitalId: string;
   purpose: 'cover' | 'gallery' | 'landing';
   file: File;
+  // Optional locale scope. When set, images are stored under a
+  // per-locale prefix so KR vs ZH variants don't collide. When
+  // omitted (legacy callers), the path is unchanged.
+  locale?: 'kr' | 'en' | 'zh' | 'ja';
 }): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   if (!file || file.size === 0) return { ok: false, error: 'empty_file' };
   if (file.size > 10 * 1024 * 1024) return { ok: false, error: 'file_too_large_10mb' };
@@ -40,7 +45,12 @@ export async function uploadHospitalImage({
     return last && last.length <= 5 ? last.toLowerCase() : 'jpg';
   })();
   const rand = Math.random().toString(36).slice(2, 8);
-  const path = `${hospitalId}/${purpose}/${Date.now()}-${rand}.${ext}`;
+  // Path layout:
+  //   <hospitalId>/<locale>/<purpose>/<timestamp>-<rand>.<ext>  (new)
+  //   <hospitalId>/<purpose>/<timestamp>-<rand>.<ext>           (legacy, base)
+  const path = locale
+    ? `${hospitalId}/${locale}/${purpose}/${Date.now()}-${rand}.${ext}`
+    : `${hospitalId}/${purpose}/${Date.now()}-${rand}.${ext}`;
 
   try {
     const svc = createSupabaseServiceClient();

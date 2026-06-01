@@ -6,6 +6,7 @@ import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { categoryListings } from '@/drizzle/schema/category-listings';
+import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 
 export const dynamic = 'force-dynamic';
 
@@ -168,6 +169,39 @@ export default async function ClinicsListPage({
     }
   } catch (err) {
     dbError = err instanceof Error ? err.message : 'db_error';
+  }
+
+  // Per-locale overrides for name + cover. Single query keyed by the
+  // already-loaded hospital ids; cheap, and lets us swap in
+  // language-specific imagery on the card without changing the layout.
+  if (filtered.length > 0) {
+    try {
+      const ids = filtered.map((h) => h.id);
+      const overrides = await db
+        .select({
+          hospitalId: hospitalLocaleContent.hospitalId,
+          name: hospitalLocaleContent.name,
+          coverImageUrl: hospitalLocaleContent.coverImageUrl,
+        })
+        .from(hospitalLocaleContent)
+        .where(
+          and(
+            inArray(hospitalLocaleContent.hospitalId, ids),
+            eq(hospitalLocaleContent.locale, params.locale),
+          ),
+        );
+      const byId = new Map(overrides.map((o) => [o.hospitalId, o]));
+      filtered = filtered.map((h) => {
+        const o = byId.get(h.id);
+        return {
+          ...h,
+          name: o?.name?.trim() || h.name,
+          coverImageUrl: o?.coverImageUrl || h.coverImageUrl,
+        };
+      });
+    } catch {
+      // hospital_locale_content table missing — keep base values.
+    }
   }
 
   return (

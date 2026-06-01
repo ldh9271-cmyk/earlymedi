@@ -1,13 +1,115 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { ArrowLeft, MapPin, Star, ShieldCheck, Sparkles, Award, Languages } from 'lucide-react';
+import type { Metadata } from 'next';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
+import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Per-locale SEO metadata.
+ *
+ * Pulls seo_title / seo_description from hospital_locale_content for
+ * the current locale. Falls back through: locale seoTitle → locale
+ * name → base hospitals.name, and locale seoDescription → locale
+ * intro → base hospitals.notes (first 160 chars). All four locales
+ * thus get distinct <title>/<meta> tags pointing back to language-
+ * specific URLs — exactly what search engines need to index each
+ * /[locale]/clinics/[slug] independently.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: PublicLocale; slug: string };
+}): Promise<Metadata> {
+  let resolvedSlug = params.slug;
+  try {
+    resolvedSlug = decodeURIComponent(params.slug);
+  } catch {
+    /* malformed escapes — keep raw */
+  }
+  const candidates = Array.from(new Set([params.slug, resolvedSlug]));
+
+  let baseName: string | null = null;
+  let baseNotes: string | null = null;
+  let hospitalId: string | null = null;
+  try {
+    const [b] = await db
+      .select({ id: hospitals.id, name: hospitals.name, notes: hospitals.notes })
+      .from(hospitals)
+      .where(inArray(hospitals.slug, candidates))
+      .limit(1);
+    if (b) {
+      baseName = b.name;
+      baseNotes = b.notes;
+      hospitalId = b.id;
+    }
+  } catch {
+    /* swallow — return empty metadata if base lookup fails */
+  }
+  if (!baseName || !hospitalId) return {};
+
+  let lcRow: { name: string | null; intro: string | null; seoTitle: string | null; seoDescription: string | null } | null = null;
+  try {
+    const [r] = await db
+      .select({
+        name: hospitalLocaleContent.name,
+        intro: hospitalLocaleContent.intro,
+        seoTitle: hospitalLocaleContent.seoTitle,
+        seoDescription: hospitalLocaleContent.seoDescription,
+      })
+      .from(hospitalLocaleContent)
+      .where(
+        and(
+          eq(hospitalLocaleContent.hospitalId, hospitalId),
+          eq(hospitalLocaleContent.locale, params.locale),
+        ),
+      )
+      .limit(1);
+    lcRow = r ?? null;
+  } catch {
+    /* table missing — fall through */
+  }
+
+  const displayName = lcRow?.name?.trim() || baseName;
+  const title = lcRow?.seoTitle?.trim() || `${displayName} | KoreaGlowUp`;
+  const descRaw = lcRow?.seoDescription?.trim() || lcRow?.intro?.trim() || baseNotes?.trim() || '';
+  const description = descRaw.length > 160 ? `${descRaw.slice(0, 157)}…` : descRaw || undefined;
+
+  const url = `/${params.locale}/clinics/${params.slug}`;
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: url,
+      languages: {
+        ko: `/kr/clinics/${params.slug}`,
+        en: `/en/clinics/${params.slug}`,
+        'zh-CN': `/zh/clinics/${params.slug}`,
+        ja: `/ja/clinics/${params.slug}`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'website',
+      locale:
+        params.locale === 'kr'
+          ? 'ko_KR'
+          : params.locale === 'zh'
+            ? 'zh_CN'
+            : params.locale === 'ja'
+              ? 'ja_JP'
+              : 'en_US',
+    },
+  };
+}
 
 /**
  * Hospital detail page — anonymous public view.
@@ -111,13 +213,55 @@ export default async function ClinicDetailPage({
 
   if (!row) notFound();
 
+  // Per-locale content overrides. Read the row for the current locale;
+  // if anything is missing, fall back to the base hospital fields below.
+  // If the table itself is missing (migration not run), skip silently —
+  // the page still works off the legacy base columns.
+  let lc: {
+    name: string | null;
+    intro: string | null;
+    coverImageUrl: string | null;
+    galleryImageUrls: string[];
+    landingImageUrl: string | null;
+  } | null = null;
+  try {
+    const [r] = await db
+      .select({
+        name: hospitalLocaleContent.name,
+        intro: hospitalLocaleContent.intro,
+        coverImageUrl: hospitalLocaleContent.coverImageUrl,
+        galleryImageUrls: hospitalLocaleContent.galleryImageUrls,
+        landingImageUrl: hospitalLocaleContent.landingImageUrl,
+      })
+      .from(hospitalLocaleContent)
+      .where(
+        and(
+          eq(hospitalLocaleContent.hospitalId, row.id),
+          eq(hospitalLocaleContent.locale, params.locale),
+        ),
+      )
+      .limit(1);
+    if (r) lc = { ...r, galleryImageUrls: (r.galleryImageUrls ?? []) as string[] };
+  } catch {
+    // Table missing — patient never sees an error, just falls back.
+  }
+
   const address = row.addressJson ?? {};
   const cats = (row.primaryCategories ?? []) as string[];
   const isKoiha = !!row.foreignPatientLicenseNumber;
-  const coverUrl = row.coverImageUrl;
-  const aboutText = row.notes?.trim() || null;
-  const gallery = ((row.galleryImageUrls ?? []) as string[]) ?? [];
-  const landingUrl = row.landingImageUrl ?? null;
+
+  // Locale-first resolution with COALESCE-style fallback to the base
+  // hospital row. Gallery falls back only if the locale's gallery is
+  // empty — a deliberately empty locale gallery (master cleared it)
+  // is preserved via the explicit length check on lc?.galleryImageUrls.
+  const displayName = lc?.name?.trim() || row.name;
+  const aboutText = lc?.intro?.trim() || row.notes?.trim() || null;
+  const coverUrl = lc?.coverImageUrl || row.coverImageUrl;
+  const galleryRaw = lc?.galleryImageUrls && lc.galleryImageUrls.length > 0
+    ? lc.galleryImageUrls
+    : ((row.galleryImageUrls ?? []) as string[]);
+  const gallery = galleryRaw ?? [];
+  const landingUrl = lc?.landingImageUrl || row.landingImageUrl || null;
 
   return (
     <article className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -143,7 +287,7 @@ export default async function ClinicDetailPage({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={coverUrl}
-            alt={row.name}
+            alt={displayName}
             className="aspect-[16/6] w-full object-cover"
             loading="eager"
           />
@@ -156,7 +300,7 @@ export default async function ClinicDetailPage({
               <img
                 key={url}
                 src={url}
-                alt={`${row.name} ${idx + 1}`}
+                alt={`${displayName} ${idx + 1}`}
                 className="h-full w-full object-cover"
                 loading="eager"
               />
@@ -183,7 +327,7 @@ export default async function ClinicDetailPage({
               <img
                 key={url}
                 src={url}
-                alt={`${row.name} 갤러리 ${idx + 1}`}
+                alt={`${displayName} 갤러리 ${idx + 1}`}
                 className="aspect-[4/3] w-full rounded object-cover"
                 loading="lazy"
               />
@@ -193,7 +337,7 @@ export default async function ClinicDetailPage({
 
         <div className="space-y-3 p-6">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{row.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{displayName}</h1>
             {isKoiha ? (
               <span className="inline-flex items-center gap-1 rounded-full border border-care-300 bg-care-50 px-2.5 py-0.5 text-xs font-medium text-care-800">
                 <ShieldCheck className="h-3 w-3" />
@@ -253,7 +397,7 @@ export default async function ClinicDetailPage({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={landingUrl}
-                    alt={`${row.name} 랜딩 포스터`}
+                    alt={`${displayName} 랜딩 포스터`}
                     className="mx-auto block w-full"
                     loading="lazy"
                   />
