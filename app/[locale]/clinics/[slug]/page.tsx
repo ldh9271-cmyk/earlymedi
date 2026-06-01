@@ -262,10 +262,6 @@ export default async function ClinicDetailPage({
             </div>
           </PlaceholderSection>
 
-          <PlaceholderSection title="Before / After" icon={Sparkles}>
-            검증된 시술 전후 사진은 의료법 규정에 따라 본인 동의 후 게시됩니다.
-          </PlaceholderSection>
-
           <PlaceholderSection title={dict.nav.reviews} icon={Star}>
             실제 환자 후기는 검증 절차를 거쳐 곧 공개됩니다.
           </PlaceholderSection>
