@@ -47,23 +47,67 @@ export default async function ClinicDetailPage({
   }
   const candidates = Array.from(new Set([params.slug, resolvedSlug]));
 
-  const [row] = await db
-    .select({
-      id: hospitals.id,
-      name: hospitals.name,
-      slug: hospitals.slug,
-      countryCode: hospitals.countryCode,
-      addressJson: hospitals.addressJson,
-      primaryCategories: hospitals.primaryCategories,
-      foreignPatientLicenseNumber: hospitals.foreignPatientLicenseNumber,
-      coverImageUrl: hospitals.coverImageUrl,
-      galleryImageUrls: hospitals.galleryImageUrls,
-      landingImageUrl: hospitals.landingImageUrl,
-      notes: hospitals.notes,
-    })
-    .from(hospitals)
-    .where(inArray(hospitals.slug, candidates))
-    .limit(1);
+  // Wide SELECT first. If the gallery_image_urls / landing_image_url
+  // migrations haven't run yet, Postgres throws `column ... does not
+  // exist`. Fall back to a minimal projection (without the new image
+  // columns) so the page still renders for the patient — they don't
+  // care about missing master-tooling features.
+  type RowShape = {
+    id: string;
+    name: string;
+    slug: string;
+    countryCode: string;
+    addressJson: { city?: string } | null;
+    primaryCategories: unknown;
+    foreignPatientLicenseNumber: string | null;
+    coverImageUrl: string | null;
+    galleryImageUrls?: unknown;
+    landingImageUrl?: string | null;
+    notes: string | null;
+  };
+  let row: RowShape | undefined;
+  try {
+    const [r] = await db
+      .select({
+        id: hospitals.id,
+        name: hospitals.name,
+        slug: hospitals.slug,
+        countryCode: hospitals.countryCode,
+        addressJson: hospitals.addressJson,
+        primaryCategories: hospitals.primaryCategories,
+        foreignPatientLicenseNumber: hospitals.foreignPatientLicenseNumber,
+        coverImageUrl: hospitals.coverImageUrl,
+        galleryImageUrls: hospitals.galleryImageUrls,
+        landingImageUrl: hospitals.landingImageUrl,
+        notes: hospitals.notes,
+      })
+      .from(hospitals)
+      .where(inArray(hospitals.slug, candidates))
+      .limit(1);
+    row = r;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes('does not exist') || msg.includes('column')) {
+      const [r] = await db
+        .select({
+          id: hospitals.id,
+          name: hospitals.name,
+          slug: hospitals.slug,
+          countryCode: hospitals.countryCode,
+          addressJson: hospitals.addressJson,
+          primaryCategories: hospitals.primaryCategories,
+          foreignPatientLicenseNumber: hospitals.foreignPatientLicenseNumber,
+          coverImageUrl: hospitals.coverImageUrl,
+          notes: hospitals.notes,
+        })
+        .from(hospitals)
+        .where(inArray(hospitals.slug, candidates))
+        .limit(1);
+      row = r;
+    } else {
+      throw e;
+    }
+  }
 
   if (!row) notFound();
 
@@ -73,7 +117,7 @@ export default async function ClinicDetailPage({
   const coverUrl = row.coverImageUrl;
   const aboutText = row.notes?.trim() || null;
   const gallery = ((row.galleryImageUrls ?? []) as string[]) ?? [];
-  const landingUrl = row.landingImageUrl;
+  const landingUrl = row.landingImageUrl ?? null;
 
   return (
     <article className="mx-auto max-w-7xl px-4 py-10 sm:px-6">

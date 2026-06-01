@@ -36,25 +36,81 @@ export default async function MasterHospitalEditPage({
   if (!auth.user) redirect(`/login?next=/master/hospitals/${params.id}/edit`);
   if (!isMasterEmail(auth.user.email ?? null)) redirect('/select-org');
 
-  const [row] = await db
-    .select({
-      id: hospitals.id,
-      name: hospitals.name,
-      slug: hospitals.slug,
-      countryCode: hospitals.countryCode,
-      coverImageUrl: hospitals.coverImageUrl,
-      galleryImageUrls: hospitals.galleryImageUrls,
-      landingImageUrl: hospitals.landingImageUrl,
-      notes: hospitals.notes,
-      orgName: organizations.name,
-    })
-    .from(hospitals)
-    .innerJoin(organizations, eq(hospitals.organizationId, organizations.id))
-    .where(eq(hospitals.id, params.id))
-    .limit(1);
+  // Load hospital row + org name. The image columns are graceful —
+  // if the SQL migrations (hospital-images.sql / hospital-landing.sql)
+  // haven't run yet, columns can be missing and the wide SELECT
+  // throws `column ... does not exist`. We try the full SELECT first
+  // and fall back to a minimal projection so the page renders with a
+  // visible "migration required" banner instead of a 500.
+  type EditRow = {
+    id: string;
+    name: string;
+    slug: string;
+    countryCode: string;
+    coverImageUrl: string | null;
+    galleryImageUrls: string[];
+    landingImageUrl: string | null;
+    notes: string | null;
+    orgName: string;
+  };
+  let row: EditRow | null = null;
+  let columnsMissing = false;
+  try {
+    const [r] = await db
+      .select({
+        id: hospitals.id,
+        name: hospitals.name,
+        slug: hospitals.slug,
+        countryCode: hospitals.countryCode,
+        coverImageUrl: hospitals.coverImageUrl,
+        galleryImageUrls: hospitals.galleryImageUrls,
+        landingImageUrl: hospitals.landingImageUrl,
+        notes: hospitals.notes,
+        orgName: organizations.name,
+      })
+      .from(hospitals)
+      .innerJoin(organizations, eq(hospitals.organizationId, organizations.id))
+      .where(eq(hospitals.id, params.id))
+      .limit(1);
+    if (r) {
+      row = {
+        ...r,
+        galleryImageUrls: (r.galleryImageUrls ?? []) as string[],
+      };
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes('does not exist') || msg.includes('column')) {
+      columnsMissing = true;
+      // Fallback: minimal projection without the new image columns.
+      const [r] = await db
+        .select({
+          id: hospitals.id,
+          name: hospitals.name,
+          slug: hospitals.slug,
+          countryCode: hospitals.countryCode,
+          coverImageUrl: hospitals.coverImageUrl,
+          notes: hospitals.notes,
+          orgName: organizations.name,
+        })
+        .from(hospitals)
+        .innerJoin(organizations, eq(hospitals.organizationId, organizations.id))
+        .where(eq(hospitals.id, params.id))
+        .limit(1);
+      if (r) {
+        row = {
+          ...r,
+          galleryImageUrls: [],
+          landingImageUrl: null,
+        };
+      }
+    } else {
+      throw e;
+    }
+  }
   if (!row) notFound();
 
-  const gallery = ((row.galleryImageUrls ?? []) as string[]) ?? [];
+  const gallery = row.galleryImageUrls;
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-8">
@@ -96,6 +152,26 @@ export default async function MasterHospitalEditPage({
       {searchParams.error ? (
         <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
           ⚠ {decodeURIComponent(searchParams.error)}
+        </div>
+      ) : null}
+      {columnsMissing ? (
+        <div className="mb-4 rounded-lg border border-hospitality-300 bg-hospitality-50 p-4 text-sm">
+          <p className="font-semibold text-hospitality-900">⚠ 데이터베이스 마이그레이션 필요</p>
+          <p className="mt-1 text-xs text-hospitality-900/80">
+            갤러리·랜딩 이미지 컬럼이 아직 Supabase 에 추가되지 않았습니다. 갤러리·
+            랜딩 이미지 카드는 비활성화 상태로 표시되며, 업로드 시도 시 에러가 납니다.
+            대표 사진과 소개 텍스트는 정상 동작합니다.
+          </p>
+          <ol className="mt-2 list-inside list-decimal space-y-0.5 text-xs text-hospitality-900/80">
+            <li>Supabase Dashboard → <strong>SQL Editor</strong> → <strong>+ New query</strong></li>
+            <li>
+              아래 SQL 들을 차례로 실행:
+              <code className="ml-1 rounded bg-white px-1 font-mono">drizzle/sql/hospital-images.sql</code>
+              {' '}+{' '}
+              <code className="rounded bg-white px-1 font-mono">drizzle/sql/hospital-landing.sql</code>
+            </li>
+            <li>이 페이지 새로고침 → 노란 배너 사라지면 적용 완료</li>
+          </ol>
         </div>
       ) : null}
 
