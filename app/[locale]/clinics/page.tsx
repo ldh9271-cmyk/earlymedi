@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { Search, MapPin, Star, ArrowRight, Sparkles } from 'lucide-react';
-import { eq, sql } from 'drizzle-orm';
+import { eq, inArray, sql, and } from 'drizzle-orm';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
+import { categoryListings } from '@/drizzle/schema/category-listings';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,50 +26,144 @@ export const dynamic = 'force-dynamic';
  *   - No pricing display
  *   - First 50 results, no pagination
  */
+type ClinicRow = {
+  id: string;
+  name: string;
+  slug: string;
+  countryCode: string;
+  primaryCategories: string[];
+  promoLabel: string | null;
+};
+
 export default async function ClinicsListPage({
   params,
   searchParams,
 }: {
   params: { locale: PublicLocale };
-  searchParams: { category?: string };
+  searchParams: { category?: string; procedure?: string };
 }): Promise<JSX.Element> {
   const dict = await getDictionary(params.locale);
 
-  let rows: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    countryCode: string;
-    primaryCategories: string[];
-  }> = [];
+  const categoryFilter = searchParams.category;
+  const procedureFilter = searchParams.procedure;
+
+  let filtered: ClinicRow[] = [];
   let dbError: string | null = null;
+
   try {
-    const fetched = await db
-      .select({
-        id: hospitals.id,
-        name: hospitals.name,
-        slug: hospitals.slug,
-        countryCode: hospitals.countryCode,
-        primaryCategories: hospitals.primaryCategories,
-      })
-      .from(hospitals)
-      .where(eq(hospitals.countryCode, 'KR'))
-      .orderBy(sql`${hospitals.createdAt} desc`)
-      .limit(50);
-    rows = fetched.map((r) => ({
-      ...r,
-      primaryCategories: (r.primaryCategories ?? []) as string[],
-    }));
+    if (categoryFilter) {
+      // ── Curated listings path ─────────────────────────────────────
+      // Master-side mappings (category_listings) take precedence.
+      // For `?procedure=X` we look up rows matching that procedure;
+      // otherwise we look up the "category-level feature" rows
+      // (procedure_slug = '').
+      //
+      // If category_listings has zero matches, we fall back to the
+      // legacy hospitals.primaryCategories tag-based filter so older
+      // hospitals (no master curation yet) still appear.
+      let listingRows: Array<{
+        hospitalId: string;
+        sortOrder: number;
+        promoLabel: string | null;
+      }> = [];
+      try {
+        listingRows = await db
+          .select({
+            hospitalId: categoryListings.hospitalId,
+            sortOrder: categoryListings.sortOrder,
+            promoLabel: categoryListings.promoLabel,
+          })
+          .from(categoryListings)
+          .where(
+            and(
+              eq(categoryListings.categoryKey, categoryFilter),
+              eq(categoryListings.procedureSlug, procedureFilter ?? ''),
+            ),
+          )
+          .orderBy(categoryListings.sortOrder);
+      } catch {
+        // Table missing or other DB issue — silently fall through to
+        // legacy filter. Empty result here just routes us into fallback.
+      }
+
+      if (listingRows.length > 0) {
+        const ids = listingRows.map((r) => r.hospitalId);
+        const hospitalsById = new Map(
+          (
+            await db
+              .select({
+                id: hospitals.id,
+                name: hospitals.name,
+                slug: hospitals.slug,
+                countryCode: hospitals.countryCode,
+                primaryCategories: hospitals.primaryCategories,
+              })
+              .from(hospitals)
+              .where(inArray(hospitals.id, ids))
+          ).map((h) => [h.id, h]),
+        );
+        // Preserve listingRows sort order; drop any listing whose
+        // hospital row is missing (cascade should have cleaned these
+        // already but defensive).
+        filtered = listingRows
+          .map((l) => {
+            const h = hospitalsById.get(l.hospitalId);
+            if (!h) return null;
+            return {
+              id: h.id,
+              name: h.name,
+              slug: h.slug,
+              countryCode: h.countryCode,
+              primaryCategories: (h.primaryCategories ?? []) as string[],
+              promoLabel: l.promoLabel,
+            };
+          })
+          .filter((r): r is ClinicRow => r !== null);
+      } else {
+        // Fallback: legacy primary_categories tag filter
+        const fetched = await db
+          .select({
+            id: hospitals.id,
+            name: hospitals.name,
+            slug: hospitals.slug,
+            countryCode: hospitals.countryCode,
+            primaryCategories: hospitals.primaryCategories,
+          })
+          .from(hospitals)
+          .where(eq(hospitals.countryCode, 'KR'))
+          .orderBy(sql`${hospitals.createdAt} desc`)
+          .limit(50);
+        filtered = fetched
+          .map((r) => ({
+            ...r,
+            primaryCategories: (r.primaryCategories ?? []) as string[],
+            promoLabel: null,
+          }))
+          .filter((h) => h.primaryCategories.includes(categoryFilter));
+      }
+    } else {
+      // No category filter → show everything (most-recent first)
+      const fetched = await db
+        .select({
+          id: hospitals.id,
+          name: hospitals.name,
+          slug: hospitals.slug,
+          countryCode: hospitals.countryCode,
+          primaryCategories: hospitals.primaryCategories,
+        })
+        .from(hospitals)
+        .where(eq(hospitals.countryCode, 'KR'))
+        .orderBy(sql`${hospitals.createdAt} desc`)
+        .limit(50);
+      filtered = fetched.map((r) => ({
+        ...r,
+        primaryCategories: (r.primaryCategories ?? []) as string[],
+        promoLabel: null,
+      }));
+    }
   } catch (err) {
     dbError = err instanceof Error ? err.message : 'db_error';
   }
-
-  // Optional category filter from query string. Defensive — unknown
-  // categories just return the unfiltered list rather than empty.
-  const categoryFilter = searchParams.category;
-  const filtered = categoryFilter
-    ? rows.filter((h) => h.primaryCategories.includes(categoryFilter))
-    : rows;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -124,13 +219,7 @@ function ClinicCard({
   locale,
   learnMoreLabel,
 }: {
-  hospital: {
-    id: string;
-    name: string;
-    slug: string;
-    countryCode: string;
-    primaryCategories: string[];
-  };
+  hospital: ClinicRow;
   locale: PublicLocale;
   learnMoreLabel: string;
 }): JSX.Element {
@@ -140,7 +229,13 @@ function ClinicCard({
       className="group block overflow-hidden rounded-xl border bg-card transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
     >
       {/* Photo placeholder — gradient until real images land. */}
-      <div className="aspect-[16/10] bg-gradient-to-br from-brand-100 via-hospitality-100 to-care-100" />
+      <div className="relative aspect-[16/10] bg-gradient-to-br from-brand-100 via-hospitality-100 to-care-100">
+        {hospital.promoLabel ? (
+          <span className="absolute left-3 top-3 rounded-full bg-hospitality-500 px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm">
+            {hospital.promoLabel}
+          </span>
+        ) : null}
+      </div>
       <div className="space-y-2 p-4">
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-base font-semibold leading-tight">{hospital.name}</h3>
