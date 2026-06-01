@@ -56,6 +56,8 @@ export default async function ClinicDetailPage({
       addressJson: hospitals.addressJson,
       primaryCategories: hospitals.primaryCategories,
       foreignPatientLicenseNumber: hospitals.foreignPatientLicenseNumber,
+      coverImageUrl: hospitals.coverImageUrl,
+      notes: hospitals.notes,
     })
     .from(hospitals)
     .where(inArray(hospitals.slug, candidates))
@@ -66,6 +68,8 @@ export default async function ClinicDetailPage({
   const address = row.addressJson ?? {};
   const cats = (row.primaryCategories ?? []) as string[];
   const isKoiha = !!row.foreignPatientLicenseNumber;
+  const coverUrl = row.coverImageUrl;
+  const aboutText = row.notes?.trim() || null;
 
   return (
     <article className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -79,7 +83,21 @@ export default async function ClinicDetailPage({
 
       {/* Hero */}
       <section className="overflow-hidden rounded-2xl border bg-card">
-        <div className="aspect-[21/9] bg-gradient-to-br from-brand-200 via-hospitality-200 to-care-200" />
+        {coverUrl ? (
+          // Use a plain <img> for now — many cover URLs sit on third-party
+          // hosts not added to next.config.mjs remotePatterns yet. Once
+          // we centralize uploads through Supabase Storage we can swap
+          // this for <Image>.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={coverUrl}
+            alt={row.name}
+            className="aspect-[21/9] w-full object-cover"
+            loading="eager"
+          />
+        ) : (
+          <div className="aspect-[21/9] bg-gradient-to-br from-brand-200 via-hospitality-200 to-care-200" />
+        )}
         <div className="space-y-3 p-6">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{row.name}</h1>
@@ -117,9 +135,14 @@ export default async function ClinicDetailPage({
 
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          {/* About — placeholder until a public bio field is added */}
+          {/* About — uses hospitals.notes as the public bio for now.
+              Master-side edit at /master/hospitals/[id]/edit. */}
           <PlaceholderSection title={dict.featured.title} icon={Award}>
-            병원 상세 소개는 곧 추가됩니다.
+            {aboutText ? (
+              <p className="whitespace-pre-wrap leading-relaxed">{aboutText}</p>
+            ) : (
+              '병원 상세 소개는 곧 추가됩니다.'
+            )}
           </PlaceholderSection>
 
           <PlaceholderSection title="Before / After" icon={Sparkles}>

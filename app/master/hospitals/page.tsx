@@ -279,12 +279,21 @@ export default async function MasterHospitalsPage({
                       : '—'}
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <Link
-                      href={`/api/master/hospitals/${h.id}/open`}
-                      className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
-                    >
-                      열기 →
-                    </Link>
+                    <div className="inline-flex items-center gap-2">
+                      <Link
+                        href={`/master/hospitals/${h.id}/edit`}
+                        className="text-xs font-medium text-brand-700 underline-offset-2 hover:underline"
+                      >
+                        편집
+                      </Link>
+                      <span className="text-muted-foreground/40">·</span>
+                      <Link
+                        href={`/api/master/hospitals/${h.id}/open`}
+                        className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
+                      >
+                        열기 →
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
