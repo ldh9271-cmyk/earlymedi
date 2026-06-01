@@ -33,7 +33,11 @@ export const metadata = { title: '마스터 관리자 — KoreaGlowUp' };
  *    drops the operator into that org's dashboard with the red master
  *    banner showing they're impersonating.
  */
-export default async function MasterPage(): Promise<JSX.Element> {
+export default async function MasterPage({
+  searchParams,
+}: {
+  searchParams: { deleted?: string; merged?: string; created?: string; error?: string };
+}): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
@@ -152,6 +156,28 @@ export default async function MasterPage(): Promise<JSX.Element> {
           </button>
         </form>
       </header>
+
+      {/* Action result banners */}
+      {searchParams.deleted ? (
+        <div className="mb-4 rounded-md border border-care-300 bg-care-50 p-3 text-xs text-care-900">
+          ✅ 조직이 삭제되었습니다.
+        </div>
+      ) : null}
+      {searchParams.merged ? (
+        <div className="mb-4 rounded-md border border-care-300 bg-care-50 p-3 text-xs text-care-900">
+          ✅ 조직이 합쳐졌습니다. 대상 조직에 모든 데이터가 이전되었습니다.
+        </div>
+      ) : null}
+      {searchParams.created ? (
+        <div className="mb-4 rounded-md border border-care-300 bg-care-50 p-3 text-xs text-care-900">
+          ✅ 새 조직이 생성되었습니다.
+        </div>
+      ) : null}
+      {searchParams.error ? (
+        <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
+          ⚠ 작업 실패: {searchParams.error}
+        </div>
+      ) : null}
 
       {/* Master mode warning */}
       <div className="mb-6 rounded-lg border border-destructive/40 bg-destructive/5 p-4">

@@ -1,9 +1,10 @@
 'use client';
 
 import { useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowRight, Users } from 'lucide-react';
+import { ArrowRight, Users, Settings } from 'lucide-react';
 import { Card, CardContent } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
 import { ACCOUNT_TYPE_COLOR, ACCOUNT_TYPE_LABEL_KO } from '@/lib/auth/account-types';
@@ -65,7 +66,18 @@ export function MasterOrgCard({
           <Badge variant={ACCOUNT_TYPE_COLOR[accountType]} className="text-[10px]">
             {ACCOUNT_TYPE_LABEL_KO[accountType]}
           </Badge>
-          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-destructive" />
+          <div className="flex items-center gap-1">
+            <Link
+              href={`/master/orgs/${orgId}`}
+              onClick={(e) => e.stopPropagation()}
+              className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="조직 관리 (삭제·합치기)"
+              title="조직 관리 (삭제·합치기)"
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </Link>
+            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-destructive" />
+          </div>
         </div>
         <h3 className="line-clamp-1 text-sm font-semibold leading-tight">{orgName}</h3>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
