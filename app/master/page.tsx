@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { asc, eq, count } from 'drizzle-orm';
-import { ShieldAlert, Building2, Users, Stethoscope, Briefcase, UserCheck } from 'lucide-react';
+import { ShieldAlert, Building2, Users, Stethoscope, Briefcase, UserCheck, Plus, Hospital, Globe2 } from 'lucide-react';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
@@ -163,6 +163,66 @@ export default async function MasterPage(): Promise<JSX.Element> {
           조직 카드를 클릭하면 해당 조직의 owner처럼 대시보드에 진입합니다. 환자 데이터 수정·메시지
           발송 등 모든 동작은 audit log에 isMaster=true 플래그로 기록됩니다.
         </p>
+      </div>
+
+      {/* Quick admin actions — direct shortcuts to cross-org admin
+          surfaces. Sits above the org list so the master operator
+          doesn't have to scroll. */}
+      <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Link
+          href="/master/orgs/new"
+          className="group flex items-start gap-3 rounded-lg border border-brand-200 bg-brand-50/40 p-4 transition hover:bg-brand-50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
+            <Plus className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold text-brand-900">신규 조직 등록</div>
+            <p className="mt-0.5 text-[11px] text-brand-900/70">
+              병원·유치업체·파트너·프리랜서를 마스터 권한으로 추가
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/master/hospitals"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-care-100 text-care-700">
+            <Hospital className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold">병원 통합 관리</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              전 Agency 병원 listing + 카테고리별 노출
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/kr/admin"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-hospitality-100 text-hospitality-700">
+            <Users className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold">환자 가입 · 문의</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              환자 자가 가입자 + 1:1 문의 리스트
+            </p>
+          </div>
+        </Link>
+
+        <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4 opacity-70">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <Globe2 className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold text-muted-foreground">카테고리 랜딩 관리</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">곧 활성화 예정</p>
+          </div>
+        </div>
       </div>
 
       {/* Quick stats row */}
