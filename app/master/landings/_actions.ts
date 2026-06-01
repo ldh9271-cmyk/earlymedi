@@ -157,15 +157,47 @@ export async function listForCategory(
   return rows;
 }
 
-export async function countByCategory(): Promise<Map<string, number>> {
-  const rows = await db
-    .select({
-      categoryKey: categoryListings.categoryKey,
-      n: sql<number>`count(*)::int`,
-    })
-    .from(categoryListings)
-    .groupBy(categoryListings.categoryKey);
-  const m = new Map<string, number>();
-  for (const r of rows) m.set(r.categoryKey, r.n);
-  return m;
+export async function countByCategory(): Promise<{
+  counts: Map<string, number>;
+  tableMissing: boolean;
+}> {
+  try {
+    const rows = await db
+      .select({
+        categoryKey: categoryListings.categoryKey,
+        n: sql<number>`count(*)::int`,
+      })
+      .from(categoryListings)
+      .groupBy(categoryListings.categoryKey);
+    const m = new Map<string, number>();
+    for (const r of rows) m.set(r.categoryKey, r.n);
+    return { counts: m, tableMissing: false };
+  } catch (e) {
+    // Most likely "relation public.category_listings does not exist" —
+    // the SQL migration in drizzle/sql/category-listings.sql hasn't run
+    // yet. Return empty + flag so the page renders a migration prompt.
+    const msg = e instanceof Error ? e.message : String(e);
+    const missing = msg.includes('does not exist') || msg.includes('relation');
+    return { counts: new Map(), tableMissing: missing };
+  }
+}
+
+/**
+ * Safer wrapper for page components — returns `{ rows, tableMissing }`
+ * so the page can render a friendly migration prompt instead of crashing.
+ */
+export async function listForCategorySafe(
+  categoryKey: string,
+): Promise<{
+  rows: Awaited<ReturnType<typeof listForCategory>>;
+  tableMissing: boolean;
+}> {
+  try {
+    const rows = await listForCategory(categoryKey);
+    return { rows, tableMissing: false };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    const missing = msg.includes('does not exist') || msg.includes('relation');
+    return { rows: [], tableMissing: missing };
+  }
 }

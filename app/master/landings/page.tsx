@@ -39,7 +39,7 @@ export default async function MasterLandingsIndex(): Promise<JSX.Element> {
   if (!auth.user) redirect('/login?next=/master/landings');
   if (!isMasterEmail(auth.user.email ?? null)) redirect('/select-org');
 
-  const counts = await countByCategory();
+  const { counts, tableMissing } = await countByCategory();
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-8">
@@ -65,6 +65,26 @@ export default async function MasterLandingsIndex(): Promise<JSX.Element> {
           {' '} 페이지에 즉시 반영됩니다.
         </p>
       </header>
+
+      {tableMissing ? (
+        <div className="mb-6 rounded-lg border border-hospitality-300 bg-hospitality-50 p-4 text-sm">
+          <p className="font-semibold text-hospitality-900">⚠ 데이터베이스 마이그레이션 필요</p>
+          <p className="mt-1 text-xs text-hospitality-900/80">
+            <code className="rounded bg-white px-1 font-mono">category_listings</code> 테이블이 아직
+            Supabase 에 생성되지 않았습니다. 마스터 콘솔은 표시되지만 매핑을 추가·조회할 수 없습니다.
+          </p>
+          <ol className="mt-2 list-inside list-decimal space-y-0.5 text-xs text-hospitality-900/80">
+            <li>Supabase Dashboard → 좌측 메뉴 <strong>SQL Editor</strong> 클릭</li>
+            <li><strong>+ New query</strong> 클릭</li>
+            <li>
+              레포의 <code className="rounded bg-white px-1 font-mono">drizzle/sql/category-listings.sql</code>{' '}
+              내용 전체 복사 → 붙여넣기
+            </li>
+            <li>우측 상단 <strong>Run</strong> 클릭</li>
+            <li>이 페이지 새로고침 — 노란 배너가 사라지면 적용 완료</li>
+          </ol>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {PUBLIC_CATEGORIES.map((key) => {

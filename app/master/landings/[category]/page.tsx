@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import { Button } from '@/components/shared/ui/button';
-import { listForCategory, addListing, removeListing } from '../_actions';
+import { listForCategorySafe, addListing, removeListing } from '../_actions';
 
 const CATEGORY_LABELS: Record<string, string> = {
   plastic_surgery: '성형외과',
@@ -57,8 +57,10 @@ export default async function MasterLandingDetail({
   const activeProcedure = searchParams.procedure ?? null;
 
   // Load all listings for this category (we render them grouped per
-  // procedure slug + a category-level bucket at the top).
-  const allListings = await listForCategory(category);
+  // procedure slug + a category-level bucket at the top). Uses the
+  // Safe variant so a missing `category_listings` table renders a
+  // friendly migration banner instead of crashing the page.
+  const { rows: allListings, tableMissing } = await listForCategorySafe(category);
 
   // Load every hospital so the master can pick from a dropdown when
   // adding a new listing. Cross-org — RLS bypassed via /master.
@@ -115,6 +117,18 @@ export default async function MasterLandingDetail({
           시술에 동시 매핑할 수도 있습니다.
         </p>
       </header>
+
+      {tableMissing ? (
+        <div className="mb-6 rounded-lg border border-hospitality-300 bg-hospitality-50 p-4 text-sm">
+          <p className="font-semibold text-hospitality-900">⚠ 데이터베이스 마이그레이션 필요</p>
+          <p className="mt-1 text-xs text-hospitality-900/80">
+            <code className="rounded bg-white px-1 font-mono">category_listings</code> 테이블이 없어
+            매핑을 저장/조회할 수 없습니다. Supabase Dashboard → SQL Editor 에서{' '}
+            <code className="rounded bg-white px-1 font-mono">drizzle/sql/category-listings.sql</code>{' '}
+            를 실행한 후 새로고침해주세요.
+          </p>
+        </div>
+      ) : null}
 
       {searchParams.error ? (
         <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
