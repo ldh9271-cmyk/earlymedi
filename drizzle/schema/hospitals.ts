@@ -68,6 +68,13 @@ export const hospitals = pgTable(
 
     websiteUrl: text('website_url'),
     coverImageUrl: text('cover_image_url'),
+    // Master-curated landing gallery (Supabase Storage bucket
+    // 'hospital-images'). Order preserved; rendered as a 2-col grid
+    // on the patient detail page.
+    galleryImageUrls: jsonb('gallery_image_urls')
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     rating: integer('rating'), // 0..50 (= 0.0..5.0 × 10)
     reviewsCount: integer('reviews_count').notNull().default(0),
 

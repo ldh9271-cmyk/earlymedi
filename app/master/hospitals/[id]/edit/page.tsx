@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
-import { ArrowLeft, ExternalLink, ImageIcon } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
@@ -9,34 +9,25 @@ import { hospitals } from '@/drizzle/schema/hospitals';
 import { organizations } from '@/drizzle/schema/organizations';
 import { Badge } from '@/components/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
-import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import { Button } from '@/components/shared/ui/button';
-import { updateHospitalBasics } from './_action';
+import {
+  updateHospitalBasics,
+  uploadCoverImage,
+  removeCoverImage,
+  addGalleryImage,
+  removeGalleryImage,
+} from './_action';
 
 export const metadata = { title: '병원 사진·소개 편집 · 마스터' };
 export const dynamic = 'force-dynamic';
 
-/**
- * Master-side quick edit page for the two patient-portal-visible
- * fields on a hospital row:
- *
- *   - coverImageUrl → hero image on /[locale]/clinics/[slug]
- *   - notes         → short bio shown in the "오늘의 추천 병원" section
- *
- * This is the minimal complement to the full Agency wizard. Letting
- * the master operator tweak just these two fields covers ~90% of
- * post-launch listing edits without re-running the 5-step flow.
- *
- * For richer fields (specialties / doctors / pricing) keep using the
- * Agency-side wizard at /agency/hospitals/[id].
- */
 export default async function MasterHospitalEditPage({
   params,
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { saved?: string };
+  searchParams: { saved?: string; error?: string };
 }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -50,6 +41,7 @@ export default async function MasterHospitalEditPage({
       slug: hospitals.slug,
       countryCode: hospitals.countryCode,
       coverImageUrl: hospitals.coverImageUrl,
+      galleryImageUrls: hospitals.galleryImageUrls,
       notes: hospitals.notes,
       orgName: organizations.name,
     })
@@ -58,6 +50,8 @@ export default async function MasterHospitalEditPage({
     .where(eq(hospitals.id, params.id))
     .limit(1);
   if (!row) notFound();
+
+  const gallery = ((row.galleryImageUrls ?? []) as string[]) ?? [];
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-8">
@@ -96,55 +90,80 @@ export default async function MasterHospitalEditPage({
           ✅ 저장되었습니다. 환자 포털에 즉시 반영됩니다.
         </div>
       ) : null}
+      {searchParams.error ? (
+        <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
+          ⚠ {decodeURIComponent(searchParams.error)}
+        </div>
+      ) : null}
 
-      <Card>
+      {/* ─── Cover image card ───────────────────────────────────── */}
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base">병원 대표 사진 + 소개</CardTitle>
+          <div className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            <CardTitle className="text-base">대표 사진 (Hero)</CardTitle>
+          </div>
           <CardDescription>
-            환자 포털 병원 상세 페이지 (/[locale]/clinics/{row.slug}) 의 Hero 이미지와
-            &quot;오늘의 추천 병원&quot; 섹션에 노출됩니다.
+            환자 포털 상세 페이지 상단 21:9 영역에 노출. 최대 10MB · 권장 가로 1680px 이상.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {row.coverImageUrl ? (
+            <div className="overflow-hidden rounded-md border bg-muted">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={row.coverImageUrl}
+                alt="현재 대표 사진"
+                className="aspect-[21/9] w-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="aspect-[21/9] w-full rounded-md border-2 border-dashed bg-muted/30" />
+          )}
+
+          <form action={uploadCoverImage} className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="id" value={row.id} />
+            <input
+              type="file"
+              name="file"
+              accept="image/*"
+              required
+              className="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-brand-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-brand-700 sm:w-auto"
+            />
+            <Button type="submit" variant="brand">
+              업로드
+            </Button>
+          </form>
+
+          {row.coverImageUrl ? (
+            <form action={removeCoverImage}>
+              <input type="hidden" name="id" value={row.id} />
+              <button
+                type="submit"
+                className="text-[11px] text-muted-foreground underline-offset-2 hover:text-destructive hover:underline"
+              >
+                대표 사진 제거
+              </button>
+            </form>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      {/* ─── About text card ───────────────────────────────────── */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">병원 소개 텍스트</CardTitle>
+          <CardDescription>
+            환자 포털 상세 페이지의 &quot;오늘의 추천 병원&quot; 섹션에 표시.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={updateHospitalBasics} className="space-y-4">
+          <form action={updateHospitalBasics} className="space-y-3">
             <input type="hidden" name="id" value={row.id} />
-
-            {/* Cover image */}
             <div className="space-y-1.5">
-              <Label htmlFor="coverImageUrl">
-                <span className="inline-flex items-center gap-1">
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  대표 사진 URL
-                </span>
+              <Label htmlFor="notes" className="sr-only">
+                소개 텍스트
               </Label>
-              <Input
-                id="coverImageUrl"
-                name="coverImageUrl"
-                type="url"
-                defaultValue={row.coverImageUrl ?? ''}
-                placeholder="https://example.com/clinic-cover.jpg"
-              />
-              <p className="text-[11px] text-muted-foreground">
-                권장 비율 21:9, 가로 1680px 이상. 비워두면 그라데이션 placeholder 표시.
-                <br />
-                💡 이미지가 호스팅되어있는 URL 을 붙여넣으세요. (Imgur / Cloudinary / S3 / 본인 도메인 등)
-              </p>
-              {row.coverImageUrl ? (
-                <div className="mt-2 overflow-hidden rounded-md border bg-muted">
-                  {/* Preview — img tag to bypass next.config remotePatterns */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={row.coverImageUrl}
-                    alt="현재 대표 사진 미리보기"
-                    className="aspect-[21/9] w-full object-cover"
-                  />
-                </div>
-              ) : null}
-            </div>
-
-            {/* About text */}
-            <div className="space-y-1.5">
-              <Label htmlFor="notes">병원 소개 텍스트</Label>
               <textarea
                 id="notes"
                 name="notes"
@@ -154,27 +173,81 @@ export default async function MasterHospitalEditPage({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <p className="text-[11px] text-muted-foreground">
-                줄바꿈은 그대로 유지됩니다. 다국어 번역은 추후 자동 처리 예정 (현재는 한국어만).
+                줄바꿈은 그대로 유지됩니다.
               </p>
             </div>
+            <Button type="submit" variant="brand">
+              소개 저장
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-            <div className="flex items-center gap-2 pt-2">
-              <Button type="submit" variant="brand">
-                저장
-              </Button>
-              <Link href={`/master/hospitals`}>
-                <Button type="button" variant="outline">
-                  취소
-                </Button>
-              </Link>
+      {/* ─── Gallery card ───────────────────────────────────── */}
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            <CardTitle className="text-base">갤러리 이미지 ({gallery.length})</CardTitle>
+          </div>
+          <CardDescription>
+            병원 시설·진료실·전후 사진 등을 여러 장 등록할 수 있습니다. 환자 포털
+            상세 페이지의 갤러리 섹션에 등록 순서대로 노출됩니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {gallery.length > 0 ? (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {gallery.map((url, idx) => (
+                <div key={url} className="relative overflow-hidden rounded-md border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={`갤러리 이미지 ${idx + 1}`}
+                    className="aspect-square w-full object-cover"
+                  />
+                  <form action={removeGalleryImage} className="absolute right-1 top-1">
+                    <input type="hidden" name="id" value={row.id} />
+                    <input type="hidden" name="url" value={url} />
+                    <button
+                      type="submit"
+                      className="rounded-full bg-black/60 p-1 text-white hover:bg-destructive"
+                      aria-label="삭제"
+                      title="삭제"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </form>
+                </div>
+              ))}
             </div>
+          ) : (
+            <p className="rounded-md border border-dashed bg-muted/20 px-4 py-6 text-center text-xs text-muted-foreground">
+              아직 등록된 갤러리 이미지가 없습니다.
+            </p>
+          )}
+
+          <form action={addGalleryImage} className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="id" value={row.id} />
+            <input
+              type="file"
+              name="file"
+              accept="image/*"
+              required
+              className="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-brand-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-brand-700 sm:w-auto"
+            />
+            <Button type="submit" variant="brand">
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              추가
+            </Button>
           </form>
         </CardContent>
       </Card>
 
       <p className="mt-6 text-[11px] text-muted-foreground">
-        💡 더 상세한 정보(시술 카테고리·의사·수수료 정책 등)는 Agency 콘솔의 5단계 위저드에서
-        편집합니다. /master/hospitals 에서 행 &quot;열기&quot; 클릭 → 해당 Agency 로 진입.
+        💡 더 상세한 정보(시술 카테고리·의사·수수료 정책 등)는 Agency 콘솔의 5단계
+        위저드에서 편집합니다. /master/hospitals 에서 행 &quot;열기&quot; 클릭 → 해당
+        Agency 로 진입.
       </p>
     </div>
   );

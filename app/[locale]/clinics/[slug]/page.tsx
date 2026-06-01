@@ -57,6 +57,7 @@ export default async function ClinicDetailPage({
       primaryCategories: hospitals.primaryCategories,
       foreignPatientLicenseNumber: hospitals.foreignPatientLicenseNumber,
       coverImageUrl: hospitals.coverImageUrl,
+      galleryImageUrls: hospitals.galleryImageUrls,
       notes: hospitals.notes,
     })
     .from(hospitals)
@@ -70,6 +71,7 @@ export default async function ClinicDetailPage({
   const isKoiha = !!row.foreignPatientLicenseNumber;
   const coverUrl = row.coverImageUrl;
   const aboutText = row.notes?.trim() || null;
+  const gallery = ((row.galleryImageUrls ?? []) as string[]) ?? [];
 
   return (
     <article className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -144,6 +146,31 @@ export default async function ClinicDetailPage({
               '병원 상세 소개는 곧 추가됩니다.'
             )}
           </PlaceholderSection>
+
+          {/* Gallery — master-curated landing images. Rendered between
+              About and Before/After so visitors see the clinic's space
+              before scrolling to the (still-placeholder) before/after
+              section. Mastered at /master/hospitals/[id]/edit. */}
+          {gallery.length > 0 ? (
+            <section>
+              <div className="mb-3 flex items-center gap-2 border-b pb-2">
+                <Sparkles className="h-4 w-4 text-brand-700" />
+                <h2 className="text-base font-bold">병원 둘러보기</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {gallery.map((url, idx) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={url}
+                    src={url}
+                    alt={`${row.name} 갤러리 ${idx + 1}`}
+                    className="aspect-square w-full rounded-md border bg-muted object-cover"
+                    loading={idx < 3 ? 'eager' : 'lazy'}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <PlaceholderSection title="Before / After" icon={Sparkles}>
             검증된 시술 전후 사진은 의료법 규정에 따라 본인 동의 후 게시됩니다.
