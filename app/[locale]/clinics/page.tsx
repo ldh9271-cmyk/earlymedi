@@ -33,6 +33,7 @@ type ClinicRow = {
   countryCode: string;
   primaryCategories: string[];
   promoLabel: string | null;
+  coverImageUrl: string | null;
 };
 
 export default async function ClinicsListPage({
@@ -97,6 +98,7 @@ export default async function ClinicsListPage({
                 slug: hospitals.slug,
                 countryCode: hospitals.countryCode,
                 primaryCategories: hospitals.primaryCategories,
+                coverImageUrl: hospitals.coverImageUrl,
               })
               .from(hospitals)
               .where(inArray(hospitals.id, ids))
@@ -116,6 +118,7 @@ export default async function ClinicsListPage({
               countryCode: h.countryCode,
               primaryCategories: (h.primaryCategories ?? []) as string[],
               promoLabel: l.promoLabel,
+              coverImageUrl: h.coverImageUrl,
             };
           })
           .filter((r): r is ClinicRow => r !== null);
@@ -128,6 +131,7 @@ export default async function ClinicsListPage({
             slug: hospitals.slug,
             countryCode: hospitals.countryCode,
             primaryCategories: hospitals.primaryCategories,
+            coverImageUrl: hospitals.coverImageUrl,
           })
           .from(hospitals)
           .where(eq(hospitals.countryCode, 'KR'))
@@ -150,6 +154,7 @@ export default async function ClinicsListPage({
           slug: hospitals.slug,
           countryCode: hospitals.countryCode,
           primaryCategories: hospitals.primaryCategories,
+          coverImageUrl: hospitals.coverImageUrl,
         })
         .from(hospitals)
         .where(eq(hospitals.countryCode, 'KR'))
@@ -228,8 +233,24 @@ function ClinicCard({
       href={`/${locale}/clinics/${hospital.slug}`}
       className="group block overflow-hidden rounded-xl border bg-card transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
     >
-      {/* Photo placeholder — gradient until real images land. */}
-      <div className="relative aspect-[16/10] bg-gradient-to-br from-brand-100 via-hospitality-100 to-care-100">
+      {/*
+       * Card cover:
+       *  - If the hospital has uploaded a cover image (master console
+       *    → /master/hospitals/[id]/edit), render it as the thumbnail.
+       *  - Otherwise fall back to the soft brand gradient so the layout
+       *    never collapses.
+       * Recommended upload: 1280 × 800 (16:10), JPEG/WebP, ≤ 500 KB.
+       */}
+      <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-brand-100 via-hospitality-100 to-care-100">
+        {hospital.coverImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={hospital.coverImageUrl}
+            alt={hospital.name}
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+          />
+        ) : null}
         {hospital.promoLabel ? (
           <span className="absolute left-3 top-3 rounded-full bg-hospitality-500 px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm">
             {hospital.promoLabel}
