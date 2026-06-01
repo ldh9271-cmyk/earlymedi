@@ -1,4 +1,3 @@
-import { sql } from 'drizzle-orm';
 import {
   index,
   integer,
@@ -17,24 +16,20 @@ import { hospitals } from './hospitals';
  *   categoryKey   — top-level B2C category (e.g. 'plastic_surgery',
  *                   'dermatology', 'dental', ...) matching the
  *                   patient-portal homepage cards.
- *   procedureSlug — optional sub-procedure key (e.g. 'rhinoplasty',
- *                   'double-eyelid'). NULL means "category-level
- *                   feature" — this hospital is shown on the category
- *                   card itself, regardless of procedure drilldown.
+ *   procedureSlug — sub-procedure key (e.g. 'rhinoplasty',
+ *                   'double-eyelid'). Empty string '' means
+ *                   "category-level feature" — this hospital is shown
+ *                   on the category card itself, regardless of
+ *                   procedure drilldown.
  *   sortOrder     — ascending: smaller numbers appear first. 100 is
  *                   the conventional starting point so masters can
  *                   slide entries above/below without renumbering.
  *
- * The mapping is intentionally simple — no per-language overrides, no
- * featured-image, no time-based scheduling. We can add those later if
- * usage warrants. Right now the goal is: master picks the order and
- * which hospitals appear where on /[locale]/procedures and
- * /[locale]/clinics filtered views.
- *
- * Unique constraint:
- *   (categoryKey, procedureSlug, hospitalId) — a hospital can only
- *   appear once per procedure slot. Updating sort_order is an UPDATE,
- *   not a duplicate INSERT.
+ * Why procedureSlug is NOT NULL with '' as the sentinel:
+ *   - SQL UNIQUE on (categoryKey, procedureSlug, hospitalId) treats
+ *     NULL as distinct → duplicates possible if we left it nullable.
+ *   - Using '' avoids COALESCE-expression unique indexes (which some
+ *     older drizzle versions don't support cleanly).
  */
 export const categoryListings = pgTable(
   'category_listings',
@@ -42,7 +37,7 @@ export const categoryListings = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
 
     categoryKey: text('category_key').notNull(),
-    procedureSlug: text('procedure_slug'), // null = category-level feature
+    procedureSlug: text('procedure_slug').notNull().default(''),
 
     hospitalId: uuid('hospital_id')
       .notNull()
@@ -63,7 +58,7 @@ export const categoryListings = pgTable(
   (t) => ({
     uniqueListing: uniqueIndex('category_listings_unique').on(
       t.categoryKey,
-      sql`coalesce(${t.procedureSlug}, '')`,
+      t.procedureSlug,
       t.hospitalId,
     ),
     categoryIdx: index('category_listings_category_idx').on(t.categoryKey, t.sortOrder),

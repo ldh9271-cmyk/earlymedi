@@ -82,11 +82,11 @@ export default async function MasterLandingDetail({
     (h) => !((h.primaryCategories ?? []) as string[]).includes(category),
   );
 
-  // Group listings by procedureSlug (null = category-level)
-  const categoryLevel = allListings.filter((l) => l.procedureSlug === null);
+  // Group listings by procedureSlug ('' = category-level feature)
+  const categoryLevel = allListings.filter((l) => l.procedureSlug === '');
   const byProcedure = new Map<string, typeof allListings>();
   for (const l of allListings) {
-    if (l.procedureSlug !== null) {
+    if (l.procedureSlug !== '') {
       const arr = byProcedure.get(l.procedureSlug) ?? [];
       arr.push(l);
       byProcedure.set(l.procedureSlug, arr);

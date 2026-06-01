@@ -3,7 +3,7 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { and, eq, sql, isNull } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { categoryListings } from '@/drizzle/schema/category-listings';
 import { auditLogs } from '@/drizzle/schema/audit';
@@ -38,7 +38,8 @@ export async function addListing(formData: FormData): Promise<void> {
   if (!master) redirect('/select-org');
 
   const categoryKey = String(formData.get('categoryKey') ?? '');
-  const procedureSlug = String(formData.get('procedureSlug') ?? '').trim() || null;
+  // '' is the sentinel for category-level (no specific procedure).
+  const procedureSlug = String(formData.get('procedureSlug') ?? '').trim();
   const hospitalId = String(formData.get('hospitalId') ?? '');
   const sortOrderStr = String(formData.get('sortOrder') ?? '100');
   const sortOrder = Number.isFinite(Number(sortOrderStr)) ? Number(sortOrderStr) : 100;
@@ -120,12 +121,12 @@ export async function removeListing(formData: FormData): Promise<void> {
  */
 export async function listForCategory(
   categoryKey: string,
-  procedureSlug?: string | null,
+  procedureSlug?: string,
 ): Promise<
   Array<{
     id: string;
     categoryKey: string;
-    procedureSlug: string | null;
+    procedureSlug: string;
     hospitalId: string;
     hospitalName: string;
     sortOrder: number;
@@ -147,15 +148,10 @@ export async function listForCategory(
     .where(
       procedureSlug === undefined
         ? eq(categoryListings.categoryKey, categoryKey)
-        : procedureSlug === null
-          ? and(
-              eq(categoryListings.categoryKey, categoryKey),
-              isNull(categoryListings.procedureSlug),
-            )
-          : and(
-              eq(categoryListings.categoryKey, categoryKey),
-              eq(categoryListings.procedureSlug, procedureSlug),
-            ),
+        : and(
+            eq(categoryListings.categoryKey, categoryKey),
+            eq(categoryListings.procedureSlug, procedureSlug),
+          ),
     )
     .orderBy(categoryListings.sortOrder);
   return rows;
