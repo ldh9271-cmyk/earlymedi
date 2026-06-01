@@ -136,6 +136,38 @@ export default async function MasterLandingDetail({
         </div>
       ) : null}
 
+      {/* Empty-hospital guidance */}
+      {hospitalRows.length === 0 ? (
+        <Card className="mb-6 border-hospitality-300 bg-hospitality-50">
+          <CardContent className="space-y-2 p-4 text-sm">
+            <p className="font-semibold text-hospitality-900">
+              ⚠ 아직 등록된 병원·호텔이 없습니다
+            </p>
+            <p className="text-xs text-hospitality-900/80">
+              매핑하려면 먼저 hospitals 테이블에 병원·호텔을 등록해야 합니다. 조직(organizations)
+              과 병원(hospitals) 은 별개 데이터로, 조직 안에서 위저드를 통해 추가합니다.
+            </p>
+            <ol className="ml-4 list-decimal space-y-1 text-xs text-hospitality-900/80">
+              <li>
+                <Link href="/master/hospitals" className="font-medium underline">
+                  /master/hospitals
+                </Link>
+                {' '}→ 신규 등록 launcher 에서 Agency 선택 → 5단계 위저드
+              </li>
+              <li>
+                <Link href="/master" className="font-medium underline">
+                  /master
+                </Link>
+                {' '}→ Agency 카드 클릭 → 사이드바 &quot;병원 마켓플레이스&quot; → 신규 등록
+              </li>
+            </ol>
+            <p className="text-[11px] text-hospitality-900/60">
+              💡 등록 시 카테고리({CATEGORY_LABELS[category] ?? category})를 체크하면 추천 그룹에 자동 표시됩니다.
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {/* Add listing form */}
       <Card className="mb-6 border-brand-200 bg-brand-50/30">
         <CardHeader>
