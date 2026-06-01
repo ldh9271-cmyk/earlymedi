@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { eq, and } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import { ArrowLeft, MapPin, Star, ShieldCheck, Sparkles, Award, Languages } from 'lucide-react';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
@@ -32,6 +32,21 @@ export default async function ClinicDetailPage({
 }): Promise<JSX.Element> {
   const dict = await getDictionary(params.locale);
 
+  // Slug-matching is forgiving here because the slug can arrive as:
+  //   - exactly what the DB stored: '세라성형외과의원-OI4Vv'
+  //   - percent-encoded by some intermediaries: '%EC%84%B8%EB%9D%BC...'
+  //   - decoded twice if a proxy was over-eager
+  // We also intentionally DROP the countryCode='KR' filter — a hospital
+  // returned by the listing page must be visitable from the detail page,
+  // and the country filter belongs on the listing side, not detail lookup.
+  let resolvedSlug = params.slug;
+  try {
+    resolvedSlug = decodeURIComponent(params.slug);
+  } catch {
+    // malformed % escapes — fall back to raw value
+  }
+  const candidates = Array.from(new Set([params.slug, resolvedSlug]));
+
   const [row] = await db
     .select({
       id: hospitals.id,
@@ -43,7 +58,7 @@ export default async function ClinicDetailPage({
       foreignPatientLicenseNumber: hospitals.foreignPatientLicenseNumber,
     })
     .from(hospitals)
-    .where(and(eq(hospitals.slug, params.slug), eq(hospitals.countryCode, 'KR')))
+    .where(inArray(hospitals.slug, candidates))
     .limit(1);
 
   if (!row) notFound();
