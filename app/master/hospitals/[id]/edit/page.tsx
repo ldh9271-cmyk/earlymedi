@@ -104,7 +104,8 @@ export default async function MasterHospitalEditPage({
             <CardTitle className="text-base">대표 사진 (Hero)</CardTitle>
           </div>
           <CardDescription>
-            환자 포털 상세 페이지 상단 21:9 영역에 노출. 최대 10MB · 권장 가로 1680px 이상.
+            환자 포털 상세 페이지 상단 16:6 영역에 노출. 최대 10MB · 권장 가로 1680px 이상.
+            갤러리 첫 4장이 Hero 옆 thumbnail strip 으로 함께 표시되니, 사진을 여러 장 등록할수록 풍부해 보입니다.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -114,11 +115,11 @@ export default async function MasterHospitalEditPage({
               <img
                 src={row.coverImageUrl}
                 alt="현재 대표 사진"
-                className="aspect-[21/9] w-full object-cover"
+                className="aspect-[16/6] w-full object-cover"
               />
             </div>
           ) : (
-            <div className="aspect-[21/9] w-full rounded-md border-2 border-dashed bg-muted/30" />
+            <div className="aspect-[16/6] w-full rounded-md border-2 border-dashed bg-muted/30" />
           )}
 
           <form action={uploadCoverImage} className="flex flex-wrap items-center gap-2">

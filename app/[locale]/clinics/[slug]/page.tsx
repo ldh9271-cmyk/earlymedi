@@ -83,23 +83,68 @@ export default async function ClinicDetailPage({
         {dict.nav.clinics}
       </Link>
 
-      {/* Hero */}
+      {/* Hero — cover photo with optional thumbnail strip below.
+          aspect-[16/6] is ~33% shorter than the original 21:9, which
+          keeps the page-fold scannable on laptops. The thumbnail strip
+          (first 4 gallery images) repurposes content the master already
+          uploaded so the Hero feels populated even before a real cover
+          arrives. */}
       <section className="overflow-hidden rounded-2xl border bg-card">
         {coverUrl ? (
-          // Use a plain <img> for now — many cover URLs sit on third-party
-          // hosts not added to next.config.mjs remotePatterns yet. Once
-          // we centralize uploads through Supabase Storage we can swap
-          // this for <Image>.
+          // Plain <img> for now — many cover URLs sit on hosts not in
+          // next.config.mjs remotePatterns yet. Will swap to <Image>
+          // once everything routes through Supabase Storage.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={coverUrl}
             alt={row.name}
-            className="aspect-[21/9] w-full object-cover"
+            className="aspect-[16/6] w-full object-cover"
             loading="eager"
           />
+        ) : gallery.length > 0 ? (
+          // No cover but we have a gallery — assemble a 4-up mosaic so
+          // the Hero never looks empty when assets exist.
+          <div className="grid aspect-[16/6] grid-cols-4 gap-px bg-muted">
+            {gallery.slice(0, 4).map((url, idx) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={url}
+                src={url}
+                alt={`${row.name} ${idx + 1}`}
+                className="h-full w-full object-cover"
+                loading="eager"
+              />
+            ))}
+            {/* If fewer than 4, pad the rest with a soft gradient */}
+            {Array.from({ length: Math.max(0, 4 - gallery.length) }).map((_, i) => (
+              <div
+                key={`pad-${i}`}
+                className="bg-gradient-to-br from-brand-100 via-hospitality-100 to-care-100"
+              />
+            ))}
+          </div>
         ) : (
-          <div className="aspect-[21/9] bg-gradient-to-br from-brand-200 via-hospitality-200 to-care-200" />
+          <div className="aspect-[16/6] bg-gradient-to-br from-brand-200 via-hospitality-200 to-care-200" />
         )}
+
+        {/* Thumbnail strip — shown only when cover exists AND we have
+            extra gallery images to preview. Acts as a teaser for the
+            full "병원 둘러보기" section further down. */}
+        {coverUrl && gallery.length > 0 ? (
+          <div className="grid grid-cols-4 gap-1.5 border-t bg-muted/10 p-1.5">
+            {gallery.slice(0, 4).map((url, idx) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={url}
+                src={url}
+                alt={`${row.name} 갤러리 ${idx + 1}`}
+                className="aspect-[4/3] w-full rounded object-cover"
+                loading="lazy"
+              />
+            ))}
+          </div>
+        ) : null}
+
         <div className="space-y-3 p-6">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{row.name}</h1>
