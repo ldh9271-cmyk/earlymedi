@@ -240,15 +240,20 @@ export default async function MasterPage({
           </div>
         </Link>
 
-        <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4 opacity-70">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <Link
+          href="/master/landings"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 text-rose-700">
             <Globe2 className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold text-muted-foreground">카테고리 랜딩 관리</div>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">곧 활성화 예정</p>
+            <div className="text-xs font-semibold">카테고리 랜딩 관리</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              시술 카탈로그 · 카테고리별 노출 병원 매핑
+            </p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Quick stats row */}

@@ -52,3 +52,6 @@ export * from './partner-bookings';
 
 // Freelancer referral codes (송객·인플루언서 추적 코드)
 export * from './freelancer-referral-codes';
+
+// Master-curated B2C category & procedure landing mappings
+export * from './category-listings';
