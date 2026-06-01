@@ -175,6 +175,9 @@ const ja: Dictionary = {
     bookConsult: '相談予約',
     seeMore: 'もっと見る',
     backToHome: 'ホームに戻る',
+    noClinicsTitle: 'まだ登録された病院がありません',
+    noClinicsBody: '提携病院を準備中です。1:1お問い合わせから直接ご案内いたします。',
+    noClinicsInCategory: 'このカテゴリーにはまだ登録された病院がありません。',
   },
 };
 

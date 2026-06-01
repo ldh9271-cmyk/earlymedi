@@ -173,6 +173,9 @@ const zh: Dictionary = {
     bookConsult: '预约咨询',
     seeMore: '查看更多',
     backToHome: '返回首页',
+    noClinicsTitle: '暂无可用医院',
+    noClinicsBody: '我们正在引入合作医院。请通过 1:1 咨询，我们将直接为您安排。',
+    noClinicsInCategory: '此类别下暂无医院。',
   },
 };
 

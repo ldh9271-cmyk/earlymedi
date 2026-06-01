@@ -98,7 +98,11 @@ export default async function ClinicsListPage({
       ) : null}
 
       {filtered.length === 0 ? (
-        <EmptyClinics dict={dict} locale={params.locale} />
+        <EmptyClinics
+          dict={dict}
+          locale={params.locale}
+          categoryFilter={categoryFilter}
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((h) => (
@@ -172,26 +176,40 @@ function ClinicCard({
 function EmptyClinics({
   dict,
   locale,
+  categoryFilter,
 }: {
   dict: Awaited<ReturnType<typeof getDictionary>>;
   locale: PublicLocale;
+  categoryFilter?: string;
 }): JSX.Element {
+  // Two distinct empty states:
+  //   (a) `?category=X` filter applied but no rows match → tell the user
+  //       it's just this category, suggest browsing all or sending an inquiry.
+  //   (b) Truly zero hospitals platform-wide → onboarding phase copy.
+  const title = categoryFilter ? dict.common.noClinicsInCategory : dict.common.noClinicsTitle;
+  const body = dict.common.noClinicsBody;
   return (
     <div className="rounded-lg border-2 border-dashed bg-muted/20 px-6 py-12 text-center">
       <MapPin className="mx-auto h-10 w-10 text-muted-foreground/40" />
-      <h3 className="mt-3 text-base font-semibold">
-        {dict.common.error}
-      </h3>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {dict.featured.subtitle}
-      </p>
-      <Link
-        href={`/${locale}/inquiry`}
-        className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
-      >
-        <Sparkles className="h-4 w-4" />
-        {dict.inquiryCta.submit}
-      </Link>
+      <h3 className="mt-3 text-base font-semibold">{title}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+        {categoryFilter ? (
+          <Link
+            href={`/${locale}/clinics`}
+            className="inline-flex items-center gap-1.5 rounded-md border border-input bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
+          >
+            {dict.common.seeMore}
+          </Link>
+        ) : null}
+        <Link
+          href={`/${locale}/inquiry`}
+          className="inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
+        >
+          <Sparkles className="h-4 w-4" />
+          {dict.inquiryCta.submit}
+        </Link>
+      </div>
     </div>
   );
 }

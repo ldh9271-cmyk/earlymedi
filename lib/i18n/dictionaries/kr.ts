@@ -187,6 +187,9 @@ const kr = {
     bookConsult: '상담 예약',
     seeMore: '더 보기',
     backToHome: '홈으로 돌아가기',
+    noClinicsTitle: '아직 등록된 병원이 없어요',
+    noClinicsBody: '협력 병원을 준비 중입니다. 1:1 문의로 직접 안내받으실 수 있어요.',
+    noClinicsInCategory: '이 카테고리에 등록된 병원이 아직 없습니다.',
   },
 };
 

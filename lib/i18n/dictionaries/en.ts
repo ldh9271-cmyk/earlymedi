@@ -176,6 +176,9 @@ const en: Dictionary = {
     bookConsult: 'Book Consult',
     seeMore: 'See more',
     backToHome: 'Back to home',
+    noClinicsTitle: 'No clinics listed yet',
+    noClinicsBody: "We're onboarding partner clinics. Start a 1:1 inquiry and we'll help you directly.",
+    noClinicsInCategory: 'No clinics listed in this category yet.',
   },
 };
 
