@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ShieldAlert } from 'lucide-react';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { LocaleSwitcher } from './locale-switcher';
@@ -8,13 +9,21 @@ import { LocaleSwitcher } from './locale-switcher';
  * fast — this is the first paint for every visitor, no client JS unless
  * absolutely necessary (only the LocaleSwitcher is client-side because
  * it needs the current pathname).
+ *
+ * `isMaster` is passed by the layout — when true (signed-in master
+ * operator), an extra "Admin" pill replaces the login button so the
+ * operator can jump straight to /[locale]/admin (patient signups,
+ * 1:1 inquiries). Non-masters never see this — the value defaults to
+ * false and the layout's master check fails silently.
  */
 export function PublicHeader({
   locale,
   dict,
+  isMaster = false,
 }: {
   locale: PublicLocale;
   dict: Dictionary;
+  isMaster?: boolean;
 }): JSX.Element {
   const navItems: Array<{ href: string; label: string }> = [
     { href: `/${locale}/clinics`, label: dict.nav.clinics },
@@ -57,6 +66,16 @@ export function PublicHeader({
             confuse foreign visitors clicking this link. */}
         <div className="ml-auto flex items-center gap-2">
           <LocaleSwitcher current={locale} />
+          {isMaster ? (
+            <Link
+              href={`/${locale}/admin`}
+              className="inline-flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-1.5 text-xs font-semibold text-destructive transition hover:bg-destructive/10"
+              title="Master admin console"
+            >
+              <ShieldAlert className="h-3 w-3" />
+              Admin
+            </Link>
+          ) : null}
           <Link
             href={`/${locale}/login`}
             className="hidden rounded-md border border-input bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground sm:inline-block"

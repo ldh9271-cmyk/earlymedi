@@ -3,6 +3,8 @@ import { isPublicLocale, LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/l
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { PublicHeader } from '@/components/public/public-header';
 import { PublicFooter } from '@/components/public/public-footer';
+import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
+import { isMasterEmail } from '@/lib/auth/master';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,12 +30,24 @@ export default async function PublicLocaleLayout({
   const locale = params.locale as PublicLocale;
   const dict = await getDictionary(locale);
 
+  // Optional master flag — only used to expose the /admin link in the
+  // header. Failure to load the session is non-fatal; we just render
+  // the header without the admin shortcut.
+  let isMaster = false;
+  try {
+    const supabase = createSupabaseServerClient();
+    const { data: auth } = await supabase.auth.getUser();
+    isMaster = isMasterEmail(auth.user?.email ?? null);
+  } catch {
+    isMaster = false;
+  }
+
   return (
     <div
       lang={LOCALE_TO_BCP47[locale]}
       className="flex min-h-screen flex-col bg-background text-foreground"
     >
-      <PublicHeader locale={locale} dict={dict} />
+      <PublicHeader locale={locale} dict={dict} isMaster={isMaster} />
       <main className="flex-1">{children}</main>
       <PublicFooter locale={locale} dict={dict} />
     </div>
