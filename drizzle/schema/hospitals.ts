@@ -75,6 +75,11 @@ export const hospitals = pgTable(
       .$type<string[]>()
       .notNull()
       .default(sql`'[]'::jsonb`),
+    // Single tall promo poster shown inside the "오늘의 추천 병원"
+    // section. Clinics often hand us full clinic-flyer PNGs — this
+    // slot renders them at full readable width without forcing them
+    // into the gallery thumbnail grid.
+    landingImageUrl: text('landing_image_url'),
     rating: integer('rating'), // 0..50 (= 0.0..5.0 × 10)
     reviewsCount: integer('reviews_count').notNull().default(0),
 

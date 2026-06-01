@@ -58,6 +58,7 @@ export default async function ClinicDetailPage({
       foreignPatientLicenseNumber: hospitals.foreignPatientLicenseNumber,
       coverImageUrl: hospitals.coverImageUrl,
       galleryImageUrls: hospitals.galleryImageUrls,
+      landingImageUrl: hospitals.landingImageUrl,
       notes: hospitals.notes,
     })
     .from(hospitals)
@@ -72,6 +73,7 @@ export default async function ClinicDetailPage({
   const coverUrl = row.coverImageUrl;
   const aboutText = row.notes?.trim() || null;
   const gallery = ((row.galleryImageUrls ?? []) as string[]) ?? [];
+  const landingUrl = row.landingImageUrl;
 
   return (
     <article className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -182,40 +184,39 @@ export default async function ClinicDetailPage({
 
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          {/* About — uses hospitals.notes as the public bio for now.
-              Master-side edit at /master/hospitals/[id]/edit. */}
+          {/* About + landing poster — uses hospitals.notes for the
+              bio text and hospitals.landingImageUrl for the long
+              vertical promo poster (clinic-supplied flyer). Both are
+              optional and mastered at /master/hospitals/[id]/edit.
+              The standalone "병원 둘러보기" gallery section was
+              removed: Hero already shows the first 4 gallery images
+              as a thumbnail strip, so duplicating them below felt
+              redundant. */}
           <PlaceholderSection title={dict.featured.title} icon={Award}>
-            {aboutText ? (
-              <p className="whitespace-pre-wrap leading-relaxed">{aboutText}</p>
-            ) : (
-              '병원 상세 소개는 곧 추가됩니다.'
-            )}
-          </PlaceholderSection>
+            <div className="space-y-5">
+              {aboutText ? (
+                <p className="whitespace-pre-wrap leading-relaxed">{aboutText}</p>
+              ) : !landingUrl ? (
+                '병원 상세 소개는 곧 추가됩니다.'
+              ) : null}
 
-          {/* Gallery — master-curated landing images. Rendered between
-              About and Before/After so visitors see the clinic's space
-              before scrolling to the (still-placeholder) before/after
-              section. Mastered at /master/hospitals/[id]/edit. */}
-          {gallery.length > 0 ? (
-            <section>
-              <div className="mb-3 flex items-center gap-2 border-b pb-2">
-                <Sparkles className="h-4 w-4 text-brand-700" />
-                <h2 className="text-base font-bold">병원 둘러보기</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {gallery.map((url, idx) => (
-                  // eslint-disable-next-line @next/next/no-img-element
+              {landingUrl ? (
+                // Full-width vertical poster. Image renders at its
+                // intrinsic aspect — most clinic flyers are 600–900
+                // wide × 2000+ tall, so we cap visible width with
+                // max-w but never crop vertically.
+                <div className="overflow-hidden rounded-lg border bg-muted">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    key={url}
-                    src={url}
-                    alt={`${row.name} 갤러리 ${idx + 1}`}
-                    className="aspect-square w-full rounded-md border bg-muted object-cover"
-                    loading={idx < 3 ? 'eager' : 'lazy'}
+                    src={landingUrl}
+                    alt={`${row.name} 랜딩 포스터`}
+                    className="mx-auto block w-full"
+                    loading="lazy"
                   />
-                ))}
-              </div>
-            </section>
-          ) : null}
+                </div>
+              ) : null}
+            </div>
+          </PlaceholderSection>
 
           <PlaceholderSection title="Before / After" icon={Sparkles}>
             검증된 시술 전후 사진은 의료법 규정에 따라 본인 동의 후 게시됩니다.

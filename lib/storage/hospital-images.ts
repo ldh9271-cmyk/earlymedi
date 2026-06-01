@@ -12,7 +12,8 @@ import { createSupabaseServiceClient } from '@/lib/auth/supabase-server';
  * File-naming policy: `<hospitalId>/<purpose>/<timestamp>-<rand>.<ext>`
  *  - hospitalId scopes images per clinic so a clinic deletion cascade
  *    can target only its own assets.
- *  - purpose: 'cover' | 'gallery' — distinguishes Hero from gallery.
+ *  - purpose: 'cover' | 'gallery' | 'landing' — Hero / gallery thumbnail
+ *    / full-bleed promo poster respectively.
  *  - timestamp + rand: avoid name collisions; Storage will reject dupes
  *    even with `upsert:false` so randomization is mandatory.
  *  - extension: derived from MIME type; defaults to .jpg if unknown.
@@ -23,7 +24,7 @@ export async function uploadHospitalImage({
   file,
 }: {
   hospitalId: string;
-  purpose: 'cover' | 'gallery';
+  purpose: 'cover' | 'gallery' | 'landing';
   file: File;
 }): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   if (!file || file.size === 0) return { ok: false, error: 'empty_file' };

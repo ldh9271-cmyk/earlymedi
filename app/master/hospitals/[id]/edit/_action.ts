@@ -163,6 +163,95 @@ export async function removeCoverImage(formData: FormData): Promise<void> {
 }
 
 /**
+ * Upload (or replace) the long-form landing image — a tall promotional
+ * poster shown inside the "오늘의 추천 병원" section. Mirrors the cover
+ * upload action: previous landing image is best-effort deleted.
+ */
+export async function uploadLandingImage(formData: FormData): Promise<void> {
+  const master = await requireMaster();
+  if (!master) redirect('/select-org');
+
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/master/hospitals?error=missing_id');
+
+  const file = formData.get('file');
+  if (!(file instanceof File) || file.size === 0) {
+    redirect(`/master/hospitals/${id}/edit?error=no_file`);
+  }
+  const result = await uploadHospitalImage({
+    hospitalId: id,
+    purpose: 'landing',
+    file: file as File,
+  });
+  if (!result.ok) {
+    redirect(`/master/hospitals/${id}/edit?error=${encodeURIComponent(result.error)}`);
+  }
+
+  const [existing] = await db
+    .select({ landingImageUrl: hospitals.landingImageUrl, organizationId: hospitals.organizationId })
+    .from(hospitals)
+    .where(eq(hospitals.id, id))
+    .limit(1);
+  if (!existing) redirect('/master/hospitals?error=hospital_not_found');
+  const previousUrl = existing.landingImageUrl;
+
+  await db
+    .update(hospitals)
+    .set({ landingImageUrl: result.url, updatedAt: new Date() })
+    .where(eq(hospitals.id, id));
+
+  if (previousUrl) {
+    await deleteHospitalImageByUrl(previousUrl);
+  }
+
+  await db
+    .insert(auditLogs)
+    .values({
+      organizationId: existing.organizationId,
+      actorUserId: master.userId,
+      action: 'update',
+      entityType: 'hospital',
+      entityId: id,
+      diff: { landingImageUrl: result.url, previousUrl },
+      metadata: { isMaster: true, source: 'master_console', kind: 'hospital_landing_upload' },
+    })
+    .catch(() => {});
+
+  revalidateClinicSurfaces();
+  redirect(`/master/hospitals/${id}/edit?saved=1`);
+}
+
+/**
+ * Remove the landing image entirely.
+ */
+export async function removeLandingImage(formData: FormData): Promise<void> {
+  const master = await requireMaster();
+  if (!master) redirect('/select-org');
+
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/master/hospitals?error=missing_id');
+
+  const [existing] = await db
+    .select({ landingImageUrl: hospitals.landingImageUrl })
+    .from(hospitals)
+    .where(eq(hospitals.id, id))
+    .limit(1);
+  if (!existing) redirect('/master/hospitals?error=hospital_not_found');
+
+  await db
+    .update(hospitals)
+    .set({ landingImageUrl: null, updatedAt: new Date() })
+    .where(eq(hospitals.id, id));
+
+  if (existing.landingImageUrl) {
+    await deleteHospitalImageByUrl(existing.landingImageUrl);
+  }
+
+  revalidateClinicSurfaces();
+  redirect(`/master/hospitals/${id}/edit?saved=1`);
+}
+
+/**
  * Append one image to the hospital's gallery. Master can call this
  * repeatedly for multiple files — we don't accept `multiple` upload
  * in a single request to keep error handling per-file simple.

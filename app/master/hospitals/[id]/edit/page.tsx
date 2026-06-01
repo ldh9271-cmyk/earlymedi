@@ -17,6 +17,8 @@ import {
   removeCoverImage,
   addGalleryImage,
   removeGalleryImage,
+  uploadLandingImage,
+  removeLandingImage,
 } from './_action';
 
 export const metadata = { title: '병원 사진·소개 편집 · 마스터' };
@@ -42,6 +44,7 @@ export default async function MasterHospitalEditPage({
       countryCode: hospitals.countryCode,
       coverImageUrl: hospitals.coverImageUrl,
       galleryImageUrls: hospitals.galleryImageUrls,
+      landingImageUrl: hospitals.landingImageUrl,
       notes: hospitals.notes,
       orgName: organizations.name,
     })
@@ -181,6 +184,61 @@ export default async function MasterHospitalEditPage({
               소개 저장
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* ─── Landing image card ───────────────────────────────── */}
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            <CardTitle className="text-base">랜딩 포스터 이미지</CardTitle>
+          </div>
+          <CardDescription>
+            병원이 만든 긴 세로 광고 이미지(원장 소개 · 시술 설명 · BEFORE/AFTER 한
+            장 등)를 그대로 업로드하세요. 환자 포털 상세 페이지의 &quot;오늘의 추천 병원&quot;
+            섹션 안에서 소개 텍스트 아래에 원본 비율 그대로 노출됩니다. 최대 10MB.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {row.landingImageUrl ? (
+            <div className="mx-auto max-w-md overflow-hidden rounded-md border bg-muted">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={row.landingImageUrl}
+                alt="현재 랜딩 포스터"
+                className="w-full"
+              />
+            </div>
+          ) : (
+            <div className="mx-auto h-48 max-w-md rounded-md border-2 border-dashed bg-muted/30" />
+          )}
+
+          <form action={uploadLandingImage} className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="id" value={row.id} />
+            <input
+              type="file"
+              name="file"
+              accept="image/*"
+              required
+              className="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-brand-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-brand-700 sm:w-auto"
+            />
+            <Button type="submit" variant="brand">
+              업로드
+            </Button>
+          </form>
+
+          {row.landingImageUrl ? (
+            <form action={removeLandingImage}>
+              <input type="hidden" name="id" value={row.id} />
+              <button
+                type="submit"
+                className="text-[11px] text-muted-foreground underline-offset-2 hover:text-destructive hover:underline"
+              >
+                랜딩 이미지 제거
+              </button>
+            </form>
+          ) : null}
         </CardContent>
       </Card>
 
