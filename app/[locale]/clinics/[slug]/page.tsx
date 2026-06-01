@@ -129,13 +129,10 @@ export async function generateMetadata({
  */
 export default async function ClinicDetailPage({
   params,
-  searchParams,
 }: {
   params: { locale: PublicLocale; slug: string };
-  searchParams?: { debug?: string };
 }): Promise<JSX.Element> {
   const dict = await getDictionary(params.locale);
-  const debug = searchParams?.debug === '1';
 
   // Slug-matching is forgiving here because the slug can arrive as:
   //   - exactly what the DB stored: '세라성형외과의원-OI4Vv'
@@ -227,28 +224,6 @@ export default async function ClinicDetailPage({
     galleryImageUrls: string[];
     landingImageUrl: string | null;
   } | null = null;
-  type LcType = {
-    name: string | null;
-    intro: string | null;
-    coverImageUrl: string | null;
-    galleryImageUrls: string[];
-    landingImageUrl: string | null;
-  } | null;
-  let lcDebug: {
-    hospitalId: string;
-    locale: string;
-    queriedAt: string;
-    allLocaleRows: Array<{ locale: string; name: string | null; intro: string | null; coverImageUrl: string | null }>;
-    selectedRow: LcType;
-    error: string | null;
-  } = {
-    hospitalId: row.id,
-    locale: params.locale,
-    queriedAt: new Date().toISOString(),
-    allLocaleRows: [],
-    selectedRow: null,
-    error: null,
-  };
   try {
     const [r] = await db
       .select({
@@ -267,23 +242,7 @@ export default async function ClinicDetailPage({
       )
       .limit(1);
     if (r) lc = { ...r, galleryImageUrls: (r.galleryImageUrls ?? []) as string[] };
-    lcDebug.selectedRow = lc;
-
-    if (debug) {
-      // Also fetch all rows for this hospital to see what's actually stored.
-      const all = await db
-        .select({
-          locale: hospitalLocaleContent.locale,
-          name: hospitalLocaleContent.name,
-          intro: hospitalLocaleContent.intro,
-          coverImageUrl: hospitalLocaleContent.coverImageUrl,
-        })
-        .from(hospitalLocaleContent)
-        .where(eq(hospitalLocaleContent.hospitalId, row.id));
-      lcDebug.allLocaleRows = all;
-    }
-  } catch (e) {
-    lcDebug.error = e instanceof Error ? e.message : String(e);
+  } catch {
     // Table missing — patient never sees an error, just falls back.
   }
 
@@ -313,12 +272,6 @@ export default async function ClinicDetailPage({
         <ArrowLeft className="h-4 w-4" />
         {dict.nav.clinics}
       </Link>
-
-      {debug ? (
-        <pre className="mb-6 overflow-auto rounded-lg border border-amber-300 bg-amber-50 p-3 text-[11px] text-amber-900">
-          {JSON.stringify(lcDebug, null, 2)}
-        </pre>
-      ) : null}
 
       {/* Hero — cover photo with optional thumbnail strip below.
           aspect-[16/6] is ~33% shorter than the original 21:9, which
