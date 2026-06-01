@@ -28,6 +28,10 @@ import { detectLocale } from '@/lib/ai/translation';
 const InputSchema = z.object({
   locale: z.enum(['kr', 'en', 'zh', 'ja']),
   hospitalId: z.string().uuid().nullable(),
+  // Display name carried alongside the UUID so the inbox can show
+  // "관심 병원: 세라성형외과의원" instead of a raw 8e5b... UUID.
+  // Optional and capped — if missing or wrong we just fall through.
+  hospitalName: z.string().max(200).nullable().optional(),
   name: z.string().min(1).max(120),
   countryCode: z.string().length(2),
   contact: z.string().min(1).max(200),
@@ -113,9 +117,13 @@ export async function submitPublicInquiryAction(
   const interestsLine = input.interests.length > 0
     ? `\n관심 분야: ${input.interests.join(', ')}`
     : '';
-  const hospitalLine = input.hospitalId
-    ? `\n관심 병원 ID: ${input.hospitalId}`
-    : '';
+  // Prefer the human-readable name; fall back to the UUID, and finally
+  // to "선택 안 함" so the inbox always has something meaningful to show.
+  const hospitalLine = input.hospitalName
+    ? `\n관심 병원: ${input.hospitalName}`
+    : input.hospitalId
+      ? `\n관심 병원 ID: ${input.hospitalId}`
+      : `\n관심 병원: (선택 안 함)`;
   const composedBody =
     `[환자 포털 문의 · ${input.locale.toUpperCase()}]\n` +
     `이름: ${input.name} (${input.countryCode})\n` +
@@ -166,6 +174,7 @@ export async function submitPublicInquiryAction(
       contact: input.contact,
       interests: input.interests,
       hospitalId: input.hospitalId ?? undefined,
+      hospitalName: input.hospitalName ?? undefined,
     },
   });
 

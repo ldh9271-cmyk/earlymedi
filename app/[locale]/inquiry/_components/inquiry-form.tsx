@@ -18,10 +18,12 @@ const COUNTRY_CODES = [
 export function InquiryForm({
   locale,
   hospitalId,
+  hospitalOptions,
   labels,
 }: {
   locale: PublicLocale;
   hospitalId: string | null;
+  hospitalOptions: Array<{ id: string; name: string }>;
   labels: {
     name: string;
     country: string;
@@ -38,8 +40,13 @@ export function InquiryForm({
   const [contact, setContact] = useState('');
   const [interests, setInterests] = useState<string[]>([]);
   const [memo, setMemo] = useState('');
+  const [selectedHospitalId, setSelectedHospitalId] = useState<string>(hospitalId ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+
+  const selectedHospital = selectedHospitalId
+    ? hospitalOptions.find((h) => h.id === selectedHospitalId)
+    : null;
 
   function toggleInterest(key: string): void {
     setInterests((prev) =>
@@ -57,7 +64,8 @@ export function InquiryForm({
     try {
       const res = await submitPublicInquiryAction({
         locale,
-        hospitalId,
+        hospitalId: selectedHospitalId || null,
+        hospitalName: selectedHospital?.name ?? null,
         name: name.trim(),
         countryCode: country,
         contact: contact.trim(),
@@ -141,6 +149,33 @@ export function InquiryForm({
           required
         />
       </div>
+
+      {/* Optional clinic picker. Pre-selected when arriving from a
+          /clinics/[slug] detail page (?hospital=<id>), otherwise blank
+          ("아직 결정 안 함"). Keeping it optional keeps the funnel
+          friendly — the patient doesn't have to commit to a clinic
+          before talking to a concierge. */}
+      {hospitalOptions.length > 0 ? (
+        <div className="space-y-1.5">
+          <Label htmlFor="inq-hospital">관심 병원 (선택)</Label>
+          <select
+            id="inq-hospital"
+            value={selectedHospitalId}
+            onChange={(e) => setSelectedHospitalId(e.target.value)}
+            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">— 아직 결정 안 함 / 추천 받기 —</option>
+            {hospitalOptions.map((h) => (
+              <option key={h.id} value={h.id}>
+                {h.name}
+              </option>
+            ))}
+          </select>
+          <p className="text-[11px] text-muted-foreground">
+            특정 병원이 마음에 든 경우 선택해 주세요. 없으면 컨시어지가 환자분 상황에 맞춰 추천드립니다.
+          </p>
+        </div>
+      ) : null}
 
       <div className="space-y-1.5">
         <Label>{labels.interest}</Label>
