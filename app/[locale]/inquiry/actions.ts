@@ -130,6 +130,34 @@ export async function submitPublicInquiryAction(
     `연락처: ${input.contact}${interestsLine}${hospitalLine}\n\n` +
     `${input.memo || '(별도 메모 없음)'}`;
 
+  // 3.5 Resolve patient language BEFORE inserting the conversation. The
+  //    old code blindly used the UI locale ("/kr/inquiry → ko"), which
+  //    silently broke outbound auto-translate for Chinese patients who
+  //    happened to land on the Korean form — the agent's Korean reply
+  //    went out untranslated because contactLocale='ko' meant
+  //    "patient is also Korean → skip translation".
+  //
+  //    Resolution order, strongest signal first:
+  //      1. detectLocale(memo) — if the body is long enough to classify
+  //         confidently (not 'other'), trust it. This catches Chinese
+  //         patients filling the KR form in Chinese characters.
+  //      2. countryCode mapping — for short bodies ("hello"), infer
+  //         from nationality. CN/HK/TW/MO → zh, JP → ja, KR → ko.
+  //      3. UI locale — last-resort fallback for ambiguous Western
+  //         countries (US/EU/etc).
+  const detected = detectLocale(input.memo);
+  const inferFromCountry = (): string | null => {
+    const cc = input.countryCode.toUpperCase();
+    if (cc === 'CN' || cc === 'HK' || cc === 'TW' || cc === 'MO') return 'zh';
+    if (cc === 'JP') return 'ja';
+    if (cc === 'KR') return 'ko';
+    return null;
+  };
+  const uiFallback = input.locale === 'kr' ? 'ko' : input.locale;
+  const contactLocale =
+    detected !== 'other' ? detected : inferFromCountry() ?? uiFallback;
+  const bodyLocale = detected === 'other' ? contactLocale : detected;
+
   // 4. Insert conversation + message + audit log in one transaction-ish
   //    sequence. Drizzle's HTTP driver doesn't expose proper
   //    transactions, but the ordering is fine: conversation first,
@@ -143,7 +171,7 @@ export async function submitPublicInquiryAction(
       contactDisplayName: input.name,
       contactExternalId: input.contact,
       contactCountryCode: input.countryCode,
-      contactLocale: input.locale === 'kr' ? 'ko' : input.locale,
+      contactLocale,
       stage: 'lead',
       priority: 'normal',
       unreadCount: 1,
@@ -151,11 +179,6 @@ export async function submitPublicInquiryAction(
     })
     .returning({ id: conversations.id });
   if (!conv) return { ok: false, error: 'conversation_create_failed' };
-
-  // detectLocale will look at the memo body; fall back to the locale
-  // chosen in the UI if the body is too short to classify.
-  const detected = detectLocale(input.memo);
-  const bodyLocale = detected === 'other' ? (input.locale === 'kr' ? 'ko' : input.locale) : detected;
 
   await db.insert(messages).values({
     organizationId: intakeOrgId,
