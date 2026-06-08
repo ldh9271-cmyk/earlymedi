@@ -147,14 +147,23 @@ export const CHANNELS: Record<ChannelKind, ChannelDef> = {
     color: '#26A5E4',
     emoji: '✈️',
     devConsoleUrl: 'https://t.me/BotFather',
-    ready: false,
+    ready: true,
     credentialFields: [
       {
         key: 'botToken',
         label: 'Bot Token',
         type: 'password',
         placeholder: '123456:ABC-DEF...',
-        helpText: '@BotFather에서 /newbot 명령어로 발급받은 토큰',
+        helpText:
+          '@BotFather에 /newbot 입력 → 봇 이름과 @username 설정 → 발급받은 토큰 (형식: 123456:ABC-DEF...).',
+      },
+      {
+        key: 'webhookSecret',
+        label: 'Webhook Secret (선택)',
+        type: 'password',
+        placeholder: '16자 이상 임의 문자열',
+        helpText:
+          'setWebhook 호출 시 secret_token 파라미터에 같은 값을 넣으면 매 요청 헤더가 검증됩니다. 비워두면 URL 의 channel UUID 가 baseline secret 역할.',
       },
     ],
     webhookPath: '/api/webhooks/telegram',
