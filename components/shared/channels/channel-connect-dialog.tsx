@@ -258,8 +258,16 @@ function translateError(code: string): string {
   switch (code) {
     case 'unauthenticated':
       return '로그인이 필요합니다.';
+    case 'no_active_org':
+      return '활성 조직이 없습니다. /select-org 에서 조직을 다시 선택해 주세요.';
+    case 'no_membership':
+      return '이 조직의 멤버가 아닙니다. 마스터 모드에서 조직 진입 후 다시 시도해 주세요.';
+    case 'org_not_found':
+      return '조직을 찾을 수 없습니다. 마스터 콘솔에서 새로 진입해 주세요.';
     case 'insufficient_role':
       return '채널 연결은 소유자 · 관리자 · 매니저 권한만 가능합니다.';
+    case 'channel_not_found':
+      return '채널을 찾을 수 없습니다 — 다른 조직 채널이거나 삭제됐을 수 있습니다.';
     case 'channel_not_ready':
       return '이 채널은 곧 활성화될 예정입니다.';
     case 'channel_save_failed':

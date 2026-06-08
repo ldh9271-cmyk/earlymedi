@@ -2,13 +2,17 @@
 
 import 'server-only';
 import { and, eq } from 'drizzle-orm';
+import { headers } from 'next/headers';
 import { z } from 'zod';
 import { db } from '@/lib/db/client';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { channels } from '@/drizzle/schema/channels';
 import { orgMemberships } from '@/drizzle/schema/memberships';
+import { organizations } from '@/drizzle/schema/organizations';
 import { auditLogs } from '@/drizzle/schema/audit';
 import { encryptPii } from '@/lib/encryption/pgcrypto';
+import { ACTIVE_ORG_HEADER } from '@/lib/auth/active-org';
+import { isMasterEmail } from '@/lib/auth/master';
 import { CHANNELS, type ChannelKind } from './registry';
 
 /**
@@ -38,10 +42,53 @@ const ConnectInputSchema = z.object({
 
 export type ConnectChannelInput = z.infer<typeof ConnectInputSchema>;
 
-async function requireOrgOwnerOrAdmin(): Promise<{ userId: string; orgId: string }> {
+/**
+ * Server-action auth guard — resolves the ACTIVE org (not the user's first
+ * membership) and verifies the user has write-level role there.
+ *
+ * History: this used to ignore the active-org cookie and just grab the
+ * user's first membership via LIMIT 1. That silently broke two scenarios:
+ *
+ *   1. Multi-tenant users (one human, multiple agencies they manage):
+ *      every server action wrote into the WRONG agency.
+ *
+ *   2. Master mode: master accounts aren't in org_memberships at all, so
+ *      the first-membership lookup returned EMPTY and threw 'no_membership'
+ *      — or worse, returned the master's own org membership and then
+ *      `channels WHERE org_id = <master_org>` came up dry as
+ *      'channel_not_found' (the real production error this fix targets).
+ *
+ * The middleware sets the x-em-active-org header from the em.active_org
+ * cookie on every request, so server actions reading the header always
+ * see the org the user is currently looking at. Master accounts bypass
+ * the membership join and get granted owner role on whatever org they
+ * impersonated — same pattern as requireAccess() in route-guards.
+ */
+async function requireOrgOwnerOrAdmin(): Promise<{
+  userId: string;
+  orgId: string;
+  isMaster: boolean;
+}> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error('unauthenticated');
+
+  const activeOrgId = headers().get(ACTIVE_ORG_HEADER);
+  if (!activeOrgId) throw new Error('no_active_org');
+
+  const email = auth.user.email ?? '';
+  if (isMasterEmail(email)) {
+    // Master mode: skip the membership join. Verify the org exists so a
+    // tampered cookie can't point us at a deleted/nonexistent org. Master
+    // is treated as 'owner' for role-gated actions.
+    const [org] = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.id, activeOrgId))
+      .limit(1);
+    if (!org) throw new Error('org_not_found');
+    return { userId: auth.user.id, orgId: activeOrgId, isMaster: true };
+  }
 
   const [m] = await db
     .select({ orgId: orgMemberships.organizationId, role: orgMemberships.role })
@@ -49,13 +96,14 @@ async function requireOrgOwnerOrAdmin(): Promise<{ userId: string; orgId: string
     .where(
       and(
         eq(orgMemberships.userId, auth.user.id),
+        eq(orgMemberships.organizationId, activeOrgId),
         eq(orgMemberships.status, 'active'),
       ),
     )
     .limit(1);
   if (!m) throw new Error('no_membership');
   if (!['owner', 'admin', 'manager'].includes(m.role)) throw new Error('insufficient_role');
-  return { userId: auth.user.id, orgId: m.orgId };
+  return { userId: auth.user.id, orgId: m.orgId, isMaster: false };
 }
 
 export async function connectChannelAction(rawInput: ConnectChannelInput): Promise<{
