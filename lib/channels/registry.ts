@@ -229,10 +229,40 @@ export const CHANNELS: Record<ChannelKind, ChannelDef> = {
     color: '#E4405F',
     emoji: '📷',
     devConsoleUrl: 'https://developers.facebook.com/apps/',
-    ready: false,
+    ready: true,
     credentialFields: [
-      { key: 'igBusinessAccountId', label: 'Instagram Business Account ID', type: 'text' },
-      { key: 'pageAccessToken', label: 'Page Access Token', type: 'password' },
+      {
+        key: 'igBusinessAccountId',
+        label: 'Instagram Business Account ID',
+        type: 'text',
+        placeholder: '숫자만 (예: 17841401234567890)',
+        helpText:
+          'Meta for Developers > 본인 앱 > Instagram > API Setup 의 "Instagram-Scoped Account ID" 또는 Business Manager > Instagram 계정 정보에서 확인.',
+      },
+      {
+        key: 'pageAccessToken',
+        label: 'Page Access Token',
+        type: 'password',
+        placeholder: 'EAA... (긴 토큰)',
+        helpText:
+          'Facebook Page 에 연결된 Page Access Token. 권한: instagram_basic + instagram_manage_messages + pages_manage_metadata + pages_messaging. 장기 토큰은 Business Manager > 시스템 사용자에서 발급.',
+      },
+      {
+        key: 'verifyToken',
+        label: 'Webhook Verify Token',
+        type: 'password',
+        placeholder: '본인이 정한 임의 16자+ 문자열',
+        helpText:
+          'Meta Webhook 콘솔의 "Verify token" 입력란과 같은 값을 사용. Verify 클릭 시 GET 핸드셰이크에서 비교됩니다.',
+      },
+      {
+        key: 'appSecret',
+        label: 'App Secret',
+        type: 'password',
+        placeholder: '32자 hex',
+        helpText:
+          'Meta for Developers > 앱 > Settings > Basic > App secret. webhook POST 의 x-hub-signature-256 헤더 검증에 사용 (위조 메시지 차단).',
+      },
     ],
     webhookPath: '/api/webhooks/instagram',
   },

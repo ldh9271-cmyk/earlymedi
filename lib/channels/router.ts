@@ -4,6 +4,7 @@ import { KakaoAdapter } from './kakao-adapter';
 import { LineAdapter } from './line-adapter';
 import { TelegramAdapter } from './telegram-adapter';
 import { WhatsAppAdapter } from './whatsapp-adapter';
+import { InstagramAdapter } from './instagram-adapter';
 import type { ChannelAdapter, ChannelKind, NormalizedOutboundMessage, SendResult } from './types';
 export { CHANNEL_DISPLAY, ALL_CHANNEL_KINDS } from './types';
 
@@ -12,10 +13,11 @@ export { CHANNEL_DISPLAY, ALL_CHANNEL_KINDS } from './types';
  * channel. The router resolves the adapter by `kind` and delegates.
  *
  * Real adapters wired in:
- *   - kakao    (via i 오픈빌더 EventAPI)
- *   - line     (via Messaging API Push)
- *   - telegram (via Bot API sendMessage)
- *   - whatsapp (via Meta Cloud API + 24h CS window)
+ *   - kakao     (via i 오픈빌더 EventAPI)
+ *   - line      (via Messaging API Push)
+ *   - telegram  (via Bot API sendMessage)
+ *   - whatsapp  (via Meta Cloud API + 24h CS window)
+ *   - instagram (via Meta Graph API + 24h CMW)
  * Other channels still use BaseMockAdapter — agent replies get stored in
  * KoreaGlowUp DB but don't push back to the user's messenger. Replace each
  * one with a real impl as the corresponding platform's API access is set up.
@@ -25,7 +27,7 @@ const adapters: Record<ChannelKind, ChannelAdapter> = {
   line: new LineAdapter(),
   telegram: new TelegramAdapter(),
   whatsapp: new WhatsAppAdapter(),
-  instagram: new BaseMockAdapter('instagram'),
+  instagram: new InstagramAdapter(),
   wechat: new BaseMockAdapter('wechat'),
   messenger: new BaseMockAdapter('messenger'),
   naver: new BaseMockAdapter('naver'),
