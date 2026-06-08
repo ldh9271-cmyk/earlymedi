@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Search, Inbox, AlertCircle } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { Search, Inbox, AlertCircle, Trash2, Loader2 } from 'lucide-react';
 import { Input } from '@/components/shared/ui/input';
 import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { ChannelBadge } from './channel-badge';
@@ -39,6 +40,10 @@ export function ConversationList({ initialId }: { initialId?: string }): JSX.Ele
     search,
     setSearch,
   } = useInboxStore();
+  const qc = useQueryClient();
+  // Tracks the row currently being deleted so we can disable that
+  // single row's UI without locking the rest of the list.
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const queryKey = useMemo(
     () => ['inbox', { channelFilters, stageFilters, unreadOnly, search }],
@@ -64,6 +69,48 @@ export function ConversationList({ initialId }: { initialId?: string }): JSX.Ele
     refetchInterval: 15_000,
     retry: 1,
   });
+
+  /**
+   * Hard-delete a single conversation. UX intentionally uses native
+   * window.confirm rather than a custom modal — this is a fairly
+   * destructive action that benefits from the browser's own friction,
+   * and avoids pulling in a dialog dependency just for one button.
+   *
+   * Optimistic update strategy:
+   *   1. Snapshot the current list from cache.
+   *   2. Eagerly drop the row.
+   *   3. If the server returns an error, restore the snapshot + toast.
+   *   4. If the deleted row was selected, clear selection so the
+   *      detail pane doesn't keep loading messages for a row the
+   *      server no longer recognizes.
+   */
+  async function handleDelete(row: ConversationRow): Promise<void> {
+    const name = row.contactDisplayName ?? '(이름 없음)';
+    if (!window.confirm(`"${name}" 대화를 정말 삭제할까요?\n메시지 전체가 함께 영구 삭제됩니다.`)) {
+      return;
+    }
+    setDeletingId(row.id);
+    const snapshot = qc.getQueryData<ConversationRow[]>(queryKey);
+    qc.setQueryData<ConversationRow[]>(queryKey, (prev) =>
+      (prev ?? []).filter((c) => c.id !== row.id),
+    );
+    try {
+      const res = await fetch(`/api/agency/inbox/${row.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status}${body ? ' — ' + body.slice(0, 200) : ''}`);
+      }
+      if (selectedConversationId === row.id) {
+        setSelectedConversationId(null);
+      }
+      toast.success(`"${name}" 대화를 삭제했습니다`);
+    } catch (e) {
+      qc.setQueryData(queryKey, snapshot);
+      toast.error(e instanceof Error ? e.message : '삭제 실패');
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   // Auto-pick initial conversation on FIRST render only.
   //
@@ -166,7 +213,9 @@ export function ConversationList({ initialId }: { initialId?: string }): JSX.Ele
                 key={c.id}
                 row={c}
                 active={c.id === selectedConversationId}
+                deleting={deletingId === c.id}
                 onSelect={() => setSelectedConversationId(c.id)}
+                onDelete={() => handleDelete(c)}
               />
             ))}
           </ul>
@@ -179,21 +228,33 @@ export function ConversationList({ initialId }: { initialId?: string }): JSX.Ele
 function ConversationRowItem({
   row,
   active,
+  deleting,
   onSelect,
+  onDelete,
 }: {
   row: ConversationRow;
   active: boolean;
+  deleting: boolean;
   onSelect: () => void;
+  onDelete: () => void;
 }): JSX.Element {
   const when = row.lastInboundAt ? formatLocal(new Date(row.lastInboundAt), 'Asia/Seoul', 'MM-dd HH:mm') : '';
+  // The row is a giant <button>; we nest the delete control in a <span>
+  // (not a <button>) and stopPropagation manually so the parent click
+  // still fires for normal area clicks but the delete area opens the
+  // confirm dialog instead. Using a sibling absolute-positioned button
+  // is the standard pattern, but requires `position: relative` on the
+  // parent and breaks the simple block layout we have today.
   return (
-    <li>
+    <li className="group relative">
       <button
         type="button"
         onClick={onSelect}
+        disabled={deleting}
         className={cn(
-          'block w-full px-3 py-3 text-left transition-colors',
+          'block w-full px-3 py-3 pr-9 text-left transition-colors',
           active ? 'bg-brand-50' : 'hover:bg-muted/40',
+          deleting && 'opacity-50',
         )}
       >
         <div className="flex items-center gap-2">
@@ -241,6 +302,37 @@ function ConversationRowItem({
             {row.aiIntentClass.replace(/_/g, ' ')}
           </div>
         ) : null}
+      </button>
+
+      {/* Delete button — absolute-positioned over the row so it doesn't
+          steal vertical space. Always rendered on touch (no hover), only
+          fades in on desktop hover. Sized small to avoid accidental
+          taps next to the main click target. */}
+      <button
+        type="button"
+        aria-label="대화 삭제"
+        title="대화 삭제 (메시지 전체 영구 삭제)"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        disabled={deleting}
+        className={cn(
+          'absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground/50 transition',
+          'hover:bg-destructive/10 hover:text-destructive',
+          'opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
+          'md:opacity-0',
+          // On touch / coarse pointers the hover-only reveal hides the
+          // button entirely. Force-show under coarse pointer media.
+          '[@media(pointer:coarse)]:opacity-100',
+          deleting && 'opacity-100',
+        )}
+      >
+        {deleting ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Trash2 className="h-3.5 w-3.5" />
+        )}
       </button>
     </li>
   );
