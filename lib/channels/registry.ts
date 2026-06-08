@@ -175,12 +175,49 @@ export const CHANNELS: Record<ChannelKind, ChannelDef> = {
     brand: 'whatsapp',
     color: '#25D366',
     emoji: '🟢',
-    devConsoleUrl: 'https://business.facebook.com/wa/manage/',
-    ready: false,
+    devConsoleUrl: 'https://developers.facebook.com/apps/',
+    ready: true,
     credentialFields: [
-      { key: 'phoneNumberId', label: 'Phone Number ID', type: 'text' },
-      { key: 'accessToken', label: 'Permanent Access Token', type: 'password' },
-      { key: 'wabaId', label: 'WhatsApp Business Account ID', type: 'text' },
+      {
+        key: 'phoneNumberId',
+        label: 'Phone Number ID',
+        type: 'text',
+        placeholder: '숫자만 (예: 123456789012345)',
+        helpText:
+          'Meta for Developers > 본인 앱 > WhatsApp > API Setup > "From" 항목 아래의 Phone number ID.',
+      },
+      {
+        key: 'accessToken',
+        label: 'Permanent Access Token',
+        type: 'password',
+        placeholder: 'EAAxxxxx... (긴 토큰)',
+        helpText:
+          '같은 API Setup 페이지의 Temporary 토큰은 24시간 후 만료됩니다. 실서비스용은 Business Manager > 시스템 사용자에서 whatsapp_business_messaging + whatsapp_business_management 권한으로 Permanent 토큰 발급 권장.',
+      },
+      {
+        key: 'wabaId',
+        label: 'WhatsApp Business Account ID',
+        type: 'text',
+        placeholder: '숫자만 (예: 987654321098765)',
+        helpText:
+          'Meta Business Suite > Settings > Business Assets > WhatsApp Accounts 에서 본인 WABA 선택 시 표시.',
+      },
+      {
+        key: 'verifyToken',
+        label: 'Webhook Verify Token',
+        type: 'password',
+        placeholder: '본인이 정한 임의 16자+ 문자열',
+        helpText:
+          'Meta Webhook 콘솔의 "Verify token" 입력란과 같은 값을 사용. Verify 클릭 시 GET 핸드셰이크에서 비교됩니다.',
+      },
+      {
+        key: 'appSecret',
+        label: 'App Secret',
+        type: 'password',
+        placeholder: '32자 hex',
+        helpText:
+          'Meta for Developers > 앱 > Settings > Basic > App secret. 모든 webhook POST 의 x-hub-signature-256 헤더 검증에 사용 (위조 메시지 차단).',
+      },
     ],
     webhookPath: '/api/webhooks/whatsapp',
   },
