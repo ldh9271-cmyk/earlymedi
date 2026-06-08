@@ -29,9 +29,9 @@ export default async function AgencyChannelsPage(): Promise<JSX.Element> {
           <Badge variant="brand" className="mb-2">
             🔌 채널 연결
           </Badge>
-          <h1 className="text-2xl font-bold tracking-tight">10채널 다국어 인박스</h1>
+          <h1 className="text-2xl font-bold tracking-tight">8채널 다국어 인박스</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            카카오톡 · LINE · WhatsApp · Telegram 등 8개 메신저를 연결해 한 인박스에서 응대하세요. 각 채널에서 발급받은 키를 등록하면 즉시 메시지를 수신합니다.
+            카카오톡 · LINE · WhatsApp · Telegram · Instagram · Messenger · Naver · WeChat — 8개 메신저를 연결해 한 인박스에서 응대하세요. 각 채널에서 발급받은 키를 등록하면 즉시 메시지를 수신합니다.
           </p>
         </div>
         <div className="text-right">
@@ -40,6 +40,7 @@ export default async function AgencyChannelsPage(): Promise<JSX.Element> {
             {connectedCount}
             <span className="text-base font-normal text-muted-foreground"> / 8</span>
           </div>
+          {/* /8 was already correct — only the heading said 10채널. */}
         </div>
       </div>
 

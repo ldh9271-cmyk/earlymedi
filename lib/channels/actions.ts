@@ -236,26 +236,93 @@ const TEST_MESSAGE_SAMPLES: Record<
 export type TestMessageLocale = keyof typeof TEST_MESSAGE_SAMPLES;
 
 /**
+ * Get-or-create a synthetic "test" channel for the given kind in this org.
+ *
+ * Why: the test-message buttons on /agency/channels used to require a
+ * real connected channel. That meant operators could only test the
+ * inbox pipeline AFTER plugging in real credentials — chicken-and-egg
+ * if they're evaluating the product. Now every channel card can fire
+ * test messages, and the first click silently inserts a synthetic
+ * channel row so the simulation has somewhere to land.
+ *
+ * Externalkey is fixed to `__test_synthetic__` so the
+ * (organization_id, kind, external_account_id) UNIQUE constraint
+ * gives us a natural upsert. Real connections use the user-supplied
+ * externalAccountId and can't collide.
+ *
+ * status='disconnected' so the channel doesn't appear in webhook
+ * routing tables — it exists only as an anchor for test conversations.
+ */
+const SYNTHETIC_TEST_ACCOUNT_ID = '__test_synthetic__';
+
+async function getOrCreateTestChannel(
+  orgId: string,
+  kind: ChannelKind,
+): Promise<string> {
+  const [existing] = await db
+    .select({ id: channels.id })
+    .from(channels)
+    .where(
+      and(
+        eq(channels.organizationId, orgId),
+        eq(channels.kind, kind),
+        eq(channels.externalAccountId, SYNTHETIC_TEST_ACCOUNT_ID),
+      ),
+    )
+    .limit(1);
+  if (existing) return existing.id;
+
+  const def = CHANNELS[kind];
+  const [created] = await db
+    .insert(channels)
+    .values({
+      organizationId: orgId,
+      kind,
+      displayName: `${def.label} (테스트)`,
+      externalAccountId: SYNTHETIC_TEST_ACCOUNT_ID,
+      status: 'disconnected',
+      lastSyncAt: new Date(),
+    })
+    .returning({ id: channels.id });
+  if (!created) throw new Error('test_channel_create_failed');
+  return created.id;
+}
+
+/**
  * Simulates an inbound message arriving via the channel's webhook. Used
  * by the per-flag test buttons on the channels page so an operator can
  * confirm the inbox pipeline (and AI translation) works end-to-end in
  * any of the 5 sample locales without waiting for a real customer message.
  *
+ * `target` is either `{channelId}` (existing connected channel) or
+ * `{kind}` (synthetic test channel — get-or-create for unconnected
+ * channels). Both paths land in the same inbox UI with full AI
+ * translation + suggested replies wired.
+ *
  * Returns the conversation id so the UI can deep-link to it.
  */
 export async function sendTestMessageAction(
-  channelId: string,
+  target: { channelId: string } | { kind: ChannelKind },
   locale: TestMessageLocale = 'ko',
 ): Promise<{ conversationId: string; locale: TestMessageLocale }> {
   const { orgId } = await requireOrgOwnerOrAdmin();
 
-  // Verify the channel belongs to the caller's org.
-  const [channel] = await db
-    .select({ id: channels.id, kind: channels.kind })
-    .from(channels)
-    .where(and(eq(channels.id, channelId), eq(channels.organizationId, orgId)))
-    .limit(1);
-  if (!channel) throw new Error('channel_not_found');
+  let channelId: string;
+  if ('channelId' in target) {
+    // Connected-channel path: verify ownership before sending.
+    const [channel] = await db
+      .select({ id: channels.id })
+      .from(channels)
+      .where(
+        and(eq(channels.id, target.channelId), eq(channels.organizationId, orgId)),
+      )
+      .limit(1);
+    if (!channel) throw new Error('channel_not_found');
+    channelId = channel.id;
+  } else {
+    // Synthetic-channel path: ensure a test row exists for this kind.
+    channelId = await getOrCreateTestChannel(orgId, target.kind);
+  }
 
   const sample = TEST_MESSAGE_SAMPLES[locale];
   const threadId = `test-${locale}-${Date.now()}`;

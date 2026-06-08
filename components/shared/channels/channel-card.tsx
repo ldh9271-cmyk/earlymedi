@@ -53,10 +53,16 @@ export function ChannelCard({
   const hasError = connected?.status === 'error';
 
   function handleTest(locale: TestMessageLocale): void {
-    if (!connected) return;
+    // Two paths into the same simulation:
+    //   - connected channel → attach test message to the real row
+    //   - unconnected channel → server creates a synthetic test channel
+    //     for this kind (status='disconnected') and uses it as anchor
+    // Either way the operator sees a populated inbox conversation with
+    // full AI translation + suggested replies wired.
+    const target = connected ? { channelId: connected.id } : { kind };
     startTestTransition(async () => {
       try {
-        const result = await sendTestMessageAction(connected.id, locale);
+        const result = await sendTestMessageAction(target, locale);
         const label = TEST_LOCALES.find((l) => l.code === result.locale)?.label ?? locale;
         toast.success(`${label} 테스트 메시지가 인박스에 도착했습니다.`, {
           action: { label: '인박스 열기', onClick: () => router.push('/agency/inbox') },
@@ -146,34 +152,38 @@ export function ChannelCard({
             </a>
           </div>
 
-          {/* Per-locale test message buttons — appear only when connected */}
-          {isConnected ? (
-            <div className="space-y-1.5 rounded-md border bg-muted/20 px-2.5 py-2">
-              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Send className="h-2.5 w-2.5" />
-                  테스트 메시지 발송
-                </span>
-                {isTestPending ? <span className="text-foreground">전송 중…</span> : null}
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {TEST_LOCALES.map((l) => (
-                  <button
-                    key={l.code}
-                    type="button"
-                    onClick={() => handleTest(l.code)}
-                    disabled={isTestPending}
-                    title={`${l.label}로 시뮬레이션 환자 메시지 발송`}
-                    aria-label={`${l.label} 테스트 메시지`}
-                    className="inline-flex items-center gap-1 rounded-md border bg-card px-2 py-1 text-[11px] font-medium transition hover:border-brand-300 hover:bg-brand-50 disabled:opacity-50"
-                  >
-                    <span className="text-sm leading-none">{l.flag}</span>
-                    <span className="text-muted-foreground">{l.short}</span>
-                  </button>
-                ))}
-              </div>
+          {/* Per-locale test message buttons.
+              Always rendered — even for unconnected channels — so the
+              operator can preview the inbox + AI translation pipeline
+              before plugging in real credentials. The first click on
+              an unconnected channel silently creates a synthetic
+              (status='disconnected') channel row to anchor the test
+              conversation. */}
+          <div className="space-y-1.5 rounded-md border bg-muted/20 px-2.5 py-2">
+            <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Send className="h-2.5 w-2.5" />
+                {isConnected ? '테스트 메시지 발송' : '시뮬레이션 (미연결도 가능)'}
+              </span>
+              {isTestPending ? <span className="text-foreground">전송 중…</span> : null}
             </div>
-          ) : null}
+            <div className="flex flex-wrap gap-1">
+              {TEST_LOCALES.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => handleTest(l.code)}
+                  disabled={isTestPending}
+                  title={`${l.label}로 시뮬레이션 환자 메시지 발송`}
+                  aria-label={`${l.label} 테스트 메시지`}
+                  className="inline-flex items-center gap-1 rounded-md border bg-card px-2 py-1 text-[11px] font-medium transition hover:border-brand-300 hover:bg-brand-50 disabled:opacity-50"
+                >
+                  <span className="text-sm leading-none">{l.flag}</span>
+                  <span className="text-muted-foreground">{l.short}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
