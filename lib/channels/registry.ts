@@ -118,10 +118,24 @@ export const CHANNELS: Record<ChannelKind, ChannelDef> = {
     color: '#06C755',
     emoji: '💚',
     devConsoleUrl: 'https://developers.line.biz/console/',
-    ready: false,
+    ready: true,
     credentialFields: [
-      { key: 'channelAccessToken', label: 'Channel Access Token', type: 'password' },
-      { key: 'channelSecret', label: 'Channel Secret', type: 'password' },
+      {
+        key: 'channelAccessToken',
+        label: 'Channel Access Token',
+        type: 'password',
+        placeholder: 'Long-lived token (JWT 형태)',
+        helpText:
+          'LINE Developers Console > Messaging API channel > Messaging API 탭 하단 "Channel access token (long-lived)" Issue 버튼.',
+      },
+      {
+        key: 'channelSecret',
+        label: 'Channel Secret',
+        type: 'password',
+        placeholder: '32자 hex',
+        helpText:
+          '같은 채널 > Basic settings 탭 상단의 "Channel secret". Webhook 서명 검증에 필수.',
+      },
     ],
     webhookPath: '/api/webhooks/line',
   },
