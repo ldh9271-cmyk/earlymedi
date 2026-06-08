@@ -319,10 +319,24 @@ export const CHANNELS: Record<ChannelKind, ChannelDef> = {
     color: '#03C75A',
     emoji: 'N',
     devConsoleUrl: 'https://partner.talk.naver.com/',
-    ready: false,
+    ready: true,
     credentialFields: [
-      { key: 'partnerId', label: 'Partner ID', type: 'text' },
-      { key: 'authToken', label: '인증 토큰', type: 'password' },
+      {
+        key: 'partnerId',
+        label: 'Partner ID',
+        type: 'text',
+        placeholder: '톡톡 파트너 ID (영숫자)',
+        helpText:
+          '톡톡 파트너 센터 > 설정 > 챗봇 API > 챗봇 활성화 후 표시되는 Partner ID.',
+      },
+      {
+        key: 'authToken',
+        label: '인증 토큰',
+        type: 'password',
+        placeholder: '발급받은 챗봇 인증 토큰',
+        helpText:
+          '같은 화면의 챗봇 인증 토큰. 발신 API 호출 시 Authorization 헤더 + 수신 webhook 요청 검증에 모두 사용.',
+      },
     ],
     webhookPath: '/api/webhooks/naver',
   },
