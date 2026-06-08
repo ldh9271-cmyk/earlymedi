@@ -274,10 +274,40 @@ export const CHANNELS: Record<ChannelKind, ChannelDef> = {
     color: '#1877F2',
     emoji: '👍',
     devConsoleUrl: 'https://developers.facebook.com/apps/',
-    ready: false,
+    ready: true,
     credentialFields: [
-      { key: 'pageId', label: 'Facebook Page ID', type: 'text' },
-      { key: 'pageAccessToken', label: 'Page Access Token', type: 'password' },
+      {
+        key: 'pageId',
+        label: 'Facebook Page ID',
+        type: 'text',
+        placeholder: '숫자만 (예: 1234567890)',
+        helpText:
+          '클리닉 페이지 About 섹션 하단 또는 Meta Business Suite > Settings > Pages 에서 확인.',
+      },
+      {
+        key: 'pageAccessToken',
+        label: 'Page Access Token',
+        type: 'password',
+        placeholder: 'EAA... (긴 토큰)',
+        helpText:
+          'Meta for Developers > 본인 앱 > Messenger > Settings > "Generate Token" → 페이지 선택 후 발급. 권한: pages_messaging + pages_messaging_subscriptions + pages_manage_metadata + pages_read_engagement. 장기 토큰은 Business Manager 시스템 사용자에서 발급 권장.',
+      },
+      {
+        key: 'verifyToken',
+        label: 'Webhook Verify Token',
+        type: 'password',
+        placeholder: '본인이 정한 임의 16자+ 문자열',
+        helpText:
+          'Meta Webhook 콘솔의 "Verify token" 입력란과 같은 값을 사용. Verify 클릭 시 GET 핸드셰이크에서 비교됩니다.',
+      },
+      {
+        key: 'appSecret',
+        label: 'App Secret',
+        type: 'password',
+        placeholder: '32자 hex',
+        helpText:
+          'Meta for Developers > 앱 > Settings > Basic > App secret (WhatsApp / Instagram 과 같은 값). webhook POST 의 x-hub-signature-256 헤더 검증에 사용.',
+      },
     ],
     webhookPath: '/api/webhooks/messenger',
   },
