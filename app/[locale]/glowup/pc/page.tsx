@@ -134,7 +134,12 @@ export default function GlowupPcPage({
         fontFamily:
           "'Inter', 'Airbnb Cereal VF', Circular, -apple-system, system-ui, sans-serif",
         color: '#222222',
-        overflowX: 'hidden',
+        // overflow-x: 'clip' instead of 'hidden' because 'hidden' creates
+        // a new scroll container, which kills `position: sticky` on
+        // descendants — the header would scroll away with the page
+        // instead of pinning to the top. `clip` clips visually without
+        // creating a scroll container, so sticky positioning works.
+        overflowX: 'clip',
       }}
     >
       {/* Hero crossfade keyframes — scoped to this page via inline <style>. */}
