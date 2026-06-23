@@ -199,10 +199,11 @@ function Hero({ locale, dict }: { locale: PublicLocale; dict: Dictionary }): JSX
 }
 
 // ─── Categories ────────────────────────────────────────────────────
-// 8 procedure categories — Airbnb-style square photo cards (placeholder
-// gradients since we don't have per-category cover photos yet). Links
-// to /clinics?category=<key> which already supports the filter via
-// category_listings table.
+// 8 procedure categories — Airbnb-style square photo cards. Each
+// category points to a hand-crafted SVG illustration in
+// /public/images/categories/ (gradient background + on-brand iconography
+// baked into the same file). Links to /clinics?category=<key> which
+// already supports the filter via category_listings table.
 
 function Categories({
   locale,
@@ -213,16 +214,16 @@ function Categories({
 }): JSX.Element {
   const items: Array<{
     key: keyof Dictionary['categories']['items'];
-    grad: string;
+    img: string;
   }> = [
-    { key: 'plastic_surgery', grad: 'linear-gradient(135deg, #ff385c 0%, #d63d5f 100%)' },
-    { key: 'dermatology',     grad: 'linear-gradient(135deg, #ffa726 0%, #f57c00 100%)' },
-    { key: 'dental',          grad: 'linear-gradient(135deg, #66bb6a 0%, #2e7d32 100%)' },
-    { key: 'hair',            grad: 'linear-gradient(135deg, #ec407a 0%, #ad1457 100%)' },
-    { key: 'health_checkup',  grad: 'linear-gradient(135deg, #29b6f6 0%, #0277bd 100%)' },
-    { key: 'beauty_tour',     grad: 'linear-gradient(135deg, #ffca28 0%, #ff8f00 100%)' },
-    { key: 'makeup',          grad: 'linear-gradient(135deg, #f48fb1 0%, #c2185b 100%)' },
-    { key: 'photo_studio',    grad: 'linear-gradient(135deg, #78909c 0%, #37474f 100%)' },
+    { key: 'plastic_surgery', img: '/images/categories/plastic-surgery.svg' },
+    { key: 'dermatology',     img: '/images/categories/dermatology.svg' },
+    { key: 'dental',          img: '/images/categories/dental.svg' },
+    { key: 'hair',            img: '/images/categories/hair.svg' },
+    { key: 'health_checkup',  img: '/images/categories/health-checkup.svg' },
+    { key: 'beauty_tour',     img: '/images/categories/beauty-tour.svg' },
+    { key: 'makeup',          img: '/images/categories/makeup.svg' },
+    { key: 'photo_studio',    img: '/images/categories/photo-studio.svg' },
   ];
   return (
     <section style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 40px 0' }}>
@@ -258,14 +259,15 @@ function Categories({
                 style={{
                   aspectRatio: '1',
                   borderRadius: 14,
-                  background: c.grad,
+                  background: `#222 url(${c.img}) center / cover`,
                   display: 'flex', alignItems: 'flex-end', padding: 18,
+                  transition: 'transform 0.2s ease',
                 }}
               >
                 <span
                   style={{
                     color: '#fff', fontWeight: 700, fontSize: 18,
-                    textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                    textShadow: '0 2px 8px rgba(0,0,0,0.45)',
                   }}
                 >
                   {meta.label}

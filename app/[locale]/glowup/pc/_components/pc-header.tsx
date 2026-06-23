@@ -163,12 +163,17 @@ export function PcHeader({
         </div>
       </div>
 
-      {/* Category strip — each icon links to /glowup/pc/c/<key> */}
+      {/* Category strip — each icon links to /glowup/pc/c/<key>.
+          Categories are centered horizontally; 필터 button sits at the
+          right edge via absolute positioning so it doesn't push the
+          icon row off-center. */}
       <div style={{ borderTop: '1px solid #ebebeb', background: '#ffffff' }}>
         <div
           style={{
+            position: 'relative',
             maxWidth: 1280, margin: '0 auto', padding: '0 40px',
-            display: 'flex', alignItems: 'center', gap: 34, overflowX: 'auto',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: 34, overflowX: 'auto',
           }}
         >
           {PC_CATEGORIES.map((c) => {
@@ -195,10 +200,12 @@ export function PcHeader({
           })}
           <div
             style={{
-              marginLeft: 'auto',
+              position: 'absolute',
+              right: 40, top: '50%', transform: 'translateY(-50%)',
               display: 'flex', alignItems: 'center', gap: 8,
               border: '1px solid #dddddd', borderRadius: 12,
               padding: '10px 14px', cursor: 'pointer', flexShrink: 0,
+              background: '#ffffff',
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.6">
