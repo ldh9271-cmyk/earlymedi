@@ -46,6 +46,26 @@ const config: Config = {
           600: '#059669',
           700: '#047857',
         },
+        // ─── Korea Glow-up Challenge (Atelier) palette ──────────────
+        // 환자 포털 신규 디자인 시스템 (claude.ai design import).
+        // 따뜻한 ivory 베이스 + wine 액센트 + gold 프리미엄.
+        // 사용처: /[locale]/glowup/* 라우트 전용 — 기존 brand/hospitality/
+        // care 토큰은 그대로 두고 새 토큰만 추가 (legacy 화면 영향 X).
+        glow: {
+          ivory: '#EAE6DF',  // 메인 배경 (warm sand)
+          cream: '#F5F1EA',  // 카드 배경 (lighter ivory)
+          paper: '#FBF8F2',  // 가장 밝은 표면 (text on dark)
+          sand:  '#D8CDB9',  // 분리선·muted 배경
+          dune:  '#D6CCBC',  // 보더
+          ink:   '#1B1512',  // 본문 텍스트 (deep brown-black)
+          jet:   '#16110E',  // 폰 프레임·헤더
+          wine:  '#7C3A4B',  // 메인 CTA (deep wine)
+          gold:  '#C9A86A',  // 프리미엄 액센트
+          mist:  '#9A8E84',  // 라벨·메타
+          stone: '#8A7F73',  // 보조 텍스트
+          slate: '#5C544C',  // 본문 muted
+          umber: '#6B6258',  // 라벨 텍스트
+        },
         // shadcn/ui tokens
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -90,6 +110,15 @@ const config: Config = {
         sans: ['var(--font-pretendard)', 'var(--font-inter)', 'system-ui', 'sans-serif'],
         display: ['var(--font-pretendard)', 'var(--font-inter)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
+        // ─── Glowup typography ──────────────────────────────────────
+        // Korean display serif (h1, h2 on phone screens).
+        'glow-serif':  ['var(--font-noto-serif-kr)', 'Noto Serif KR', 'serif'],
+        // English/numeric italic accent (eyebrow lines, tagline).
+        'glow-italic': ['var(--font-cormorant)', 'Cormorant Garamond', 'serif'],
+        // Korean UI/body sans (buttons, paragraph).
+        'glow-sans':   ['var(--font-pretendard)', 'Pretendard Variable', 'sans-serif'],
+        // All-caps labels with letter-spacing (S1 · 온보딩 style).
+        'glow-mono':   ['var(--font-space-mono)', 'Space Mono', 'monospace'],
       },
       keyframes: {
         'accordion-down': {
