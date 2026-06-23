@@ -30,11 +30,18 @@ export const metadata = {
  * the root <div>.
  */
 
-const HERO_GRADIENT_LAYERS = [
-  'linear-gradient(135deg, #3a1f24 0%, #7C3A4B 50%, #c2856b 100%)',
-  'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-  'linear-gradient(135deg, #2d1b3d 0%, #4a3155 50%, #6e4a72 100%)',
-  'linear-gradient(135deg, #1c2920 0%, #2d4438 50%, #c9a86a 100%)',
+// Image assets extracted from the original design's bundled manifest
+// (claude.ai standalone HTML → base64+gzip decoded). Served from
+// /public/images/glowup-pc/ so they ship with the Next.js build.
+// UUIDs preserved as filenames for easy traceability back to the
+// design source.
+const IMG_BASE = '/images/glowup-pc';
+
+const HERO_LAYERS = [
+  `${IMG_BASE}/79dac510-b190-481f-bff3-acd40a97ced6.jpg`,
+  `${IMG_BASE}/00c1f04c-fb00-44c7-b991-2af98bddd6e2.jpg`,
+  `${IMG_BASE}/b2e666ae-08b3-480c-8739-f31a1292573b.jpg`,
+  `${IMG_BASE}/dd5e57b8-0e0a-4154-8174-8c3c2593a905.jpg`,
 ];
 
 const PROGRAMS = [
@@ -45,7 +52,7 @@ const PROGRAMS = [
     place: '강남 스튜디오',
     price: '₩180,000',
     featured: true,
-    bg: 'linear-gradient(135deg, #e4d2d6 0%, #c9a8b0 50%, #7C3A4B 100%)',
+    img: `${IMG_BASE}/65b2c08d-ad5a-411e-a40e-fcbfec808c02.jpg`,
   },
   {
     name: '피부 진단 케어',
@@ -54,7 +61,7 @@ const PROGRAMS = [
     place: '청담 클리닉',
     price: '₩240,000',
     featured: false,
-    bg: 'linear-gradient(135deg, #d9d2c0 0%, #b8a785 50%, #7a6650 100%)',
+    img: `${IMG_BASE}/0b3ab66a-79d6-49be-b4f6-8a626ee1fc2d.jpg`,
   },
   {
     name: '프로필 화보 촬영',
@@ -63,7 +70,7 @@ const PROGRAMS = [
     place: '성수 스튜디오',
     price: '₩320,000',
     featured: true,
-    bg: 'linear-gradient(135deg, #ded5c2 0%, #b5a986 50%, #5c544c 100%)',
+    img: `${IMG_BASE}/10f945b3-775f-4fe8-aab6-7e434cfca9b5.jpg`,
   },
   {
     name: 'K-뷰티 메이크업 클래스',
@@ -72,15 +79,18 @@ const PROGRAMS = [
     place: '명동 살롱',
     price: '₩150,000',
     featured: false,
-    bg: 'linear-gradient(135deg, #e2d3cf 0%, #c0a5a0 50%, #8a6a65 100%)',
+    img: `${IMG_BASE}/96a7e0c2-ea2f-4549-8875-a3be3c38c523.jpg`,
   },
 ];
 
+const COURSE_IMG = `${IMG_BASE}/356620f6-4792-40a8-80a3-337ae86d266f.jpg`;
+const HOTEL_IMG = `${IMG_BASE}/b6d9c1aa-25f5-4abd-bb32-c74099caddc0.jpg`;
+
 const FOODS = [
-  { name: '한우구이', place: '강남 · ★ 4.9', booked: true,  bg: 'linear-gradient(135deg, #2d1810 0%, #6b3a25 100%)' },
-  { name: '전주 비빔밥', place: '북촌 · ★ 4.8', booked: false, bg: 'linear-gradient(135deg, #4a2a1a 0%, #c4644a 100%)' },
-  { name: '신당동 떡볶이', place: '신당동 · ★ 4.7', booked: true,  bg: 'linear-gradient(135deg, #8b1e1e 0%, #d63d3d 100%)' },
-  { name: '한정식 반상', place: '인사동 · ★ 4.9', booked: false, bg: 'linear-gradient(135deg, #3a2510 0%, #8a6535 100%)' },
+  { name: '한우구이',    place: '강남 · ★ 4.9',   booked: true,  img: `${IMG_BASE}/79cf46f3-c412-4e1e-8f72-e15c9e0f609b.jpg` },
+  { name: '전주 비빔밥',  place: '북촌 · ★ 4.8',   booked: false, img: `${IMG_BASE}/ee4b88ae-280f-486f-9555-2e4bd4b68131.jpg` },
+  { name: '신당동 떡볶이', place: '신당동 · ★ 4.7', booked: true,  img: `${IMG_BASE}/1a4c5d2b-938c-4b65-95d2-c87d556b24a8.jpg` },
+  { name: '한정식 반상',  place: '인사동 · ★ 4.9', booked: false, img: `${IMG_BASE}/c9fd4dde-ac1d-49fa-80b3-04139ec41b8c.jpg` },
 ];
 
 const ITINERARY = [
@@ -470,14 +480,17 @@ export default function GlowupPcPage({
               borderRadius: 20,
               overflow: 'hidden',
               height: 360,
-              background: HERO_GRADIENT_LAYERS[0],
+              background: `#222 url(${HERO_LAYERS[0]}) center / cover`,
             }}
           >
-            {HERO_GRADIENT_LAYERS.map((bg, i) => (
+            {HERO_LAYERS.map((src, i) => (
               <div
                 key={i}
                 className="glowup-hero-layer"
-                style={{ background: bg, animationDelay: `${i * 6}s` }}
+                style={{
+                  backgroundImage: `url(${src})`,
+                  animationDelay: `${i * 6}s`,
+                }}
               />
             ))}
             <div
@@ -582,7 +595,7 @@ export default function GlowupPcPage({
                     aspectRatio: '1',
                     borderRadius: 14,
                     overflow: 'hidden',
-                    background: p.bg,
+                    background: `#f2f2f2 url(${p.img}) center / cover`,
                   }}
                 >
                   {p.featured ? (
@@ -681,8 +694,7 @@ export default function GlowupPcPage({
                   aspectRatio: '16/10',
                   borderRadius: 20,
                   overflow: 'hidden',
-                  background:
-                    'linear-gradient(135deg, #2d1b2e 0%, #5a334d 35%, #c9a86a 100%)',
+                  background: `#f2f2f2 url(${COURSE_IMG}) center / cover`,
                 }}
               />
               <h3 style={{ fontSize: 21, fontWeight: 700, margin: '24px 0 0' }}>
@@ -882,7 +894,7 @@ export default function GlowupPcPage({
                     aspectRatio: '4/5',
                     borderRadius: 14,
                     overflow: 'hidden',
-                    background: f.bg,
+                    background: `#f2f2f2 url(${f.img}) center / cover`,
                   }}
                 >
                   {f.booked ? (
@@ -979,8 +991,7 @@ export default function GlowupPcPage({
                 aspectRatio: '5/4',
                 borderRadius: 20,
                 overflow: 'hidden',
-                background:
-                  'linear-gradient(135deg, #1a1a1a 0%, #3d2e2e 35%, #c9a86a 100%)',
+                background: `#f2f2f2 url(${HOTEL_IMG}) center / cover`,
               }}
             />
             <div>
