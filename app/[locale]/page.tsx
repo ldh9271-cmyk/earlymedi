@@ -1,29 +1,120 @@
 import Link from 'next/link';
-import { Sparkles, Check, ShieldCheck, Languages, Wallet, Heart } from 'lucide-react';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { PcHeader } from './glowup/pc/_components/pc-header';
 
 /**
- * Patient portal landing — Airbnb design language.
+ * Patient portal landing — Airbnb design language, 7-section order
+ * fixed by the founder (see chat 2026-06-23):
  *
- * This used to live under (public-portal)/ with the legacy PublicHeader
- * + PublicFooter chrome. The /kr/glowup/pc redesign proved out a much
- * cleaner Airbnb-style look (white surfaces, #ff385c CTA, sticky top
- * nav, photo-first cards), so the main /[locale] landing is rebuilt
- * here against that design language while keeping every content piece
- * the old landing carried (병원 찾기, AI 상담, 카테고리, 신뢰 그리드,
- * 1:1 문의) and every existing dict translation key — so /en /zh /ja
- * continue to work unchanged.
+ *   1. Hero            — 서울에서 놀면서, 예뻐지는 4박 5일 (crossfade)
+ *   2. Categories      — 관심 분야를 선택하세요 (8 SVG 카드)
+ *   3. Programs        — 서울의 인기 뷰티 프로그램 (4 카드)
+ *   4. Course          — 베스트셀러 · 올인원 코스 (5단계 일정 + sticky 예약)
+ *   5. Foods           — 현지인만 아는 찐맛집 (4 카드)
+ *   6. K-pop           — K-팝 성지 탐방 (HYBE/SM/JYP/YG)
+ *   7. Hotel + Final CTA — 명동 5성 호텔 + 지금, 가장 빛나는 여행을 시작하세요
  *
- * Sibling routes (/[locale]/clinics, /[locale]/inquiry, …) still live
- * inside (public-portal)/ and keep the legacy PublicHeader. That's
- * intentional for now — when a visitor lands on /kr they see the
- * Airbnb-style hero, but the deeper utility pages keep their existing
- * dense-information layouts. A follow-up can migrate those once their
- * content is also redesigned.
+ * Every booking CTA (Programs/Course/Hotel/Final) lands in the existing
+ * /[locale]/inquiry form, which prefills program/interest and routes
+ * the resulting message into /agency/inbox — so Glow-up looks like a
+ * standalone marketplace but every lead reaches the agency staff queue
+ * through the same channel as Kakao/LINE/WhatsApp inquiries.
+ *
+ * Korean copy is hardcoded for now (the chat-ordered carousel sections
+ * have no existing dict keys); /en /zh /ja still render the same KR
+ * strings on this page until dict entries are added in a follow-up.
+ * The Categories section is the exception — it uses `dict.categories`
+ * which already exists in all four languages.
  */
+
+const IMG_BASE = '/images/glowup-pc';
+
+const HERO_LAYERS = [
+  `${IMG_BASE}/79dac510-b190-481f-bff3-acd40a97ced6.jpg`,
+  `${IMG_BASE}/00c1f04c-fb00-44c7-b991-2af98bddd6e2.jpg`,
+  `${IMG_BASE}/b2e666ae-08b3-480c-8739-f31a1292573b.jpg`,
+  `${IMG_BASE}/dd5e57b8-0e0a-4154-8174-8c3c2593a905.jpg`,
+];
+
+type Program = {
+  name: string;
+  rating: number;
+  desc: string;
+  place: string;
+  price: string;
+  featured: boolean;
+  img: string;
+  interest: string;
+};
+
+const PROGRAMS: Program[] = [
+  {
+    name: '퍼스널 컬러 진단',
+    rating: 4.9,
+    desc: '전문 컨설턴트 1:1 드레이핑 · 90분',
+    place: '강남 스튜디오',
+    price: '₩180,000',
+    featured: true,
+    img: `${IMG_BASE}/65b2c08d-ad5a-411e-a40e-fcbfec808c02.jpg`,
+    interest: 'makeup',
+  },
+  {
+    name: '피부 진단 케어',
+    rating: 4.8,
+    desc: 'AI 피부 분석 + 맞춤 케어 · 120분',
+    place: '청담 클리닉',
+    price: '₩240,000',
+    featured: false,
+    img: `${IMG_BASE}/0b3ab66a-79d6-49be-b4f6-8a626ee1fc2d.jpg`,
+    interest: 'dermatology',
+  },
+  {
+    name: '프로필 화보 촬영',
+    rating: 5.0,
+    desc: '헤어·메이크업 + 전문 스튜디오 · 150분',
+    place: '성수 스튜디오',
+    price: '₩320,000',
+    featured: true,
+    img: `${IMG_BASE}/10f945b3-775f-4fe8-aab6-7e434cfca9b5.jpg`,
+    interest: 'photo_studio',
+  },
+  {
+    name: 'K-뷰티 메이크업 클래스',
+    rating: 4.9,
+    desc: '아티스트와 1:1 셀프 레슨 · 100분',
+    place: '명동 살롱',
+    price: '₩150,000',
+    featured: false,
+    img: `${IMG_BASE}/96a7e0c2-ea2f-4549-8875-a3be3c38c523.jpg`,
+    interest: 'makeup',
+  },
+];
+
+const COURSE_IMG = `${IMG_BASE}/356620f6-4792-40a8-80a3-337ae86d266f.jpg`;
+const HOTEL_IMG = `${IMG_BASE}/b6d9c1aa-25f5-4abd-bb32-c74099caddc0.jpg`;
+
+const FOODS = [
+  { name: '한우구이',    place: '강남 · ★ 4.9',   booked: true,  img: `${IMG_BASE}/79cf46f3-c412-4e1e-8f72-e15c9e0f609b.jpg` },
+  { name: '전주 비빔밥',  place: '북촌 · ★ 4.8',   booked: false, img: `${IMG_BASE}/ee4b88ae-280f-486f-9555-2e4bd4b68131.jpg` },
+  { name: '신당동 떡볶이', place: '신당동 · ★ 4.7', booked: true,  img: `${IMG_BASE}/1a4c5d2b-938c-4b65-95d2-c87d556b24a8.jpg` },
+  { name: '한정식 반상',  place: '인사동 · ★ 4.9', booked: false, img: `${IMG_BASE}/c9fd4dde-ac1d-49fa-80b3-04139ec41b8c.jpg` },
+];
+
+const ITINERARY: Array<{ n: number; title: string; desc: string }> = [
+  { n: 1, title: '도착 · 퍼스널 컬러 진단', desc: '전용 차량 픽업 · 통역 가이드 · 명동 5성 호텔 체크인' },
+  { n: 2, title: '피부 진단 케어 · 한우 다이닝', desc: '스킨 진단 프로그램 · 현지인 추천 한우구이·간장게장' },
+  { n: 3, title: 'K-팝 성지 투어 · 화보 촬영', desc: 'HYBE·SM·JYP·YG 탐방 · 프로필 화보 스튜디오' },
+  { n: 4, title: '경복궁 · 한강 · 성수 쇼핑', desc: '필수 명소 투어 · 청담·성수 감성 쇼핑' },
+  { n: 5, title: '롯데월드 · 출국', desc: '아쿠아리움 · 면세 쇼핑 · 공항 샌딩' },
+];
+
+const COURSE_PROGRAM = '4박 5일 글로우업 코스';
+
+const bookingHref = (locale: PublicLocale, program: string, interest: string): string =>
+  `/${locale}/inquiry?program=${encodeURIComponent(program)}&interest=${interest}`;
+
 export default async function PublicLandingPage({
   params,
 }: {
@@ -37,174 +128,124 @@ export default async function PublicLandingPage({
         background: '#ffffff',
         fontFamily: "'Inter', 'Airbnb Cereal VF', Circular, -apple-system, system-ui, sans-serif",
         color: '#222222',
-        // `overflow-x: clip` instead of hidden so the PcHeader's
+        // `overflow-x: clip` instead of hidden so PcHeader's
         // `position: sticky` keeps working — same gotcha as /glowup/pc.
         overflowX: 'clip',
       }}
     >
+      <style>{`
+        @keyframes heroFade {
+          0% { opacity: 0; }
+          5% { opacity: 1; }
+          25% { opacity: 1; }
+          30% { opacity: 0; }
+          100% { opacity: 0; }
+        }
+        .glowup-hero-layer {
+          position: absolute;
+          inset: 0;
+          background-size: cover;
+          background-position: center;
+          animation: heroFade 24s infinite;
+        }
+      `}</style>
+
       <PcHeader locale={locale} activeKey="all" />
 
-      <main>
-        <Hero locale={locale} dict={dict} />
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
+        <Hero locale={locale} />
         <Categories locale={locale} dict={dict} />
-        <AiTeaser locale={locale} dict={dict} />
-        <TrustGrid dict={dict} />
-        <InquiryCta locale={locale} dict={dict} />
+        <Programs locale={locale} />
+        <Course locale={locale} />
+        <Foods locale={locale} />
+        <KpopRow />
+        <HotelAndFinalCta locale={locale} />
       </main>
+
+      <Footer />
     </div>
   );
 }
 
-// ─── Hero ──────────────────────────────────────────────────────────
-// Airbnb-style hero card: dark photo background with a left-aligned
-// title + CTA stack. Uses the same crossfade behavior we ship on
-// /glowup/pc so the patient sees the platform's signature animated
-// hero on the home page too. Stats row sits below the photo card to
-// keep the photo from competing with numbers.
-
-function Hero({ locale, dict }: { locale: PublicLocale; dict: Dictionary }): JSX.Element {
-  const stats = [
-    { value: '120+', label: dict.hero.stats.hospitals },
-    { value: '8', label: dict.hero.stats.procedures },
-    { value: '3,200', label: dict.hero.stats.patients },
-    { value: '5', label: dict.hero.stats.languages },
-  ];
-  const heroLayers = [
-    '/images/glowup-pc/79dac510-b190-481f-bff3-acd40a97ced6.jpg',
-    '/images/glowup-pc/00c1f04c-fb00-44c7-b991-2af98bddd6e2.jpg',
-    '/images/glowup-pc/b2e666ae-08b3-480c-8739-f31a1292573b.jpg',
-    '/images/glowup-pc/dd5e57b8-0e0a-4154-8174-8c3c2593a905.jpg',
-  ];
+// ─── 1. Hero ───────────────────────────────────────────────────────
+function Hero({ locale }: { locale: PublicLocale }): JSX.Element {
   return (
-    <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 0' }}>
-      {/* Hero crossfade rule scoped to this page. */}
-      <style>{`
-        @keyframes landingHeroFade {
-          0% { opacity: 0; } 5% { opacity: 1; } 25% { opacity: 1; }
-          30% { opacity: 0; } 100% { opacity: 0; }
-        }
-        .landing-hero-layer {
-          position: absolute; inset: 0;
-          background-size: cover; background-position: center;
-          animation: landingHeroFade 24s infinite;
-        }
-      `}</style>
-
+    <section style={{ padding: '40px 0 8px' }}>
       <div
         style={{
           position: 'relative',
-          height: 460,
           borderRadius: 20,
           overflow: 'hidden',
-          background: `#222 url(${heroLayers[0]}) center / cover`,
+          height: 360,
+          background: `#222 url(${HERO_LAYERS[0]}) center / cover`,
         }}
       >
-        {heroLayers.map((src, i) => (
+        {HERO_LAYERS.map((src, i) => (
           <div
             key={i}
-            className="landing-hero-layer"
+            className="glowup-hero-layer"
             style={{ backgroundImage: `url(${src})`, animationDelay: `${i * 6}s` }}
           />
         ))}
         <div
           style={{
-            position: 'absolute',
-            inset: 0,
-            background:
-              'linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%)',
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0) 100%)',
           }}
         />
-        <div style={{ position: 'absolute', left: 56, top: '50%', transform: 'translateY(-50%)', maxWidth: 560, color: '#fff' }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: 48, top: '50%', transform: 'translateY(-50%)',
+            maxWidth: 520, color: '#fff',
+          }}
+        >
           <div
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               background: '#fff', color: '#222',
-              fontSize: 13, fontWeight: 600, borderRadius: 9999, padding: '6px 12px',
+              fontSize: 13, fontWeight: 600,
+              borderRadius: 9999, padding: '6px 12px',
             }}
           >
-            <Sparkles style={{ width: 14, height: 14 }} />
-            {dict.hero.badge}
+            <span style={{ color: '#ff385c' }}>★</span> 게스트 선호 · 평점 4.9
           </div>
           <h1
             style={{
-              whiteSpace: 'pre-line', fontSize: 44, fontWeight: 700,
-              lineHeight: 1.15, margin: '18px 0 0', letterSpacing: '-1px',
+              fontSize: 40, fontWeight: 700, lineHeight: 1.15,
+              margin: '18px 0 0', letterSpacing: '-1px',
             }}
           >
-            {dict.hero.title}
+            서울에서 놀면서,<br />예뻐지는 4박 5일
           </h1>
           <p
             style={{
-              fontSize: 16, fontWeight: 400, lineHeight: 1.55,
+              fontSize: 16, fontWeight: 400, lineHeight: 1.5,
               margin: '14px 0 0', color: 'rgba(255,255,255,0.92)',
-              maxWidth: 520,
             }}
           >
-            {dict.hero.subtitle}
+            퍼스널 컬러 진단부터 K-팝 성지, 현지인 찐맛집까지. 노는 사이 더 예뻐지는 올인원 K-뷰티 여행.
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 24 }}>
-            <Link
-              href={`/${locale}/ai-consult`}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: '#ff385c', color: '#fff',
-                borderRadius: 8, height: 48, padding: '0 22px',
-                fontWeight: 600, fontSize: 15, textDecoration: 'none',
-              }}
-            >
-              <Sparkles style={{ width: 16, height: 16 }} />
-              {dict.hero.ctaPrimary}
-            </Link>
-            <Link
-              href={`/${locale}/clinics`}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: '#fff', color: '#222', border: '1px solid #fff',
-                borderRadius: 8, height: 48, padding: '0 22px',
-                fontWeight: 600, fontSize: 15, textDecoration: 'none',
-              }}
-            >
-              {dict.hero.ctaSecondary}
-            </Link>
-          </div>
+          <Link
+            href={`#programs`}
+            style={{
+              display: 'inline-block', marginTop: 24,
+              background: '#ff385c', color: '#fff',
+              border: 'none', borderRadius: 8,
+              height: 48, lineHeight: '48px', padding: '0 24px',
+              fontWeight: 500, fontSize: 16,
+              cursor: 'pointer', textDecoration: 'none',
+            }}
+          >
+            여행 둘러보기
+          </Link>
         </div>
-      </div>
-
-      {/* Stats row */}
-      <div
-        style={{
-          marginTop: 32,
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
-          paddingBottom: 8,
-        }}
-      >
-        {stats.map((s) => (
-          <div key={s.label}>
-            <div
-              style={{
-                fontSize: 11, fontWeight: 600, letterSpacing: '0.06em',
-                textTransform: 'uppercase', color: '#6a6a6a',
-              }}
-            >
-              {s.label}
-            </div>
-            <div style={{ marginTop: 6, fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px' }}>
-              {s.value}
-            </div>
-          </div>
-        ))}
       </div>
     </section>
   );
 }
 
-// ─── Categories ────────────────────────────────────────────────────
-// 8 procedure categories — Airbnb-style square photo cards. Each
-// category points to a hand-crafted SVG illustration in
-// /public/images/categories/ (gradient background + on-brand iconography
-// baked into the same file). Links to /clinics?category=<key> which
-// already supports the filter via category_listings table.
-
+// ─── 2. Categories ─────────────────────────────────────────────────
 function Categories({
   locale,
   dict,
@@ -226,9 +267,9 @@ function Categories({
     { key: 'photo_studio',    img: '/images/categories/photo-studio.svg' },
   ];
   return (
-    <section style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 40px 0' }}>
+    <section style={{ padding: '48px 0 0' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>
           {dict.categories.title}
         </h2>
         <Link
@@ -282,108 +323,197 @@ function Categories({
   );
 }
 
-// ─── AI Teaser ─────────────────────────────────────────────────────
-// Split layout: copy + bullets on the left, mock "analysis result"
-// card on the right. Kept the demo data verbatim from the old landing
-// (anonymized procedure names + estimated price ranges) so this still
-// communicates what the AI does without any backend dependency.
-
-function AiTeaser({ locale, dict }: { locale: PublicLocale; dict: Dictionary }): JSX.Element {
+// ─── 3. Programs ───────────────────────────────────────────────────
+function Programs({ locale }: { locale: PublicLocale }): JSX.Element {
   return (
-    <section style={{ background: '#f7f7f7', marginTop: 80, padding: '64px 0' }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'center' }}>
-          <div>
+    <section id="programs" style={{ padding: '56px 0 0', scrollMarginTop: 200 }}>
+      <SectionHeader title="서울의 인기 뷰티 프로그램" />
+      <div
+        style={{
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
+          marginTop: 24,
+        }}
+      >
+        {PROGRAMS.map((p) => (
+          <Link
+            key={p.name}
+            href={bookingHref(locale, p.name, p.interest)}
+            style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
+          >
             <div
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: '#fff', border: '1px solid #ebebeb',
-                color: '#222', fontSize: 12, fontWeight: 600,
-                borderRadius: 9999, padding: '6px 12px',
+                position: 'relative',
+                aspectRatio: '1', borderRadius: 14, overflow: 'hidden',
+                background: `#f2f2f2 url(${p.img}) center / cover`,
               }}
             >
-              <Sparkles style={{ width: 14, height: 14, color: '#ff385c' }} />
-              AI Glow-Up
-            </div>
-            <h2 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px', margin: '12px 0 0' }}>
-              {dict.ai.title}
-            </h2>
-            <p style={{ fontSize: 16, color: '#3f3f3f', margin: '12px 0 0', lineHeight: 1.55 }}>
-              {dict.ai.subtitle}
-            </p>
-            <ul style={{ marginTop: 24, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {dict.ai.bullets.map((b) => (
-                <li key={b} style={{ display: 'flex', gap: 10, fontSize: 15 }}>
-                  <Check style={{ width: 18, height: 18, color: '#ff385c', flexShrink: 0, marginTop: 2 }} />
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
-            <div style={{ marginTop: 28 }}>
-              <Link
-                href={`/${locale}/ai-consult`}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: '#ff385c', color: '#fff',
-                  borderRadius: 8, height: 48, padding: '0 24px',
-                  fontWeight: 600, fontSize: 15, textDecoration: 'none',
-                }}
-              >
-                <Sparkles style={{ width: 16, height: 16 }} />
-                {dict.ai.cta}
-              </Link>
-            </div>
-            <p style={{ marginTop: 12, fontSize: 12, color: '#6a6a6a' }}>🔒 {dict.ai.note}</p>
-          </div>
-
-          {/* Demo analysis card */}
-          <div
-            style={{
-              background: '#fff', border: '1px solid #ebebeb', borderRadius: 16, padding: 20,
-              boxShadow: 'rgba(0,0,0,0.04) 0 4px 16px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#6a6a6a' }}>
-                Analysis result
-              </div>
-              <div style={{ background: '#fce4ea', color: '#ff385c', fontSize: 11, fontWeight: 700, borderRadius: 9999, padding: '4px 10px' }}>
-                85% match
-              </div>
-            </div>
-            <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                { name: 'Rhinoplasty (non-incision)', est: '₩ 3.5M ~ 5.5M', recovery: '7 days' },
-                { name: 'Tear-trough filler', est: '₩ 0.4M ~ 0.6M', recovery: '0 days' },
-                { name: 'Skin booster', est: '₩ 0.3M ~ 0.5M', recovery: '0 days' },
-              ].map((r) => (
+              {p.featured ? (
                 <div
-                  key={r.name}
                   style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    border: '1px solid #ebebeb', background: '#fafafa',
-                    borderRadius: 10, padding: '10px 14px', fontSize: 13,
+                    position: 'absolute', top: 12, left: 12,
+                    background: '#fff', color: '#222',
+                    fontSize: 11, fontWeight: 600,
+                    borderRadius: 9999, padding: '5px 11px',
+                    boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
                   }}
                 >
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{r.name}</div>
-                    <div style={{ fontSize: 11, color: '#6a6a6a', marginTop: 2 }}>
-                      Recovery: {r.recovery}
-                    </div>
-                  </div>
-                  <div style={{ fontFamily: 'monospace', fontSize: 12 }}>{r.est}</div>
+                  게스트 선호
                 </div>
-              ))}
+              ) : null}
+              <div style={{ position: 'absolute', top: 12, right: 12 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(0,0,0,0.45)" stroke="#fff" strokeWidth="1.8">
+                  <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
+                </svg>
+              </div>
             </div>
-            <div
-              style={{
-                marginTop: 14,
-                border: '1px dashed #ebebeb', background: '#fafafa',
-                borderRadius: 10, padding: '8px 12px',
-                fontSize: 11, color: '#6a6a6a',
-              }}
-            >
-              Demo data shown above. Real analysis runs on actual face photos.
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+              <span style={{ fontSize: 16, fontWeight: 600 }}>{p.name}</span>
+              <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
+                  <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
+                </svg>
+                {p.rating}
+              </span>
+            </div>
+            <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 3 }}>{p.desc}</div>
+            <div style={{ fontSize: 14, color: '#6a6a6a' }}>{p.place}</div>
+            <div style={{ fontSize: 15, marginTop: 6 }}>
+              <span style={{ fontWeight: 600 }}>{p.price}</span>{' '}
+              <span style={{ color: '#6a6a6a' }}>세션</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── 4. Course (베스트셀러 · 올인원 코스) ────────────────────────────
+function Course({ locale }: { locale: PublicLocale }): JSX.Element {
+  return (
+    <section style={{ padding: '56px 0 0' }}>
+      <SectionHeader title="베스트셀러 · 올인원 코스" />
+      <div
+        style={{
+          display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 40,
+          marginTop: 24, alignItems: 'start',
+        }}
+      >
+        <div>
+          <div
+            style={{
+              aspectRatio: '16/10', borderRadius: 20, overflow: 'hidden',
+              background: `#f2f2f2 url(${COURSE_IMG}) center / cover`,
+            }}
+          />
+          <h3 style={{ fontSize: 21, fontWeight: 700, margin: '24px 0 0' }}>
+            4박 5일 글로우업 코스
+          </h3>
+          <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 4 }}>
+            뷰티 케어 · 찐맛집 · K-팝 성지 · 명소 · 5성 호텔
+          </div>
+          <div style={{ height: 1, background: '#ebebeb', margin: '24px 0' }} />
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {ITINERARY.map((d, i) => (
+              <div key={d.n} style={{ display: 'flex', gap: 18 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      width: 36, height: 36, borderRadius: 9999,
+                      background: i === ITINERARY.length - 1 ? '#ff385c' : '#222',
+                      color: '#fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 15, fontWeight: 600, flexShrink: 0,
+                    }}
+                  >
+                    {d.n}
+                  </div>
+                  {i < ITINERARY.length - 1 ? (
+                    <div style={{ width: 2, flex: 1, background: '#ebebeb' }} />
+                  ) : null}
+                </div>
+                <div style={{ paddingBottom: i === ITINERARY.length - 1 ? 0 : 22 }}>
+                  <div style={{ fontSize: 16, fontWeight: 600 }}>{d.title}</div>
+                  <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 4, lineHeight: 1.5 }}>
+                    {d.desc}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div
+          style={{
+            position: 'sticky', top: 200,
+            border: '1px solid #dddddd', borderRadius: 14, padding: 24,
+            boxShadow:
+              'rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px 0, rgba(0,0,0,0.1) 0 4px 8px 0',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <div>
+              <span style={{ fontSize: 21, fontWeight: 700 }}>₩1,890,000</span>{' '}
+              <span style={{ fontSize: 15, color: '#6a6a6a' }}>/ 1인</span>
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
+                <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
+              </svg>
+              4.9 · 후기 318개
+            </span>
+          </div>
+          <div
+            style={{
+              border: '1px solid #c1c1c1', borderRadius: 12,
+              marginTop: 18, overflow: 'hidden',
+            }}
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+              <div
+                style={{
+                  padding: '12px 14px',
+                  borderRight: '1px solid #c1c1c1',
+                  borderBottom: '1px solid #c1c1c1',
+                }}
+              >
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>출발일</div>
+                <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>날짜 추가</div>
+              </div>
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid #c1c1c1' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>종료일</div>
+                <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>날짜 추가</div>
+              </div>
+            </div>
+            <div style={{ padding: '12px 14px' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>인원</div>
+              <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>게스트 1명</div>
+            </div>
+          </div>
+          <Link
+            href={bookingHref(locale, COURSE_PROGRAM, 'beauty_tour')}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '100%', marginTop: 16,
+              background: '#ff385c', color: '#fff',
+              border: 'none', borderRadius: 8, height: 50,
+              fontWeight: 500, fontSize: 16,
+              cursor: 'pointer', textDecoration: 'none',
+            }}
+          >
+            예약하기
+          </Link>
+          <div style={{ textAlign: 'center', fontSize: 14, color: '#6a6a6a', marginTop: 12 }}>
+            예약 확정 전에는 요금이 청구되지 않습니다
+          </div>
+          <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
+            <RowBreakdown label="₩1,890,000 × 1인" value="₩1,890,000" />
+            <RowBreakdown label="통역 가이드 동행" value="포함" />
+            <RowBreakdown label="5성 호텔 4박" value="포함" />
+            <div style={{ height: 1, background: '#ebebeb', margin: '6px 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: 16 }}>
+              <span>총 합계</span>
+              <span>₩1,890,000</span>
             </div>
           </div>
         </div>
@@ -392,105 +522,288 @@ function AiTeaser({ locale, dict }: { locale: PublicLocale; dict: Dictionary }):
   );
 }
 
-// ─── Trust Grid ────────────────────────────────────────────────────
-
-function TrustGrid({ dict }: { dict: Dictionary }): JSX.Element {
-  const items: Array<{
-    key: keyof Dictionary['trust']['items'];
-    icon: typeof ShieldCheck;
-  }> = [
-    { key: 'koiha',       icon: ShieldCheck },
-    { key: 'ai',          icon: Languages },
-    { key: 'transparent', icon: Wallet },
-    { key: 'aftercare',   icon: Heart },
-  ];
+// ─── 5. Foods ──────────────────────────────────────────────────────
+function Foods({ locale: _locale }: { locale: PublicLocale }): JSX.Element {
   return (
-    <section style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 40px 0' }}>
-      <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.5px', margin: 0, textAlign: 'center' }}>
-        {dict.trust.title}
+    <section style={{ padding: '56px 0 0' }}>
+      <SectionHeader title="현지인만 아는 찐맛집" />
+      <div
+        style={{
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
+          marginTop: 24,
+        }}
+      >
+        {FOODS.map((f) => (
+          <div key={f.name} style={{ cursor: 'pointer' }}>
+            <div
+              style={{
+                position: 'relative',
+                aspectRatio: '4/5', borderRadius: 14, overflow: 'hidden',
+                background: `#f2f2f2 url(${f.img}) center / cover`,
+              }}
+            >
+              {f.booked ? (
+                <div
+                  style={{
+                    position: 'absolute', top: 12, left: 12,
+                    background: '#fff', color: '#222',
+                    fontSize: 8, fontWeight: 700, letterSpacing: '0.32px',
+                    borderRadius: 9999, padding: '4px 8px',
+                    boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
+                  }}
+                >
+                  예약 대행
+                </div>
+              ) : null}
+              <div style={{ position: 'absolute', top: 12, right: 12 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(0,0,0,0.45)" stroke="#fff" strokeWidth="1.8">
+                  <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
+                </svg>
+              </div>
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 600, marginTop: 12 }}>{f.name}</div>
+            <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{f.place}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── 6. K-pop ──────────────────────────────────────────────────────
+function KpopRow(): JSX.Element {
+  return (
+    <section style={{ padding: '40px 0 0' }}>
+      <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>
+        K-팝 성지 탐방
       </h2>
       <div
         style={{
-          marginTop: 28,
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20,
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
+          marginTop: 24,
         }}
       >
-        {items.map((c) => {
-          const item = dict.trust.items[c.key];
-          const Icon = c.icon;
-          return (
-            <div
-              key={c.key}
-              style={{
-                border: '1px solid #ebebeb', borderRadius: 14, padding: 22, background: '#fff',
-              }}
-            >
-              <div
-                style={{
-                  width: 44, height: 44, borderRadius: 10,
-                  background: '#fff5f6', color: '#ff385c',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >
-                <Icon style={{ width: 22, height: 22 }} />
-              </div>
-              <h3 style={{ fontSize: 15, fontWeight: 700, margin: '14px 0 0' }}>{item.title}</h3>
-              <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 0', lineHeight: 1.55 }}>
-                {item.desc}
-              </p>
-            </div>
-          );
-        })}
+        {['HYBE', 'SM', 'JYP', 'YG'].map((label) => (
+          <div
+            key={label}
+            style={{
+              aspectRatio: '16/10', borderRadius: 14,
+              background: '#222',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontWeight: 700, fontSize: 26, letterSpacing: 1,
+            }}
+          >
+            {label}
+          </div>
+        ))}
       </div>
     </section>
   );
 }
 
-// ─── Inquiry CTA ───────────────────────────────────────────────────
-
-function InquiryCta({
-  locale,
-  dict,
-}: {
-  locale: PublicLocale;
-  dict: Dictionary;
-}): JSX.Element {
+// ─── 7. Hotel + Final CTA ──────────────────────────────────────────
+function HotelAndFinalCta({ locale }: { locale: PublicLocale }): JSX.Element {
   return (
-    <section style={{ marginTop: 80, padding: '64px 0', background: '#222' }}>
-      <div
-        style={{
-          maxWidth: 720, margin: '0 auto', padding: '0 40px',
-          textAlign: 'center', color: '#fff',
-        }}
-      >
-        <h2 style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
-          {dict.inquiryCta.title}
+    <>
+      <section style={{ padding: '56px 0 0' }}>
+        <div
+          style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48,
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              aspectRatio: '5/4', borderRadius: 20, overflow: 'hidden',
+              background: `#f2f2f2 url(${HOTEL_IMG}) center / cover`,
+            }}
+          />
+          <div>
+            <div style={{ fontSize: 21, fontWeight: 600, letterSpacing: '-0.18px' }}>
+              명동 중심 프리미엄 5성 호텔
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 24 }}>
+              <svg width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
+                <path d="M20 4C10 10 8 26 12 40c1.5 5 3 12 2 20" />
+              </svg>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1, letterSpacing: '-1px' }}>4.9</div>
+              </div>
+              <svg width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
+                <path d="M6 4C16 10 18 26 14 40c-1.5 5-3 12-2 20" />
+              </svg>
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>게스트 선호</div>
+            <p
+              style={{
+                fontSize: 16, lineHeight: 1.5, color: '#3f3f3f',
+                margin: '16px 0 0', maxWidth: 440,
+              }}
+            >
+              스파·루프탑·조식 뷔페까지 갖춘 명동 중심 호텔에서 4박. 모든 코스 일정의 이동 동선을 가장 가깝게 설계했습니다.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', marginTop: 20 }}>
+              {[
+                '스파 · 루프탑 · 피트니스 무료 이용',
+                '조식 뷔페 4일 포함',
+                '명동·남산·동대문 도보 이동권',
+              ].map((amen, idx) => (
+                <div
+                  key={amen}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 14,
+                    padding: '12px 0',
+                    borderTop: '1px solid #ebebeb',
+                    borderBottom: idx === 2 ? '1px solid #ebebeb' : undefined,
+                    fontSize: 16,
+                  }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5">
+                    <circle cx="12" cy="12" r="9" />
+                  </svg>
+                  {amen}
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 22 }}>
+              <span style={{ fontSize: 21, fontWeight: 700 }}>₩320,000</span>
+              <span style={{ fontSize: 15, color: '#6a6a6a' }}>/ 박 · 코스 포함가</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ padding: '64px 0 8px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
+          지금, 가장 빛나는 여행을 시작하세요
         </h2>
-        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.78)', margin: '12px 0 0' }}>
-          {dict.inquiryCta.subtitle}
+        <p
+          style={{
+            fontSize: 16, color: '#6a6a6a',
+            margin: '12px auto 0', maxWidth: 480, lineHeight: 1.5,
+          }}
+        >
+          날짜와 인원만 정하면, 나머지는 통역 가이드와 함께 완벽하게 준비해 드립니다.
         </p>
         <div
           style={{
-            marginTop: 28, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: 12, marginTop: 24,
           }}
         >
           <Link
-            href={`/${locale}/inquiry`}
+            href={bookingHref(locale, COURSE_PROGRAM, 'beauty_tour')}
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
               background: '#ff385c', color: '#fff',
-              borderRadius: 8, height: 50, padding: '0 28px',
-              fontWeight: 600, fontSize: 16, textDecoration: 'none',
+              border: 'none', borderRadius: 8,
+              height: 48, lineHeight: '48px', padding: '0 28px',
+              fontWeight: 500, fontSize: 16,
+              cursor: 'pointer', textDecoration: 'none',
             }}
           >
-            {dict.inquiryCta.submit} →
+            여행 시작하기
+          </Link>
+          <Link
+            href={`/${locale}/inquiry`}
+            style={{
+              background: '#fff', color: '#222',
+              border: '1px solid #222', borderRadius: 8,
+              height: 48, lineHeight: '46px', padding: '0 26px',
+              fontWeight: 500, fontSize: 16,
+              cursor: 'pointer', textDecoration: 'none',
+            }}
+          >
+            1:1 상담
           </Link>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 
 // ─── Footer ────────────────────────────────────────────────────────
-// (Inline lightweight footer — the existing PublicFooter lives in the
-// (public-portal) layout and isn't applied here. Keep it minimal.)
+function Footer(): JSX.Element {
+  return (
+    <footer
+      style={{
+        background: '#f7f7f7',
+        borderTop: '1px solid #ebebeb',
+        marginTop: 56,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1280, margin: '0 auto', padding: '48px 40px',
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24,
+        }}
+      >
+        {[
+          { title: '지원',     items: ['도움말 센터', '안전 정보', '취소 옵션', '예약 문의'] },
+          { title: '프로그램', items: ['퍼스널 컬러 진단', '피부 진단 케어', '프로필 화보 촬영', '4박 5일 글로우업 코스'] },
+          { title: 'glow-up',  items: ['소개', '찐맛집 가이드', 'K-팝 성지', '호스트 되기'] },
+        ].map((col) => (
+          <div key={col.title}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#222' }}>{col.title}</div>
+            <div
+              style={{
+                display: 'flex', flexDirection: 'column', gap: 12,
+                marginTop: 16, fontSize: 14, color: '#222',
+              }}
+            >
+              {col.items.map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ borderTop: '1px solid #dddddd' }}>
+        <div
+          style={{
+            maxWidth: 1280, margin: '0 auto', padding: '24px 40px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            fontSize: 13, color: '#6a6a6a', flexWrap: 'wrap', gap: 12,
+          }}
+        >
+          <span>© 2026 Korea Glow-up Challenge · 개인정보처리방침 · 이용약관</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#222', fontWeight: 600 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.6">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" />
+              </svg>
+              한국어 (KR)
+            </span>
+            <span style={{ color: '#222', fontWeight: 600 }}>₩ KRW</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ─── Small reusable bits ───────────────────────────────────────────
+function SectionHeader({ title }: { title: string }): JSX.Element {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>{title}</h2>
+      <span
+        style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          color: '#222', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+        }}
+      >
+        전체 보기 <span style={{ fontSize: 16 }}>›</span>
+      </span>
+    </div>
+  );
+}
+
+function RowBreakdown({ label, value }: { label: string; value: string }): JSX.Element {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#3f3f3f' }}>
+      <span>{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
