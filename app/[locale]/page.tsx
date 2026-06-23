@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
-import { PcHeader } from './glowup/pc/_components/pc-header';
+import { MainHeader } from './_components/main-header';
 
 /**
  * Patient portal landing — Airbnb design language, 7-section order
@@ -150,7 +150,7 @@ export default async function PublicLandingPage({
         }
       `}</style>
 
-      <PcHeader locale={locale} activeKey="all" />
+      <MainHeader locale={locale} activeKey="all" />
 
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
         <Hero />
