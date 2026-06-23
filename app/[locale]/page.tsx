@@ -153,7 +153,7 @@ export default async function PublicLandingPage({
       <PcHeader locale={locale} activeKey="all" />
 
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
-        <Hero locale={locale} />
+        <Hero />
         <Categories locale={locale} dict={dict} />
         <Programs locale={locale} />
         <Course locale={locale} />
@@ -168,7 +168,8 @@ export default async function PublicLandingPage({
 }
 
 // ─── 1. Hero ───────────────────────────────────────────────────────
-function Hero({ locale }: { locale: PublicLocale }): JSX.Element {
+// CTA jumps to in-page #programs anchor — no locale needed.
+function Hero(): JSX.Element {
   return (
     <section style={{ padding: '40px 0 8px' }}>
       <div
