@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html><head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600;1,700&family=Space+Mono:wght@400;700&display=swap">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<body>
+
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600;1,700&family=Space+Mono:wght@400;700&display=swap">
+
+<div style="min-height:100vh;background:#EAE6DF;padding:72px 64px 110px;font-family:'Pretendard Variable',Pretendard,sans-serif;color:#1B1512;display:flex;flex-direction:column;gap:56px;">
+
+  <!-- PAGE HEADER -->
+  <div style="max-width:1280px;">
+    <div style="font-family:'Space Mono',monospace;font-size:13px;letter-spacing:0.22em;color:#7C3A4B;text-transform:uppercase;">Final Direction · Atelier</div>
+    <h1 style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:46px;line-height:1.16;margin:18px 0 0;max-width:900px;letter-spacing:-0.01em;">미니멀 프리미엄 — 글로우업 예약 앱 전체 플로우</h1>
+    <p style="font-size:17px;line-height:1.7;color:#5C544C;margin:20px 0 0;max-width:760px;">따뜻한 아이보리와 와인 컬러, 세리프 타이틀로 완성한 고급 뷰티 트래블 앱. 온보딩부터 예약·결제·내 여행 관리까지 <b style="color:#1B1512;font-weight:600;">10개 화면</b>의 완결된 흐름입니다.</p>
+  </div>
+
+  <!-- BRAND / DESIGN SYSTEM BAR -->
+  <div style="background:#F5F1EA;border:1px solid #E1D8CA;border-radius:22px;padding:26px 30px;display:flex;align-items:center;gap:36px;flex-wrap:wrap;max-width:1280px;">
+    <div>
+      <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:21px;letter-spacing:-0.01em;">Korea Glow-up Challenge</div>
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#9A8E84;margin-top:6px;">서울에서 놀면서, 예뻐지다</div>
+    </div>
+    <div style="width:1px;height:48px;background:#E1D8CA;"></div>
+    <div style="display:flex;gap:18px;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="width:34px;height:34px;border-radius:999px;background:#F5F1EA;border:1px solid #D8CDB9;"></div><span style="font-family:'Space Mono',monospace;font-size:9px;color:#9A8E84;">Ivory</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="width:34px;height:34px;border-radius:999px;background:#1B1512;"></div><span style="font-family:'Space Mono',monospace;font-size:9px;color:#9A8E84;">Ink</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="width:34px;height:34px;border-radius:999px;background:#7C3A4B;"></div><span style="font-family:'Space Mono',monospace;font-size:9px;color:#9A8E84;">Wine</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="width:34px;height:34px;border-radius:999px;background:#C9A86A;"></div><span style="font-family:'Space Mono',monospace;font-size:9px;color:#9A8E84;">Gold</span></div>
+    </div>
+    <div style="width:1px;height:48px;background:#E1D8CA;"></div>
+    <div style="display:flex;gap:28px;align-items:baseline;">
+      <div><div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:24px;">가나 Aa</div><div style="font-family:'Space Mono',monospace;font-size:9px;color:#9A8E84;margin-top:4px;">Noto Serif KR · 디스플레이</div></div>
+      <div><div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:26px;font-style:italic;">Glow Aa</div><div style="font-family:'Space Mono',monospace;font-size:9px;color:#9A8E84;margin-top:4px;">Cormorant · 영문·수치</div></div>
+      <div><div style="font-family:'Pretendard Variable',Pretendard;font-weight:600;font-size:22px;">본문 Aa</div><div style="font-family:'Space Mono',monospace;font-size:9px;color:#9A8E84;margin-top:4px;">Pretendard · UI·본문</div></div>
+    </div>
+  </div>
+
+  <!-- ================= FLOW CONTAINER ================= -->
+  <div style="display:flex;flex-wrap:wrap;gap:54px 40px;align-items:flex-start;">
+
+    <!-- FLOW 01 HEADING -->
+    <div style="width:100%;display:flex;align-items:baseline;gap:16px;border-top:1px solid #D6CCBC;padding-top:26px;">
+      <span style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:15px;letter-spacing:0.2em;color:#7C3A4B;">01</span>
+      <h2 style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:25px;margin:0;letter-spacing:-0.01em;">시작하기</h2>
+      <span style="font-size:14px;color:#8A7F73;">설렘을 만드는 첫 화면</span>
+    </div>
+
+    <!-- S1 · ONBOARDING -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#9A8E84;text-transform:uppercase;">S1 · 온보딩</div>
+      <div style="width:380px;height:800px;background:#16110E;border-radius:54px;padding:11px;box-shadow:0 50px 90px -40px rgba(40,28,22,0.55),0 0 0 1px rgba(0,0,0,0.35);">
+        <div style="position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:#F5F1EA;display:flex;flex-direction:column;">
+          <div style="position:relative;height:430px;flex-shrink:0;background:repeating-linear-gradient(135deg,#D8CDB9 0 13px,#E0D6C4 13px 26px);">
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,17,14,0.25) 0%,rgba(22,17,14,0) 30%,rgba(245,241,234,0) 58%,rgba(245,241,234,0.95) 100%);"></div>
+            <div style="position:absolute;top:18px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;color:#FBF8F2;font-weight:600;font-size:15px;">
+              <span>9:41</span>
+              <div style="display:flex;align-items:center;gap:7px;"><span style="font-size:12px;">5G</span><div style="width:24px;height:12px;border:1.5px solid #FBF8F2;border-radius:3px;padding:1.5px;"><div style="width:72%;height:100%;background:#FBF8F2;border-radius:1px;"></div></div></div>
+            </div>
+            <div style="position:absolute;top:64px;left:28px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#FBF8F2;">SEOUL · SOUTH KOREA</div>
+            <div style="position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#8C7E6A;">[ 모델 · 뷰티 화보컷 ]</div>
+          </div>
+          <div style="flex:1;padding:8px 30px 32px;display:flex;flex-direction:column;">
+            <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#7C3A4B;text-transform:uppercase;">K-Beauty Travel · 4박 5일</div>
+            <h2 style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:35px;line-height:1.22;margin:12px 0 0;letter-spacing:-0.01em;color:#1B1512;">서울에서 놀면서,<br>예뻐지다</h2>
+            <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;letter-spacing:0.01em;color:#7C3A4B;margin:10px 0 0;white-space:nowrap;">Glow up while you play in Seoul</p>
+            <p style="font-size:14.5px;line-height:1.65;color:#5C544C;margin:14px 0 0;">퍼스널 컬러 진단부터 K-팝 성지, 현지인 찐맛집까지. 노는 사이 더 예뻐지는 올인원 뷰티 여행.</p>
+            <div style="margin-top:auto;">
+              <button style="width:100%;background:#7C3A4B;color:#F7F2EB;border:none;border-radius:999px;padding:17px;font-family:'Pretendard Variable',Pretendard,sans-serif;font-weight:600;font-size:16px;cursor:pointer;box-shadow:0 14px 26px -12px rgba(124,58,75,0.6);">여행 시작하기 →</button>
+              <div style="display:flex;gap:8px;margin-top:16px;justify-content:center;">
+                <span style="font-size:12px;font-weight:600;color:#F7F2EB;background:#1B1512;border-radius:999px;padding:7px 14px;">한국어</span>
+                <span style="font-size:12px;font-weight:500;color:#6B6258;background:transparent;border:1px solid #D6CEC2;border-radius:999px;padding:7px 14px;">EN</span>
+                <span style="font-size:12px;font-weight:500;color:#6B6258;background:transparent;border:1px solid #D6CEC2;border-radius:999px;padding:7px 14px;">中文</span>
+                <span style="font-size:12px;font-weight:500;color:#6B6258;background:transparent;border:1px solid #D6CEC2;border-radius:999px;padding:7px 14px;">日本語</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOW 02 HEADING -->
+    <div style="width:100%;display:flex;align-items:baseline;gap:16px;border-top:1px solid #D6CCBC;padding-top:26px;margin-top:8px;">
+      <span style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:15px;letter-spacing:0.2em;color:#7C3A4B;">02</span>
+      <h2 style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:25px;margin:0;letter-spacing:-0.01em;">둘러보기 &amp; 발견</h2>
+      <span style="font-size:14px;color:#8A7F73;">홈 · 프로그램 탐색 · 상세</span>
+    </div>
+
+    <!-- S2 · HOME -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#9A8E84;text-transform:uppercase;">S2 · 홈</div>
+      <div style="width:380px;height:800px;background:#16110E;border-radius:54px;padding:11px;box-shadow:0 50px 90px -40px rgba(40,28,22,0.55),0 0 0 1px rgba(0,0,0,0.35);">
+        <div style="position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:#F5F1EA;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 28px 0;color:#1B1512;font-weight:600;font-size:15px;flex-shrink:0;"><span>9:41</span><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:12px;">5G</span><div style="width:24px;height:12px;border:1.5px solid #1B1512;border-radius:3px;padding:1.5px;"><div style="width:72%;height:100%;background:#1B1512;border-radius:1px;"></div></div></div></div>
+          <div style="padding:18px 28px 0;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:13px;color:#9A8E84;">안녕하세요, 지민님</div>
+              <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:22px;margin-top:4px;letter-spacing:-0.01em;">어떤 글로우업을 원하세요?</div>
+            </div>
+            <div style="width:44px;height:44px;border-radius:999px;background:repeating-linear-gradient(135deg,#D8CDB9 0 6px,#E0D6C4 6px 12px);border:1px solid #E6DECF;flex-shrink:0;"></div>
+          </div>
+          <div style="margin:18px 28px 0;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E6DECF;border-radius:14px;padding:13px 16px;">
+            <div style="width:15px;height:15px;border:2px solid #B8AE9F;border-radius:999px;"></div>
+            <span style="font-size:14px;color:#A89E90;">프로그램·코스·맛집 검색</span>
+          </div>
+          <div style="display:flex;gap:8px;padding:16px 28px 0;overflow:hidden;">
+            <span style="font-size:13px;font-weight:600;color:#F7F2EB;background:#7C3A4B;border-radius:999px;padding:8px 14px;white-space:nowrap;">전체</span>
+            <span style="font-size:13px;font-weight:500;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:8px 14px;white-space:nowrap;">뷰티</span>
+            <span style="font-size:13px;font-weight:500;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:8px 14px;white-space:nowrap;">맛집</span>
+            <span style="font-size:13px;font-weight:500;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:8px 14px;white-space:nowrap;">K-팝</span>
+            <span style="font-size:13px;font-weight:500;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:8px 14px;white-space:nowrap;">명소</span>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:22px 28px 0;">
+            <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:17px;">시그니처 뷰티 프로그램</div>
+            <div style="font-size:12px;color:#7C3A4B;font-weight:600;">전체보기</div>
+          </div>
+          <div style="display:flex;gap:14px;padding:14px 28px 0;overflow:hidden;">
+            <div style="width:190px;flex-shrink:0;background:#fff;border:1px solid #EAE3D7;border-radius:20px;overflow:hidden;">
+              <div style="height:118px;background:repeating-linear-gradient(135deg,#E4D2D6 0 12px,#ECDDE0 12px 24px);position:relative;"><span style="position:absolute;bottom:8px;left:10px;font-family:'Space Mono',monospace;font-size:9px;color:#A98792;">[ 퍼스널컬러 ]</span></div>
+              <div style="padding:13px 14px 15px;">
+                <div style="font-size:11px;color:#9A8E84;">진단 · 90분</div>
+                <div style="font-weight:600;font-size:15px;margin-top:4px;">퍼스널 컬러 진단</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:18px;color:#7C3A4B;margin-top:8px;">₩180,000</div>
+              </div>
+            </div>
+            <div style="width:190px;flex-shrink:0;background:#fff;border:1px solid #EAE3D7;border-radius:20px;overflow:hidden;">
+              <div style="height:118px;background:repeating-linear-gradient(135deg,#D9D2C0 0 12px,#E2DBCA 12px 24px);position:relative;"><span style="position:absolute;bottom:8px;left:10px;font-family:'Space Mono',monospace;font-size:9px;color:#9A9079;">[ 피부진단 ]</span></div>
+              <div style="padding:13px 14px 15px;">
+                <div style="font-size:11px;color:#9A8E84;">케어 · 120분</div>
+                <div style="font-weight:600;font-size:15px;margin-top:4px;">피부 진단 케어</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:18px;color:#7C3A4B;margin-top:8px;">₩240,000</div>
+              </div>
+            </div>
+          </div>
+          <div style="margin:18px 28px 0;background:#1B1512;border-radius:22px;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.14em;color:#C9A86A;">BEST · 올인원</div>
+              <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:18px;color:#F7F2EB;margin-top:7px;">4박 5일 글로우업 코스</div>
+              <div style="font-size:13px;color:#B8AE9F;margin-top:5px;">뷰티+맛집+K-팝+호텔 올인원</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:22px;color:#F7F2EB;">₩1.89M~</div>
+              <div style="width:38px;height:38px;border-radius:999px;background:#7C3A4B;color:#F7F2EB;display:flex;align-items:center;justify-content:center;font-size:18px;margin-left:auto;margin-top:8px;">→</div>
+            </div>
+          </div>
+          <div style="margin-top:auto;display:flex;justify-content:space-around;align-items:center;padding:14px 24px 22px;border-top:1px solid #E6DECF;background:#F5F1EA;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#7C3A4B;"><div style="width:18px;height:18px;border-radius:5px;background:#7C3A4B;"></div><span style="font-size:10px;font-weight:600;">둘러보기</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:5px;border:2px solid #A89E90;"></div><span style="font-size:10px;">코스</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:999px;border:2px solid #A89E90;"></div><span style="font-size:10px;">예약</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:999px;border:2px solid #A89E90;"></div><span style="font-size:10px;">마이</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S3 · PROGRAM LIST -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#9A8E84;text-transform:uppercase;">S3 · 뷰티 프로그램</div>
+      <div style="width:380px;height:800px;background:#16110E;border-radius:54px;padding:11px;box-shadow:0 50px 90px -40px rgba(40,28,22,0.55),0 0 0 1px rgba(0,0,0,0.35);">
+        <div style="position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:#F5F1EA;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 28px 0;color:#1B1512;font-weight:600;font-size:15px;flex-shrink:0;"><span>9:41</span><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:12px;">5G</span><div style="width:24px;height:12px;border:1.5px solid #1B1512;border-radius:3px;padding:1.5px;"><div style="width:72%;height:100%;background:#1B1512;border-radius:1px;"></div></div></div></div>
+          <div style="padding:14px 28px 0;display:flex;align-items:center;gap:14px;">
+            <div style="width:36px;height:36px;border-radius:999px;border:1px solid #DDD3C5;display:flex;align-items:center;justify-content:center;font-size:18px;color:#1B1512;">←</div>
+            <div>
+              <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:21px;letter-spacing:-0.01em;">뷰티 프로그램</div>
+              <div style="font-size:12px;color:#9A8E84;margin-top:2px;">놀면서 예뻐지는 4가지 시그니처 케어</div>
+            </div>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:18px 24px 0;display:flex;flex-direction:column;gap:14px;">
+            <div style="background:#fff;border:1px solid #EAE3D7;border-radius:20px;padding:14px;display:flex;gap:14px;align-items:center;">
+              <div style="width:84px;height:84px;border-radius:15px;background:repeating-linear-gradient(135deg,#E4D2D6 0 10px,#ECDDE0 10px 20px);flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.06em;color:#9A8E84;">진단 · 90분</div>
+                <div style="font-weight:600;font-size:16px;margin-top:4px;">퍼스널 컬러 진단</div>
+                <div style="font-size:12px;color:#7C6F64;margin-top:3px;">나에게 꼭 맞는 컬러 · 메이크업 추천</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:18px;color:#7C3A4B;margin-top:6px;">₩180,000</div>
+              </div>
+              <div style="font-size:20px;color:#C3B8A8;">›</div>
+            </div>
+            <div style="background:#fff;border:1px solid #EAE3D7;border-radius:20px;padding:14px;display:flex;gap:14px;align-items:center;">
+              <div style="width:84px;height:84px;border-radius:15px;background:repeating-linear-gradient(135deg,#D9D2C0 0 10px,#E2DBCA 10px 20px);flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.06em;color:#9A8E84;">케어 · 120분</div>
+                <div style="font-weight:600;font-size:16px;margin-top:4px;">피부 진단 케어</div>
+                <div style="font-size:12px;color:#7C6F64;margin-top:3px;">AI 피부 분석 · 맞춤 스킨 프로그램</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:18px;color:#7C3A4B;margin-top:6px;">₩240,000</div>
+              </div>
+              <div style="font-size:20px;color:#C3B8A8;">›</div>
+            </div>
+            <div style="background:#fff;border:1px solid #EAE3D7;border-radius:20px;padding:14px;display:flex;gap:14px;align-items:center;">
+              <div style="width:84px;height:84px;border-radius:15px;background:repeating-linear-gradient(135deg,#DED5C2 0 10px,#E7DECB 10px 20px);flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.06em;color:#9A8E84;">스튜디오 · 150분</div>
+                <div style="font-weight:600;font-size:16px;margin-top:4px;">프로필 화보 촬영</div>
+                <div style="font-size:12px;color:#7C6F64;margin-top:3px;">헤어·메이크업 + 전문 포토 스튜디오</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:18px;color:#7C3A4B;margin-top:6px;">₩320,000</div>
+              </div>
+              <div style="font-size:20px;color:#C3B8A8;">›</div>
+            </div>
+            <div style="background:#fff;border:1px solid #EAE3D7;border-radius:20px;padding:14px;display:flex;gap:14px;align-items:center;">
+              <div style="width:84px;height:84px;border-radius:15px;background:repeating-linear-gradient(135deg,#E2D3CF 0 10px,#EADBD7 10px 20px);flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.06em;color:#9A8E84;">클래스 · 100분</div>
+                <div style="font-weight:600;font-size:16px;margin-top:4px;">K-뷰티 메이크업 클래스</div>
+                <div style="font-size:12px;color:#7C6F64;margin-top:3px;">아티스트와 1:1 셀프 메이크업 레슨</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:18px;color:#7C3A4B;margin-top:6px;">₩150,000</div>
+              </div>
+              <div style="font-size:20px;color:#C3B8A8;">›</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-around;align-items:center;padding:14px 24px 22px;border-top:1px solid #E6DECF;background:#F5F1EA;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#7C3A4B;"><div style="width:18px;height:18px;border-radius:5px;background:#7C3A4B;"></div><span style="font-size:10px;font-weight:600;">둘러보기</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:5px;border:2px solid #A89E90;"></div><span style="font-size:10px;">코스</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:999px;border:2px solid #A89E90;"></div><span style="font-size:10px;">예약</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:999px;border:2px solid #A89E90;"></div><span style="font-size:10px;">마이</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S4 · PROGRAM DETAIL -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#9A8E84;text-transform:uppercase;">S4 · 프로그램 상세</div>
+      <div style="width:380px;height:800px;background:#16110E;border-radius:54px;padding:11px;box-shadow:0 50px 90px -40px rgba(40,28,22,0.55),0 0 0 1px rgba(0,0,0,0.35);">
+        <div style="position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:#F5F1EA;display:flex;flex-direction:column;">
+          <div style="height:230px;background:repeating-linear-gradient(135deg,#E4D2D6 0 13px,#ECDDE0 13px 26px);position:relative;flex-shrink:0;">
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,17,14,0.28),rgba(22,17,14,0) 50%);"></div>
+            <div style="position:absolute;top:18px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;color:#FBF8F2;font-weight:600;font-size:15px;">
+              <div style="width:34px;height:34px;border-radius:999px;background:rgba(251,248,242,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">←</div>
+              <div style="width:34px;height:34px;border-radius:999px;background:rgba(251,248,242,0.2);display:flex;align-items:center;justify-content:center;font-size:15px;">♡</div>
+            </div>
+            <div style="position:absolute;bottom:14px;left:24px;font-family:'Space Mono',monospace;font-size:10px;color:#A98792;">[ 퍼스널 컬러 진단 화보 ]</div>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:22px 26px 0;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.06em;color:#7C3A4B;">진단 · 90분</span>
+              <span style="color:#D8CDB9;">·</span>
+              <span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:14px;color:#C9A86A;">★ 4.9</span>
+              <span style="font-size:11px;color:#9A8E84;">(312)</span>
+            </div>
+            <h2 style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:25px;margin:10px 0 0;letter-spacing:-0.01em;">퍼스널 컬러 진단</h2>
+            <p style="font-size:13.5px;line-height:1.6;color:#5C544C;margin:10px 0 0;">전문 컨설턴트가 드레이핑으로 나에게 가장 잘 어울리는 컬러를 찾아드려요. 결과 리포트와 메이크업·패션 추천까지.</p>
+            <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:15px;margin-top:18px;">포함 사항</div>
+            <div style="display:flex;flex-direction:column;gap:9px;margin-top:11px;">
+              <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:#3D362F;"><div style="width:18px;height:18px;border-radius:999px;background:#F0E3E6;color:#7C3A4B;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">✓</div>1:1 전문 컬러 컨설턴트</div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:#3D362F;"><div style="width:18px;height:18px;border-radius:999px;background:#F0E3E6;color:#7C3A4B;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">✓</div>컬러 드레이핑 진단 + 결과 리포트</div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:#3D362F;"><div style="width:18px;height:18px;border-radius:999px;background:#F0E3E6;color:#7C3A4B;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">✓</div>맞춤 메이크업·패션 컬러 가이드</div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:#3D362F;"><div style="width:18px;height:18px;border-radius:999px;background:#F0E3E6;color:#7C3A4B;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">✓</div>통역 가이드 동행 (영·중·일)</div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:18px;">
+              <div style="flex:1;height:64px;border-radius:13px;background:repeating-linear-gradient(135deg,#E4D2D6 0 9px,#ECDDE0 9px 18px);"></div>
+              <div style="flex:1;height:64px;border-radius:13px;background:repeating-linear-gradient(135deg,#DED5C2 0 9px,#E7DECB 9px 18px);"></div>
+              <div style="flex:1;height:64px;border-radius:13px;background:repeating-linear-gradient(135deg,#D9D2C0 0 9px,#E2DBCA 9px 18px);"></div>
+            </div>
+          </div>
+          <div style="border-top:1px solid #E6DECF;background:#fff;padding:16px 24px 22px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:11px;color:#9A8E84;">1인 기준</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:24px;color:#1B1512;">₩180,000</div>
+            </div>
+            <button style="background:#7C3A4B;color:#F7F2EB;border:none;border-radius:999px;padding:16px 34px;font-family:'Pretendard Variable',Pretendard,sans-serif;font-weight:600;font-size:16px;cursor:pointer;box-shadow:0 14px 26px -12px rgba(124,58,75,0.6);">예약하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOW 03 HEADING -->
+    <div style="width:100%;display:flex;align-items:baseline;gap:16px;border-top:1px solid #D6CCBC;padding-top:26px;margin-top:8px;">
+      <span style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:15px;letter-spacing:0.2em;color:#7C3A4B;">03</span>
+      <h2 style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:25px;margin:0;letter-spacing:-0.01em;">경험 설계</h2>
+      <span style="font-size:14px;color:#8A7F73;">코스 · 찐맛집 &amp; K-팝 · 프리미엄 호텔</span>
+    </div>
+
+    <!-- S5 · SIGNATURE COURSE -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#9A8E84;text-transform:uppercase;">S5 · 4박 5일 코스</div>
+      <div style="width:380px;height:800px;background:#16110E;border-radius:54px;padding:11px;box-shadow:0 50px 90px -40px rgba(40,28,22,0.55),0 0 0 1px rgba(0,0,0,0.35);">
+        <div style="position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:#F5F1EA;display:flex;flex-direction:column;">
+          <div style="height:150px;background:repeating-linear-gradient(135deg,#D8CDB9 0 13px,#E0D6C4 13px 26px);position:relative;flex-shrink:0;">
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,17,14,0.32),rgba(22,17,14,0) 55%);"></div>
+            <div style="position:absolute;top:18px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;color:#FBF8F2;font-weight:600;font-size:15px;">
+              <div style="width:34px;height:34px;border-radius:999px;background:rgba(251,248,242,0.18);display:flex;align-items:center;justify-content:center;font-size:18px;">←</div>
+              <div style="display:flex;align-items:center;gap:7px;"><span style="font-size:12px;">5G</span><div style="width:24px;height:12px;border:1.5px solid #FBF8F2;border-radius:3px;padding:1.5px;"><div style="width:72%;height:100%;background:#FBF8F2;border-radius:1px;"></div></div></div>
+            </div>
+            <div style="position:absolute;bottom:14px;left:24px;color:#FBF8F2;">
+              <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.14em;">SIGNATURE COURSE</div>
+              <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:23px;margin-top:4px;">4박 5일 글로우업 코스</div>
+            </div>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:20px 26px 0;">
+            <div style="display:flex;flex-direction:column;gap:0;">
+              <div style="display:flex;gap:14px;">
+                <div style="display:flex;flex-direction:column;align-items:center;"><div style="width:30px;height:30px;border-radius:999px;background:#7C3A4B;color:#F7F2EB;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Cormorant Garamond',serif;">1</div><div style="width:2px;flex:1;background:#E0D6C4;"></div></div>
+                <div style="padding-bottom:15px;"><div style="font-weight:600;font-size:14.5px;">도착 · 퍼스널 컬러 진단</div><div style="font-size:12px;color:#7C6F64;margin-top:2px;line-height:1.45;">차량 픽업 · 통역 가이드 · 명동 호텔 체크인</div></div>
+              </div>
+              <div style="display:flex;gap:14px;">
+                <div style="display:flex;flex-direction:column;align-items:center;"><div style="width:30px;height:30px;border-radius:999px;background:#7C3A4B;color:#F7F2EB;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Cormorant Garamond',serif;">2</div><div style="width:2px;flex:1;background:#E0D6C4;"></div></div>
+                <div style="padding-bottom:15px;"><div style="font-weight:600;font-size:14.5px;">피부 진단 케어 · 한우 다이닝</div><div style="font-size:12px;color:#7C6F64;margin-top:2px;line-height:1.45;">스킨 진단 · 한우구이·간장게장 찐맛집</div></div>
+              </div>
+              <div style="display:flex;gap:14px;">
+                <div style="display:flex;flex-direction:column;align-items:center;"><div style="width:30px;height:30px;border-radius:999px;background:#7C3A4B;color:#F7F2EB;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Cormorant Garamond',serif;">3</div><div style="width:2px;flex:1;background:#E0D6C4;"></div></div>
+                <div style="padding-bottom:15px;"><div style="font-weight:600;font-size:14.5px;">K-팝 성지 투어 · 화보 촬영</div><div style="font-size:12px;color:#7C6F64;margin-top:2px;line-height:1.45;">HYBE·SM·JYP·YG 탐방 · 프로필 화보 스튜디오</div></div>
+              </div>
+              <div style="display:flex;gap:14px;">
+                <div style="display:flex;flex-direction:column;align-items:center;"><div style="width:30px;height:30px;border-radius:999px;background:#7C3A4B;color:#F7F2EB;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Cormorant Garamond',serif;">4</div><div style="width:2px;flex:1;background:#E0D6C4;"></div></div>
+                <div style="padding-bottom:15px;"><div style="font-weight:600;font-size:14.5px;">경복궁 · 한강 · 성수 쇼핑</div><div style="font-size:12px;color:#7C6F64;margin-top:2px;line-height:1.45;">필수 명소 · 청담·성수 감성 쇼핑</div></div>
+              </div>
+              <div style="display:flex;gap:14px;">
+                <div style="display:flex;flex-direction:column;align-items:center;"><div style="width:30px;height:30px;border-radius:999px;background:#1B1512;color:#F7F2EB;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Cormorant Garamond',serif;">5</div></div>
+                <div><div style="font-weight:600;font-size:14.5px;">롯데월드 · 출국</div><div style="font-size:12px;color:#7C6F64;margin-top:2px;line-height:1.45;">아쿠아리움 · 면세 쇼핑 · 공항 샌딩</div></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+              <span style="font-size:11px;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:6px 11px;">차량 서비스</span>
+              <span style="font-size:11px;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:6px 11px;">통역 가이드</span>
+              <span style="font-size:11px;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:6px 11px;">맛집 예약</span>
+              <span style="font-size:11px;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:6px 11px;">5성 호텔</span>
+            </div>
+          </div>
+          <div style="border-top:1px solid #E6DECF;background:#fff;padding:16px 24px 22px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:11px;color:#9A8E84;">1인 · 4박 5일</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:24px;color:#1B1512;">₩1,890,000~</div>
+            </div>
+            <button style="background:#7C3A4B;color:#F7F2EB;border:none;border-radius:999px;padding:16px 30px;font-family:'Pretendard Variable',Pretendard,sans-serif;font-weight:600;font-size:16px;cursor:pointer;box-shadow:0 14px 26px -12px rgba(124,58,75,0.6);">예약하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S6 · LOCAL FOOD & K-POP -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#9A8E84;text-transform:uppercase;">S6 · 찐맛집 &amp; K-팝</div>
+      <div style="width:380px;height:800px;background:#16110E;border-radius:54px;padding:11px;box-shadow:0 50px 90px -40px rgba(40,28,22,0.55),0 0 0 1px rgba(0,0,0,0.35);">
+        <div style="position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:#F5F1EA;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 28px 0;color:#1B1512;font-weight:600;font-size:15px;flex-shrink:0;"><span>9:41</span><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:12px;">5G</span><div style="width:24px;height:12px;border:1.5px solid #1B1512;border-radius:3px;padding:1.5px;"><div style="width:72%;height:100%;background:#1B1512;border-radius:1px;"></div></div></div></div>
+          <div style="padding:14px 28px 0;">
+            <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.14em;color:#7C3A4B;">#한국음식추천 #K-POP</div>
+            <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:21px;margin-top:6px;letter-spacing:-0.01em;">현지인 추천 &amp; K-팝 성지</div>
+          </div>
+          <div style="display:flex;gap:22px;padding:16px 28px 0;border-bottom:1px solid #E6DECF;">
+            <div style="padding-bottom:10px;border-bottom:2px solid #7C3A4B;font-weight:600;font-size:14px;color:#1B1512;">찐맛집</div>
+            <div style="padding-bottom:10px;font-weight:500;font-size:14px;color:#A89E90;">K-팝 성지</div>
+            <div style="padding-bottom:10px;font-weight:500;font-size:14px;color:#A89E90;">관광 명소</div>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:16px 24px 0;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="background:#fff;border:1px solid #EAE3D7;border-radius:16px;overflow:hidden;"><div style="height:78px;background:repeating-linear-gradient(135deg,#E1D2C2 0 10px,#E9DBCB 10px 20px);"></div><div style="padding:9px 11px 11px;"><div style="font-weight:600;font-size:13px;">삼겹살</div><div style="font-size:10.5px;color:#9A8E84;margin-top:2px;">마포 · ★4.8</div></div></div>
+              <div style="background:#fff;border:1px solid #EAE3D7;border-radius:16px;overflow:hidden;"><div style="height:78px;background:repeating-linear-gradient(135deg,#DBC8C0 0 10px,#E5D4CC 10px 20px);"></div><div style="padding:9px 11px 11px;"><div style="font-weight:600;font-size:13px;">한우구이</div><div style="font-size:10.5px;color:#9A8E84;margin-top:2px;">강남 · ★4.9</div></div></div>
+              <div style="background:#fff;border:1px solid #EAE3D7;border-radius:16px;overflow:hidden;"><div style="height:78px;background:repeating-linear-gradient(135deg,#DED5C0 0 10px,#E7DECA 10px 20px);"></div><div style="padding:9px 11px 11px;"><div style="font-weight:600;font-size:13px;">간장게장</div><div style="font-size:10.5px;color:#9A8E84;margin-top:2px;">을지로 · ★4.7</div></div></div>
+              <div style="background:#fff;border:1px solid #EAE3D7;border-radius:16px;overflow:hidden;"><div style="height:78px;background:repeating-linear-gradient(135deg,#E2D4CE 0 10px,#EBDDD7 10px 20px);"></div><div style="padding:9px 11px 11px;"><div style="font-weight:600;font-size:13px;">낙지볶음탕</div><div style="font-size:10.5px;color:#9A8E84;margin-top:2px;">종로 · ★4.8</div></div></div>
+            </div>
+            <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:15px;margin-top:18px;">엔터테인먼트 탐방</div>
+            <div style="display:flex;gap:8px;margin-top:11px;">
+              <div style="flex:1;background:#1B1512;border-radius:13px;padding:13px 0;text-align:center;color:#F7F2EB;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:15px;letter-spacing:0.04em;">HYBE</div>
+              <div style="flex:1;background:#1B1512;border-radius:13px;padding:13px 0;text-align:center;color:#F7F2EB;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:15px;letter-spacing:0.04em;">SM</div>
+              <div style="flex:1;background:#1B1512;border-radius:13px;padding:13px 0;text-align:center;color:#F7F2EB;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:15px;letter-spacing:0.04em;">JYP</div>
+              <div style="flex:1;background:#1B1512;border-radius:13px;padding:13px 0;text-align:center;color:#F7F2EB;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:15px;letter-spacing:0.04em;">YG</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-around;align-items:center;padding:14px 24px 22px;border-top:1px solid #E6DECF;background:#F5F1EA;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:5px;border:2px solid #A89E90;"></div><span style="font-size:10px;">둘러보기</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#7C3A4B;"><div style="width:18px;height:18px;border-radius:5px;background:#7C3A4B;"></div><span style="font-size:10px;font-weight:600;">코스</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:999px;border:2px solid #A89E90;"></div><span style="font-size:10px;">예약</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:999px;border:2px solid #A89E90;"></div><span style="font-size:10px;">마이</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S7 · PREMIUM HOTEL -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#9A8E84;text-transform:uppercase;">S7 · 프리미엄 호텔</div>
+      <div style="width:380px;height:800px;background:#16110E;border-radius:54px;padding:11px;box-shadow:0 50px 90px -40px rgba(40,28,22,0.55),0 0 0 1px rgba(0,0,0,0.35);">
+        <div style="position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:#F5F1EA;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 28px 0;color:#1B1512;font-weight:600;font-size:15px;flex-shrink:0;"><span>9:41</span><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:12px;">5G</span><div style="width:24px;height:12px;border:1.5px solid #1B1512;border-radius:3px;padding:1.5px;"><div style="width:72%;height:100%;background:#1B1512;border-radius:1px;"></div></div></div></div>
+          <div style="padding:14px 28px 0;display:flex;align-items:center;gap:14px;">
+            <div style="width:36px;height:36px;border-radius:999px;border:1px solid #DDD3C5;display:flex;align-items:center;justify-content:center;font-size:18px;">←</div>
+            <div>
+              <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:21px;letter-spacing:-0.01em;">프리미엄 브랜드 호텔</div>
+              <div style="font-size:12px;color:#9A8E84;margin-top:2px;">4박 · 명동 중심 5성 호텔</div>
+            </div>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:18px 24px 0;display:flex;flex-direction:column;gap:16px;">
+            <div style="background:#fff;border:2px solid #7C3A4B;border-radius:22px;overflow:hidden;position:relative;">
+              <div style="position:absolute;top:14px;right:14px;background:#7C3A4B;color:#F7F2EB;font-size:11px;font-weight:600;border-radius:999px;padding:6px 12px;z-index:1;">선택됨</div>
+              <div style="height:138px;background:repeating-linear-gradient(135deg,#D9D2C0 0 12px,#E2DBCA 12px 24px);position:relative;"><span style="position:absolute;bottom:8px;left:12px;font-family:'Space Mono',monospace;font-size:9px;color:#9A9079;">[ 호텔 외관·룸 ]</span></div>
+              <div style="padding:15px 16px 17px;">
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:13px;color:#C9A86A;">★★★★★</span><span style="font-size:11px;color:#9A8E84;">명동</span></div>
+                <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:18px;margin-top:6px;">아테르 앰배서더 명동</div>
+                <div style="font-size:12px;color:#7C6F64;margin-top:5px;">스파 · 루프탑 · 조식 뷔페 · 피트니스</div>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:12px;">
+                  <span style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:20px;color:#1B1512;">₩320,000<span style="font-size:12px;color:#9A8E84;font-family:'Pretendard Variable',Pretendard;font-weight:400;"> / 박</span></span>
+                  <span style="font-size:12px;color:#7C3A4B;font-weight:600;">코스 포함가</span>
+                </div>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #EAE3D7;border-radius:22px;overflow:hidden;">
+              <div style="height:110px;background:repeating-linear-gradient(135deg,#DED5C2 0 12px,#E7DECB 12px 24px);"></div>
+              <div style="padding:15px 16px 17px;">
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:13px;color:#C9A86A;">★★★★★</span><span style="font-size:11px;color:#9A8E84;">을지로</span></div>
+                <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:18px;margin-top:6px;">현대 프리미어 호텔</div>
+                <div style="font-size:12px;color:#7C6F64;margin-top:5px;">시티뷰 · 라운지 · 사우나</div>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:12px;">
+                  <span style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:20px;color:#1B1512;">₩280,000<span style="font-size:12px;color:#9A8E84;font-family:'Pretendard Variable',Pretendard;font-weight:400;"> / 박</span></span>
+                  <span style="font-size:12px;color:#7C3A4B;font-weight:600;">+₩0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="border-top:1px solid #E6DECF;background:#fff;padding:16px 24px 22px;">
+            <button style="width:100%;background:#7C3A4B;color:#F7F2EB;border:none;border-radius:999px;padding:17px;font-family:'Pretendard Variable',Pretendard,sans-serif;font-weight:600;font-size:16px;cursor:pointer;box-shadow:0 14px 26px -12px rgba(124,58,75,0.6);">아테르 앰배서더로 예약 →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOW 04 HEADING -->
+    <div style="width:100%;display:flex;align-items:baseline;gap:16px;border-top:1px solid #D6CCBC;padding-top:26px;margin-top:8px;">
+      <span style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:15px;letter-spacing:0.2em;color:#7C3A4B;">04</span>
+      <h2 style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:25px;margin:0;letter-spacing:-0.01em;">예약 &amp; 내 여행</h2>
+      <span style="font-size:14px;color:#8A7F73;">결제 · 완료 · 일정 관리</span>
+    </div>
+
+    <!-- S8 · CHECKOUT -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#9A8E84;text-transform:uppercase;">S8 · 예약 · 결제</div>
+      <div style="width:380px;height:800px;background:#16110E;border-radius:54px;padding:11px;box-shadow:0 50px 90px -40px rgba(40,28,22,0.55),0 0 0 1px rgba(0,0,0,0.35);">
+        <div style="position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:#F5F1EA;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 28px 0;color:#1B1512;font-weight:600;font-size:15px;flex-shrink:0;"><span>9:41</span><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:12px;">5G</span><div style="width:24px;height:12px;border:1.5px solid #1B1512;border-radius:3px;padding:1.5px;"><div style="width:72%;height:100%;background:#1B1512;border-radius:1px;"></div></div></div></div>
+          <div style="padding:14px 28px 0;display:flex;align-items:center;gap:14px;">
+            <div style="width:36px;height:36px;border-radius:999px;border:1px solid #DDD3C5;display:flex;align-items:center;justify-content:center;font-size:18px;">←</div>
+            <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:21px;letter-spacing:-0.01em;">예약 정보</div>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:18px 24px 0;">
+            <div style="background:#fff;border:1px solid #EAE3D7;border-radius:18px;padding:15px;display:flex;gap:13px;align-items:center;">
+              <div style="width:62px;height:62px;border-radius:13px;background:repeating-linear-gradient(135deg,#D8CDB9 0 9px,#E0D6C4 9px 18px);flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div style="font-family:'Space Mono',monospace;font-size:10px;color:#9A8E84;">올인원 · 4박 5일</div>
+                <div style="font-weight:600;font-size:15px;margin-top:3px;">4박 5일 글로우업 코스</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:16px;color:#7C3A4B;margin-top:4px;">₩1,890,000</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:11px;margin-top:14px;">
+              <div style="flex:1;background:#fff;border:1px solid #EAE3D7;border-radius:14px;padding:12px 14px;"><div style="font-size:11px;color:#9A8E84;">출발일</div><div style="font-weight:600;font-size:14px;margin-top:4px;">7월 12일 (토)</div></div>
+              <div style="flex:1;background:#fff;border:1px solid #EAE3D7;border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;"><div><div style="font-size:11px;color:#9A8E84;">인원</div><div style="font-weight:600;font-size:14px;margin-top:4px;">성인 2</div></div><div style="display:flex;gap:6px;"><div style="width:24px;height:24px;border-radius:999px;border:1px solid #DDD3C5;display:flex;align-items:center;justify-content:center;font-size:14px;color:#7C3A4B;">−</div><div style="width:24px;height:24px;border-radius:999px;background:#7C3A4B;color:#F7F2EB;display:flex;align-items:center;justify-content:center;font-size:14px;">+</div></div></div>
+            </div>
+            <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:15px;margin-top:18px;">추가 옵션</div>
+            <div style="background:#fff;border:1px solid #EAE3D7;border-radius:14px;padding:14px;margin-top:11px;display:flex;align-items:center;justify-content:between;gap:10px;"><div style="flex:1;"><div style="font-weight:600;font-size:13.5px;">프로필 화보 촬영 추가</div><div style="font-size:11px;color:#9A8E84;margin-top:2px;">+ ₩320,000</div></div><div style="width:42px;height:24px;border-radius:999px;background:#7C3A4B;position:relative;flex-shrink:0;"><div style="width:18px;height:18px;border-radius:999px;background:#fff;position:absolute;top:3px;right:3px;"></div></div></div>
+            <div style="background:#fff;border:1px solid #EAE3D7;border-radius:14px;padding:14px;margin-top:10px;display:flex;align-items:center;gap:10px;"><div style="flex:1;"><div style="font-weight:600;font-size:13.5px;">공항 VIP 픽업</div><div style="font-size:11px;color:#9A8E84;margin-top:2px;">+ ₩90,000</div></div><div style="width:42px;height:24px;border-radius:999px;background:#E0D6C4;position:relative;flex-shrink:0;"><div style="width:18px;height:18px;border-radius:999px;background:#fff;position:absolute;top:3px;left:3px;"></div></div></div>
+            <div style="margin-top:18px;display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;color:#5C544C;"><span>코스 (2인)</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;">₩3,780,000</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;color:#5C544C;"><span>화보 촬영 추가</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;">₩320,000</span></div>
+            </div>
+          </div>
+          <div style="border-top:1px solid #E6DECF;background:#fff;padding:15px 24px 22px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:11px;color:#9A8E84;">총 결제 금액</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:23px;color:#1B1512;">₩4,100,000</div>
+            </div>
+            <button style="background:#7C3A4B;color:#F7F2EB;border:none;border-radius:999px;padding:16px 32px;font-family:'Pretendard Variable',Pretendard,sans-serif;font-weight:600;font-size:16px;cursor:pointer;box-shadow:0 14px 26px -12px rgba(124,58,75,0.6);">결제하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S9 · CONFIRMATION -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#9A8E84;text-transform:uppercase;">S9 · 예약 완료</div>
+      <div style="width:380px;height:800px;background:#16110E;border-radius:54px;padding:11px;box-shadow:0 50px 90px -40px rgba(40,28,22,0.55),0 0 0 1px rgba(0,0,0,0.35);">
+        <div style="position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:#1B1512;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 28px 0;color:#F7F2EB;font-weight:600;font-size:15px;flex-shrink:0;"><span>9:41</span><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:12px;">5G</span><div style="width:24px;height:12px;border:1.5px solid #F7F2EB;border-radius:3px;padding:1.5px;"><div style="width:72%;height:100%;background:#F7F2EB;border-radius:1px;"></div></div></div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 32px;text-align:center;">
+            <div style="width:84px;height:84px;border-radius:999px;background:#7C3A4B;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 10px rgba(124,58,75,0.18);">
+              <div style="width:30px;height:16px;border-left:3px solid #F7F2EB;border-bottom:3px solid #F7F2EB;transform:rotate(-45deg);margin-top:-6px;"></div>
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;color:#C9A86A;margin-top:28px;white-space:nowrap;">See you in Seoul</div>
+            <h2 style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:27px;color:#F7F2EB;margin:8px 0 0;letter-spacing:-0.01em;">예약이 완료되었어요</h2>
+            <p style="font-size:13.5px;line-height:1.6;color:#B8AE9F;margin:12px 0 0;">7월의 글로우업 여행이 확정되었습니다.<br>설레는 마음으로 준비할게요.</p>
+            <div style="width:100%;background:rgba(245,241,234,0.06);border:1px solid rgba(245,241,234,0.14);border-radius:18px;padding:18px;margin-top:26px;text-align:left;">
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:#B8AE9F;">예약번호</span><span style="font-family:'Space Mono',monospace;font-size:13px;color:#F7F2EB;letter-spacing:0.04em;">GUC-240712</span></div>
+              <div style="height:1px;background:rgba(245,241,234,0.12);margin:13px 0;"></div>
+              <div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:#B8AE9F;">일정</span><span style="font-size:13px;color:#F7F2EB;font-weight:600;">7.12 – 7.16 · 4박 5일</span></div>
+              <div style="display:flex;justify-content:space-between;margin-top:9px;"><span style="font-size:12px;color:#B8AE9F;">코스</span><span style="font-size:13px;color:#F7F2EB;font-weight:600;">글로우업 올인원 (2인)</span></div>
+            </div>
+          </div>
+          <div style="padding:0 28px 30px;display:flex;flex-direction:column;gap:11px;">
+            <button style="width:100%;background:#7C3A4B;color:#F7F2EB;border:none;border-radius:999px;padding:17px;font-family:'Pretendard Variable',Pretendard,sans-serif;font-weight:600;font-size:16px;cursor:pointer;">내 일정 보기</button>
+            <button style="width:100%;background:transparent;color:#C9A86A;border:1px solid rgba(201,168,106,0.4);border-radius:999px;padding:15px;font-family:'Pretendard Variable',Pretendard,sans-serif;font-weight:500;font-size:15px;cursor:pointer;">홈으로</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S10 · MY TRIP -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#9A8E84;text-transform:uppercase;">S10 · 마이 트립</div>
+      <div style="width:380px;height:800px;background:#16110E;border-radius:54px;padding:11px;box-shadow:0 50px 90px -40px rgba(40,28,22,0.55),0 0 0 1px rgba(0,0,0,0.35);">
+        <div style="position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:#F5F1EA;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 28px 0;color:#1B1512;font-weight:600;font-size:15px;flex-shrink:0;"><span>9:41</span><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:12px;">5G</span><div style="width:24px;height:12px;border:1.5px solid #1B1512;border-radius:3px;padding:1.5px;"><div style="width:72%;height:100%;background:#1B1512;border-radius:1px;"></div></div></div></div>
+          <div style="padding:16px 28px 0;">
+            <div style="font-size:13px;color:#9A8E84;">지민님의 여행</div>
+            <div style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:22px;margin-top:3px;letter-spacing:-0.01em;">내 여행</div>
+          </div>
+          <div style="margin:16px 24px 0;background:#1B1512;border-radius:20px;padding:20px 22px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-30px;right:-20px;width:120px;height:120px;border-radius:999px;background:rgba(124,58,75,0.35);"></div>
+            <div style="position:relative;">
+              <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.14em;color:#C9A86A;">UPCOMING</div>
+              <div style="display:flex;align-items:baseline;gap:10px;margin-top:8px;"><span style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:34px;color:#F7F2EB;white-space:nowrap;">D-14</span><span style="font-family:'Noto Serif KR',serif;font-weight:600;font-size:17px;color:#F7F2EB;">서울 글로우업</span></div>
+              <div style="font-size:12px;color:#B8AE9F;margin-top:6px;">2026.7.12 – 7.16 · 아테르 앰배서더 명동</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;padding:18px 24px 0;">
+            <span style="font-size:12px;font-weight:600;color:#F7F2EB;background:#7C3A4B;border-radius:999px;padding:7px 14px;">Day 1</span>
+            <span style="font-size:12px;font-weight:500;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:7px 14px;">Day 2</span>
+            <span style="font-size:12px;font-weight:500;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:7px 14px;">Day 3</span>
+            <span style="font-size:12px;font-weight:500;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:7px 14px;">Day 4</span>
+            <span style="font-size:12px;font-weight:500;color:#5C544C;background:#fff;border:1px solid #E6DECF;border-radius:999px;padding:7px 14px;">5</span>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:16px 26px 0;">
+            <div style="display:flex;gap:14px;">
+              <div style="display:flex;flex-direction:column;align-items:center;"><div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:13px;color:#7C3A4B;">11:00</div><div style="width:9px;height:9px;border-radius:999px;background:#7C3A4B;margin-top:6px;"></div><div style="width:2px;flex:1;background:#E0D6C4;"></div></div>
+              <div style="padding-bottom:16px;flex:1;"><div style="font-weight:600;font-size:14.5px;">인천공항 도착 · VIP 픽업</div><div style="font-size:12px;color:#7C6F64;margin-top:2px;">전용 차량 · 통역 가이드 미팅</div></div>
+            </div>
+            <div style="display:flex;gap:14px;">
+              <div style="display:flex;flex-direction:column;align-items:center;"><div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:13px;color:#7C3A4B;">14:00</div><div style="width:9px;height:9px;border-radius:999px;background:#7C3A4B;margin-top:6px;"></div><div style="width:2px;flex:1;background:#E0D6C4;"></div></div>
+              <div style="padding-bottom:16px;flex:1;"><div style="font-weight:600;font-size:14.5px;">호텔 체크인 · 퍼스널 컬러 진단</div><div style="font-size:12px;color:#7C6F64;margin-top:2px;">아테르 앰배서더 명동 · 90분 컨설팅</div></div>
+            </div>
+            <div style="display:flex;gap:14px;">
+              <div style="display:flex;flex-direction:column;align-items:center;"><div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:13px;color:#7C3A4B;">19:00</div><div style="width:9px;height:9px;border-radius:999px;background:#C9A86A;margin-top:6px;"></div></div>
+              <div style="flex:1;"><div style="font-weight:600;font-size:14.5px;">웰컴 디너 · 한우구이</div><div style="font-size:12px;color:#7C6F64;margin-top:2px;">현지인 추천 강남 맛집 · 예약 완료</div></div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-around;align-items:center;padding:14px 24px 22px;border-top:1px solid #E6DECF;background:#F5F1EA;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:5px;border:2px solid #A89E90;"></div><span style="font-size:10px;">둘러보기</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:5px;border:2px solid #A89E90;"></div><span style="font-size:10px;">코스</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#A89E90;"><div style="width:18px;height:18px;border-radius:999px;border:2px solid #A89E90;"></div><span style="font-size:10px;">예약</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#7C3A4B;"><div style="width:18px;height:18px;border-radius:999px;background:#7C3A4B;"></div><span style="font-size:10px;font-weight:600;">마이</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOW-END -->
+  </div>
+
+</div>
+
+
+
+</body></html>
