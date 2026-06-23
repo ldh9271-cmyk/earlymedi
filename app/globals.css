@@ -1,4 +1,92 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+/* ─── Pretendard 1.3.9 — self-hosted ──────────────────────────────────
+ * Previously loaded via jsdelivr CDN; switched to local @font-face so:
+ *   1. No third-party dependency (CDN outage / region block resilience)
+ *   2. No privacy leak to a third party on every page view
+ *   3. WOFF2 served from the same Vercel edge → no extra DNS/TLS round-trip
+ *
+ * Two families ship in tandem:
+ *   - 'Pretendard Variable' (2.0 MB WOFF2, weight axis 45-920) — single
+ *     file covers every weight, used by ~96% of browsers. Always tried
+ *     first because it's smaller in aggregate than fetching multiple
+ *     static files.
+ *   - 'Pretendard' (9× OTF, ~1.5 MB each) — explicit per-weight static
+ *     fallback for browsers that don't support woff2-variations.
+ *     Browser only fetches the specific weights actually rendered.
+ *
+ * --font-pretendard CSS var listing puts Variable first → static second
+ * → system stack last; the actual download decision happens at the
+ * @font-face level via format() negotiation.
+ * ─────────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Pretendard Variable';
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/pretendard/PretendardVariable.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/pretendard/static/Pretendard-Thin.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/pretendard/static/Pretendard-ExtraLight.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/pretendard/static/Pretendard-Light.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/pretendard/static/Pretendard-Regular.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/pretendard/static/Pretendard-Medium.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/pretendard/static/Pretendard-SemiBold.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/pretendard/static/Pretendard-Bold.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/pretendard/static/Pretendard-ExtraBold.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/pretendard/static/Pretendard-Black.otf') format('opentype');
+}
 
 @tailwind base;
 @tailwind components;
