@@ -254,18 +254,24 @@ function Categories({
   locale: PublicLocale;
   dict: Dictionary;
 }): JSX.Element {
+  // Real photos, not the earlier SVG illustrations. Medical-specific
+  // shots (plastic_surgery/dental/hair/health_checkup) are fresh
+  // Unsplash JPEGs downloaded to /public/images/categories/. The other
+  // four reuse photos already shipped under /public/images/glowup-pc/
+  // (skincare bottle, Seoul cityscape, makeup flat-lay, photo-shoot
+  // portrait) since the subject already matches.
   const items: Array<{
     key: keyof Dictionary['categories']['items'];
     img: string;
   }> = [
-    { key: 'plastic_surgery', img: '/images/categories/plastic-surgery.svg' },
-    { key: 'dermatology',     img: '/images/categories/dermatology.svg' },
-    { key: 'dental',          img: '/images/categories/dental.svg' },
-    { key: 'hair',            img: '/images/categories/hair.svg' },
-    { key: 'health_checkup',  img: '/images/categories/health-checkup.svg' },
-    { key: 'beauty_tour',     img: '/images/categories/beauty-tour.svg' },
-    { key: 'makeup',          img: '/images/categories/makeup.svg' },
-    { key: 'photo_studio',    img: '/images/categories/photo-studio.svg' },
+    { key: 'plastic_surgery', img: '/images/categories/plastic-surgery.jpg' },
+    { key: 'dermatology',     img: '/images/glowup-pc/0b3ab66a-79d6-49be-b4f6-8a626ee1fc2d.jpg' },
+    { key: 'dental',          img: '/images/categories/dental.jpg' },
+    { key: 'hair',            img: '/images/categories/hair.jpg' },
+    { key: 'health_checkup',  img: '/images/categories/health-checkup.jpg' },
+    { key: 'beauty_tour',     img: '/images/glowup-pc/79dac510-b190-481f-bff3-acd40a97ced6.jpg' },
+    { key: 'makeup',          img: '/images/glowup-pc/96a7e0c2-ea2f-4549-8875-a3be3c38c523.jpg' },
+    { key: 'photo_studio',    img: '/images/glowup-pc/10f945b3-775f-4fe8-aab6-7e434cfca9b5.jpg' },
   ];
   return (
     <section style={{ padding: '48px 0 0' }}>
@@ -301,7 +307,12 @@ function Categories({
                 style={{
                   aspectRatio: '1',
                   borderRadius: 14,
-                  background: `#222 url(${c.img}) center / cover`,
+                  // photo + dark bottom gradient on top so the white
+                  // label is readable on any background (skincare flat-
+                  // lays in particular run very light).
+                  background:
+                    `linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0) 70%), ` +
+                    `#222 url(${c.img}) center / cover`,
                   display: 'flex', alignItems: 'flex-end', padding: 18,
                   transition: 'transform 0.2s ease',
                 }}
@@ -309,7 +320,7 @@ function Categories({
                 <span
                   style={{
                     color: '#fff', fontWeight: 700, fontSize: 18,
-                    textShadow: '0 2px 8px rgba(0,0,0,0.45)',
+                    textShadow: '0 2px 8px rgba(0,0,0,0.55)',
                   }}
                 >
                   {meta.label}
