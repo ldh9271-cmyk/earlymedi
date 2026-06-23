@@ -1,55 +1,28 @@
 import type { ReactNode } from 'react';
-import { Noto_Serif_KR, Cormorant_Garamond, Space_Mono } from 'next/font/google';
 
 /**
- * Korea Glow-up Challenge — patient-portal redesign root layout.
+ * Glow-up patient app layout — minimal wrapper.
  *
- * Scoped to /[locale]/glowup/* so the legacy /[locale] B2C landing
- * stays on the old blue brand-* tokens until we explicitly migrate.
+ * Replaces the earlier Atelier mobile design (10-screen Wine/Ivory
+ * phone mockups) with the Airbnb-style mobile patterns:
+ *   - /[locale]/glowup           → Home (screen 1)
+ *   - /[locale]/glowup/courses/[id]  → Course detail (screen 2)
+ *   - /[locale]/glowup/explore   → Food & K-pop (screen 3)
+ *   - /[locale]/glowup/categories  → All categories feed (screen 4)
+ *   - /[locale]/glowup/pc        → Desktop landing (existing)
  *
- * Font strategy:
- *   - next/font/google self-hosts WOFF2 → no FOUT, no privacy-leaking
- *     fonts.googleapis.com lookup. CSS variables let Tailwind classes
- *     (font-glow-serif, font-glow-italic, font-glow-mono) target each.
- *   - Pretendard is already CDN-loaded in globals.css for the rest of
- *     the app; we reuse it via `var(--font-pretendard)` so font-glow-sans
- *     doesn't double-fetch.
- *   - Subsets: latin only for italic + mono accent fonts (English /
- *     numeric usage). Korean serif sits at the global lang setting.
+ * Mobile screens render a phone-frame mockup on desktop (so designers
+ * see the full app shell at full size) and full-bleed on real mobile.
  *
- * Background lives on a layer wrapping {children} rather than <body> so
- * navigating from /agency/* into /[locale]/glowup/* doesn't bleed ivory
- * back into the B2B routes.
+ * Inter + Pretendard fonts come from the root globals.css — no
+ * additional next/font/google calls needed. The old Noto Serif KR +
+ * Cormorant + Space Mono fonts that the Atelier design relied on were
+ * removed since the Airbnb-style mobile design uses neither.
+ *
+ * Background is a plain white so the phone-frame's outer chrome (on
+ * desktop) sits on a neutral surface, matching the design's photo
+ * preview cards.
  */
-
-const notoSerifKr = Noto_Serif_KR({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-noto-serif-kr',
-  display: 'swap',
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  style: ['italic'],
-  variable: '--font-cormorant',
-  display: 'swap',
-});
-
-const spaceMono = Space_Mono({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-space-mono',
-  display: 'swap',
-});
-
 export default function GlowupLayout({ children }: { children: ReactNode }): JSX.Element {
-  return (
-    <div
-      className={`${notoSerifKr.variable} ${cormorant.variable} ${spaceMono.variable} min-h-screen bg-glow-ivory font-glow-sans text-glow-ink antialiased`}
-    >
-      {children}
-    </div>
-  );
+  return <div className="min-h-screen bg-white text-glow-ink antialiased">{children}</div>;
 }

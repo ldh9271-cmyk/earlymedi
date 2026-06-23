@@ -24,7 +24,7 @@ export default async function InquiryPage({
   searchParams,
 }: {
   params: { locale: PublicLocale };
-  searchParams: { hospital?: string };
+  searchParams: { hospital?: string; program?: string; interest?: string };
 }): Promise<JSX.Element> {
   const dict = await getDictionary(params.locale);
 
@@ -57,6 +57,8 @@ export default async function InquiryPage({
       <InquiryForm
         locale={params.locale}
         hospitalId={searchParams.hospital ?? null}
+        prefillProgram={searchParams.program ?? null}
+        prefillInterest={searchParams.interest ?? null}
         hospitalOptions={hospitalOptions}
         labels={{
           name: dict.inquiryCta.nameLabel,

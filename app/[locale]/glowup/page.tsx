@@ -1,144 +1,214 @@
 import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
+import { PhoneFrame, StatusBar } from './_components/phone';
+import { BottomTabBar } from './_components/bottom-tab-bar';
+import {
+  MobileCategoryIcon,
+  type MobileCategoryKind,
+} from './_components/category-icon';
+import { HeartIcon, StarRating } from './_components/heart-icon';
+import {
+  FEATURED_COURSE,
+  HOME_PROGRAMS,
+  bookingHref,
+} from './_components/program-data';
 
 export const metadata = {
-  title: 'Korea Glow-up Challenge — 서울에서 놀면서, 예뻐지다',
-  description:
-    '퍼스널 컬러 진단부터 K-팝 성지, 현지인 찐맛집까지. 노는 사이 더 예뻐지는 올인원 뷰티 여행.',
+  title: 'glow-up — 모바일',
+  description: '서울에서 놀면서, 예뻐지는 4박 5일 — 모바일 환자 앱',
 };
 
 /**
- * S1 · Onboarding — first screen of the Atelier-style patient app.
+ * Screen 1 — Mobile home / browse.
  *
- * Faithful port of the claude.ai design (Korea Glow-up Challenge -
- * Atelier.dc.html) into a responsive Next.js page. The mockup framed
- * the design inside a 380×800 phone shell; we keep that exact
- * aesthetic on desktop (centered phone card) while collapsing to a
- * full-bleed mobile experience on small screens.
+ * Layout (top → bottom):
+ *   - status bar (sticky)
+ *   - search pill ("어디로 여행가세요? · 서울·날짜·인원")
+ *   - 9-icon category strip (전체 active, others muted)
+ *   - section: 베스트셀러 패키지
+ *     · large featured course card with dark overlay
+ *   - section: 개별 뷰티 프로그램 (3 cards)
+ *     · first has page-indicator dots overlay
+ *   - bottom tab bar (둘러보기 active)
  *
- * Layout structure:
- *   [phone frame · jet bezel · 54px rounded outer]
- *     ├─ image hero (430px, repeating diagonal sand pattern + overlay)
- *     │   ├─ status bar (9:41 · 5G · battery)
- *     │   ├─ SEOUL · SOUTH KOREA eyebrow
- *     │   └─ "[ 모델 · 뷰티 화보컷 ]" art placeholder
- *     └─ content card
- *         ├─ K-BEAUTY TRAVEL · 4박 5일 eyebrow
- *         ├─ "서울에서 놀면서, 예뻐지다" hero serif
- *         ├─ "Glow up while you play in Seoul" italic tagline
- *         ├─ body description paragraph
- *         ├─ [여행 시작하기 →] wine CTA → /glowup/home
- *         └─ 4-language locale chips (current locale highlighted)
+ * B2B routing:
+ *   - search pill → /[locale]/clinics (existing browse)
+ *   - featured course → /[locale]/glowup/courses/glowup-4n5d
+ *   - each program card → /[locale]/inquiry?program=…&interest=…
+ *     so the message appears in the agency's inbox
  */
 
-const LOCALES: Array<{ code: PublicLocale; label: string }> = [
-  { code: 'kr', label: '한국어' },
-  { code: 'en', label: 'EN' },
-  { code: 'zh', label: '中文' },
-  { code: 'ja', label: '日本語' },
+const HOME_CATEGORIES: Array<{ kind: MobileCategoryKind; label: string; active?: boolean }> = [
+  { kind: 'all',    label: '전체',    active: true },
+  { kind: 'color',  label: '퍼스널컬러' },
+  { kind: 'skin',   label: '피부케어' },
+  { kind: 'photo',  label: '화보촬영' },
+  { kind: 'makeup', label: '메이크업' },
+  { kind: 'kpop',   label: 'K-팝' },
+  { kind: 'food',   label: '맛집' },
+  { kind: 'hotel',  label: '호텔' },
+  { kind: 'spot',   label: '명소' },
 ];
 
-export default function GlowupOnboardingPage({
+export default function GlowupMobileHomePage({
   params,
 }: {
   params: { locale: PublicLocale };
 }): JSX.Element {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-glow-ivory p-0 sm:p-8 md:p-12">
-      {/* Phone frame — full-bleed on mobile, card on larger screens. */}
-      <div
-        className="
-          w-full sm:w-[380px] sm:h-[800px] sm:p-[11px]
-          sm:rounded-[54px] sm:bg-glow-jet
-          sm:shadow-[0_50px_90px_-40px_rgba(40,28,22,0.55),0_0_0_1px_rgba(0,0,0,0.35)]
-          min-h-screen sm:min-h-0
-        "
-      >
-        <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-glow-cream sm:min-h-0 sm:rounded-[43px]">
-          {/* Hero — repeating diagonal sand pattern with brown→ivory overlay */}
-          <div
-            className="relative h-[55vh] min-h-[380px] flex-shrink-0 sm:h-[430px]"
+    <PhoneFrame>
+      {/* Sticky header (status + search + category) */}
+      <div className="sticky top-0 z-20 bg-white">
+        <StatusBar tone="dark" sticky={false} />
+        <div className="px-[18px] pb-3 pt-2">
+          <Link
+            href={`/${params.locale}/clinics`}
+            className="flex items-center gap-3 rounded-full border border-[#dddddd] px-[18px] py-[13px] shadow-[rgba(0,0,0,0.04)_0_2px_8px]"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2.2">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4-4" />
+            </svg>
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-glow-ink">어디로 여행가세요?</div>
+              <div className="mt-[1px] text-xs text-[#717171]">서울 · 날짜 · 인원</div>
+            </div>
+            <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#dddddd]">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
+                <path d="M3 6h18M6 12h12M10 18h4" />
+              </svg>
+            </div>
+          </Link>
+        </div>
+        <div className="flex gap-[26px] overflow-x-auto border-b border-[#ebebeb] px-[18px] pt-1">
+          {HOME_CATEGORIES.map((c) => {
+            const color = c.active ? '#222' : '#9a9a9a';
+            return (
+              <div
+                key={c.label}
+                className="flex flex-shrink-0 flex-col items-center gap-[7px] pb-3 pt-1.5"
+                style={{
+                  color,
+                  borderBottom: c.active ? '2px solid #222' : '2px solid transparent',
+                }}
+              >
+                <MobileCategoryIcon kind={c.kind} stroke={color} />
+                <span className={`text-[11px] ${c.active ? 'font-semibold' : 'font-medium'}`}>
+                  {c.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Cards stack */}
+      <div className="flex flex-col gap-[26px] px-[18px] pt-[18px]">
+        {/* Featured course — dark overlay hero card */}
+        <div>
+          <div className="mb-3 text-lg font-semibold text-glow-ink">베스트셀러 패키지</div>
+          <Link
+            href={`/${params.locale}/glowup/courses/${FEATURED_COURSE.id}`}
+            className="relative block overflow-hidden rounded-2xl bg-glow-jet"
             style={{
-              background:
-                'repeating-linear-gradient(135deg, #D8CDB9 0 13px, #E0D6C4 13px 26px)',
+              aspectRatio: '1.3',
+              backgroundImage: `url(${FEATURED_COURSE.img})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
             }}
           >
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(22,17,14,0.25) 0%, rgba(22,17,14,0) 30%, rgba(245,241,234,0) 58%, rgba(245,241,234,0.95) 100%)',
+                  'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.78) 100%)',
               }}
             />
-            {/* Status bar */}
-            <div className="absolute left-0 right-0 top-[18px] flex items-center justify-between px-7 text-[15px] font-semibold text-glow-paper">
-              <span>9:41</span>
-              <div className="flex items-center gap-[7px]">
-                <span className="text-[12px]">5G</span>
-                <div className="flex h-3 w-6 items-stretch rounded-[3px] border-[1.5px] border-glow-paper p-[1.5px]">
-                  <div className="h-full w-[72%] rounded-[1px] bg-glow-paper" />
+            <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-glow-ink shadow-[rgba(0,0,0,0.1)_0_2px_6px]">
+              <span style={{ color: '#ff385c' }}>★</span> 베스트셀러
+            </div>
+            <div className="absolute right-3.5 top-3.5">
+              <HeartIcon size={24} />
+            </div>
+            <div className="absolute bottom-4 left-[18px] right-[18px] text-white">
+              <div className="text-xs font-semibold tracking-[0.04em] text-white/90">
+                {FEATURED_COURSE.duration}
+              </div>
+              <div className="mt-1 text-[22px] font-bold leading-tight tracking-[-0.5px]">
+                {FEATURED_COURSE.name}
+              </div>
+              <div className="mt-1 text-[13px] text-white/90">{FEATURED_COURSE.tagline}</div>
+              <div className="mt-3.5 flex items-end justify-between">
+                <div>
+                  <span className="text-[20px] font-bold">₩{FEATURED_COURSE.price.toLocaleString('ko-KR')}</span>{' '}
+                  <span className="text-[13px] text-white/85">/ 1인</span>
                 </div>
+                <span className="inline-flex items-center gap-1 text-[13px] font-semibold">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="#fff">
+                    <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
+                  </svg>
+                  {FEATURED_COURSE.rating} · {FEATURED_COURSE.reviews}
+                </span>
               </div>
             </div>
-            {/* Location eyebrow */}
-            <div className="absolute left-7 top-[64px] font-glow-mono text-[11px] uppercase tracking-[0.22em] text-glow-paper">
-              SEOUL · SOUTH KOREA
-            </div>
-            {/* Art placeholder */}
-            <div className="absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 font-glow-mono text-[11px] tracking-[0.1em] text-[#8C7E6A]">
-              [ 모델 · 뷰티 화보컷 ]
-            </div>
-          </div>
-
-          {/* Content card */}
-          <div className="flex flex-1 flex-col px-[30px] pb-8 pt-2">
-            <div className="font-glow-mono text-[11px] uppercase tracking-[0.16em] text-glow-wine">
-              K-Beauty Travel · 4박 5일
-            </div>
-            <h1
-              className="mt-3 font-glow-serif text-[35px] font-semibold leading-[1.22] tracking-[-0.01em] text-glow-ink"
-              style={{ wordBreak: 'keep-all' }}
-            >
-              서울에서 놀면서,
-              <br />
-              예뻐지다
-            </h1>
-            <p className="mt-[10px] whitespace-nowrap font-glow-italic text-[18px] italic tracking-[0.01em] text-glow-wine">
-              Glow up while you play in Seoul
-            </p>
-            <p className="mt-[14px] text-[14.5px] leading-[1.65] text-glow-slate">
-              퍼스널 컬러 진단부터 K-팝 성지, 현지인 찐맛집까지. 노는 사이 더 예뻐지는 올인원 뷰티 여행.
-            </p>
-
-            <div className="mt-auto pt-6">
-              <Link
-                href={`/${params.locale}/glowup/home`}
-                className="flex w-full items-center justify-center rounded-full bg-glow-wine px-4 py-[17px] font-glow-sans text-base font-semibold text-glow-paper shadow-[0_14px_26px_-12px_rgba(124,58,75,0.6)] transition active:scale-[0.98]"
-              >
-                여행 시작하기 →
-              </Link>
-              <div className="mt-4 flex justify-center gap-2">
-                {LOCALES.map((l) => {
-                  const isActive = l.code === params.locale;
-                  return (
-                    <Link
-                      key={l.code}
-                      href={`/${l.code}/glowup`}
-                      className={
-                        isActive
-                          ? 'rounded-full bg-glow-jet px-3.5 py-[7px] text-xs font-semibold text-glow-paper'
-                          : 'rounded-full border border-glow-dune bg-transparent px-3.5 py-[7px] text-xs font-medium text-glow-umber transition hover:bg-glow-sand/30'
-                      }
-                    >
-                      {l.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          </Link>
         </div>
+
+        <div className="h-px bg-[#ebebeb]" />
+
+        <div className="-mb-2 text-lg font-semibold text-glow-ink">개별 뷰티 프로그램</div>
+
+        {HOME_PROGRAMS.map((p, i) => (
+          <Link
+            key={p.id}
+            href={bookingHref(params.locale, p)}
+            className="block"
+          >
+            <div
+              className="relative overflow-hidden rounded-2xl"
+              style={{
+                aspectRatio: '1.1',
+                backgroundColor: '#f2f2f2',
+                backgroundImage: `url(${p.img})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
+              {p.featured ? (
+                <div className="absolute left-3 top-3 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-glow-ink shadow-[rgba(0,0,0,0.1)_0_2px_6px]">
+                  게스트 선호
+                </div>
+              ) : null}
+              <div className="absolute right-3.5 top-3.5">
+                <HeartIcon size={24} />
+              </div>
+              {/* Carousel dots on first card only — matches design */}
+              {i === 0 ? (
+                <div className="absolute bottom-3.5 left-1/2 flex -translate-x-1/2 gap-1.5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-white/50" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-white/50" />
+                </div>
+              ) : null}
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-base font-semibold text-glow-ink">{p.name}</span>
+              <StarRating value={p.rating} />
+            </div>
+            <div className="mt-0.5 text-sm text-[#6a6a6a]">
+              {p.place} · {p.duration}
+            </div>
+            <div className="mt-[5px] text-[15px] text-glow-ink">
+              <span className="font-semibold">{p.price}</span>{' '}
+              <span className="text-[#6a6a6a]">세션</span>
+            </div>
+          </Link>
+        ))}
+
+        <div className="h-2" />
       </div>
-    </main>
+
+      <BottomTabBar locale={params.locale} active="explore" />
+    </PhoneFrame>
   );
 }

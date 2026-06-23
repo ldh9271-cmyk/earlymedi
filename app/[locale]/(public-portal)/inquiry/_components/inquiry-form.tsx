@@ -18,11 +18,17 @@ const COUNTRY_CODES = [
 export function InquiryForm({
   locale,
   hospitalId,
+  prefillProgram,
+  prefillInterest,
   hospitalOptions,
   labels,
 }: {
   locale: PublicLocale;
   hospitalId: string | null;
+  /** Pre-fills memo when arriving from the Glow-up app (e.g. "예약 문의: 4박 5일 글로우업 코스"). */
+  prefillProgram?: string | null;
+  /** Pre-checks one of the interest chips (categoryKey) when present. */
+  prefillInterest?: string | null;
   hospitalOptions: Array<{ id: string; name: string }>;
   labels: {
     name: string;
@@ -38,8 +44,12 @@ export function InquiryForm({
   const [name, setName] = useState('');
   const [country, setCountry] = useState('US');
   const [contact, setContact] = useState('');
-  const [interests, setInterests] = useState<string[]>([]);
-  const [memo, setMemo] = useState('');
+  const [interests, setInterests] = useState<string[]>(
+    prefillInterest ? [prefillInterest] : [],
+  );
+  const [memo, setMemo] = useState(
+    prefillProgram ? `[Glow-up 모바일 앱] ${prefillProgram} 예약 문의입니다.` : '',
+  );
   const [selectedHospitalId, setSelectedHospitalId] = useState<string>(hospitalId ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
