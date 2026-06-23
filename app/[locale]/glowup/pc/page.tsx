@@ -93,6 +93,27 @@ const FOODS = [
   { name: '한정식 반상',  place: '인사동 · ★ 4.9', booked: false, img: `${IMG_BASE}/c9fd4dde-ac1d-49fa-80b3-04139ec41b8c.jpg` },
 ];
 
+type CategoryKind =
+  | 'all'
+  | 'color'
+  | 'skin'
+  | 'photo'
+  | 'makeup'
+  | 'kpop'
+  | 'food'
+  | 'hotel';
+
+const CATEGORIES: Array<{ kind: CategoryKind; label: string; active?: boolean }> = [
+  { kind: 'all',    label: '전체',    active: true },
+  { kind: 'color',  label: '퍼스널컬러' },
+  { kind: 'skin',   label: '피부케어' },
+  { kind: 'photo',  label: '화보촬영' },
+  { kind: 'makeup', label: '메이크업' },
+  { kind: 'kpop',   label: 'K-팝성지' },
+  { kind: 'food',   label: '맛집' },
+  { kind: 'hotel',  label: '호텔' },
+];
+
 const ITINERARY = [
   { n: 1, title: '도착 · 퍼스널 컬러 진단', desc: '전용 차량 픽업 · 통역 가이드 · 명동 5성 호텔 체크인' },
   { n: 2, title: '피부 진단 케어 · 한우 다이닝', desc: '스킨 진단 프로그램 · 현지인 추천 한우구이·간장게장' },
@@ -415,41 +436,28 @@ export default function GlowupPcPage({
             overflow: 'hidden',
           }}
         >
-          {[
-            { label: '전체', active: true },
-            { label: '퍼스널컬러' },
-            { label: '피부케어' },
-            { label: '화보촬영' },
-            { label: '메이크업' },
-            { label: 'K-팝성지' },
-            { label: '맛집' },
-            { label: '호텔' },
-          ].map((c) => (
-            <div
-              key={c.label}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 8,
-                padding: '14px 0',
-                borderBottom: c.active ? '2px solid #222' : '2px solid transparent',
-                color: c.active ? '#222' : '#6a6a6a',
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
+          {CATEGORIES.map((c) => {
+            const stroke = c.active ? '#222' : '#6a6a6a';
+            return (
               <div
+                key={c.label}
                 style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 6,
-                  background: c.active ? '#222' : '#e0e0e0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '14px 0',
+                  borderBottom: c.active ? '2px solid #222' : '2px solid transparent',
+                  color: c.active ? '#222' : '#6a6a6a',
+                  cursor: 'pointer',
+                  flexShrink: 0,
                 }}
-              />
-              <span style={{ fontSize: 12, fontWeight: c.active ? 600 : 500 }}>{c.label}</span>
-            </div>
-          ))}
+              >
+                <CategoryIcon kind={c.kind} stroke={stroke} />
+                <span style={{ fontSize: 12, fontWeight: c.active ? 600 : 500 }}>{c.label}</span>
+              </div>
+            );
+          })}
           <div
             style={{
               marginLeft: 'auto',
@@ -1237,4 +1245,93 @@ function RowBreakdown({ label, value }: { label: string; value: string }): JSX.E
       <span>{value}</span>
     </div>
   );
+}
+
+/**
+ * Category strip glyph — 24×24 line icon matching the source design.
+ * Eight kinds shipped: all / color / skin / photo / makeup / kpop /
+ * food / hotel. stroke color is supplied by parent (changes with
+ * active state).
+ */
+function CategoryIcon({
+  kind,
+  stroke,
+}: {
+  kind: CategoryKind;
+  stroke: string;
+}): JSX.Element {
+  const common = {
+    width: 24,
+    height: 24,
+    viewBox: '0 0 24 24',
+    fill: 'none' as const,
+    stroke,
+    strokeWidth: 1.5,
+  };
+  switch (kind) {
+    case 'all':
+      // concentric circles — "show everything" target
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="3.5" />
+        </svg>
+      );
+    case 'color':
+      // face with three dots — personal color palette
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="8" />
+          <circle cx="9" cy="9" r="1.4" fill={stroke} />
+          <circle cx="15" cy="9" r="1.4" fill={stroke} />
+          <circle cx="9.5" cy="15" r="1.4" fill={stroke} />
+        </svg>
+      );
+    case 'skin':
+      // water-drop shape — skincare hydration
+      return (
+        <svg {...common}>
+          <path d="M12 3c3 4 5 6.5 5 9.5A5 5 0 0 1 7 12.5C7 9.5 9 7 12 3z" />
+        </svg>
+      );
+    case 'photo':
+      // camera body + lens
+      return (
+        <svg {...common}>
+          <rect x="3" y="7" width="18" height="13" rx="2.5" />
+          <circle cx="12" cy="13.5" r="3.5" />
+          <path d="M8 7l1.5-2.5h5L16 7" />
+        </svg>
+      );
+    case 'makeup':
+      // brush strokes — makeup brush motion
+      return (
+        <svg {...common}>
+          <path d="M5 19l9-9M11 7l3-3 4 4-3 3M14 10l4 4-3 3-4-4" />
+        </svg>
+      );
+    case 'kpop':
+      // music note + double-base — K-pop entertainment
+      return (
+        <svg {...common}>
+          <path d="M9 18V6l11-2v12" />
+          <circle cx="6" cy="18" r="2.5" />
+          <circle cx="17" cy="16" r="2.5" />
+        </svg>
+      );
+    case 'food':
+      // fork + spoon — local eats
+      return (
+        <svg {...common}>
+          <path d="M6 3v8a2 2 0 0 0 2 2v8M6 3v5M9 3v5M16 3c-1.5 0-2 3-2 6s.5 3 2 3v9" />
+        </svg>
+      );
+    case 'hotel':
+      // house with door — hotel stay
+      return (
+        <svg {...common}>
+          <path d="M3 20V9l9-5 9 5v11M3 20h18M9 20v-5h6v5" />
+        </svg>
+      );
+  }
 }
