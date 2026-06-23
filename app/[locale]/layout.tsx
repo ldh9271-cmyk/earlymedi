@@ -1,57 +1,36 @@
 import { notFound } from 'next/navigation';
-import { isPublicLocale, LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
-import { getDictionary } from '@/lib/i18n/get-dictionary';
-import { PublicHeader } from '@/components/public/public-header';
-import { PublicFooter } from '@/components/public/public-footer';
-import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
-import { isMasterEmail } from '@/lib/auth/master';
-
-export const dynamic = 'force-dynamic';
+import { isPublicLocale } from '@/lib/i18n/locales';
 
 /**
- * Patient-facing portal layout — applies to every route under
- * /kr|/en|/zh|/ja. The B2B dashboards under /agency, /medical,
- * /partner, /freelancer keep their own AppShell layout untouched.
+ * Root layout for /[locale]/* — locale validation ONLY.
  *
- * Locale validation happens here so individual pages can assume
- * `params.locale` is one of PUBLIC_LOCALES. Anything else 404s
- * cleanly without leaking the page structure.
+ * Previously this layout also rendered PublicHeader + PublicFooter
+ * around every patient-facing route. That coupling meant the new
+ * /glowup mobile-app design also got the desktop chrome rendered
+ * on top of the phone-frame mockup. We split those concerns:
+ *
+ *   - This file (root) — validates locale, generateStaticParams for
+ *     the 4 locales, and passes children through.
+ *   - (public-portal)/layout.tsx — adds PublicHeader + PublicFooter
+ *     to the legacy patient routes (landing, clinics, inquiry, etc.).
+ *   - glowup/layout.tsx — applies the glowup font stack + ivory bg.
+ *     The mobile app design owns the full viewport.
+ *
+ * Route groups (paren-wrapped folders) are not part of the URL, so
+ * existing links like /kr/clinics/[slug] keep working unchanged after
+ * the move into (public-portal)/.
  */
-export default async function PublicLocaleLayout({
+export default function PublicLocaleRootLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
   params: { locale: string };
-}): Promise<JSX.Element> {
+}): JSX.Element {
   if (!isPublicLocale(params.locale)) {
     notFound();
   }
-  const locale = params.locale as PublicLocale;
-  const dict = await getDictionary(locale);
-
-  // Optional master flag — only used to expose the /admin link in the
-  // header. Failure to load the session is non-fatal; we just render
-  // the header without the admin shortcut.
-  let isMaster = false;
-  try {
-    const supabase = createSupabaseServerClient();
-    const { data: auth } = await supabase.auth.getUser();
-    isMaster = isMasterEmail(auth.user?.email ?? null);
-  } catch {
-    isMaster = false;
-  }
-
-  return (
-    <div
-      lang={LOCALE_TO_BCP47[locale]}
-      className="flex min-h-screen flex-col bg-background text-foreground"
-    >
-      <PublicHeader locale={locale} dict={dict} isMaster={isMaster} />
-      <main className="flex-1">{children}</main>
-      <PublicFooter locale={locale} dict={dict} />
-    </div>
-  );
+  return <>{children}</>;
 }
 
 // Pre-generate the 4 locale segments so /kr, /en, /zh, /ja statically
