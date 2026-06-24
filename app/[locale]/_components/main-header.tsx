@@ -1,48 +1,83 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 import type { PublicLocale } from '@/lib/i18n/locales';
 
 /**
- * Patient-portal main header — Airbnb-style sticky nav for /[locale].
+ * Patient-portal main header — sticky Airbnb-style nav for /[locale].
  *
- * Visually a sibling of /glowup/pc/_components/pc-header.tsx (same
- * 80px row + sticky category strip + #ff385c accent), but the *links*
- * and *categories* belong to the patient-portal world:
+ * Used by every B2C surface (the /kr landing, every (public-portal)
+ * route via layout, and /glowup/pc + /c/[key] via their own page
+ * wrappers). 80px top row with logo + 3 product tabs + utilities,
+ * underneath a horizontal strip of category entry points.
  *
- *   - Logo  → /[locale]                          (B2C home)
- *   - Tabs  → /[locale]/clinics                  (병원 찾기 — default)
- *             /[locale]/ai-consult               (AI 상담)
- *             /[locale]/glowup/pc                (여행 패키지 NEW)
- *   - Strip → /[locale]/clinics
- *             /[locale]/clinics?category=<key>   (8 medical categories)
+ * The category strip merges two product worlds into one bar:
+ *   1. "병원" — single dropdown that fans out into 8 medical
+ *      sub-categories (성형외과 / 피부과 / 치과 / 모발 / 건강검진 /
+ *      줄기세포 / 한방병원 / 파트너병원). Each sub leads to
+ *      /clinics?category=<key>. Keeping these behind one icon clears
+ *      space in the strip and gives the medical IA its own grouping.
+ *   2. Glow-up lifestyle categories (퍼스널컬러 / 피부케어 / 화보촬영 /
+ *      메이크업 / K-팝성지 / 맛집 / 호텔) — each links to its detail
+ *      page under /glowup/pc/c/<key>, which already exists with sample
+ *      products and the same Airbnb shell.
  *
- * /glowup/pc and its detail pages keep using PcHeader so their
- * category strip still surfaces the wellness/entertainment lineup
- * (퍼스널컬러 / 피부케어 / 화보촬영 / 메이크업 / K-팝성지 / 맛집 /
- * 호텔). Two headers for two product surfaces — same look, different
- * IA — instead of one ambiguous shared strip.
+ * Client component because the dropdown needs open/close state. Click-
+ * outside-to-close via a documented mousedown listener.
  */
-export type MainCategoryKey =
-  | 'all'
+
+type HospitalSubKey =
   | 'plastic_surgery'
   | 'dermatology'
   | 'dental'
   | 'hair'
   | 'health_checkup'
-  | 'beauty_tour'
-  | 'makeup'
-  | 'photo_studio';
+  | 'stem_cell'
+  | 'oriental'
+  | 'partner';
 
-const MAIN_CATEGORIES: Array<{ key: MainCategoryKey; label: string }> = [
-  { key: 'all',             label: '전체' },
+const HOSPITAL_SUBS: Array<{ key: HospitalSubKey; label: string }> = [
   { key: 'plastic_surgery', label: '성형외과' },
   { key: 'dermatology',     label: '피부과' },
   { key: 'dental',          label: '치과' },
   { key: 'hair',            label: '모발' },
   { key: 'health_checkup',  label: '건강검진' },
-  { key: 'beauty_tour',     label: '뷰티 투어' },
-  { key: 'makeup',          label: '메이크업' },
-  { key: 'photo_studio',    label: '사진 스튜디오' },
+  { key: 'stem_cell',       label: '줄기세포' },
+  { key: 'oriental',        label: '한방병원' },
+  { key: 'partner',         label: '파트너병원' },
 ];
+
+/**
+ * Strip-level keys. `hospital` is the dropdown trigger; everything
+ * else is a flat link. `all` is the leftmost reset (전체) that
+ * lands on the unfiltered /clinics list.
+ */
+export type MainCategoryKey =
+  | 'all'
+  | 'hospital'
+  | 'color' | 'skin' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel';
+
+const MAIN_CATEGORIES: Array<{ key: MainCategoryKey; label: string }> = [
+  { key: 'all',      label: '전체' },
+  { key: 'hospital', label: '병원' },
+  { key: 'color',    label: '퍼스널컬러' },
+  { key: 'skin',     label: '피부케어' },
+  { key: 'photo',    label: '화보촬영' },
+  { key: 'makeup',   label: '메이크업' },
+  { key: 'kpop',     label: 'K-팝성지' },
+  { key: 'food',     label: '맛집' },
+  { key: 'hotel',    label: '호텔' },
+];
+
+function hrefForCategory(locale: PublicLocale, key: MainCategoryKey): string {
+  switch (key) {
+    case 'all':      return `/${locale}/clinics`;
+    case 'hospital': return `/${locale}/clinics`;
+    // glow-up lifestyle categories → their existing detail pages
+    default:         return `/${locale}/glowup/pc/c/${key}`;
+  }
+}
 
 export function MainHeader({
   locale,
@@ -51,9 +86,25 @@ export function MainHeader({
 }: {
   locale: PublicLocale;
   activeKey?: MainCategoryKey;
-  /** Which top-row tab gets the underline + dark text. */
   activeTab?: 'clinics' | 'ai' | 'glowup';
 }): JSX.Element {
+  const [hospitalOpen, setHospitalOpen] = useState(false);
+  const hospitalRef = useRef<HTMLDivElement | null>(null);
+
+  // Click-outside-to-close. Captures during the bubble phase so a click
+  // on the trigger itself toggles via its own onClick before this fires.
+  useEffect(() => {
+    if (!hospitalOpen) return;
+    function onDown(e: MouseEvent): void {
+      if (!hospitalRef.current) return;
+      if (!hospitalRef.current.contains(e.target as Node)) {
+        setHospitalOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [hospitalOpen]);
+
   return (
     <header
       style={{
@@ -166,27 +217,96 @@ export function MainHeader({
         </div>
       </div>
 
-      {/* Category strip — 8 medical categories + 전체.
-          Centered; 필터 button absolutely positioned at right edge. */}
+      {/* Category strip — 전체 + 병원(dropdown) + 7 lifestyle */}
       <div style={{ borderTop: '1px solid #ebebeb', background: '#ffffff' }}>
         <div
           style={{
             position: 'relative',
             maxWidth: 1280, margin: '0 auto', padding: '0 40px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: 34, overflowX: 'auto',
+            gap: 34,
           }}
         >
           {MAIN_CATEGORIES.map((c) => {
             const isActive = c.key === activeKey;
             const stroke = isActive ? '#222' : '#6a6a6a';
-            const href = c.key === 'all'
-              ? `/${locale}/clinics`
-              : `/${locale}/clinics?category=${c.key}`;
+
+            // "병원" gets a click-toggle dropdown panel anchored below it.
+            // Everything else is a flat <Link>.
+            if (c.key === 'hospital') {
+              return (
+                <div
+                  key={c.key}
+                  ref={hospitalRef}
+                  style={{ position: 'relative', flexShrink: 0 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setHospitalOpen((v) => !v)}
+                    style={{
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', gap: 8,
+                      padding: '14px 0',
+                      borderBottom: isActive || hospitalOpen
+                        ? '2px solid #222'
+                        : '2px solid transparent',
+                      color: stroke, background: 'transparent', border: 'none',
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    <MainCategoryIcon kind={c.key} stroke={stroke} />
+                    <span style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
+                      {c.label}
+                    </span>
+                  </button>
+                  {hospitalOpen ? (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 'calc(100% + 4px)', left: '50%',
+                        transform: 'translateX(-50%)',
+                        minWidth: 200,
+                        background: '#fff',
+                        border: '1px solid #ebebeb',
+                        borderRadius: 14,
+                        boxShadow:
+                          'rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.08) 0 8px 24px',
+                        padding: 8,
+                        zIndex: 60,
+                      }}
+                    >
+                      {HOSPITAL_SUBS.map((sub) => (
+                        <Link
+                          key={sub.key}
+                          href={`/${locale}/clinics?category=${sub.key}`}
+                          onClick={() => setHospitalOpen(false)}
+                          style={{
+                            display: 'block',
+                            padding: '10px 14px',
+                            fontSize: 14, color: '#222',
+                            borderRadius: 8,
+                            textDecoration: 'none',
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLAnchorElement).style.background = '#f7f7f7';
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
+                          }}
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={c.key}
-                href={href}
+                href={hrefForCategory(locale, c.key)}
                 style={{
                   display: 'flex', flexDirection: 'column',
                   alignItems: 'center', gap: 8,
@@ -197,7 +317,9 @@ export function MainHeader({
                 }}
               >
                 <MainCategoryIcon kind={c.key} stroke={stroke} />
-                <span style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>{c.label}</span>
+                <span style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
+                  {c.label}
+                </span>
               </Link>
             );
           })}
@@ -286,71 +408,69 @@ function MainCategoryIcon({
           <circle cx="12" cy="12" r="3.5" />
         </svg>
       );
-    case 'plastic_surgery':
-      // Side face profile silhouette
+    case 'hospital':
+      // Hospital building with medical cross
       return (
         <svg {...common}>
-          <path d="M9 4 C6 6 5 10 6 13 C6.5 15 7 17 8 18 V21" />
-          <path d="M9 4 C13 3 16 5 17 9 C17.5 11 17 13 16 14 L14 14 L14 17 L11 17" />
-          <circle cx="12" cy="10" r="0.6" fill={stroke} />
+          <path d="M4 21V8l8-5 8 5v13" />
+          <path d="M3 21h18" />
+          <path d="M11 9h2M12 8v2" />
+          <path d="M9 21v-5h6v5" />
         </svg>
       );
-    case 'dermatology':
+    case 'color':
+      // Palette with color dots
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="8" />
+          <circle cx="9" cy="9" r="1.4" fill={stroke} />
+          <circle cx="15" cy="9" r="1.4" fill={stroke} />
+          <circle cx="9.5" cy="15" r="1.4" fill={stroke} />
+        </svg>
+      );
+    case 'skin':
       // Skincare droplet
       return (
         <svg {...common}>
           <path d="M12 3c3 4 5 6.5 5 9.5A5 5 0 0 1 7 12.5C7 9.5 9 7 12 3z" />
         </svg>
       );
-    case 'dental':
-      // Tooth
-      return (
-        <svg {...common}>
-          <path d="M7 4 C5 4 4 6 4.5 9 C5 11 5.5 13 6 16 C6.3 18 7 20 8 20 C9 20 9.3 18 9.6 16 C9.8 15 10.5 14.5 12 14.5 C13.5 14.5 14.2 15 14.4 16 C14.7 18 15 20 16 20 C17 20 17.7 18 18 16 C18.5 13 19 11 19.5 9 C20 6 19 4 17 4 C15.5 4 14 4.5 12 4.5 C10 4.5 8.5 4 7 4 Z" />
-        </svg>
-      );
-    case 'hair':
-      // Comb + flowing hair
-      return (
-        <svg {...common}>
-          <path d="M4 5 C7 7 11 9 12 12 C13 15 12 18 10 21" />
-          <path d="M9 5 C11 7 14 10 15 13 C16 16 15 19 13 21" />
-          <path d="M14 5 C15 7 17 10 18 13" />
-        </svg>
-      );
-    case 'health_checkup':
-      // Heart + pulse line
-      return (
-        <svg {...common}>
-          <path d="M3 13h3l2-4 2 8 2-5h2" />
-          <path d="M14 4 a3 3 0 0 1 6 3 c0 4-4 7-6 9c-2-2-6-5-6-9 a3 3 0 0 1 6-3" opacity="0.55" transform="translate(0 1) scale(0.6) translate(8 4)" />
-        </svg>
-      );
-    case 'beauty_tour':
-      // Suitcase
-      return (
-        <svg {...common}>
-          <rect x="3" y="7" width="18" height="13" rx="2" />
-          <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-          <path d="M3 13h18" />
-        </svg>
-      );
-    case 'makeup':
-      // Lipstick
-      return (
-        <svg {...common}>
-          <path d="M9 3h6l-1 5h-4z" />
-          <rect x="8.5" y="8" width="7" height="3" rx="0.5" />
-          <rect x="9" y="11" width="6" height="10" rx="0.8" />
-        </svg>
-      );
-    case 'photo_studio':
+    case 'photo':
       // Camera
       return (
         <svg {...common}>
           <rect x="3" y="7" width="18" height="13" rx="2.5" />
           <circle cx="12" cy="13.5" r="3.5" />
-          <path d="M9 7l1.5-2h3L15 7" />
+        </svg>
+      );
+    case 'makeup':
+      // Crossed brushes
+      return (
+        <svg {...common}>
+          <path d="M5 19l9-9M11 7l3-3 4 4-3 3M14 10l4 4-3 3-4-4" />
+        </svg>
+      );
+    case 'kpop':
+      // Music note + stage
+      return (
+        <svg {...common}>
+          <path d="M9 18V6l11-2v12" />
+          <circle cx="6" cy="18" r="2.5" />
+          <circle cx="17" cy="16" r="2.5" />
+        </svg>
+      );
+    case 'food':
+      // Fork + knife
+      return (
+        <svg {...common}>
+          <path d="M6 3v8a2 2 0 0 0 2 2v8M6 3v5M9 3v5M16 3c-1.5 0-2 3-2 6s.5 3 2 3v9" />
+        </svg>
+      );
+    case 'hotel':
+      // House outline
+      return (
+        <svg {...common}>
+          <path d="M3 20V9l9-5 9 5v11M3 20h18M9 20v-5h6v5" />
         </svg>
       );
   }
