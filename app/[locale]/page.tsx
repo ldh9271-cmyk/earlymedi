@@ -124,9 +124,10 @@ export default async function PublicLandingPage({
 }): Promise<JSX.Element> {
   const { locale } = params;
   // DB-backed cards. Empty arrays = no curated listings yet → sections
-  // fall back to the hardcoded PROGRAMS / FOODS samples below so the
-  // page never looks empty even before /master/listings is populated.
-  const [dbPrograms, dbFoods] = await Promise.all([
+  // fall back to the hardcoded PROGRAMS / FOODS / Hotel samples below
+  // so the page never looks empty even before /master/listings is
+  // populated.
+  const [dbPrograms, dbFoods, dbHotels] = await Promise.all([
     fetchFeaturedListings({
       locale,
       categories: ['personal_color', 'hair', 'makeup', 'photo_studio'],
@@ -137,7 +138,13 @@ export default async function PublicLandingPage({
       categories: ['food', 'restaurant'],
       limit: 4,
     }),
+    fetchFeaturedListings({
+      locale,
+      categories: ['hotel'],
+      limit: 1,
+    }),
   ]);
+  const dbHotel = dbHotels[0] ?? null;
   return (
     <div
       style={{
@@ -174,7 +181,7 @@ export default async function PublicLandingPage({
         <Course locale={locale} />
         <Foods locale={locale} dbCards={dbFoods} />
         <KpopRow />
-        <HotelAndFinalCta locale={locale} />
+        <HotelAndFinalCta locale={locale} dbHotel={dbHotel} />
       </main>
 
       <MainFooter />
@@ -654,7 +661,53 @@ function KpopRow(): JSX.Element {
 }
 
 // ─── 7. Hotel + Final CTA ──────────────────────────────────────────
-function HotelAndFinalCta({ locale }: { locale: PublicLocale }): JSX.Element {
+// Hotel block reads DB-first (category='hotel', featured=true, first
+// row). Fallback values keep the hardcoded "명동 중심 프리미엄 5성
+// 호텔" copy when no row is approved yet. Amenities list pulls from
+// details.amenities when present (keys: spa/breakfast/rooftop/...),
+// otherwise the original 3-item default.
+const HOTEL_AMENITY_LABEL: Record<string, string> = {
+  spa: '스파 무료 이용',
+  breakfast: '조식 뷔페 포함',
+  rooftop: '루프탑 무료 이용',
+  fitness: '피트니스 무료 이용',
+  pool: '수영장 무료 이용',
+  sauna: '사우나 무료 이용',
+  concierge: '컨시어지 서비스',
+  parking: '주차 무료',
+};
+
+function HotelAndFinalCta({
+  locale,
+  dbHotel,
+}: {
+  locale: PublicLocale;
+  dbHotel: ListingCard | null;
+}): JSX.Element {
+  const hotel = {
+    title: dbHotel?.title ?? '명동 중심 프리미엄 5성 호텔',
+    img: dbHotel?.coverImageUrl ?? HOTEL_IMG,
+    rating: dbHotel?.rating ? (dbHotel.rating / 10).toFixed(1) : '4.9',
+    description:
+      dbHotel?.description ??
+      '스파·루프탑·조식 뷔페까지 갖춘 명동 중심 호텔에서 4박. 모든 코스 일정의 이동 동선을 가장 가깝게 설계했습니다.',
+    amenities: (() => {
+      const fromDb = Array.isArray(dbHotel?.details.amenities)
+        ? (dbHotel?.details.amenities as string[])
+            .map((k) => HOTEL_AMENITY_LABEL[k] ?? k)
+            .slice(0, 3)
+        : [];
+      if (fromDb.length > 0) return fromDb;
+      return [
+        '스파 · 루프탑 · 피트니스 무료 이용',
+        '조식 뷔페 4일 포함',
+        '명동·남산·동대문 도보 이동권',
+      ];
+    })(),
+    priceWon: dbHotel?.priceWon ?? 320_000,
+    priceUnit: dbHotel?.priceUnit ?? '박',
+    promoLabel: dbHotel?.promoLabel ?? '게스트 선호',
+  };
   return (
     <>
       <section style={{ padding: '56px 0 0' }}>
@@ -667,46 +720,44 @@ function HotelAndFinalCta({ locale }: { locale: PublicLocale }): JSX.Element {
           <div
             style={{
               aspectRatio: '5/4', borderRadius: 20, overflow: 'hidden',
-              background: `#f2f2f2 url(${HOTEL_IMG}) center / cover`,
+              background: `#f2f2f2 url(${hotel.img}) center / cover`,
             }}
           />
           <div>
             <div style={{ fontSize: 21, fontWeight: 600, letterSpacing: '-0.18px' }}>
-              명동 중심 프리미엄 5성 호텔
+              {hotel.title}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 24 }}>
               <svg width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
                 <path d="M20 4C10 10 8 26 12 40c1.5 5 3 12 2 20" />
               </svg>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1, letterSpacing: '-1px' }}>4.9</div>
+                <div style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1, letterSpacing: '-1px' }}>
+                  {hotel.rating}
+                </div>
               </div>
               <svg width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
                 <path d="M6 4C16 10 18 26 14 40c-1.5 5-3 12-2 20" />
               </svg>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>게스트 선호</div>
+            <div style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>{hotel.promoLabel}</div>
             <p
               style={{
                 fontSize: 16, lineHeight: 1.5, color: '#3f3f3f',
                 margin: '16px 0 0', maxWidth: 440,
               }}
             >
-              스파·루프탑·조식 뷔페까지 갖춘 명동 중심 호텔에서 4박. 모든 코스 일정의 이동 동선을 가장 가깝게 설계했습니다.
+              {hotel.description}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', marginTop: 20 }}>
-              {[
-                '스파 · 루프탑 · 피트니스 무료 이용',
-                '조식 뷔페 4일 포함',
-                '명동·남산·동대문 도보 이동권',
-              ].map((amen, idx) => (
+              {hotel.amenities.map((amen, idx) => (
                 <div
                   key={amen}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 14,
                     padding: '12px 0',
                     borderTop: '1px solid #ebebeb',
-                    borderBottom: idx === 2 ? '1px solid #ebebeb' : undefined,
+                    borderBottom: idx === hotel.amenities.length - 1 ? '1px solid #ebebeb' : undefined,
                     fontSize: 16,
                   }}
                 >
@@ -718,8 +769,12 @@ function HotelAndFinalCta({ locale }: { locale: PublicLocale }): JSX.Element {
               ))}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 22 }}>
-              <span style={{ fontSize: 21, fontWeight: 700 }}>₩320,000</span>
-              <span style={{ fontSize: 15, color: '#6a6a6a' }}>/ 박 · 코스 포함가</span>
+              <span style={{ fontSize: 21, fontWeight: 700 }}>
+                ₩{hotel.priceWon.toLocaleString('ko-KR')}
+              </span>
+              <span style={{ fontSize: 15, color: '#6a6a6a' }}>
+                / {hotel.priceUnit} · 코스 포함가
+              </span>
             </div>
           </div>
         </div>

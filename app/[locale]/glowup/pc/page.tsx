@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { MainHeader } from '../../_components/main-header';
 import { MainFooter } from '../../_components/main-footer';
+import { fetchFeaturedListings } from '@/lib/listings/query';
 
 export const metadata = {
   title: 'glow-up — 서울에서 놀면서, 예뻐지는 4박 5일',
@@ -104,11 +105,67 @@ const ITINERARY = [
   { n: 5, title: '롯데월드 · 출국', desc: '아쿠아리움 · 면세 쇼핑 · 공항 샌딩' },
 ];
 
-export default function GlowupPcPage({
+export default async function GlowupPcPage({
   params,
 }: {
   params: { locale: PublicLocale };
-}): JSX.Element {
+}): Promise<JSX.Element> {
+  // DB-backed cards — same pattern as /[locale]/page.tsx. Empty
+  // arrays fall through to the hardcoded PROGRAMS/FOODS samples so
+  // the page never looks empty before /master/listings is populated.
+  const [dbPrograms, dbFoods, dbHotels] = await Promise.all([
+    fetchFeaturedListings({
+      locale: params.locale,
+      categories: ['personal_color', 'hair', 'makeup', 'photo_studio'],
+      limit: 4,
+    }),
+    fetchFeaturedListings({
+      locale: params.locale,
+      categories: ['food', 'restaurant'],
+      limit: 4,
+    }),
+    fetchFeaturedListings({
+      locale: params.locale,
+      categories: ['hotel'],
+      limit: 1,
+    }),
+  ]);
+  const dbHotel = dbHotels[0] ?? null;
+
+  const programs = dbPrograms.length > 0
+    ? dbPrograms.map((d) => ({
+        name: d.title,
+        rating: d.rating ? d.rating / 10 : 4.9,
+        desc: d.description ?? '',
+        place: d.locationLabel ?? '',
+        price: d.priceWon ? `₩${d.priceWon.toLocaleString('ko-KR')}` : '문의',
+        featured: !!d.promoLabel,
+        img: d.coverImageUrl ?? '',
+      }))
+    : PROGRAMS;
+
+  const foods = dbFoods.length > 0
+    ? dbFoods.map((d) => ({
+        name: d.title,
+        place: d.locationLabel
+          ?? (d.rating ? `★ ${(d.rating / 10).toFixed(1)}` : ''),
+        booked: !!d.promoLabel,
+        img: d.coverImageUrl ?? '',
+      }))
+    : FOODS;
+
+  const hotel = {
+    title: dbHotel?.title ?? '명동 중심 프리미엄 5성 호텔',
+    img: dbHotel?.coverImageUrl ?? HOTEL_IMG,
+    rating: dbHotel?.rating ? (dbHotel.rating / 10).toFixed(1) : '4.9',
+    description:
+      dbHotel?.description ??
+      '스파·루프탑·조식 뷔페까지 갖춘 명동 중심 호텔에서 4박. 모든 코스 일정의 이동 동선을 가장 가깝게 설계했습니다.',
+    priceWon: dbHotel?.priceWon ?? 320_000,
+    priceUnit: dbHotel?.priceUnit ?? '박',
+    promoLabel: dbHotel?.promoLabel ?? '게스트 선호',
+  };
+
   return (
     <div
       style={{
@@ -263,7 +320,7 @@ export default function GlowupPcPage({
               marginTop: 24,
             }}
           >
-            {PROGRAMS.map((p) => (
+            {programs.map((p) => (
               <Link
                 key={p.name}
                 href={`/${params.locale}/glowup/programs`}
@@ -566,7 +623,7 @@ export default function GlowupPcPage({
               marginTop: 24,
             }}
           >
-            {FOODS.map((f) => (
+            {foods.map((f) => (
               <div key={f.name} style={{ cursor: 'pointer' }}>
                 <div
                   style={{
@@ -671,12 +728,12 @@ export default function GlowupPcPage({
                 aspectRatio: '5/4',
                 borderRadius: 20,
                 overflow: 'hidden',
-                background: `#f2f2f2 url(${HOTEL_IMG}) center / cover`,
+                background: `#f2f2f2 url(${hotel.img}) center / cover`,
               }}
             />
             <div>
               <div style={{ fontSize: 21, fontWeight: 600, letterSpacing: '-0.18px' }}>
-                명동 중심 프리미엄 5성 호텔
+                {hotel.title}
               </div>
               <div
                 style={{
@@ -690,13 +747,15 @@ export default function GlowupPcPage({
                   <path d="M20 4C10 10 8 26 12 40c1.5 5 3 12 2 20" />
                 </svg>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1, letterSpacing: '-1px' }}>4.9</div>
+                  <div style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1, letterSpacing: '-1px' }}>
+                    {hotel.rating}
+                  </div>
                 </div>
                 <svg width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
                   <path d="M6 4C16 10 18 26 14 40c-1.5 5-3 12-2 20" />
                 </svg>
               </div>
-              <div style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>게스트 선호</div>
+              <div style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>{hotel.promoLabel}</div>
               <p
                 style={{
                   fontSize: 16,
@@ -706,7 +765,7 @@ export default function GlowupPcPage({
                   maxWidth: 440,
                 }}
               >
-                스파·루프탑·조식 뷔페까지 갖춘 명동 중심 호텔에서 4박. 모든 코스 일정의 이동 동선을 가장 가깝게 설계했습니다.
+                {hotel.description}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', marginTop: 20 }}>
                 {[
@@ -734,8 +793,12 @@ export default function GlowupPcPage({
                 ))}
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 22 }}>
-                <span style={{ fontSize: 21, fontWeight: 700 }}>₩320,000</span>
-                <span style={{ fontSize: 15, color: '#6a6a6a' }}>/ 박 · 코스 포함가</span>
+                <span style={{ fontSize: 21, fontWeight: 700 }}>
+                  ₩{hotel.priceWon.toLocaleString('ko-KR')}
+                </span>
+                <span style={{ fontSize: 15, color: '#6a6a6a' }}>
+                  / {hotel.priceUnit} · 코스 포함가
+                </span>
               </div>
             </div>
           </div>
