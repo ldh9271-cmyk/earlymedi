@@ -3,7 +3,12 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import type { PublicLocale } from '@/lib/i18n/locales';
+import {
+  LOCALE_LABELS,
+  PUBLIC_LOCALES,
+  isPublicLocale,
+  type PublicLocale,
+} from '@/lib/i18n/locales';
 import { BrandLockup } from './brand-mark';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 
@@ -116,10 +121,12 @@ export function MainHeader({
   const [travelOpen, setTravelOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const hospitalRef = useRef<HTMLDivElement | null>(null);
   const travelRef = useRef<HTMLDivElement | null>(null);
   const accountRef = useRef<HTMLDivElement | null>(null);
   const filterRef = useRef<HTMLDivElement | null>(null);
+  const langRef = useRef<HTMLDivElement | null>(null);
 
   // Auth state — null = unknown (initial), undefined = signed out,
   // string = signed in (email). Subscribed via Supabase auth listener so
@@ -158,7 +165,7 @@ export function MainHeader({
   // listener — checks each open dropdown's ref independently so they
   // can be open simultaneously (though UX-wise only one usually is).
   useEffect(() => {
-    if (!hospitalOpen && !travelOpen && !accountOpen && !filterOpen) return;
+    if (!hospitalOpen && !travelOpen && !accountOpen && !filterOpen && !langOpen) return;
     function onDown(e: MouseEvent): void {
       const t = e.target as Node;
       if (hospitalOpen && hospitalRef.current && !hospitalRef.current.contains(t)) {
@@ -173,10 +180,33 @@ export function MainHeader({
       if (filterOpen && filterRef.current && !filterRef.current.contains(t)) {
         setFilterOpen(false);
       }
+      if (langOpen && langRef.current && !langRef.current.contains(t)) {
+        setLangOpen(false);
+      }
     }
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
-  }, [hospitalOpen, travelOpen, accountOpen, filterOpen]);
+  }, [hospitalOpen, travelOpen, accountOpen, filterOpen, langOpen]);
+
+  /**
+   * Swap the locale prefix in the current pathname. Falls back to
+   * pushing `/${nextLocale}` if the current path doesn't start with a
+   * known locale segment (shouldn't happen since this header is only
+   * mounted under /[locale], but defensive).
+   */
+  function switchLocale(nextLocale: PublicLocale): void {
+    const segments = pathname.split('/').filter(Boolean);
+    const first = segments[0];
+    if (first && isPublicLocale(first)) {
+      segments[0] = nextLocale;
+    } else {
+      segments.unshift(nextLocale);
+    }
+    const qs = searchParams.toString();
+    const target = `/${segments.join('/')}${qs ? `?${qs}` : ''}`;
+    setLangOpen(false);
+    router.push(target);
+  }
 
   return (
     <header
@@ -264,14 +294,82 @@ export function MainHeader({
             </span>
           ) : null}
 
-          <div style={{
-            width: 40, height: 40, borderRadius: 9999,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.6">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" />
-            </svg>
+          {/* Language switcher — globe icon opens a dropdown listing
+              every public locale. Clicking an item swaps the locale
+              segment of the current pathname and preserves query
+              params, so the user stays on the same page in a new
+              language. */}
+          <div ref={langRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setLangOpen((v) => !v)}
+              aria-label="언어 선택"
+              style={{
+                width: 40, height: 40, borderRadius: 9999,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', background: 'transparent', border: 'none',
+                padding: 0, fontFamily: 'inherit',
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.6">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" />
+              </svg>
+            </button>
+            {langOpen ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 6px)', right: 0,
+                  minWidth: 200,
+                  background: '#fff',
+                  border: '1px solid #ebebeb',
+                  borderRadius: 14,
+                  boxShadow:
+                    'rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.08) 0 8px 24px',
+                  padding: 8,
+                  zIndex: 60,
+                }}
+              >
+                {PUBLIC_LOCALES.map((l) => {
+                  const meta = LOCALE_LABELS[l];
+                  const active = l === locale;
+                  return (
+                    <button
+                      key={l}
+                      type="button"
+                      onClick={() => switchLocale(l)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        width: '100%', textAlign: 'left',
+                        padding: '10px 14px',
+                        border: 'none',
+                        borderRadius: 8,
+                        background: active ? '#f7f7f7' : 'transparent',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        fontSize: 14,
+                        color: '#222',
+                        fontWeight: active ? 600 : 500,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!active) (e.currentTarget as HTMLButtonElement).style.background = '#f7f7f7';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+                      }}
+                    >
+                      <span style={{ fontSize: 18, lineHeight: 1 }}>{meta.flag}</span>
+                      <span style={{ flex: 1 }}>{meta.native}</span>
+                      {active ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff385c" strokeWidth="2.5">
+                          <path d="M5 12l5 5L20 7" />
+                        </svg>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
 
           {/* Account pill — anchors a small dropdown when logged in
