@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { PublicLocale } from '@/lib/i18n/locales';
+import { BrandLockup } from './brand-mark';
 
 /**
  * Patient-portal main header — sticky Airbnb-style nav for /[locale].
@@ -130,14 +131,10 @@ export function MainHeader({
       >
         <Link
           href={`/${locale}`}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+          style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
+          aria-label="glow-up 홈"
         >
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="#ff385c">
-            <path d="M12 2c2.5 0 4 2 5.4 4.7 1.3 2.6 2.6 6 2.6 8.1 0 2.8-2 4.2-4 4.2-1.5 0-2.8-.8-4-2.5-1.2 1.7-2.5 2.5-4 2.5-2 0-4-1.4-4-4.2 0-2.1 1.3-5.5 2.6-8.1C8 4 9.5 2 12 2zm0 2.3C10.7 4.3 9.6 5.8 8.5 8c-1.2 2.4-2.3 5.4-2.3 6.8 0 1.6 1 2.2 1.9 2.2 1 0 1.9-.8 2.9-2.6l1 .0c1 1.8 1.9 2.6 2.9 2.6.9 0 1.9-.6 1.9-2.2 0-1.4-1.1-4.4-2.3-6.8C14.4 5.8 13.3 4.3 12 4.3z" />
-          </svg>
-          <span style={{ fontWeight: 700, fontSize: 22, letterSpacing: '-0.5px', color: '#ff385c' }}>
-            glow-up
-          </span>
+          <BrandLockup height={30} color="#ff385c" />
         </Link>
 
         <nav style={{ display: 'flex', alignItems: 'center', gap: 8, justifySelf: 'center' }}>

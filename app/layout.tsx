@@ -47,10 +47,8 @@ export const metadata: Metadata = {
     description: '환자의 첫 문의부터 귀국 후 케어까지, 한 손에서 끝나는 의료관광',
     images: ['/og-image.png'],
   },
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
-  },
+  // icons auto-detected from app/icon.svg + app/apple-icon.svg
+  // (Next.js 14 convention) — no explicit metadata.icons needed.
   manifest: '/manifest.json',
   robots: {
     index: true,
