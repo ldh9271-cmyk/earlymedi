@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { PublicLocale } from '@/lib/i18n/locales';
-import { PcHeader, type PcCategoryKey } from '../../_components/pc-header';
+import { MainHeader } from '../../../../_components/main-header';
+import { MainFooter } from '../../../../_components/main-footer';
+import { type PcCategoryKey } from '../../_components/pc-header';
 import { CATEGORY_PRODUCTS } from '../../_components/category-products';
 
 export const dynamic = 'force-dynamic';
@@ -60,7 +62,7 @@ export default function CategoryDetailPage({
         overflowX: 'clip',
       }}
     >
-      <PcHeader locale={params.locale} activeKey={p.key} />
+      <MainHeader locale={params.locale} activeKey="all" activeTab="glowup" />
 
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
         {/* Breadcrumb-ish back link */}
@@ -263,6 +265,7 @@ export default function CategoryDetailPage({
           </div>
         </div>
       </main>
+      <MainFooter />
     </div>
   );
 }
