@@ -1,0 +1,296 @@
+'use server';
+
+import 'server-only';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
+import { and, eq } from 'drizzle-orm';
+import { db } from '@/lib/db/client';
+import {
+  partnerListings,
+  partnerListingLocaleContent,
+} from '@/drizzle/schema/partner-listings';
+import { organizations } from '@/drizzle/schema/organizations';
+import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
+import { isMasterEmail } from '@/lib/auth/master';
+import { uploadListingImage } from '@/lib/storage/listing-images';
+import {
+  LISTING_CATEGORIES,
+  isListingCategory,
+  type ListingCategory,
+} from '@/lib/listings/categories';
+
+async function requireMaster(): Promise<true | never> {
+  const supabase = createSupabaseServerClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) redirect('/login?next=/master/listings');
+  if (!isMasterEmail(auth.user.email ?? null)) redirect('/select-org');
+  return true;
+}
+
+function revalidateListingSurfaces(): void {
+  revalidatePath('/master/listings');
+  revalidatePath('/kr', 'layout');
+  revalidatePath('/en', 'layout');
+  revalidatePath('/zh', 'layout');
+  revalidatePath('/ja', 'layout');
+}
+
+/**
+ * Pick the first agency org as the default owner when creating from
+ * the master console. The org dropdown on the create form lets the
+ * master override; this is just the safe fallback.
+ */
+async function defaultOwnerOrgId(): Promise<string | null> {
+  const [row] = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.accountType, 'agency'))
+    .limit(1);
+  return row?.id ?? null;
+}
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9가-힣]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || `listing-${Date.now().toString(36)}`;
+}
+
+/**
+ * Create an empty draft for `category` and redirect to its edit page
+ * so the master can fill in the rest. Default sort_order=100,
+ * status='draft', owner=first agency org.
+ */
+export async function createListingAction(formData: FormData): Promise<void> {
+  await requireMaster();
+  const rawCategory = String(formData.get('category') ?? '');
+  if (!isListingCategory(rawCategory)) redirect('/master/listings?error=bad_category');
+  const category = rawCategory as ListingCategory;
+  const title = String(formData.get('title') ?? '').trim() || '신규 상품';
+  const ownerOrgId = String(formData.get('ownerOrgId') ?? '') || await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+
+  const meta = LISTING_CATEGORIES.find((c) => c.key === category);
+  const slug = slugify(title);
+
+  const inserted = await db
+    .insert(partnerListings)
+    .values({
+      ownerOrgId,
+      category,
+      slug,
+      title,
+      status: 'draft',
+      featured: false,
+      sortOrder: 100,
+      priceUnit: meta?.defaultPriceUnit ?? null,
+      interestKey: meta?.interestKey ?? null,
+    })
+    .returning({ id: partnerListings.id });
+  const newId = inserted[0]?.id;
+  if (!newId) redirect('/master/listings?error=insert_failed');
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings/${newId}/edit`);
+}
+
+/**
+ * Upsert the base columns of a listing.
+ * Form fields handled here:
+ *   - title, locationLabel, priceWon, priceUnit, promoLabel,
+ *     featured, sortOrder, rating, reviewsCount, description,
+ *     interestKey, status, addressJson (city)
+ *   - category-specific `details` JSON (passed in as a JSON string)
+ */
+export async function updateListingAction(formData: FormData): Promise<void> {
+  await requireMaster();
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/master/listings?error=missing_id');
+
+  const title = String(formData.get('title') ?? '').trim() || '제목 없음';
+  const locationLabel = String(formData.get('locationLabel') ?? '').trim() || null;
+  const priceWon = parseIntOrNull(formData.get('priceWon'));
+  const priceUnit = String(formData.get('priceUnit') ?? '').trim() || null;
+  const promoLabel = String(formData.get('promoLabel') ?? '').trim() || null;
+  const featured = formData.get('featured') === 'on';
+  const sortOrder = parseIntOrNull(formData.get('sortOrder')) ?? 100;
+  const rating = parseIntOrNull(formData.get('rating'));
+  const reviewsCount = parseIntOrNull(formData.get('reviewsCount')) ?? 0;
+  const description = String(formData.get('description') ?? '').trim() || null;
+  const interestKey = String(formData.get('interestKey') ?? '').trim() || null;
+  const status = String(formData.get('status') ?? 'draft');
+  const city = String(formData.get('city') ?? '').trim();
+
+  // category-specific details as JSON string. Master form posts this
+  // already serialized; invalid JSON is silently coerced to {} so
+  // operators can't break the row by typing.
+  let details: Record<string, unknown> = {};
+  const detailsRaw = formData.get('detailsJson');
+  if (typeof detailsRaw === 'string' && detailsRaw.trim().length > 0) {
+    try {
+      const parsed = JSON.parse(detailsRaw);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        details = parsed;
+      }
+    } catch {
+      /* fall through with {} */
+    }
+  }
+
+  await db
+    .update(partnerListings)
+    .set({
+      title,
+      locationLabel,
+      priceWon: priceWon ?? null,
+      priceUnit,
+      promoLabel,
+      featured,
+      sortOrder,
+      rating,
+      reviewsCount,
+      description,
+      interestKey,
+      status,
+      addressJson: city ? { city } : {},
+      details,
+      updatedAt: new Date(),
+    })
+    .where(eq(partnerListings.id, id));
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings/${id}/edit?ok=1`);
+}
+
+/** Delete a listing entirely. Cascades to locale_content via FK. */
+export async function deleteListingAction(formData: FormData): Promise<void> {
+  await requireMaster();
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/master/listings?error=missing_id');
+  await db.delete(partnerListings).where(eq(partnerListings.id, id));
+  revalidateListingSurfaces();
+  redirect('/master/listings');
+}
+
+/**
+ * Image upload — single-file form upload. Returns by redirect to the
+ * edit page so the new URL is rendered immediately. Cover replaces
+ * the current cover; gallery appends to the existing array.
+ */
+export async function uploadListingImageAction(formData: FormData): Promise<void> {
+  await requireMaster();
+  const id = String(formData.get('id') ?? '');
+  const purpose = String(formData.get('purpose') ?? 'cover');
+  if (!id || (purpose !== 'cover' && purpose !== 'gallery')) {
+    redirect('/master/listings?error=bad_upload');
+  }
+  const file = formData.get('file');
+  if (!(file instanceof File) || file.size === 0) {
+    redirect(`/master/listings/${id}/edit?error=no_file`);
+  }
+
+  const res = await uploadListingImage({
+    listingId: id,
+    purpose: purpose as 'cover' | 'gallery',
+    file: file as File,
+  });
+  if (!res.ok) {
+    redirect(`/master/listings/${id}/edit?error=${encodeURIComponent(res.error)}`);
+  }
+
+  if (purpose === 'cover') {
+    await db
+      .update(partnerListings)
+      .set({ coverImageUrl: res.url, updatedAt: new Date() })
+      .where(eq(partnerListings.id, id));
+  } else {
+    // append to existing gallery array
+    const [cur] = await db
+      .select({ gallery: partnerListings.galleryImageUrls })
+      .from(partnerListings)
+      .where(eq(partnerListings.id, id))
+      .limit(1);
+    const next = [...((cur?.gallery ?? []) as string[]), res.url];
+    await db
+      .update(partnerListings)
+      .set({ galleryImageUrls: next, updatedAt: new Date() })
+      .where(eq(partnerListings.id, id));
+  }
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings/${id}/edit?ok=upload`);
+}
+
+/** Remove a single gallery image by URL. */
+export async function removeGalleryImageAction(formData: FormData): Promise<void> {
+  await requireMaster();
+  const id = String(formData.get('id') ?? '');
+  const url = String(formData.get('url') ?? '');
+  if (!id || !url) redirect('/master/listings?error=bad_remove');
+
+  const [cur] = await db
+    .select({ gallery: partnerListings.galleryImageUrls })
+    .from(partnerListings)
+    .where(eq(partnerListings.id, id))
+    .limit(1);
+  const next = ((cur?.gallery ?? []) as string[]).filter((u) => u !== url);
+  await db
+    .update(partnerListings)
+    .set({ galleryImageUrls: next, updatedAt: new Date() })
+    .where(eq(partnerListings.id, id));
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings/${id}/edit?ok=removed`);
+}
+
+/** Upsert one locale's title/description/locationLabel (light path —
+ *  4 locales fit on the edit page as a small tabbed area). */
+export async function upsertListingLocaleAction(formData: FormData): Promise<void> {
+  await requireMaster();
+  const id = String(formData.get('id') ?? '');
+  const locale = String(formData.get('locale') ?? '');
+  if (!id || !['kr', 'en', 'zh', 'ja'].includes(locale)) {
+    redirect(`/master/listings/${id}/edit?error=bad_locale`);
+  }
+  const title = String(formData.get('title') ?? '').trim() || null;
+  const description = String(formData.get('description') ?? '').trim() || null;
+  const locationLabel = String(formData.get('locationLabel') ?? '').trim() || null;
+
+  const [existing] = await db
+    .select({ id: partnerListingLocaleContent.id })
+    .from(partnerListingLocaleContent)
+    .where(
+      and(
+        eq(partnerListingLocaleContent.listingId, id),
+        eq(partnerListingLocaleContent.locale, locale),
+      ),
+    )
+    .limit(1);
+
+  if (existing) {
+    await db
+      .update(partnerListingLocaleContent)
+      .set({ title, description, locationLabel, updatedAt: new Date() })
+      .where(eq(partnerListingLocaleContent.id, existing.id));
+  } else {
+    await db.insert(partnerListingLocaleContent).values({
+      listingId: id,
+      locale,
+      title,
+      description,
+      locationLabel,
+    });
+  }
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings/${id}/edit?lng=${locale}&ok=locale`);
+}
+
+function parseIntOrNull(x: FormDataEntryValue | null): number | null {
+  if (typeof x !== 'string') return null;
+  const t = x.trim();
+  if (!t) return null;
+  const n = Number(t);
+  return Number.isFinite(n) ? Math.round(n) : null;
+}

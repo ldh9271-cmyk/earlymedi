@@ -58,3 +58,7 @@ export * from './category-listings';
 
 // Per-locale (kr/en/zh/ja) hospital content overrides
 export * from './hospital-locale-content';
+
+// Non-medical marketplace inventory (hotel / restaurant / 맛집 /
+// personal_color / hair / makeup / photo / kpop_tour)
+export * from './partner-listings';

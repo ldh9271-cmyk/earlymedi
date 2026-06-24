@@ -254,6 +254,21 @@ export default async function MasterPage({
             </p>
           </div>
         </Link>
+
+        <Link
+          href="/master/listings"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
+            <Briefcase className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold">글로우업 상품 관리</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              호텔·맛집·뷰티·K-팝 등 비의료 카테고리 상품 등록/노출
+            </p>
+          </div>
+        </Link>
       </div>
 
       {/* Quick stats row */}

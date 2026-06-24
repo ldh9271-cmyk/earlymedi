@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { MainHeader } from './_components/main-header';
 import { MainFooter } from './_components/main-footer';
+import { fetchFeaturedListings, type ListingCard } from '@/lib/listings/query';
 
 /**
  * Patient portal landing — Airbnb design language. Founder-ordered
@@ -116,12 +117,27 @@ const COURSE_PROGRAM = '4박 5일 글로우업 코스';
 const bookingHref = (locale: PublicLocale, program: string, interest: string): string =>
   `/${locale}/inquiry?program=${encodeURIComponent(program)}&interest=${interest}`;
 
-export default function PublicLandingPage({
+export default async function PublicLandingPage({
   params,
 }: {
   params: { locale: PublicLocale };
-}): JSX.Element {
+}): Promise<JSX.Element> {
   const { locale } = params;
+  // DB-backed cards. Empty arrays = no curated listings yet → sections
+  // fall back to the hardcoded PROGRAMS / FOODS samples below so the
+  // page never looks empty even before /master/listings is populated.
+  const [dbPrograms, dbFoods] = await Promise.all([
+    fetchFeaturedListings({
+      locale,
+      categories: ['personal_color', 'hair', 'makeup', 'photo_studio'],
+      limit: 4,
+    }),
+    fetchFeaturedListings({
+      locale,
+      categories: ['food', 'restaurant'],
+      limit: 4,
+    }),
+  ]);
   return (
     <div
       style={{
@@ -154,9 +170,9 @@ export default function PublicLandingPage({
 
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
         <Hero />
-        <Programs locale={locale} />
+        <Programs locale={locale} dbCards={dbPrograms} />
         <Course locale={locale} />
-        <Foods locale={locale} />
+        <Foods locale={locale} dbCards={dbFoods} />
         <KpopRow />
         <HotelAndFinalCta locale={locale} />
       </main>
@@ -246,7 +262,39 @@ function Hero(): JSX.Element {
 }
 
 // ─── 3. Programs ───────────────────────────────────────────────────
-function Programs({ locale }: { locale: PublicLocale }): JSX.Element {
+// `dbCards` (from partner_listings, status=approved+featured) takes
+// precedence. When empty (migration not yet applied or no curation),
+// falls back to the hardcoded PROGRAMS samples so the page stays
+// populated. Shape mapping:
+//   DB row → { name, rating, desc, place, price, featured, img, interest }
+function Programs({
+  locale,
+  dbCards,
+}: {
+  locale: PublicLocale;
+  dbCards: ListingCard[];
+}): JSX.Element {
+  const cards: Array<{
+    name: string;
+    rating: number;
+    desc: string;
+    place: string;
+    price: string;
+    featured: boolean;
+    img: string;
+    interest: string;
+  }> = dbCards.length > 0
+    ? dbCards.map((d) => ({
+        name: d.title,
+        rating: d.rating ? d.rating / 10 : 4.9,
+        desc: d.description ?? '',
+        place: d.locationLabel ?? '',
+        price: d.priceWon ? `₩${d.priceWon.toLocaleString('ko-KR')}` : '문의',
+        featured: !!d.promoLabel,
+        img: d.coverImageUrl ?? '',
+        interest: d.interestKey ?? 'makeup',
+      }))
+    : PROGRAMS;
   return (
     <section id="programs" style={{ padding: '56px 0 0', scrollMarginTop: 200 }}>
       <SectionHeader title="서울의 인기 뷰티 프로그램" />
@@ -256,7 +304,7 @@ function Programs({ locale }: { locale: PublicLocale }): JSX.Element {
           marginTop: 24,
         }}
       >
-        {PROGRAMS.map((p) => (
+        {cards.map((p) => (
           <Link
             key={p.name}
             href={bookingHref(locale, p.name, p.interest)}
@@ -445,7 +493,29 @@ function Course({ locale }: { locale: PublicLocale }): JSX.Element {
 }
 
 // ─── 5. Foods ──────────────────────────────────────────────────────
-function Foods({ locale: _locale }: { locale: PublicLocale }): JSX.Element {
+// Same DB-first-with-fallback pattern as Programs. `dbCards` come
+// from partner_listings (category in 'food','restaurant').
+function Foods({
+  locale: _locale,
+  dbCards,
+}: {
+  locale: PublicLocale;
+  dbCards: ListingCard[];
+}): JSX.Element {
+  const cards: Array<{
+    name: string;
+    place: string;
+    booked: boolean;
+    img: string;
+  }> = dbCards.length > 0
+    ? dbCards.map((d) => ({
+        name: d.title,
+        place: d.locationLabel
+          ?? (d.rating ? `★ ${(d.rating / 10).toFixed(1)}` : ''),
+        booked: !!d.promoLabel,
+        img: d.coverImageUrl ?? '',
+      }))
+    : FOODS;
   return (
     <section style={{ padding: '56px 0 0' }}>
       <SectionHeader title="현지인만 아는 찐맛집" />
@@ -455,7 +525,7 @@ function Foods({ locale: _locale }: { locale: PublicLocale }): JSX.Element {
           marginTop: 24,
         }}
       >
-        {FOODS.map((f) => (
+        {cards.map((f) => (
           <div key={f.name} style={{ cursor: 'pointer' }}>
             <div
               style={{
