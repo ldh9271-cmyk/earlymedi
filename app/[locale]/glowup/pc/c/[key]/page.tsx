@@ -4,6 +4,7 @@ import type { PublicLocale } from '@/lib/i18n/locales';
 import { MainHeader } from '../../../../_components/main-header';
 import { MainFooter } from '../../../../_components/main-footer';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import { LOCALE_LABELS } from '@/lib/i18n/locales';
 import { type PcCategoryKey } from '../../_components/pc-header';
 import { CATEGORY_PRODUCTS } from '../../_components/category-products';
 
@@ -267,7 +268,7 @@ export default async function CategoryDetailPage({
           </div>
         </div>
       </main>
-      <MainFooter />
+      <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[params.locale].native} />
     </div>
   );
 }

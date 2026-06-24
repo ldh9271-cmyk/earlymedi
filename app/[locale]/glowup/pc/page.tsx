@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { PublicLocale } from '@/lib/i18n/locales';
+import { LOCALE_LABELS, type PublicLocale } from '@/lib/i18n/locales';
 import { MainHeader } from '../../_components/main-header';
 import { MainFooter } from '../../_components/main-footer';
 import { fetchFeaturedListings } from '@/lib/listings/query';
@@ -876,7 +876,7 @@ export default async function GlowupPcPage({
         </section>
       </main>
 
-      <MainFooter />
+      <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[params.locale].native} />
     </div>
   );
 }

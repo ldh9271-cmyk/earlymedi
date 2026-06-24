@@ -1,4 +1,4 @@
-import { LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
+import { LOCALE_LABELS, LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { MainHeader } from '../_components/main-header';
 import { MainFooter } from '../_components/main-footer';
@@ -47,7 +47,7 @@ export default async function PublicPortalLayout({
     >
       <MainHeader locale={params.locale} activeKey="all" activeTab="clinics" t={dict.header} />
       <main style={{ flex: 1 }}>{children}</main>
-      <MainFooter />
+      <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[params.locale].native} />
     </div>
   );
 }

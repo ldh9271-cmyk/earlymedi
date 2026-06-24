@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { PublicLocale } from '@/lib/i18n/locales';
+import { LOCALE_LABELS, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { MainHeader } from './_components/main-header';
@@ -193,7 +193,7 @@ export default async function PublicLandingPage({
         <HotelAndFinalCta locale={locale} dbHotel={dbHotel} t={dict.landing} />
       </main>
 
-      <MainFooter />
+      <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[locale].native} />
     </div>
   );
 }
