@@ -1,12 +1,14 @@
 /**
- * Supported locales for the patient-facing portal at /kr|/en|/zh|/ja.
+ * Supported locales for the patient-facing portal at
+ * /kr|/en|/zh|/ja|/ru|/vi.
  *
- * Kept deliberately small — these are the 4 source markets we target for
- * Korean medical tourism (KOIHA's top 5 inbound nationalities minus
- * USA/Russia which we group under EN for now). Add new entries here +
- * a dictionary file in `dictionaries/` to expand.
+ * Source markets covered: Korea (home), English (US/EU fallback),
+ * China, Japan, Russian-speaking CIS (Russia/Kazakhstan/Uzbekistan),
+ * Vietnam — the top 6 inbound nationalities for Korean medical
+ * tourism. Add new entries here + a dictionary file in `dictionaries/`
+ * to expand.
  */
-export const PUBLIC_LOCALES = ['kr', 'en', 'zh', 'ja'] as const;
+export const PUBLIC_LOCALES = ['kr', 'en', 'zh', 'ja', 'ru', 'vi'] as const;
 
 export type PublicLocale = (typeof PUBLIC_LOCALES)[number];
 
@@ -18,10 +20,12 @@ export function isPublicLocale(s: string): s is PublicLocale {
 
 /** Display labels in their native script for the locale switcher. */
 export const LOCALE_LABELS: Record<PublicLocale, { native: string; flag: string }> = {
-  kr: { native: '한국어', flag: '🇰🇷' },
-  en: { native: 'English', flag: '🇺🇸' },
-  zh: { native: '中文', flag: '🇨🇳' },
-  ja: { native: '日本語', flag: '🇯🇵' },
+  kr: { native: '한국어',     flag: '🇰🇷' },
+  en: { native: 'English',    flag: '🇺🇸' },
+  zh: { native: '中文',       flag: '🇨🇳' },
+  ja: { native: '日本語',     flag: '🇯🇵' },
+  ru: { native: 'Русский',    flag: '🇷🇺' },
+  vi: { native: 'Tiếng Việt', flag: '🇻🇳' },
 };
 
 /**
@@ -34,6 +38,8 @@ export const LOCALE_TO_BCP47: Record<PublicLocale, string> = {
   en: 'en-US',
   zh: 'zh-CN',
   ja: 'ja-JP',
+  ru: 'ru-RU',
+  vi: 'vi-VN',
 };
 
 /**
@@ -61,12 +67,13 @@ export const PATIENT_DOMAINS: ReadonlySet<string> = new Set([
  *   - `ko*` → 'kr' (Korean speakers get Korean — overwhelmingly the home market)
  *   - `zh*` → 'zh' (zh-CN, zh-TW, zh-HK all map to Simplified for now)
  *   - `ja*` → 'ja'
- *   - everything else (en, de, fr, ru, vi, th, ar, …) → 'en' fallback
+ *   - `ru*` / `kk*` / `uz*` → 'ru' (Russian umbrella for CIS markets)
+ *   - `vi*` → 'vi'
+ *   - everything else (en, de, fr, th, ar, …) → 'en' fallback
  *
- * Falls back to DEFAULT_LOCALE when the header is missing entirely
- * (e.g. some bots, server-side requests). We pick 'en' as the actual
- * fallback below since DEFAULT_LOCALE='kr' would surprise foreign
- * visitors landing on glowuptour.com without a language preference.
+ * Falls back to 'en' when the header is missing entirely (bots, SSR).
+ * DEFAULT_LOCALE='kr' would surprise foreign visitors landing on
+ * glowuptour.com without a language preference.
  */
 export function detectLocaleFromAcceptLanguage(header: string | null): PublicLocale {
   if (!header) return 'en';
@@ -80,6 +87,9 @@ export function detectLocaleFromAcceptLanguage(header: string | null): PublicLoc
     if (lang.startsWith('ko')) return 'kr';
     if (lang.startsWith('zh')) return 'zh';
     if (lang.startsWith('ja')) return 'ja';
+    // CIS markets — Russian umbrella covers Kazakhstan/Uzbekistan too.
+    if (lang.startsWith('ru') || lang.startsWith('kk') || lang.startsWith('uz')) return 'ru';
+    if (lang.startsWith('vi')) return 'vi';
     if (lang.startsWith('en')) return 'en';
   }
   return 'en';

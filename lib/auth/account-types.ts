@@ -30,13 +30,15 @@ export const GATED_PREFIXES = Object.keys(PREFIX_TO_ACCOUNT_TYPE);
 /** Paths that bypass the gated layer (always public or auth-flow only). */
 export const PUBLIC_PREFIXES = [
   '/',
-  // Patient-facing B2C portal at /kr|/en|/zh|/ja. No Supabase session
-  // required; each page does its own data-visibility filtering. Same
-  // pattern as /pricing, /about — public marketing surface.
+  // Patient-facing B2C portal at /kr|/en|/zh|/ja|/ru|/vi. No Supabase
+  // session required; each page does its own data-visibility filtering.
+  // Same pattern as /pricing, /about — public marketing surface.
   '/kr',
   '/en',
   '/zh',
   '/ja',
+  '/ru',
+  '/vi',
   '/login',
   '/signup',
   '/select-org',

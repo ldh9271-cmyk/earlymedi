@@ -108,7 +108,14 @@ export default async function ProceduresPage({
                     className="group flex items-center justify-between rounded-md border bg-card px-3 py-2.5 text-sm transition hover:border-brand-300 hover:bg-brand-50"
                   >
                     <span className="font-medium">
-                      {item.name[params.locale === 'kr' ? 'kr' : params.locale]}
+                      {/* item.name only has the original 4 locales — Russian
+                          and Vietnamese fall back to English until per-
+                          procedure copy is translated. */}
+                      {item.name[
+                        (params.locale === 'ru' || params.locale === 'vi'
+                          ? 'en'
+                          : params.locale) as 'kr' | 'en' | 'zh' | 'ja'
+                      ]}
                     </span>
                     <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-brand-700" />
                   </Link>

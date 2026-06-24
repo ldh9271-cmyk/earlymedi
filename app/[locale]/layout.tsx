@@ -33,8 +33,15 @@ export default function PublicLocaleRootLayout({
   return <>{children}</>;
 }
 
-// Pre-generate the 4 locale segments so /kr, /en, /zh, /ja statically
-// resolve and don't hit catch-all behavior.
+// Pre-generate every locale segment so /kr, /en, /zh, /ja, /ru, /vi
+// statically resolve and don't hit catch-all behavior.
 export function generateStaticParams(): Array<{ locale: string }> {
-  return [{ locale: 'kr' }, { locale: 'en' }, { locale: 'zh' }, { locale: 'ja' }];
+  return [
+    { locale: 'kr' },
+    { locale: 'en' },
+    { locale: 'zh' },
+    { locale: 'ja' },
+    { locale: 'ru' },
+    { locale: 'vi' },
+  ];
 }

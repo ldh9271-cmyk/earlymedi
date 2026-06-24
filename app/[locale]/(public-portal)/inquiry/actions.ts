@@ -26,7 +26,7 @@ import { detectLocale } from '@/lib/ai/translation';
  */
 
 const InputSchema = z.object({
-  locale: z.enum(['kr', 'en', 'zh', 'ja']),
+  locale: z.enum(['kr', 'en', 'zh', 'ja', 'ru', 'vi']),
   hospitalId: z.string().uuid().nullable(),
   // Display name carried alongside the UUID so the inbox can show
   // "관심 병원: 세라성형외과의원" instead of a raw 8e5b... UUID.

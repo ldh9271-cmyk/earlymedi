@@ -100,6 +100,8 @@ export async function generateMetadata({
         en: `/en/clinics/${params.slug}`,
         'zh-CN': `/zh/clinics/${params.slug}`,
         ja: `/ja/clinics/${params.slug}`,
+        ru: `/ru/clinics/${params.slug}`,
+        vi: `/vi/clinics/${params.slug}`,
       },
     },
     openGraph: {
@@ -107,14 +109,14 @@ export async function generateMetadata({
       description,
       url,
       type: 'website',
-      locale:
-        params.locale === 'kr'
-          ? 'ko_KR'
-          : params.locale === 'zh'
-            ? 'zh_CN'
-            : params.locale === 'ja'
-              ? 'ja_JP'
-              : 'en_US',
+      locale: ({
+        kr: 'ko_KR',
+        zh: 'zh_CN',
+        ja: 'ja_JP',
+        ru: 'ru_RU',
+        vi: 'vi_VN',
+        en: 'en_US',
+      } as const)[params.locale] ?? 'en_US',
     },
   };
 }
