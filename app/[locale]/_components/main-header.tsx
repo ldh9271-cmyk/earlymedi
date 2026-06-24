@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { BrandLockup } from './brand-mark';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
@@ -110,12 +110,16 @@ export function MainHeader({
   activeTab?: 'clinics' | 'ai' | 'glowup';
 }): JSX.Element {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [hospitalOpen, setHospitalOpen] = useState(false);
   const [travelOpen, setTravelOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const hospitalRef = useRef<HTMLDivElement | null>(null);
   const travelRef = useRef<HTMLDivElement | null>(null);
   const accountRef = useRef<HTMLDivElement | null>(null);
+  const filterRef = useRef<HTMLDivElement | null>(null);
 
   // Auth state — null = unknown (initial), undefined = signed out,
   // string = signed in (email). Subscribed via Supabase auth listener so
@@ -154,7 +158,7 @@ export function MainHeader({
   // listener — checks each open dropdown's ref independently so they
   // can be open simultaneously (though UX-wise only one usually is).
   useEffect(() => {
-    if (!hospitalOpen && !travelOpen && !accountOpen) return;
+    if (!hospitalOpen && !travelOpen && !accountOpen && !filterOpen) return;
     function onDown(e: MouseEvent): void {
       const t = e.target as Node;
       if (hospitalOpen && hospitalRef.current && !hospitalRef.current.contains(t)) {
@@ -166,10 +170,13 @@ export function MainHeader({
       if (accountOpen && accountRef.current && !accountRef.current.contains(t)) {
         setAccountOpen(false);
       }
+      if (filterOpen && filterRef.current && !filterRef.current.contains(t)) {
+        setFilterOpen(false);
+      }
     }
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
-  }, [hospitalOpen, travelOpen, accountOpen]);
+  }, [hospitalOpen, travelOpen, accountOpen, filterOpen]);
 
   return (
     <header
@@ -491,21 +498,14 @@ export function MainHeader({
               </Link>
             );
           })}
-          <div
-            style={{
-              position: 'absolute',
-              right: 40, top: '50%', transform: 'translateY(-50%)',
-              display: 'flex', alignItems: 'center', gap: 8,
-              border: '1px solid #dddddd', borderRadius: 12,
-              padding: '10px 14px', cursor: 'pointer', flexShrink: 0,
-              background: '#ffffff',
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.6">
-              <path d="M3 6h18M6 12h12M10 18h4" />
-            </svg>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#222' }}>필터</span>
-          </div>
+          <FilterPill
+            open={filterOpen}
+            setOpen={setFilterOpen}
+            wrapperRef={filterRef}
+            pathname={pathname}
+            searchParams={searchParams}
+            router={router}
+          />
         </div>
       </div>
     </header>
@@ -651,4 +651,285 @@ function MainCategoryIcon({
         </svg>
       );
   }
+}
+
+/**
+ * Filter pill — sticky-right of the category strip. Click toggles a
+ * dropdown panel with price / rating / location fields. "적용" writes
+ * the chosen values as query params on the CURRENT pathname (so the
+ * surface page — /clinics or /glowup/pc — can read them and filter
+ * its own SQL).
+ *
+ * Query param convention (consumed by the page-side filter logic):
+ *   ?priceMin=80000&priceMax=500000&minRating=45&loc=gangnam,myeongdong
+ *
+ * `minRating` is integer × 10 (45 = 4.5+) to match
+ * partner_listings.rating which is stored in the same encoding.
+ * `loc` is a comma-separated list of district keys.
+ */
+type SearchParamsLike = {
+  get: (key: string) => string | null;
+};
+
+const LOCATION_OPTIONS: ReadonlyArray<{ key: string; label: string }> = [
+  { key: 'gangnam',    label: '강남' },
+  { key: 'myeongdong', label: '명동' },
+  { key: 'seongsu',    label: '성수' },
+  { key: 'cheongdam',  label: '청담' },
+  { key: 'hongdae',    label: '홍대' },
+  { key: 'itaewon',    label: '이태원' },
+];
+
+function FilterPill({
+  open,
+  setOpen,
+  wrapperRef,
+  pathname,
+  searchParams,
+  router,
+}: {
+  open: boolean;
+  setOpen: (v: boolean | ((p: boolean) => boolean)) => void;
+  wrapperRef: React.RefObject<HTMLDivElement>;
+  pathname: string;
+  searchParams: SearchParamsLike;
+  router: ReturnType<typeof useRouter>;
+}): JSX.Element {
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+  const [minRating, setMinRating] = useState('');
+  const [locs, setLocs] = useState<string[]>([]);
+
+  // Hydrate from URL on every open so the panel reflects the active filter.
+  useEffect(() => {
+    if (!open) return;
+    setPriceMin(searchParams.get('priceMin') ?? '');
+    setPriceMax(searchParams.get('priceMax') ?? '');
+    setMinRating(searchParams.get('minRating') ?? '');
+    const locParam = searchParams.get('loc') ?? '';
+    setLocs(locParam ? locParam.split(',').filter(Boolean) : []);
+  }, [open, searchParams]);
+
+  const activeCount =
+    (priceMin ? 1 : 0) +
+    (priceMax ? 1 : 0) +
+    (minRating ? 1 : 0) +
+    (locs.length > 0 ? 1 : 0);
+
+  function toggleLoc(k: string): void {
+    setLocs((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
+  }
+
+  function apply(): void {
+    const usp = new URLSearchParams();
+    // Preserve existing non-filter params (e.g. category=…, sub=…).
+    for (const k of ['category', 'sub', 'procedure']) {
+      const v = searchParams.get(k);
+      if (v) usp.set(k, v);
+    }
+    if (priceMin) usp.set('priceMin', priceMin);
+    if (priceMax) usp.set('priceMax', priceMax);
+    if (minRating) usp.set('minRating', minRating);
+    if (locs.length > 0) usp.set('loc', locs.join(','));
+    const qs = usp.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname);
+    setOpen(false);
+  }
+
+  function reset(): void {
+    setPriceMin('');
+    setPriceMax('');
+    setMinRating('');
+    setLocs([]);
+  }
+
+  const inputStyle: React.CSSProperties = {
+    height: 38, width: '100%',
+    border: '1px solid #dddddd', borderRadius: 8,
+    padding: '0 12px', fontSize: 14, color: '#222',
+    background: '#fff', outline: 'none', fontFamily: 'inherit',
+  };
+  const labelStyle: React.CSSProperties = {
+    fontSize: 12, fontWeight: 600, color: '#222', marginBottom: 6,
+  };
+
+  return (
+    <div
+      ref={wrapperRef}
+      style={{
+        position: 'absolute',
+        right: 40, top: '50%', transform: 'translateY(-50%)',
+        flexShrink: 0,
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          border: `1px solid ${activeCount > 0 ? '#222' : '#dddddd'}`,
+          borderRadius: 12,
+          padding: '10px 14px', cursor: 'pointer',
+          background: '#fff', fontFamily: 'inherit',
+          color: '#222',
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.6">
+          <path d="M3 6h18M6 12h12M10 18h4" />
+        </svg>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#222' }}>필터</span>
+        {activeCount > 0 ? (
+          <span
+            style={{
+              background: '#ff385c', color: '#fff',
+              fontSize: 10, fontWeight: 700,
+              borderRadius: 9999, padding: '1px 6px',
+              minWidth: 16, textAlign: 'center',
+              marginLeft: 2,
+            }}
+          >
+            {activeCount}
+          </span>
+        ) : null}
+      </button>
+      {open ? (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 8px)', right: 0,
+            width: 340,
+            background: '#fff',
+            border: '1px solid #ebebeb',
+            borderRadius: 14,
+            boxShadow:
+              'rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.12) 0 12px 32px',
+            padding: 20,
+            zIndex: 60,
+          }}
+        >
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: '#222' }}>
+            필터
+          </div>
+
+          {/* Price range */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={labelStyle}>가격 (원)</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 16px 1fr', gap: 6, alignItems: 'center' }}>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={10000}
+                value={priceMin}
+                placeholder="최소"
+                onChange={(e) => setPriceMin(e.target.value)}
+                style={inputStyle}
+              />
+              <span style={{ textAlign: 'center', color: '#9c9c9c' }}>—</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={10000}
+                value={priceMax}
+                placeholder="최대"
+                onChange={(e) => setPriceMax(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+          </div>
+
+          {/* Minimum rating */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={labelStyle}>최소 평점</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {[
+                { key: '',   label: '전체' },
+                { key: '40', label: '4.0+' },
+                { key: '45', label: '4.5+' },
+                { key: '50', label: '5.0' },
+              ].map((opt) => {
+                const active = minRating === opt.key;
+                return (
+                  <button
+                    key={opt.key || 'all'}
+                    type="button"
+                    onClick={() => setMinRating(opt.key)}
+                    style={{
+                      border: `1px solid ${active ? '#222' : '#dddddd'}`,
+                      background: active ? '#222' : '#fff',
+                      color: active ? '#fff' : '#222',
+                      borderRadius: 9999,
+                      padding: '6px 12px',
+                      fontSize: 12, fontWeight: 500,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Locations */}
+          <div style={{ marginBottom: 18 }}>
+            <div style={labelStyle}>위치</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {LOCATION_OPTIONS.map((opt) => {
+                const active = locs.includes(opt.key);
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => toggleLoc(opt.key)}
+                    style={{
+                      border: `1px solid ${active ? '#ff385c' : '#dddddd'}`,
+                      background: active ? '#ff385c' : '#fff',
+                      color: active ? '#fff' : '#222',
+                      borderRadius: 9999,
+                      padding: '6px 12px',
+                      fontSize: 12, fontWeight: 500,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Footer actions */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #ebebeb', paddingTop: 14 }}>
+            <button
+              type="button"
+              onClick={reset}
+              style={{
+                fontSize: 13, color: '#222', fontWeight: 600,
+                background: 'transparent', border: 'none',
+                cursor: 'pointer', padding: 0,
+                textDecoration: 'underline', textUnderlineOffset: 3,
+                fontFamily: 'inherit',
+              }}
+            >
+              초기화
+            </button>
+            <button
+              type="button"
+              onClick={apply}
+              style={{
+                background: '#ff385c', color: '#fff',
+                border: 'none', borderRadius: 8,
+                padding: '9px 18px', fontSize: 14, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              적용
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
 }
