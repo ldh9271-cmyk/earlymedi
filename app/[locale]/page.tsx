@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
+import { getDictionary } from '@/lib/i18n/get-dictionary';
+import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { MainHeader } from './_components/main-header';
 import { MainFooter } from './_components/main-footer';
 import { fetchFeaturedListings, type ListingCard } from '@/lib/listings/query';
@@ -129,6 +131,7 @@ export default async function PublicLandingPage({
   params: { locale: PublicLocale };
 }): Promise<JSX.Element> {
   const { locale } = params;
+  const dict = await getDictionary(locale);
   // DB-backed cards. Empty arrays = no curated listings yet → sections
   // fall back to the hardcoded PROGRAMS / FOODS / Hotel samples below
   // so the page never looks empty even before /master/listings is
@@ -182,12 +185,12 @@ export default async function PublicLandingPage({
       <MainHeader locale={locale} activeKey="all" />
 
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
-        <Hero />
-        <Programs locale={locale} dbCards={dbPrograms} />
-        <Course locale={locale} />
-        <Foods locale={locale} dbCards={dbFoods} />
-        <KpopRow />
-        <HotelAndFinalCta locale={locale} dbHotel={dbHotel} />
+        <Hero t={dict.landing} />
+        <Programs locale={locale} dbCards={dbPrograms} t={dict.landing} />
+        <Course locale={locale} t={dict.landing} />
+        <Foods locale={locale} dbCards={dbFoods} t={dict.landing} />
+        <KpopRow t={dict.landing} />
+        <HotelAndFinalCta locale={locale} dbHotel={dbHotel} t={dict.landing} />
       </main>
 
       <MainFooter />
@@ -197,7 +200,7 @@ export default async function PublicLandingPage({
 
 // ─── 1. Hero ───────────────────────────────────────────────────────
 // CTA jumps to in-page #programs anchor — no locale needed.
-function Hero(): JSX.Element {
+function Hero({ t }: { t: Dictionary['landing'] }): JSX.Element {
   return (
     <section style={{ padding: '40px 0 8px' }}>
       <div
@@ -237,7 +240,7 @@ function Hero(): JSX.Element {
               borderRadius: 9999, padding: '6px 12px',
             }}
           >
-            <span style={{ color: '#ff385c' }}>★</span> 게스트 선호 · 평점 4.9
+            <span style={{ color: '#ff385c' }}>★</span> {t.heroBadge}
           </div>
           <h1
             style={{
@@ -245,7 +248,7 @@ function Hero(): JSX.Element {
               margin: '18px 0 0', letterSpacing: '-1px',
             }}
           >
-            서울에서 놀면서,<br />예뻐지는 4박 5일
+            {t.heroTitleLine1}<br />{t.heroTitleLine2}
           </h1>
           <p
             style={{
@@ -253,7 +256,7 @@ function Hero(): JSX.Element {
               margin: '14px 0 0', color: 'rgba(255,255,255,0.92)',
             }}
           >
-            퍼스널 컬러 진단부터 K-팝 성지, 현지인 찐맛집까지. 노는 사이 더 예뻐지는 올인원 K-뷰티 여행.
+            {t.heroSubtitle}
           </p>
           <Link
             href={`#programs`}
@@ -266,7 +269,7 @@ function Hero(): JSX.Element {
               cursor: 'pointer', textDecoration: 'none',
             }}
           >
-            여행 둘러보기
+            {t.heroCta}
           </Link>
         </div>
       </div>
@@ -283,9 +286,11 @@ function Hero(): JSX.Element {
 function Programs({
   locale,
   dbCards,
+  t,
 }: {
   locale: PublicLocale;
   dbCards: ListingCard[];
+  t: Dictionary['landing'];
 }): JSX.Element {
   const cards: Array<{
     name: string;
@@ -310,7 +315,7 @@ function Programs({
     : PROGRAMS;
   return (
     <section id="programs" style={{ padding: '56px 0 0', scrollMarginTop: 200 }}>
-      <SectionHeader title="서울의 인기 뷰티 프로그램" />
+      <SectionHeader title={t.programsTitle} viewAllLabel={t.sectionViewAll} />
       <div
         style={{
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
@@ -340,7 +345,7 @@ function Programs({
                     boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
                   }}
                 >
-                  게스트 선호
+                  {t.programsFeaturedBadge}
                 </div>
               ) : null}
               <div style={{ position: 'absolute', top: 12, right: 12 }}>
@@ -362,7 +367,7 @@ function Programs({
             <div style={{ fontSize: 14, color: '#6a6a6a' }}>{p.place}</div>
             <div style={{ fontSize: 15, marginTop: 6 }}>
               <span style={{ fontWeight: 600 }}>{p.price}</span>{' '}
-              <span style={{ color: '#6a6a6a' }}>세션</span>
+              <span style={{ color: '#6a6a6a' }}>{t.programsPerSession}</span>
             </div>
           </Link>
         ))}
@@ -372,10 +377,16 @@ function Programs({
 }
 
 // ─── 4. Course (베스트셀러 · 올인원 코스) ────────────────────────────
-function Course({ locale }: { locale: PublicLocale }): JSX.Element {
+function Course({
+  locale,
+  t,
+}: {
+  locale: PublicLocale;
+  t: Dictionary['landing'];
+}): JSX.Element {
   return (
     <section style={{ padding: '56px 0 0' }}>
-      <SectionHeader title="베스트셀러 · 올인원 코스" />
+      <SectionHeader title={t.courseTitle} viewAllLabel={t.sectionViewAll} />
       <div
         style={{
           display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 40,
@@ -390,10 +401,10 @@ function Course({ locale }: { locale: PublicLocale }): JSX.Element {
             }}
           />
           <h3 style={{ fontSize: 21, fontWeight: 700, margin: '24px 0 0' }}>
-            4박 5일 글로우업 코스
+            {t.courseName}
           </h3>
           <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 4 }}>
-            뷰티 케어 · 찐맛집 · K-팝 성지 · 명소 · 5성 호텔
+            {t.courseDesc}
           </div>
           <div style={{ height: 1, background: '#ebebeb', margin: '24px 0' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -437,13 +448,13 @@ function Course({ locale }: { locale: PublicLocale }): JSX.Element {
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div>
               <span style={{ fontSize: 21, fontWeight: 700 }}>₩1,890,000</span>{' '}
-              <span style={{ fontSize: 15, color: '#6a6a6a' }}>/ 1인</span>
+              <span style={{ fontSize: 15, color: '#6a6a6a' }}>{t.coursePerPerson}</span>
             </div>
             <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
                 <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
               </svg>
-              4.9 · 후기 318개
+              4.9 · {t.courseReviews}
             </span>
           </div>
           <div
@@ -460,17 +471,17 @@ function Course({ locale }: { locale: PublicLocale }): JSX.Element {
                   borderBottom: '1px solid #c1c1c1',
                 }}
               >
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>출발일</div>
-                <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>날짜 추가</div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>{t.courseDeparture}</div>
+                <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{t.courseAddDate}</div>
               </div>
               <div style={{ padding: '12px 14px', borderBottom: '1px solid #c1c1c1' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>종료일</div>
-                <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>날짜 추가</div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>{t.courseEnd}</div>
+                <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{t.courseAddDate}</div>
               </div>
             </div>
             <div style={{ padding: '12px 14px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>인원</div>
-              <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>게스트 1명</div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>{t.coursePax}</div>
+              <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{t.courseGuest1}</div>
             </div>
           </div>
           <Link
@@ -484,18 +495,18 @@ function Course({ locale }: { locale: PublicLocale }): JSX.Element {
               cursor: 'pointer', textDecoration: 'none',
             }}
           >
-            예약하기
+            {t.courseBook}
           </Link>
           <div style={{ textAlign: 'center', fontSize: 14, color: '#6a6a6a', marginTop: 12 }}>
-            예약 확정 전에는 요금이 청구되지 않습니다
+            {t.courseNotCharged}
           </div>
           <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
-            <RowBreakdown label="₩1,890,000 × 1인" value="₩1,890,000" />
-            <RowBreakdown label="통역 가이드 동행" value="포함" />
-            <RowBreakdown label="5성 호텔 4박" value="포함" />
+            <RowBreakdown label={`₩1,890,000 × 1 ${t.coursePersonUnit}`} value="₩1,890,000" />
+            <RowBreakdown label={t.courseInterpreter} value={t.courseIncluded} />
+            <RowBreakdown label={t.courseHotel4} value={t.courseIncluded} />
             <div style={{ height: 1, background: '#ebebeb', margin: '6px 0' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: 16 }}>
-              <span>총 합계</span>
+              <span>{t.courseTotal}</span>
               <span>₩1,890,000</span>
             </div>
           </div>
@@ -511,9 +522,11 @@ function Course({ locale }: { locale: PublicLocale }): JSX.Element {
 function Foods({
   locale: _locale,
   dbCards,
+  t,
 }: {
   locale: PublicLocale;
   dbCards: ListingCard[];
+  t: Dictionary['landing'];
 }): JSX.Element {
   const cards: Array<{
     name: string;
@@ -531,7 +544,7 @@ function Foods({
     : FOODS;
   return (
     <section style={{ padding: '56px 0 0' }}>
-      <SectionHeader title="현지인만 아는 찐맛집" />
+      <SectionHeader title={t.foodsTitle} viewAllLabel={t.sectionViewAll} />
       <div
         style={{
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
@@ -557,7 +570,7 @@ function Foods({
                     boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
                   }}
                 >
-                  예약 대행
+                  {t.foodsBookedBadge}
                 </div>
               ) : null}
               <div style={{ position: 'absolute', top: 12, right: 12 }}>
@@ -622,11 +635,11 @@ const KPOP_HOUSES: Array<{
   },
 ];
 
-function KpopRow(): JSX.Element {
+function KpopRow({ t }: { t: Dictionary['landing'] }): JSX.Element {
   return (
     <section style={{ padding: '40px 0 0' }}>
       <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>
-        K-팝 성지 탐방
+        {t.kpopTitle}
       </h2>
       <div
         style={{
@@ -686,17 +699,17 @@ const HOTEL_AMENITY_LABEL: Record<string, string> = {
 function HotelAndFinalCta({
   locale,
   dbHotel,
+  t,
 }: {
   locale: PublicLocale;
   dbHotel: ListingCard | null;
+  t: Dictionary['landing'];
 }): JSX.Element {
   const hotel = {
-    title: dbHotel?.title ?? '명동 중심 프리미엄 5성 호텔',
+    title: dbHotel?.title ?? t.hotelTitle,
     img: dbHotel?.coverImageUrl ?? HOTEL_IMG,
     rating: dbHotel?.rating ? (dbHotel.rating / 10).toFixed(1) : '4.9',
-    description:
-      dbHotel?.description ??
-      '스파·루프탑·조식 뷔페까지 갖춘 명동 중심 호텔에서 4박. 모든 코스 일정의 이동 동선을 가장 가깝게 설계했습니다.',
+    description: dbHotel?.description ?? t.hotelDescription,
     amenities: (() => {
       const fromDb = Array.isArray(dbHotel?.details.amenities)
         ? (dbHotel?.details.amenities as string[])
@@ -704,15 +717,11 @@ function HotelAndFinalCta({
             .slice(0, 3)
         : [];
       if (fromDb.length > 0) return fromDb;
-      return [
-        '스파 · 루프탑 · 피트니스 무료 이용',
-        '조식 뷔페 4일 포함',
-        '명동·남산·동대문 도보 이동권',
-      ];
+      return [t.hotelAmenity1, t.hotelAmenity2, t.hotelAmenity3];
     })(),
     priceWon: dbHotel?.priceWon ?? 320_000,
     priceUnit: dbHotel?.priceUnit ?? '박',
-    promoLabel: dbHotel?.promoLabel ?? '게스트 선호',
+    promoLabel: dbHotel?.promoLabel ?? t.hotelPromoLabel,
   };
   return (
     <>
@@ -779,7 +788,7 @@ function HotelAndFinalCta({
                 ₩{hotel.priceWon.toLocaleString('ko-KR')}
               </span>
               <span style={{ fontSize: 15, color: '#6a6a6a' }}>
-                / {hotel.priceUnit} · 코스 포함가
+                {t.hotelPerNight}
               </span>
             </div>
           </div>
@@ -788,7 +797,7 @@ function HotelAndFinalCta({
 
       <section style={{ padding: '64px 0 8px', textAlign: 'center' }}>
         <h2 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
-          지금, 가장 빛나는 여행을 시작하세요
+          {t.finalCtaTitle}
         </h2>
         <p
           style={{
@@ -796,7 +805,7 @@ function HotelAndFinalCta({
             margin: '12px auto 0', maxWidth: 480, lineHeight: 1.5,
           }}
         >
-          날짜와 인원만 정하면, 나머지는 통역 가이드와 함께 완벽하게 준비해 드립니다.
+          {t.finalCtaSubtitle}
         </p>
         <div
           style={{
@@ -814,7 +823,7 @@ function HotelAndFinalCta({
               cursor: 'pointer', textDecoration: 'none',
             }}
           >
-            여행 시작하기
+            {t.finalCtaStart}
           </Link>
           <Link
             href={`/${locale}/inquiry`}
@@ -826,7 +835,7 @@ function HotelAndFinalCta({
               cursor: 'pointer', textDecoration: 'none',
             }}
           >
-            1:1 상담
+            {t.finalCtaConsult}
           </Link>
         </div>
       </section>
@@ -835,7 +844,13 @@ function HotelAndFinalCta({
 }
 
 // ─── Small reusable bits ───────────────────────────────────────────
-function SectionHeader({ title }: { title: string }): JSX.Element {
+function SectionHeader({
+  title,
+  viewAllLabel,
+}: {
+  title: string;
+  viewAllLabel: string;
+}): JSX.Element {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>{title}</h2>
@@ -845,7 +860,7 @@ function SectionHeader({ title }: { title: string }): JSX.Element {
           color: '#222', fontSize: 14, fontWeight: 600, cursor: 'pointer',
         }}
       >
-        전체 보기 <span style={{ fontSize: 16 }}>›</span>
+        {viewAllLabel} <span style={{ fontSize: 16 }}>›</span>
       </span>
     </div>
   );
