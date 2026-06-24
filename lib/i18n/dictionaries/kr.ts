@@ -191,6 +191,12 @@ const kr = {
     noClinicsBody: '협력 병원을 준비 중입니다. 1:1 문의로 직접 안내받으실 수 있어요.',
     noClinicsInCategory: '이 카테고리에 등록된 병원이 아직 없습니다.',
   },
+  meta: {
+    siteTitle: 'glow-up — 서울에서 놀면서, 예뻐지는 4박 5일',
+    siteDescription: '퍼스널 컬러 진단부터 K-팝 성지, 현지인 찐맛집까지. 노는 사이 더 예뻐지는 올인원 K-뷰티 여행.',
+    ogTitle: 'glow-up · 한국 의료관광 AI 컨시어지',
+    ogDescription: '병원·시술·여행을 한 화면에서 비교. AI 컨시어지가 6개국어로 24/7 안내.',
+  },
   siteFooter: {
     colSupport: '지원',
     colPrograms: '프로그램',

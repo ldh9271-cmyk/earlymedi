@@ -1,5 +1,51 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { isPublicLocale } from '@/lib/i18n/locales';
+import {
+  LOCALE_TO_BCP47,
+  PUBLIC_LOCALES,
+  isPublicLocale,
+  type PublicLocale,
+} from '@/lib/i18n/locales';
+import { getDictionary } from '@/lib/i18n/get-dictionary';
+
+/**
+ * Per-locale metadata (title / description / openGraph). Overrides the
+ * root layout's defaults so /en, /zh, /ja, /ru, /vi each get their own
+ * <title>/<meta description>/og: tags in the active language — important
+ * for SEO and for social previews when foreign users share links.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: string };
+}): Promise<Metadata> {
+  if (!isPublicLocale(params.locale)) return {};
+  const dict = await getDictionary(params.locale as PublicLocale);
+  const url = `/${params.locale}`;
+  return {
+    title: dict.meta.siteTitle,
+    description: dict.meta.siteDescription,
+    alternates: {
+      canonical: url,
+      languages: Object.fromEntries(
+        PUBLIC_LOCALES.map((l) => [LOCALE_TO_BCP47[l], `/${l}`]),
+      ),
+    },
+    openGraph: {
+      type: 'website',
+      url,
+      siteName: 'glow-up',
+      locale: LOCALE_TO_BCP47[params.locale as PublicLocale].replace('-', '_'),
+      title: dict.meta.ogTitle,
+      description: dict.meta.ogDescription,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: dict.meta.ogTitle,
+      description: dict.meta.ogDescription,
+    },
+  };
+}
 
 /**
  * Root layout for /[locale]/* — locale validation ONLY.

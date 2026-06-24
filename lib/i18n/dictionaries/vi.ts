@@ -168,6 +168,12 @@ const vi: Dictionary = {
     businessLogin: 'Đăng nhập doanh nghiệp →',
     privacy: 'Khi đăng nhập, bạn đồng ý với Chính sách bảo mật.',
   },
+  meta: {
+    siteTitle: 'glow-up — Vừa chơi ở Seoul, vừa đẹp lên trong 4 đêm 5 ngày',
+    siteDescription: 'Từ phân tích màu cá nhân đến thánh địa K-pop và quán ăn người bản xứ — chuyến du lịch K-beauty trọn gói.',
+    ogTitle: 'glow-up · Concierge AI cho du lịch y tế Hàn Quốc',
+    ogDescription: 'So sánh phòng khám, dịch vụ và hành trình ở một nơi. Concierge AI hỗ trợ 24/7 bằng 6 ngôn ngữ.',
+  },
   siteFooter: {
     colSupport: 'Hỗ trợ',
     colPrograms: 'Chương trình',

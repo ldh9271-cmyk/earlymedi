@@ -180,6 +180,12 @@ const en: Dictionary = {
     noClinicsBody: "We're onboarding partner clinics. Start a 1:1 inquiry and we'll help you directly.",
     noClinicsInCategory: 'No clinics listed in this category yet.',
   },
+  meta: {
+    siteTitle: 'glow-up — Play in Seoul, glow up in 4 nights 5 days',
+    siteDescription: 'From personal-color analysis to K-pop landmarks and authentic local restaurants — an all-in-one K-beauty trip.',
+    ogTitle: 'glow-up · AI concierge for Korean medical tourism',
+    ogDescription: 'Compare clinics, treatments, and trips in one place. AI concierge guides you 24/7 in 6 languages.',
+  },
   siteFooter: {
     colSupport: 'Support',
     colPrograms: 'Programs',

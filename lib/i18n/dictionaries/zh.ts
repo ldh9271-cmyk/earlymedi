@@ -165,6 +165,12 @@ const zh: Dictionary = {
     businessLogin: '业者登录 →',
     privacy: '登录即同意隐私政策。',
   },
+  meta: {
+    siteTitle: 'glow-up — 游玩首尔，变美 4 晚 5 日',
+    siteDescription: '从个人色彩诊断到 K-pop 圣地与本地人推荐美食 — 边玩边变美的一站式 K-beauty 旅行。',
+    ogTitle: 'glow-up · 韩国医疗旅游 AI 礼宾',
+    ogDescription: '一站对比医院、项目和行程。AI 礼宾以 6 种语言全天候为您服务。',
+  },
   siteFooter: {
     colSupport: '支持',
     colPrograms: '项目',
