@@ -40,10 +40,10 @@ const TRAVEL_TYPES: ReadonlyArray<{
     key: 'free',
     titleKr: '자유여행',
     titleEn: 'Free travel',
-    desc: '원하는 시술·맛집·호텔만 골라 일정은 자유롭게. 컨시어지가 예약·통역만 지원해요.',
+    desc: '드라이빙 가이드 포함. 원하는 시술·맛집·호텔만 골라 일정은 자유롭게. 1일 이용 기준.',
     img: `${IMG_BASE}/00c1f04c-fb00-44c7-b991-2af98bddd6e2.jpg`,
-    duration: '3–7박 · 유연 일정',
-    priceFromWon: 480_000,
+    duration: '1일 · 드라이빙 가이드 포함',
+    priceFromWon: 350_000,
   },
   {
     key: 'package',
@@ -117,7 +117,7 @@ export default async function GlowupPcPage({
           {TRAVEL_TYPES.map((t) => (
             <Link
               key={t.key}
-              href={`/${params.locale}/checkout?cat=hotel&sub=${t.key}`}
+              href={`/${params.locale}/travel/${t.key}`}
               style={{
                 display: 'block',
                 border: '1px solid #ebebeb', borderRadius: 16,
