@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
-import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import type { PublicLocale } from '@/lib/i18n/locales';
@@ -414,9 +413,20 @@ export function PatientSignupForm({
           </div>
         ) : null}
 
-        <Button type="submit" variant="brand" className="w-full" disabled={submitting}>
+        <button
+          type="submit"
+          disabled={submitting}
+          style={{
+            width: '100%', height: 50, marginTop: 4,
+            background: submitting ? '#ffb3c1' : '#ff385c',
+            color: '#fff', border: 'none', borderRadius: 10,
+            fontWeight: 600, fontSize: 16,
+            cursor: submitting ? 'wait' : 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
           {submitting ? dict.submitting : dict.submitCta}
-        </Button>
+        </button>
       </form>
     </div>
   );
