@@ -15,15 +15,10 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   + '.m-mh-globe-btn { width: 36px !important; height: 36px !important; }'
   + '.m-mh-account-pill { padding: 4px 6px 4px 10px !important; }'
   + '.m-mh-account-avatar { width: 26px !important; height: 26px !important; }'
-  // 9 items in a 4 / 5 layout — row 1 = 4 items (slightly wider),
-  // row 2 = 5 items. Uses a fine 20-col grid (LCM of 4 and 5) so
-  // each row spans the full width with even gutters. nth-child
-  // selectors target wrapper position so the dropdown <div>
-  // wrappers (travel/hospital) are picked up alongside the <Link>
-  // items even though only the latter carry .m-mh-cat-item.
-  + '.m-mh-cat-strip { display: grid !important; grid-template-columns: repeat(20, 1fr) !important; row-gap: 4px !important; column-gap: 4px !important; padding: 6px 8px !important; overflow: visible !important; }'
-  + '.m-mh-cat-strip > :nth-child(-n+4) { grid-column: span 5 !important; }'
-  + '.m-mh-cat-strip > :nth-child(n+5):nth-child(-n+9) { grid-column: span 4 !important; }'
+  // 8 items in a 4 / 4 grid, centered. No fine-grid hack needed
+  // now that both rows are 4 wide; one 4-col grid fits both rows
+  // cleanly with consistent cell width.
+  + '.m-mh-cat-strip { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; row-gap: 4px !important; column-gap: 4px !important; padding: 6px 8px !important; overflow: visible !important; }'
   + '.m-mh-cat-item { padding: 8px 2px !important; gap: 4px !important; min-width: 0 !important; }'
   + '.m-mh-cat-icon { width: 22px !important; height: 22px !important; }'
   + '.m-mh-cat-label { font-size: 11px !important; line-height: 1.2 !important; max-width: 100%; text-align: center; word-break: keep-all; }'
@@ -111,14 +106,15 @@ export type MainCategoryKey =
   | 'hospital'
   | 'color' | 'skin' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel';
 
-// '전체' was the leftmost reset that landed on /clinics. Dropped from
-// the visible strip 2026-06-25 — the lifestyle categories already imply
-// "all" through their union, and the slot crowded the mobile 2-row grid.
-// The 'all' key stays in MainCategoryKey + dict so callers still pass
-// activeKey="all" to mean "no specific category highlighted".
+// Founder-ordered strip (2026-06-25): row 1 = travel / hospital /
+// food / hotel (the high-intent "trip" anchors), row 2 = skin /
+// photo / makeup / kpop (the K-beauty + culture exploration row).
+// '전체' was dropped earlier (lifestyle categories imply the union);
+// 'color' (퍼스널컬러) is hidden from the strip but its key + dict
+// + /glowup/pc/c/color route stay live so deep-links still work.
 const MAIN_CATEGORY_KEYS: ReadonlyArray<MainCategoryKey> = [
-  'travel', 'hospital',
-  'color', 'skin', 'photo', 'makeup', 'kpop', 'food', 'hotel',
+  'travel', 'hospital', 'food', 'hotel',
+  'skin', 'photo', 'makeup', 'kpop',
 ];
 
 // Narrow to only the `cat*` keys (which are always plain strings).
