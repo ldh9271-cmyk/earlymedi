@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, lte, type SQL } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import {
   partnerListings,
@@ -38,30 +38,60 @@ export type ListingCard = {
  * Read-side never throws — if the table doesn't exist yet (migration
  * not applied) or the row count is zero, returns [] so the /kr
  * landing falls back to its hardcoded defaults without breaking.
+ *
+ * Filter options (MainHeader filter pill):
+ *   - priceMin/priceMax: SQL gte/lte on partner_listings.price_won
+ *   - minRating: SQL gte on partner_listings.rating (×10 encoding)
+ *   - cities: post-fetch JS filter against location_label (substring)
+ *     — schema's address_json.city isn't reliably populated for
+ *     listings yet, so we match against the human-readable
+ *     location_label instead. Once the JSONB index lands we can
+ *     migrate to a server-side filter.
  */
 export async function fetchFeaturedListings(opts: {
   locale: PublicLocale;
   categories: ListingCategory[];
   limit?: number;
+  priceMin?: number | null;
+  priceMax?: number | null;
+  minRating?: number | null;
+  cities?: ReadonlyArray<string>;
 }): Promise<ListingCard[]> {
-  const { locale, categories, limit } = opts;
+  const { locale, categories, limit, priceMin, priceMax, minRating, cities } = opts;
   if (categories.length === 0) return [];
 
   let rows: PartnerListing[] = [];
   try {
+    const whereParts: SQL[] = [
+      inArray(partnerListings.category, categories),
+      eq(partnerListings.status, 'approved'),
+      eq(partnerListings.featured, true),
+    ];
+    if (typeof priceMin === 'number' && priceMin > 0) {
+      whereParts.push(gte(partnerListings.priceWon, priceMin));
+    }
+    if (typeof priceMax === 'number' && priceMax > 0) {
+      whereParts.push(lte(partnerListings.priceWon, priceMax));
+    }
+    if (typeof minRating === 'number' && minRating > 0) {
+      whereParts.push(gte(partnerListings.rating, minRating));
+    }
     rows = await db
       .select()
       .from(partnerListings)
-      .where(
-        and(
-          inArray(partnerListings.category, categories),
-          eq(partnerListings.status, 'approved'),
-          eq(partnerListings.featured, true),
-        ),
-      )
+      .where(and(...whereParts))
       .orderBy(asc(partnerListings.sortOrder));
   } catch {
     return [];
+  }
+
+  // City whitelist — post-fetch substring match against locationLabel.
+  if (cities && cities.length > 0) {
+    rows = rows.filter((r) => {
+      const label = (r.locationLabel ?? '').trim();
+      if (!label) return false;
+      return cities.some((c) => label.includes(c));
+    });
   }
 
   if (rows.length === 0) return [];

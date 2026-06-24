@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { eq, inArray, sql, and } from 'drizzle-orm';
+import { eq, inArray, sql, and, gte } from 'drizzle-orm';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { db } from '@/lib/db/client';
@@ -38,6 +38,22 @@ type ClinicRow = {
   coverImageUrl: string | null;
 };
 
+/**
+ * City whitelist matcher — case-insensitive partial-match against
+ * addressJson.city. Empty whitelist = no filter (pass all). Used to
+ * apply MainHeader's location chips (강남 / 명동 / ...) post-fetch,
+ * since the SELECT only pulls 50 most-recent rows.
+ */
+function cityFilterMatch(
+  addressJson: { city?: string } | null,
+  cityWhitelist: ReadonlyArray<string>,
+): boolean {
+  if (cityWhitelist.length === 0) return true;
+  const city = (addressJson?.city ?? '').trim();
+  if (!city) return false;
+  return cityWhitelist.some((w) => city.includes(w));
+}
+
 const CATEGORY_LABELS: Record<string, string> = {
   plastic_surgery: '성형외과',
   dermatology: '피부과',
@@ -57,12 +73,50 @@ export default async function ClinicsListPage({
   searchParams,
 }: {
   params: { locale: PublicLocale };
-  searchParams: { category?: string; procedure?: string };
+  searchParams: {
+    category?: string;
+    procedure?: string;
+    /** filter pill query params */
+    priceMin?: string;
+    priceMax?: string;
+    minRating?: string;
+    loc?: string;
+  };
 }): Promise<JSX.Element> {
   const dict = await getDictionary(params.locale);
 
   const categoryFilter = searchParams.category;
   const procedureFilter = searchParams.procedure;
+
+  // ── MainHeader filter pill query parsing ────────────────────────────
+  // hospitals has rating (0..50 integer) and addressJson.city — those
+  // are filterable. priceMin/priceMax is ignored on this page because
+  // the hospitals row has no price column (procedure prices live
+  // elsewhere). filtering them silently would surprise users; better
+  // to keep the rows visible and let the filter chip just indicate
+  // intent. Once we surface price_won (post Phase A.5), wire it in.
+  const minRating = (() => {
+    const n = Number(searchParams.minRating);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  })();
+  const wantedCities = (searchParams.loc ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  // map of filter-key → display city name (must match what we store
+  // in hospitals.addressJson.city). hospitals data uses Korean city
+  // names regardless of the visitor's locale.
+  const LOC_TO_CITY: Record<string, string> = {
+    gangnam: '강남',
+    myeongdong: '명동',
+    seongsu: '성수',
+    cheongdam: '청담',
+    hongdae: '홍대',
+    itaewon: '이태원',
+  };
+  const cityWhitelist = wantedCities
+    .map((k) => LOC_TO_CITY[k])
+    .filter((v): v is string => typeof v === 'string');
 
   let filtered: ClinicRow[] = [];
   let dbError: string | null = null;
@@ -126,6 +180,8 @@ export default async function ClinicsListPage({
           })
           .filter((r): r is ClinicRow => r !== null);
       } else {
+        const whereParts = [eq(hospitals.countryCode, 'KR')];
+        if (minRating !== null) whereParts.push(gte(hospitals.rating, minRating));
         const fetched = await db
           .select({
             id: hospitals.id,
@@ -134,9 +190,10 @@ export default async function ClinicsListPage({
             countryCode: hospitals.countryCode,
             primaryCategories: hospitals.primaryCategories,
             coverImageUrl: hospitals.coverImageUrl,
+            addressJson: hospitals.addressJson,
           })
           .from(hospitals)
-          .where(eq(hospitals.countryCode, 'KR'))
+          .where(and(...whereParts))
           .orderBy(sql`${hospitals.createdAt} desc`)
           .limit(50);
         filtered = fetched
@@ -145,9 +202,12 @@ export default async function ClinicsListPage({
             primaryCategories: (r.primaryCategories ?? []) as string[],
             promoLabel: null,
           }))
-          .filter((h) => h.primaryCategories.includes(categoryFilter));
+          .filter((h) => h.primaryCategories.includes(categoryFilter))
+          .filter((h) => cityFilterMatch(h.addressJson, cityWhitelist));
       }
     } else {
+      const whereParts = [eq(hospitals.countryCode, 'KR')];
+      if (minRating !== null) whereParts.push(gte(hospitals.rating, minRating));
       const fetched = await db
         .select({
           id: hospitals.id,
@@ -156,16 +216,19 @@ export default async function ClinicsListPage({
           countryCode: hospitals.countryCode,
           primaryCategories: hospitals.primaryCategories,
           coverImageUrl: hospitals.coverImageUrl,
+          addressJson: hospitals.addressJson,
         })
         .from(hospitals)
-        .where(eq(hospitals.countryCode, 'KR'))
+        .where(and(...whereParts))
         .orderBy(sql`${hospitals.createdAt} desc`)
         .limit(50);
-      filtered = fetched.map((r) => ({
-        ...r,
-        primaryCategories: (r.primaryCategories ?? []) as string[],
-        promoLabel: null,
-      }));
+      filtered = fetched
+        .map((r) => ({
+          ...r,
+          primaryCategories: (r.primaryCategories ?? []) as string[],
+          promoLabel: null,
+        }))
+        .filter((h) => cityFilterMatch(h.addressJson, cityWhitelist));
     }
   } catch (err) {
     dbError = err instanceof Error ? err.message : 'db_error';

@@ -106,30 +106,63 @@ const FOODS = [
 // Itinerary copy now lives in dict.landing.itinerary (6 locale).
 // We just add the step number `n` at render time.
 
+// Resolve filter pill query into the shape fetchFeaturedListings
+// understands. Mirrors the /clinics page's parsing — keep the
+// loc→city map in sync.
+const LOC_TO_CITY_LISTING: Record<string, string> = {
+  gangnam: '강남',
+  myeongdong: '명동',
+  seongsu: '성수',
+  cheongdam: '청담',
+  hongdae: '홍대',
+  itaewon: '이태원',
+};
+
 export default async function GlowupPcPage({
   params,
+  searchParams,
 }: {
   params: { locale: PublicLocale };
+  searchParams: {
+    sub?: string;
+    priceMin?: string;
+    priceMax?: string;
+    minRating?: string;
+    loc?: string;
+  };
 }): Promise<JSX.Element> {
+  const priceMin = Number(searchParams.priceMin) || null;
+  const priceMax = Number(searchParams.priceMax) || null;
+  const minRating = Number(searchParams.minRating) || null;
+  const cities = (searchParams.loc ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((k) => LOC_TO_CITY_LISTING[k])
+    .filter((v): v is string => typeof v === 'string');
   // DB-backed cards — same pattern as /[locale]/page.tsx. Empty
   // arrays fall through to the hardcoded PROGRAMS/FOODS samples so
   // the page never looks empty before /master/listings is populated.
   const dict = await getDictionary(params.locale);
+  const filterOpts = { priceMin, priceMax, minRating, cities };
   const [dbPrograms, dbFoods, dbHotels] = await Promise.all([
     fetchFeaturedListings({
       locale: params.locale,
       categories: ['personal_color', 'hair', 'makeup', 'photo_studio'],
       limit: 4,
+      ...filterOpts,
     }),
     fetchFeaturedListings({
       locale: params.locale,
       categories: ['food', 'restaurant'],
       limit: 4,
+      ...filterOpts,
     }),
     fetchFeaturedListings({
       locale: params.locale,
       categories: ['hotel'],
       limit: 1,
+      ...filterOpts,
     }),
   ]);
   const dbHotel = dbHotels[0] ?? null;
