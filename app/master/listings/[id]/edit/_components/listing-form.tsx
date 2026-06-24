@@ -5,7 +5,15 @@ import {
   LISTING_CATEGORIES,
   LISTING_STATUSES,
   TRAVEL_PACKAGE_SUB_TYPES,
+  type ListingStatus,
 } from '@/lib/listings/categories';
+
+const STATUS_LABELS_KR: Record<ListingStatus, string> = {
+  draft: '임시저장 (draft)',
+  pending: '검수 대기 (pending)',
+  approved: '승인 완료 (approved)',
+  rejected: '반려 (rejected)',
+};
 
 /**
  * Master listing edit form — client-side because the category-specific
@@ -241,7 +249,7 @@ export function ListingEditForm({
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 {LISTING_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>{STATUS_LABELS_KR[s]}</option>
                 ))}
               </select>
             </Field>
