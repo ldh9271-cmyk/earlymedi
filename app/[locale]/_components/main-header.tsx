@@ -50,6 +50,20 @@ const HOSPITAL_SUBS: Array<{ key: HospitalSubKey; label: string }> = [
 ];
 
 /**
+ * Travel sub-types — surfaced under the 여행 dropdown. Keys match
+ * partner_listings.details.subType so /glowup/pc?sub=<key> can filter
+ * the listings page directly when the user picks one. Aligned with
+ * lib/listings/categories.ts → TRAVEL_PACKAGE_SUB_TYPES.
+ */
+type TravelSubKey = 'free' | 'package' | 'training';
+
+const TRAVEL_SUBS: Array<{ key: TravelSubKey; label: string }> = [
+  { key: 'free',     label: '자유여행' },
+  { key: 'package',  label: '패키지여행' },
+  { key: 'training', label: '연수패키지' },
+];
+
+/**
  * Strip-level keys. `hospital` is the dropdown trigger; everything
  * else is a flat link. `all` is the leftmost reset (전체) that
  * lands on the unfiltered /clinics list.
@@ -94,21 +108,27 @@ export function MainHeader({
   activeTab?: 'clinics' | 'ai' | 'glowup';
 }): JSX.Element {
   const [hospitalOpen, setHospitalOpen] = useState(false);
+  const [travelOpen, setTravelOpen] = useState(false);
   const hospitalRef = useRef<HTMLDivElement | null>(null);
+  const travelRef = useRef<HTMLDivElement | null>(null);
 
-  // Click-outside-to-close. Captures during the bubble phase so a click
-  // on the trigger itself toggles via its own onClick before this fires.
+  // Click-outside-to-close for both dropdowns. One shared mousedown
+  // listener — checks each open dropdown's ref independently so they
+  // can be open simultaneously (though UX-wise only one usually is).
   useEffect(() => {
-    if (!hospitalOpen) return;
+    if (!hospitalOpen && !travelOpen) return;
     function onDown(e: MouseEvent): void {
-      if (!hospitalRef.current) return;
-      if (!hospitalRef.current.contains(e.target as Node)) {
+      const t = e.target as Node;
+      if (hospitalOpen && hospitalRef.current && !hospitalRef.current.contains(t)) {
         setHospitalOpen(false);
+      }
+      if (travelOpen && travelRef.current && !travelRef.current.contains(t)) {
+        setTravelOpen(false);
       }
     }
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
-  }, [hospitalOpen]);
+  }, [hospitalOpen, travelOpen]);
 
   return (
     <header
@@ -232,23 +252,38 @@ export function MainHeader({
             const isActive = c.key === activeKey;
             const stroke = isActive ? '#222' : '#6a6a6a';
 
-            // "병원" gets a click-toggle dropdown panel anchored below it.
+            // "병원" and "여행" both get click-toggle dropdown panels.
             // Everything else is a flat <Link>.
-            if (c.key === 'hospital') {
+            if (c.key === 'hospital' || c.key === 'travel') {
+              const isHospital = c.key === 'hospital';
+              const open = isHospital ? hospitalOpen : travelOpen;
+              const setOpen = isHospital ? setHospitalOpen : setTravelOpen;
+              const panelRef = isHospital ? hospitalRef : travelRef;
+              const subs = isHospital
+                ? HOSPITAL_SUBS.map((s) => ({
+                    key: s.key,
+                    label: s.label,
+                    href: `/${locale}/clinics?category=${s.key}`,
+                  }))
+                : TRAVEL_SUBS.map((s) => ({
+                    key: s.key,
+                    label: s.label,
+                    href: `/${locale}/glowup/pc?sub=${s.key}`,
+                  }));
               return (
                 <div
                   key={c.key}
-                  ref={hospitalRef}
+                  ref={panelRef}
                   style={{ position: 'relative', flexShrink: 0 }}
                 >
                   <button
                     type="button"
-                    onClick={() => setHospitalOpen((v) => !v)}
+                    onClick={() => setOpen((v) => !v)}
                     style={{
                       display: 'flex', flexDirection: 'column',
                       alignItems: 'center', gap: 8,
                       padding: '14px 0',
-                      borderBottom: isActive || hospitalOpen
+                      borderBottom: isActive || open
                         ? '2px solid #222'
                         : '2px solid transparent',
                       color: stroke, background: 'transparent', border: 'none',
@@ -260,7 +295,7 @@ export function MainHeader({
                       {c.label}
                     </span>
                   </button>
-                  {hospitalOpen ? (
+                  {open ? (
                     <div
                       style={{
                         position: 'absolute',
@@ -276,11 +311,11 @@ export function MainHeader({
                         zIndex: 60,
                       }}
                     >
-                      {HOSPITAL_SUBS.map((sub) => (
+                      {subs.map((sub) => (
                         <Link
                           key={sub.key}
-                          href={`/${locale}/clinics?category=${sub.key}`}
-                          onClick={() => setHospitalOpen(false)}
+                          href={sub.href}
+                          onClick={() => setOpen(false)}
                           style={{
                             display: 'block',
                             padding: '10px 14px',
