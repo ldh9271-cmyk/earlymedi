@@ -3,6 +3,7 @@ import type { PublicLocale } from '@/lib/i18n/locales';
 import { MainHeader } from '../../_components/main-header';
 import { MainFooter } from '../../_components/main-footer';
 import { fetchFeaturedListings } from '@/lib/listings/query';
+import { getDictionary } from '@/lib/i18n/get-dictionary';
 
 export const metadata = {
   title: 'glow-up — 서울에서 놀면서, 예뻐지는 4박 5일',
@@ -118,6 +119,7 @@ export default async function GlowupPcPage({
   // DB-backed cards — same pattern as /[locale]/page.tsx. Empty
   // arrays fall through to the hardcoded PROGRAMS/FOODS samples so
   // the page never looks empty before /master/listings is populated.
+  const dict = await getDictionary(params.locale);
   const [dbPrograms, dbFoods, dbHotels] = await Promise.all([
     fetchFeaturedListings({
       locale: params.locale,
@@ -211,7 +213,7 @@ export default async function GlowupPcPage({
        * refactor — gated under `false &&` so it never renders. Once
        * /c/[key] proves out the shared header we can remove the gated
        * block entirely. */}
-      <MainHeader locale={params.locale} activeKey="all" activeTab="glowup" />
+      <MainHeader locale={params.locale} activeKey="all" activeTab="glowup" t={dict.header} />
 
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
         {/* ===== HERO STRIP ===== */}

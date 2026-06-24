@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { MainHeader } from '../../../../_components/main-header';
 import { MainFooter } from '../../../../_components/main-footer';
+import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { type PcCategoryKey } from '../../_components/pc-header';
 import { CATEGORY_PRODUCTS } from '../../_components/category-products';
 
@@ -42,16 +43,17 @@ export async function generateMetadata({
   };
 }
 
-export default function CategoryDetailPage({
+export default async function CategoryDetailPage({
   params,
 }: {
   params: { locale: PublicLocale; key: string };
-}): JSX.Element {
+}): Promise<JSX.Element> {
   if (!VALID_KEYS.has(params.key as Exclude<PcCategoryKey, 'all'>)) {
     notFound();
   }
   const p = CATEGORY_PRODUCTS[params.key as Exclude<PcCategoryKey, 'all'>];
   const bookHref = `/${params.locale}/inquiry?program=${encodeURIComponent(p.title)}&interest=${p.interest}`;
+  const dict = await getDictionary(params.locale);
 
   return (
     <div
@@ -62,7 +64,7 @@ export default function CategoryDetailPage({
         overflowX: 'clip',
       }}
     >
-      <MainHeader locale={params.locale} activeKey="all" activeTab="glowup" />
+      <MainHeader locale={params.locale} activeKey="all" activeTab="glowup" t={dict.header} />
 
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
         {/* Breadcrumb-ish back link */}

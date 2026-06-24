@@ -1,4 +1,5 @@
 import { LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
+import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { MainHeader } from '../_components/main-header';
 import { MainFooter } from '../_components/main-footer';
 
@@ -22,13 +23,14 @@ export const dynamic = 'force-dynamic';
  * (via their own page wrappers) so the shell is consistent
  * everywhere — only the body content differs.
  */
-export default function PublicPortalLayout({
+export default async function PublicPortalLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
   params: { locale: PublicLocale };
-}): JSX.Element {
+}): Promise<JSX.Element> {
+  const dict = await getDictionary(params.locale);
   return (
     <div
       lang={LOCALE_TO_BCP47[params.locale]}
@@ -43,7 +45,7 @@ export default function PublicPortalLayout({
         overflowX: 'clip',
       }}
     >
-      <MainHeader locale={params.locale} activeKey="all" activeTab="clinics" />
+      <MainHeader locale={params.locale} activeKey="all" activeTab="clinics" t={dict.header} />
       <main style={{ flex: 1 }}>{children}</main>
       <MainFooter />
     </div>

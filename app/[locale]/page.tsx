@@ -182,7 +182,7 @@ export default async function PublicLandingPage({
         }
       `}</style>
 
-      <MainHeader locale={locale} activeKey="all" />
+      <MainHeader locale={locale} activeKey="all" t={dict.header} />
 
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
         <Hero t={dict.landing} />

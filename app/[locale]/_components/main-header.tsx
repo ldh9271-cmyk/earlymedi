@@ -9,6 +9,7 @@ import {
   isPublicLocale,
   type PublicLocale,
 } from '@/lib/i18n/locales';
+import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { BrandLockup } from './brand-mark';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 
@@ -45,30 +46,32 @@ type HospitalSubKey =
   | 'oriental'
   | 'partner';
 
-const HOSPITAL_SUBS: Array<{ key: HospitalSubKey; label: string }> = [
-  { key: 'plastic_surgery', label: '성형외과' },
-  { key: 'dermatology',     label: '피부과' },
-  { key: 'dental',          label: '치과' },
-  { key: 'hair',            label: '모발' },
-  { key: 'health_checkup',  label: '건강검진' },
-  { key: 'stem_cell',       label: '줄기세포' },
-  { key: 'oriental',        label: '한방병원' },
-  { key: 'partner',         label: '파트너병원' },
+// Stable order for the hospital dropdown. Display labels come from
+// dict.header.hospitalSubs.* (resolved at render via the `t` prop).
+const HOSPITAL_SUB_KEYS: ReadonlyArray<HospitalSubKey> = [
+  'plastic_surgery', 'dermatology', 'dental', 'hair',
+  'health_checkup', 'stem_cell', 'oriental', 'partner',
 ];
+
+const HOSPITAL_SUB_DICT_KEY: Record<HospitalSubKey, keyof Dictionary['header']['hospitalSubs']> = {
+  plastic_surgery: 'plasticSurgery',
+  dermatology: 'dermatology',
+  dental: 'dental',
+  hair: 'hair',
+  health_checkup: 'healthCheckup',
+  stem_cell: 'stemCell',
+  oriental: 'oriental',
+  partner: 'partner',
+};
 
 /**
  * Travel sub-types — surfaced under the 여행 dropdown. Keys match
  * partner_listings.details.subType so /glowup/pc?sub=<key> can filter
- * the listings page directly when the user picks one. Aligned with
- * lib/listings/categories.ts → TRAVEL_PACKAGE_SUB_TYPES.
+ * the listings page directly when the user picks one.
  */
 type TravelSubKey = 'free' | 'package' | 'training';
 
-const TRAVEL_SUBS: Array<{ key: TravelSubKey; label: string }> = [
-  { key: 'free',     label: '자유여행' },
-  { key: 'package',  label: '패키지여행' },
-  { key: 'training', label: '연수패키지' },
-];
+const TRAVEL_SUB_KEYS: ReadonlyArray<TravelSubKey> = ['free', 'package', 'training'];
 
 /**
  * Strip-level keys. `hospital` is the dropdown trigger; everything
@@ -81,18 +84,31 @@ export type MainCategoryKey =
   | 'hospital'
   | 'color' | 'skin' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel';
 
-const MAIN_CATEGORIES: Array<{ key: MainCategoryKey; label: string }> = [
-  { key: 'all',      label: '전체' },
-  { key: 'travel',   label: '여행' },
-  { key: 'hospital', label: '병원' },
-  { key: 'color',    label: '퍼스널컬러' },
-  { key: 'skin',     label: '피부케어' },
-  { key: 'photo',    label: '화보촬영' },
-  { key: 'makeup',   label: '메이크업' },
-  { key: 'kpop',     label: 'K-팝성지' },
-  { key: 'food',     label: '맛집' },
-  { key: 'hotel',    label: '호텔' },
+const MAIN_CATEGORY_KEYS: ReadonlyArray<MainCategoryKey> = [
+  'all', 'travel', 'hospital',
+  'color', 'skin', 'photo', 'makeup', 'kpop', 'food', 'hotel',
 ];
+
+// Narrow to only the `cat*` keys (which are always plain strings).
+// Using `keyof Dictionary['header']` here would include nested object
+// keys like 'hospitalSubs', and TS would refuse to render the union
+// as ReactNode.
+type CatDictKey =
+  | 'catAll' | 'catTravel' | 'catHospital' | 'catColor' | 'catSkin'
+  | 'catPhoto' | 'catMakeup' | 'catKpop' | 'catFood' | 'catHotel';
+
+const MAIN_CATEGORY_DICT_KEY: Record<MainCategoryKey, CatDictKey> = {
+  all: 'catAll',
+  travel: 'catTravel',
+  hospital: 'catHospital',
+  color: 'catColor',
+  skin: 'catSkin',
+  photo: 'catPhoto',
+  makeup: 'catMakeup',
+  kpop: 'catKpop',
+  food: 'catFood',
+  hotel: 'catHotel',
+};
 
 function hrefForCategory(locale: PublicLocale, key: MainCategoryKey): string {
   switch (key) {
@@ -109,10 +125,12 @@ export function MainHeader({
   locale,
   activeKey = 'all',
   activeTab = 'clinics',
+  t,
 }: {
   locale: PublicLocale;
   activeKey?: MainCategoryKey;
   activeTab?: 'clinics' | 'ai' | 'glowup';
+  t: Dictionary['header'];
 }): JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
@@ -230,7 +248,7 @@ export function MainHeader({
         <Link
           href={`/${locale}`}
           style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-          aria-label="glow-up 홈"
+          aria-label={t.account.logoAlt}
         >
           <BrandLockup height={30} color="#ff385c" />
         </Link>
@@ -238,9 +256,9 @@ export function MainHeader({
         <nav style={{ display: 'flex', alignItems: 'center', gap: 8, justifySelf: 'center' }}>
           <TopTab
             href={`/${locale}/glowup/pc`}
-            label="여행 패키지"
+            label={t.tabGlowup}
             active={activeTab === 'glowup'}
-            badge="NEW"
+            badge={t.badgeNew}
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
                 <rect x="3" y="7" width="18" height="13" rx="2" />
@@ -251,7 +269,7 @@ export function MainHeader({
           />
           <TopTab
             href={`/${locale}/ai-consult`}
-            label="AI 상담"
+            label={t.tabAi}
             active={activeTab === 'ai'}
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
@@ -262,7 +280,7 @@ export function MainHeader({
           />
           <TopTab
             href={`/${locale}/clinics`}
-            label="병원 찾기"
+            label={t.tabClinics}
             active={activeTab === 'clinics'}
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
@@ -286,7 +304,7 @@ export function MainHeader({
                 textDecoration: 'none',
               }}
             >
-              로그인
+              {t.account.login}
             </Link>
           ) : userEmail ? (
             <span style={{ fontSize: 13, color: '#6a6a6a', padding: '0 6px' }}>
@@ -303,7 +321,7 @@ export function MainHeader({
             <button
               type="button"
               onClick={() => setLangOpen((v) => !v)}
-              aria-label="언어 선택"
+              aria-label={t.account.langSelect}
               style={{
                 width: 40, height: 40, borderRadius: 9999,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -438,7 +456,7 @@ export function MainHeader({
                     marginBottom: 6,
                   }}
                 >
-                  로그인됨<br />
+                  {t.account.signedIn}<br />
                   <span style={{ color: '#222', fontWeight: 600 }}>{userEmail}</span>
                 </div>
                 <Link
@@ -452,7 +470,7 @@ export function MainHeader({
                   onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#f7f7f7'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
                 >
-                  내 문의
+                  {t.account.myInquiry}
                 </Link>
                 <button
                   type="button"
@@ -467,7 +485,7 @@ export function MainHeader({
                   onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f7f7f7'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
                 >
-                  로그아웃
+                  {t.account.signOut}
                 </button>
               </div>
             ) : null}
@@ -485,31 +503,32 @@ export function MainHeader({
             gap: 34,
           }}
         >
-          {MAIN_CATEGORIES.map((c) => {
-            const isActive = c.key === activeKey;
+          {MAIN_CATEGORY_KEYS.map((cKey) => {
+            const isActive = cKey === activeKey;
             const stroke = isActive ? '#222' : '#6a6a6a';
+            const cLabel = t[MAIN_CATEGORY_DICT_KEY[cKey]];
 
             // "병원" and "여행" both get click-toggle dropdown panels.
             // Everything else is a flat <Link>.
-            if (c.key === 'hospital' || c.key === 'travel') {
-              const isHospital = c.key === 'hospital';
+            if (cKey === 'hospital' || cKey === 'travel') {
+              const isHospital = cKey === 'hospital';
               const open = isHospital ? hospitalOpen : travelOpen;
               const setOpen = isHospital ? setHospitalOpen : setTravelOpen;
               const panelRef = isHospital ? hospitalRef : travelRef;
               const subs = isHospital
-                ? HOSPITAL_SUBS.map((s) => ({
-                    key: s.key,
-                    label: s.label,
-                    href: `/${locale}/clinics?category=${s.key}`,
+                ? HOSPITAL_SUB_KEYS.map((s) => ({
+                    key: s,
+                    label: t.hospitalSubs[HOSPITAL_SUB_DICT_KEY[s]],
+                    href: `/${locale}/clinics?category=${s}`,
                   }))
-                : TRAVEL_SUBS.map((s) => ({
-                    key: s.key,
-                    label: s.label,
-                    href: `/${locale}/glowup/pc?sub=${s.key}`,
+                : TRAVEL_SUB_KEYS.map((s) => ({
+                    key: s,
+                    label: t.travelSubs[s],
+                    href: `/${locale}/glowup/pc?sub=${s}`,
                   }));
               return (
                 <div
-                  key={c.key}
+                  key={cKey}
                   ref={panelRef}
                   style={{ position: 'relative', flexShrink: 0 }}
                 >
@@ -527,9 +546,9 @@ export function MainHeader({
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}
                   >
-                    <MainCategoryIcon kind={c.key} stroke={stroke} />
+                    <MainCategoryIcon kind={cKey} stroke={stroke} />
                     <span style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
-                      {c.label}
+                      {cLabel}
                     </span>
                   </button>
                   {open ? (
@@ -578,8 +597,8 @@ export function MainHeader({
 
             return (
               <Link
-                key={c.key}
-                href={hrefForCategory(locale, c.key)}
+                key={cKey}
+                href={hrefForCategory(locale, cKey)}
                 style={{
                   display: 'flex', flexDirection: 'column',
                   alignItems: 'center', gap: 8,
@@ -589,9 +608,9 @@ export function MainHeader({
                   flexShrink: 0,
                 }}
               >
-                <MainCategoryIcon kind={c.key} stroke={stroke} />
+                <MainCategoryIcon kind={cKey} stroke={stroke} />
                 <span style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
-                  {c.label}
+                  {cLabel}
                 </span>
               </Link>
             );
@@ -603,6 +622,7 @@ export function MainHeader({
             pathname={pathname}
             searchParams={searchParams}
             router={router}
+            t={t}
           />
         </div>
       </div>
@@ -769,13 +789,8 @@ type SearchParamsLike = {
   get: (key: string) => string | null;
 };
 
-const LOCATION_OPTIONS: ReadonlyArray<{ key: string; label: string }> = [
-  { key: 'gangnam',    label: '강남' },
-  { key: 'myeongdong', label: '명동' },
-  { key: 'seongsu',    label: '성수' },
-  { key: 'cheongdam',  label: '청담' },
-  { key: 'hongdae',    label: '홍대' },
-  { key: 'itaewon',    label: '이태원' },
+const LOCATION_KEYS: ReadonlyArray<keyof Dictionary['header']['locations']> = [
+  'gangnam', 'myeongdong', 'seongsu', 'cheongdam', 'hongdae', 'itaewon',
 ];
 
 function FilterPill({
@@ -785,6 +800,7 @@ function FilterPill({
   pathname,
   searchParams,
   router,
+  t,
 }: {
   open: boolean;
   setOpen: (v: boolean | ((p: boolean) => boolean)) => void;
@@ -792,6 +808,7 @@ function FilterPill({
   pathname: string;
   searchParams: SearchParamsLike;
   router: ReturnType<typeof useRouter>;
+  t: Dictionary['header'];
 }): JSX.Element {
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
@@ -875,7 +892,7 @@ function FilterPill({
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.6">
           <path d="M3 6h18M6 12h12M10 18h4" />
         </svg>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#222' }}>필터</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#222' }}>{t.filter.label}</span>
         {activeCount > 0 ? (
           <span
             style={{
@@ -906,12 +923,12 @@ function FilterPill({
           }}
         >
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: '#222' }}>
-            필터
+            {t.filter.title}
           </div>
 
           {/* Price range */}
           <div style={{ marginBottom: 16 }}>
-            <div style={labelStyle}>가격 (원)</div>
+            <div style={labelStyle}>{t.filter.price}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 16px 1fr', gap: 6, alignItems: 'center' }}>
               <input
                 type="number"
@@ -919,7 +936,7 @@ function FilterPill({
                 min={0}
                 step={10000}
                 value={priceMin}
-                placeholder="최소"
+                placeholder={t.filter.priceMin}
                 onChange={(e) => setPriceMin(e.target.value)}
                 style={inputStyle}
               />
@@ -930,7 +947,7 @@ function FilterPill({
                 min={0}
                 step={10000}
                 value={priceMax}
-                placeholder="최대"
+                placeholder={t.filter.priceMax}
                 onChange={(e) => setPriceMax(e.target.value)}
                 style={inputStyle}
               />
@@ -939,10 +956,10 @@ function FilterPill({
 
           {/* Minimum rating */}
           <div style={{ marginBottom: 16 }}>
-            <div style={labelStyle}>최소 평점</div>
+            <div style={labelStyle}>{t.filter.rating}</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {[
-                { key: '',   label: '전체' },
+                { key: '',   label: t.filter.ratingAll },
                 { key: '40', label: '4.0+' },
                 { key: '45', label: '4.5+' },
                 { key: '50', label: '5.0' },
@@ -972,15 +989,15 @@ function FilterPill({
 
           {/* Locations */}
           <div style={{ marginBottom: 18 }}>
-            <div style={labelStyle}>위치</div>
+            <div style={labelStyle}>{t.filter.location}</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {LOCATION_OPTIONS.map((opt) => {
-                const active = locs.includes(opt.key);
+              {LOCATION_KEYS.map((locKey) => {
+                const active = locs.includes(locKey);
                 return (
                   <button
-                    key={opt.key}
+                    key={locKey}
                     type="button"
-                    onClick={() => toggleLoc(opt.key)}
+                    onClick={() => toggleLoc(locKey)}
                     style={{
                       border: `1px solid ${active ? '#ff385c' : '#dddddd'}`,
                       background: active ? '#ff385c' : '#fff',
@@ -991,7 +1008,7 @@ function FilterPill({
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}
                   >
-                    {opt.label}
+                    {t.locations[locKey]}
                   </button>
                 );
               })}
@@ -1011,7 +1028,7 @@ function FilterPill({
                 fontFamily: 'inherit',
               }}
             >
-              초기화
+              {t.filter.reset}
             </button>
             <button
               type="button"
@@ -1023,7 +1040,7 @@ function FilterPill({
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              적용
+              {t.filter.apply}
             </button>
           </div>
         </div>
