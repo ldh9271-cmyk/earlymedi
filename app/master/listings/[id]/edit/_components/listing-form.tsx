@@ -64,7 +64,7 @@ export function ListingEditForm({
         <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h2 className="text-sm font-semibold">대표 이미지 · 갤러리</h2>
           <span className="text-[11px] text-muted-foreground">
-            추천 사이즈 — 대표 <strong className="font-medium text-foreground">1600 × 1000 px</strong> (8:5) · 갤러리 <strong className="font-medium text-foreground">1200 × 1200 px</strong> (1:1) · JPG/PNG · 최대 10MB
+            추천 — 대표 <strong className="font-medium text-foreground">1200 × 750 px</strong> (8:5, 권장 ≤ 300 KB) · 갤러리 <strong className="font-medium text-foreground">800 × 800 px</strong> (1:1, 권장 ≤ 200 KB) · WebP 권장 · 업로드 한도 10 MB
           </span>
         </div>
         <div className="grid gap-4 sm:grid-cols-[200px,1fr]">
