@@ -3,6 +3,28 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+
+/** Mobile (≤ 768px) overrides. Pulled out of JSX as a plain const to
+ *  avoid SWC mis-parsing an inline template literal that contains
+ *  both backticks and CSS braces inside dangerouslySetInnerHTML. */
+const MOBILE_CSS = '@media (max-width: 768px) {'
+  + '.m-mh-top { height: 60px !important; padding: 0 12px !important; grid-template-columns: 1fr auto !important; }'
+  + '.m-mh-tabs { display: none !important; }'
+  + '.m-mh-util-gap { gap: 2px !important; }'
+  + '.m-mh-login { padding: 8px 10px !important; font-size: 13px !important; }'
+  + '.m-mh-globe-btn { width: 36px !important; height: 36px !important; }'
+  + '.m-mh-account-pill { padding: 4px 6px 4px 10px !important; }'
+  + '.m-mh-account-avatar { width: 26px !important; height: 26px !important; }'
+  + '.m-mh-cat-strip { padding: 0 12px !important; gap: 18px !important; justify-content: flex-start !important; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }'
+  + '.m-mh-cat-strip::-webkit-scrollbar { display: none; }'
+  + '.m-mh-cat-item { padding: 10px 0 !important; }'
+  + '.m-mh-cat-icon { width: 20px !important; height: 20px !important; }'
+  + '.m-mh-cat-label { font-size: 11px !important; }'
+  + '.m-mh-filter { position: static !important; top: auto !important; right: auto !important; transform: none !important; margin-left: 6px !important; align-self: center !important; }'
+  + '.m-mh-filter-btn { padding: 7px 10px !important; }'
+  + '.m-mh-filter-label { font-size: 11px !important; }'
+  + '.m-mh-account-email { display: none !important; }'
+  + '}';
 import {
   LOCALE_LABELS,
   PUBLIC_LOCALES,
@@ -236,8 +258,12 @@ export function MainHeader({
         borderBottom: '1px solid #ebebeb',
       }}
     >
+      {/* Mobile responsive overrides — see MOBILE_CSS const above. */}
+      <style dangerouslySetInnerHTML={{ __html: MOBILE_CSS }} />
+
       {/* Top row — logo + product tabs + utilities */}
       <div
+        className="m-mh-top"
         style={{
           maxWidth: 1280, margin: '0 auto', padding: '0 40px',
           height: 80,
@@ -253,7 +279,7 @@ export function MainHeader({
           <BrandLockup height={30} color="#ff385c" />
         </Link>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 8, justifySelf: 'center' }}>
+        <nav className="m-mh-tabs" style={{ display: 'flex', alignItems: 'center', gap: 8, justifySelf: 'center' }}>
           <TopTab
             href={`/${locale}/glowup/pc`}
             label={t.tabGlowup}
@@ -292,12 +318,13 @@ export function MainHeader({
           />
         </nav>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifySelf: 'end' }}>
+        <div className="m-mh-util-gap" style={{ display: 'flex', alignItems: 'center', gap: 6, justifySelf: 'end' }}>
           {/* Logged-out: "로그인" link. Logged-in: nothing here (email
               dropdown takes its place in the pill below). */}
           {userEmail === undefined ? (
             <Link
               href={`/${locale}/login`}
+              className="m-mh-login"
               style={{
                 fontSize: 14, fontWeight: 600, color: '#222',
                 padding: '12px 14px', borderRadius: 9999, cursor: 'pointer',
@@ -307,7 +334,7 @@ export function MainHeader({
               {t.account.login}
             </Link>
           ) : userEmail ? (
-            <span style={{ fontSize: 13, color: '#6a6a6a', padding: '0 6px' }}>
+            <span className="m-mh-account-email" style={{ fontSize: 13, color: '#6a6a6a', padding: '0 6px' }}>
               {userEmail}
             </span>
           ) : null}
@@ -322,6 +349,7 @@ export function MainHeader({
               type="button"
               onClick={() => setLangOpen((v) => !v)}
               aria-label={t.account.langSelect}
+              className="m-mh-globe-btn"
               style={{
                 width: 40, height: 40, borderRadius: 9999,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -405,6 +433,7 @@ export function MainHeader({
                   router.push(`/${locale}/login`);
                 }
               }}
+              className="m-mh-account-pill"
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 border: '1px solid #dddddd', borderRadius: 9999,
@@ -417,7 +446,7 @@ export function MainHeader({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
                 <path d="M3 7h18M3 12h18M3 17h18" />
               </svg>
-              <div style={{
+              <div className="m-mh-account-avatar" style={{
                 width: 30, height: 30, borderRadius: 9999,
                 background: userEmail ? '#ff385c' : '#717171',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -494,8 +523,9 @@ export function MainHeader({
       </div>
 
       {/* Category strip — 전체 + 병원(dropdown) + 7 lifestyle */}
-      <div style={{ borderTop: '1px solid #ebebeb', background: '#ffffff' }}>
+      <div className="m-mh-cat-strip-row" style={{ borderTop: '1px solid #ebebeb', background: '#ffffff' }}>
         <div
+          className="m-mh-cat-strip"
           style={{
             position: 'relative',
             maxWidth: 1280, margin: '0 auto', padding: '0 40px',
@@ -535,6 +565,7 @@ export function MainHeader({
                   <button
                     type="button"
                     onClick={() => setOpen((v) => !v)}
+                    className="m-mh-cat-item"
                     style={{
                       display: 'flex', flexDirection: 'column',
                       alignItems: 'center', gap: 8,
@@ -547,7 +578,7 @@ export function MainHeader({
                     }}
                   >
                     <MainCategoryIcon kind={cKey} stroke={stroke} />
-                    <span style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
+                    <span className="m-mh-cat-label" style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
                       {cLabel}
                     </span>
                   </button>
@@ -599,6 +630,7 @@ export function MainHeader({
               <Link
                 key={cKey}
                 href={hrefForCategory(locale, cKey)}
+                className="m-mh-cat-item"
                 style={{
                   display: 'flex', flexDirection: 'column',
                   alignItems: 'center', gap: 8,
@@ -609,7 +641,7 @@ export function MainHeader({
                 }}
               >
                 <MainCategoryIcon kind={cKey} stroke={stroke} />
-                <span style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
+                <span className="m-mh-cat-label" style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
                   {cLabel}
                 </span>
               </Link>
@@ -685,6 +717,7 @@ function MainCategoryIcon({
   const common = {
     width: 22, height: 22, viewBox: '0 0 24 24',
     fill: 'none' as const, stroke, strokeWidth: 1.5,
+    className: 'm-mh-cat-icon',
   };
   switch (kind) {
     case 'all':
@@ -871,6 +904,7 @@ function FilterPill({
   return (
     <div
       ref={wrapperRef}
+      className="m-mh-filter"
       style={{
         position: 'absolute',
         right: 40, top: '50%', transform: 'translateY(-50%)',
@@ -880,6 +914,7 @@ function FilterPill({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        className="m-mh-filter-btn"
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           border: `1px solid ${activeCount > 0 ? '#222' : '#dddddd'}`,
@@ -892,7 +927,7 @@ function FilterPill({
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.6">
           <path d="M3 6h18M6 12h12M10 18h4" />
         </svg>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#222' }}>{t.filter.label}</span>
+        <span className="m-mh-filter-label" style={{ fontSize: 12, fontWeight: 600, color: '#222' }}>{t.filter.label}</span>
         {activeCount > 0 ? (
           <span
             style={{

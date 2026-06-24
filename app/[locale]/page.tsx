@@ -117,6 +117,65 @@ const FOODS = [
 
 const COURSE_PROGRAM = '4박 5일 글로우업 코스';
 
+/** Hero crossfade keyframes + mobile responsive overrides. Stored
+ *  as a plain string (concatenated lines) instead of a template
+ *  literal — SWC's JSX parser occasionally mis-counts braces when a
+ *  backtick + CSS `{…}` block sits inside `dangerouslySetInnerHTML`,
+ *  which throws a spurious "Unexpected token" on the next JSX tag. */
+const PAGE_CSS =
+  '@keyframes heroFade { 0% { opacity: 0; } 5% { opacity: 1; } 25% { opacity: 1; } 30% { opacity: 0; } 100% { opacity: 0; } }'
+  + '.glowup-hero-layer { position: absolute; inset: 0; background-size: cover; background-position: center; animation: heroFade 24s infinite; }'
+
+  + '@media (max-width: 768px) {'
+  + '.m-main { padding: 0 16px !important; }'
+  + '.m-section { padding: 32px 0 0 !important; }'
+  + '.m-section-h2 { font-size: 18px !important; letter-spacing: -0.3px !important; }'
+  + '.m-section-viewall { font-size: 13px !important; }'
+
+  + '.m-hero-wrap { padding: 20px 0 4px !important; }'
+  + '.m-hero-card { height: 280px !important; border-radius: 14px !important; }'
+  + '.m-hero-text { left: 20px !important; right: 20px !important; top: 50% !important; max-width: none !important; }'
+  + '.m-hero-badge { font-size: 11px !important; padding: 5px 10px !important; }'
+  + '.m-hero-h1 { font-size: 26px !important; margin-top: 12px !important; letter-spacing: -0.5px !important; line-height: 1.2 !important; }'
+  + '.m-hero-p { font-size: 14px !important; margin-top: 10px !important; }'
+  + '.m-hero-cta { margin-top: 16px !important; height: 44px !important; line-height: 44px !important; font-size: 15px !important; padding: 0 20px !important; }'
+
+  + '.m-grid-4 { grid-template-columns: repeat(2, 1fr) !important; gap: 14px !important; margin-top: 16px !important; }'
+  + '.m-card-name { font-size: 14px !important; }'
+  + '.m-card-rating { font-size: 12px !important; }'
+  + '.m-card-desc { font-size: 12px !important; line-height: 1.4 !important; }'
+  + '.m-card-place { font-size: 12px !important; }'
+  + '.m-card-price { font-size: 13px !important; }'
+
+  + '.m-course-grid { grid-template-columns: 1fr !important; gap: 24px !important; }'
+  + '.m-course-book { position: static !important; padding: 18px !important; }'
+  + '.m-course-name { font-size: 18px !important; }'
+  + '.m-course-price { font-size: 18px !important; }'
+
+  + '.m-kpop-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 14px !important; margin-top: 16px !important; }'
+
+  + '.m-hotel-grid { grid-template-columns: 1fr !important; gap: 20px !important; }'
+  + '.m-hotel-title { font-size: 18px !important; }'
+  + '.m-hotel-rating-num { font-size: 44px !important; }'
+  + '.m-hotel-rating-wing { width: 18px !important; height: 44px !important; }'
+  + '.m-hotel-amenity { font-size: 14px !important; padding: 10px 0 !important; }'
+  + '.m-hotel-promo { font-size: 14px !important; }'
+  + '.m-hotel-desc { font-size: 14px !important; }'
+  + '.m-hotel-price { font-size: 18px !important; }'
+  + '.m-final-cta-section { padding: 44px 0 8px !important; }'
+  + '.m-final-cta-h2 { font-size: 22px !important; letter-spacing: -0.3px !important; }'
+  + '.m-final-cta-p { font-size: 14px !important; }'
+  + '.m-final-cta-actions { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }'
+  + '.m-final-cta-actions > a { width: 100% !important; text-align: center; height: 46px !important; line-height: 44px !important; font-size: 15px !important; padding: 0 !important; }'
+  + '}'
+
+  + '@media (min-width: 769px) and (max-width: 1023px) {'
+  + '.m-main { padding: 0 24px !important; }'
+  + '.m-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }'
+  + '.m-kpop-grid { grid-template-columns: repeat(2, 1fr) !important; }'
+  + '.m-course-grid { grid-template-columns: 1.4fr 1fr !important; }'
+  + '}';
+
 const bookingHref = (locale: PublicLocale, program: string, interest: string): string =>
   `/${locale}/inquiry?program=${encodeURIComponent(program)}&interest=${interest}`;
 
@@ -160,26 +219,11 @@ export default async function PublicLandingPage({
         overflowX: 'clip',
       }}
     >
-      <style>{`
-        @keyframes heroFade {
-          0% { opacity: 0; }
-          5% { opacity: 1; }
-          25% { opacity: 1; }
-          30% { opacity: 0; }
-          100% { opacity: 0; }
-        }
-        .glowup-hero-layer {
-          position: absolute;
-          inset: 0;
-          background-size: cover;
-          background-position: center;
-          animation: heroFade 24s infinite;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
 
       <MainHeader locale={locale} activeKey="all" t={dict.header} />
 
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
+      <main className="m-main" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
         <Hero t={dict.landing} />
         <Programs locale={locale} dbCards={dbPrograms} t={dict.landing} />
         <Course locale={locale} t={dict.landing} />
@@ -197,8 +241,9 @@ export default async function PublicLandingPage({
 // CTA jumps to in-page #programs anchor — no locale needed.
 function Hero({ t }: { t: Dictionary['landing'] }): JSX.Element {
   return (
-    <section style={{ padding: '40px 0 8px' }}>
+    <section className="m-hero-wrap" style={{ padding: '40px 0 8px' }}>
       <div
+        className="m-hero-card"
         style={{
           position: 'relative',
           borderRadius: 20,
@@ -221,6 +266,7 @@ function Hero({ t }: { t: Dictionary['landing'] }): JSX.Element {
           }}
         />
         <div
+          className="m-hero-text"
           style={{
             position: 'absolute',
             left: 48, top: '50%', transform: 'translateY(-50%)',
@@ -228,6 +274,7 @@ function Hero({ t }: { t: Dictionary['landing'] }): JSX.Element {
           }}
         >
           <div
+            className="m-hero-badge"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               background: '#fff', color: '#222',
@@ -238,6 +285,7 @@ function Hero({ t }: { t: Dictionary['landing'] }): JSX.Element {
             <span style={{ color: '#ff385c' }}>★</span> {t.heroBadge}
           </div>
           <h1
+            className="m-hero-h1"
             style={{
               fontSize: 40, fontWeight: 700, lineHeight: 1.15,
               margin: '18px 0 0', letterSpacing: '-1px',
@@ -246,6 +294,7 @@ function Hero({ t }: { t: Dictionary['landing'] }): JSX.Element {
             {t.heroTitleLine1}<br />{t.heroTitleLine2}
           </h1>
           <p
+            className="m-hero-p"
             style={{
               fontSize: 16, fontWeight: 400, lineHeight: 1.5,
               margin: '14px 0 0', color: 'rgba(255,255,255,0.92)',
@@ -255,6 +304,7 @@ function Hero({ t }: { t: Dictionary['landing'] }): JSX.Element {
           </p>
           <Link
             href={`#programs`}
+            className="m-hero-cta"
             style={{
               display: 'inline-block', marginTop: 24,
               background: '#ff385c', color: '#fff',
@@ -318,9 +368,10 @@ function Programs({
         place: t.samplePrograms[i]?.place ?? p.place,
       }));
   return (
-    <section id="programs" style={{ padding: '56px 0 0', scrollMarginTop: 200 }}>
+    <section id="programs" className="m-section" style={{ padding: '56px 0 0', scrollMarginTop: 200 }}>
       <SectionHeader title={t.programsTitle} viewAllLabel={t.sectionViewAll} />
       <div
+        className="m-grid-4"
         style={{
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
           marginTop: 24,
@@ -359,17 +410,17 @@ function Programs({
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
-              <span style={{ fontSize: 16, fontWeight: 600 }}>{p.name}</span>
-              <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
+              <span className="m-card-name" style={{ fontSize: 16, fontWeight: 600 }}>{p.name}</span>
+              <span className="m-card-rating" style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
                   <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
                 </svg>
                 {p.rating}
               </span>
             </div>
-            <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 3 }}>{p.desc}</div>
-            <div style={{ fontSize: 14, color: '#6a6a6a' }}>{p.place}</div>
-            <div style={{ fontSize: 15, marginTop: 6 }}>
+            <div className="m-card-desc" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 3 }}>{p.desc}</div>
+            <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a' }}>{p.place}</div>
+            <div className="m-card-price" style={{ fontSize: 15, marginTop: 6 }}>
               <span style={{ fontWeight: 600 }}>{p.price}</span>{' '}
               <span style={{ color: '#6a6a6a' }}>{t.programsPerSession}</span>
             </div>
@@ -389,9 +440,10 @@ function Course({
   t: Dictionary['landing'];
 }): JSX.Element {
   return (
-    <section style={{ padding: '56px 0 0' }}>
+    <section className="m-section" style={{ padding: '56px 0 0' }}>
       <SectionHeader title={t.courseTitle} viewAllLabel={t.sectionViewAll} />
       <div
+        className="m-course-grid"
         style={{
           display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 40,
           marginTop: 24, alignItems: 'start',
@@ -404,7 +456,7 @@ function Course({
               background: `#f2f2f2 url(${COURSE_IMG}) center / cover`,
             }}
           />
-          <h3 style={{ fontSize: 21, fontWeight: 700, margin: '24px 0 0' }}>
+          <h3 className="m-course-name" style={{ fontSize: 21, fontWeight: 700, margin: '24px 0 0' }}>
             {t.courseName}
           </h3>
           <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 4 }}>
@@ -442,6 +494,7 @@ function Course({
         </div>
 
         <div
+          className="m-course-book"
           style={{
             position: 'sticky', top: 200,
             border: '1px solid #dddddd', borderRadius: 14, padding: 24,
@@ -451,7 +504,7 @@ function Course({
         >
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div>
-              <span style={{ fontSize: 21, fontWeight: 700 }}>₩1,890,000</span>{' '}
+              <span className="m-course-price" style={{ fontSize: 21, fontWeight: 700 }}>₩1,890,000</span>{' '}
               <span style={{ fontSize: 15, color: '#6a6a6a' }}>{t.coursePerPerson}</span>
             </div>
             <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -552,9 +605,10 @@ function Foods({
         place: t.sampleFoods[i]?.place ?? f.place,
       }));
   return (
-    <section style={{ padding: '56px 0 0' }}>
+    <section className="m-section" style={{ padding: '56px 0 0' }}>
       <SectionHeader title={t.foodsTitle} viewAllLabel={t.sectionViewAll} />
       <div
+        className="m-grid-4"
         style={{
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
           marginTop: 24,
@@ -588,8 +642,8 @@ function Foods({
                 </svg>
               </div>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 600, marginTop: 12 }}>{f.name}</div>
-            <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{f.place}</div>
+            <div className="m-card-name" style={{ fontSize: 16, fontWeight: 600, marginTop: 12 }}>{f.name}</div>
+            <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{f.place}</div>
           </div>
         ))}
       </div>
@@ -654,11 +708,12 @@ function KpopRow({ t }: { t: Dictionary['landing'] }): JSX.Element {
     spot: t.kpopHouses[i]?.spot ?? h.spot,
   }));
   return (
-    <section style={{ padding: '40px 0 0' }}>
-      <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>
+    <section className="m-section" style={{ padding: '40px 0 0' }}>
+      <h2 className="m-section-h2" style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>
         {t.kpopTitle}
       </h2>
       <div
+        className="m-kpop-grid"
         style={{
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
           marginTop: 24,
@@ -685,8 +740,8 @@ function KpopRow({ t }: { t: Dictionary['landing'] }): JSX.Element {
                 }}
               />
             </div>
-            <div style={{ marginTop: 12, fontSize: 16, fontWeight: 600 }}>{h.brand}</div>
-            <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>
+            <div className="m-card-name" style={{ marginTop: 12, fontSize: 16, fontWeight: 600 }}>{h.brand}</div>
+            <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>
               {h.area} · {h.spot}
             </div>
           </div>
@@ -742,8 +797,9 @@ function HotelAndFinalCta({
   };
   return (
     <>
-      <section style={{ padding: '56px 0 0' }}>
+      <section className="m-section" style={{ padding: '56px 0 0' }}>
         <div
+          className="m-hotel-grid"
           style={{
             display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48,
             alignItems: 'center',
@@ -756,24 +812,25 @@ function HotelAndFinalCta({
             }}
           />
           <div>
-            <div style={{ fontSize: 21, fontWeight: 600, letterSpacing: '-0.18px' }}>
+            <div className="m-hotel-title" style={{ fontSize: 21, fontWeight: 600, letterSpacing: '-0.18px' }}>
               {hotel.title}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 24 }}>
-              <svg width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
+              <svg className="m-hotel-rating-wing" width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
                 <path d="M20 4C10 10 8 26 12 40c1.5 5 3 12 2 20" />
               </svg>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1, letterSpacing: '-1px' }}>
+                <div className="m-hotel-rating-num" style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1, letterSpacing: '-1px' }}>
                   {hotel.rating}
                 </div>
               </div>
-              <svg width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
+              <svg className="m-hotel-rating-wing" width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
                 <path d="M6 4C16 10 18 26 14 40c-1.5 5-3 12-2 20" />
               </svg>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>{hotel.promoLabel}</div>
+            <div className="m-hotel-promo" style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>{hotel.promoLabel}</div>
             <p
+              className="m-hotel-desc"
               style={{
                 fontSize: 16, lineHeight: 1.5, color: '#3f3f3f',
                 margin: '16px 0 0', maxWidth: 440,
@@ -785,6 +842,7 @@ function HotelAndFinalCta({
               {hotel.amenities.map((amen, idx) => (
                 <div
                   key={amen}
+                  className="m-hotel-amenity"
                   style={{
                     display: 'flex', alignItems: 'center', gap: 14,
                     padding: '12px 0',
@@ -801,7 +859,7 @@ function HotelAndFinalCta({
               ))}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 22 }}>
-              <span style={{ fontSize: 21, fontWeight: 700 }}>
+              <span className="m-hotel-price" style={{ fontSize: 21, fontWeight: 700 }}>
                 ₩{hotel.priceWon.toLocaleString('ko-KR')}
               </span>
               <span style={{ fontSize: 15, color: '#6a6a6a' }}>
@@ -812,11 +870,12 @@ function HotelAndFinalCta({
         </div>
       </section>
 
-      <section style={{ padding: '64px 0 8px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
+      <section className="m-final-cta-section" style={{ padding: '64px 0 8px', textAlign: 'center' }}>
+        <h2 className="m-final-cta-h2" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
           {t.finalCtaTitle}
         </h2>
         <p
+          className="m-final-cta-p"
           style={{
             fontSize: 16, color: '#6a6a6a',
             margin: '12px auto 0', maxWidth: 480, lineHeight: 1.5,
@@ -825,6 +884,7 @@ function HotelAndFinalCta({
           {t.finalCtaSubtitle}
         </p>
         <div
+          className="m-final-cta-actions"
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             gap: 12, marginTop: 24,
@@ -870,8 +930,9 @@ function SectionHeader({
 }): JSX.Element {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>{title}</h2>
+      <h2 className="m-section-h2" style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>{title}</h2>
       <span
+        className="m-section-viewall"
         style={{
           display: 'flex', alignItems: 'center', gap: 4,
           color: '#222', fontSize: 14, fontWeight: 600, cursor: 'pointer',
