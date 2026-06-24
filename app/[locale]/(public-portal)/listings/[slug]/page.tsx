@@ -57,7 +57,7 @@ export default async function ListingDetailPage({
     ? `₩${listing.priceWon.toLocaleString('ko-KR')}`
     : '문의';
   const priceUnit = priceUnitLabel(listing.priceUnit, listing.category);
-  const reserveHref = `/${params.locale}/inquiry?program=${encodeURIComponent(listing.title)}&interest=${listing.interestKey ?? listing.category}`;
+  const reserveHref = `/${params.locale}/checkout?slug=${encodeURIComponent(listing.slug)}`;
 
   return (
     <div

@@ -51,7 +51,7 @@ export default async function CategoryDetailPage({
   }
   const p = CATEGORY_PRODUCTS[params.key as Exclude<PcCategoryKey, 'all'>];
   const dict = await getDictionary(params.locale);
-  const bookHref = `/${params.locale}/inquiry?program=${encodeURIComponent(p.title)}&interest=${p.interest}`;
+  const bookHref = `/${params.locale}/checkout?cat=${p.key}`;
   const titleEn = englishTitleForCategory(p.key);
   const hostName = hostNameForCategory(p.key);
   const highlights = highlightsForCategory(p);
