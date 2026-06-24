@@ -55,11 +55,13 @@ const HOSPITAL_SUBS: Array<{ key: HospitalSubKey; label: string }> = [
  */
 export type MainCategoryKey =
   | 'all'
+  | 'travel'
   | 'hospital'
   | 'color' | 'skin' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel';
 
 const MAIN_CATEGORIES: Array<{ key: MainCategoryKey; label: string }> = [
   { key: 'all',      label: '전체' },
+  { key: 'travel',   label: '여행' },
   { key: 'hospital', label: '병원' },
   { key: 'color',    label: '퍼스널컬러' },
   { key: 'skin',     label: '피부케어' },
@@ -74,6 +76,8 @@ function hrefForCategory(locale: PublicLocale, key: MainCategoryKey): string {
   switch (key) {
     case 'all':      return `/${locale}/clinics`;
     case 'hospital': return `/${locale}/clinics`;
+    // 여행 → 글로우업 PC 페이지 (코스·호텔·맛집·K팝 종합)
+    case 'travel':   return `/${locale}/glowup/pc`;
     // glow-up lifestyle categories → their existing detail pages
     default:         return `/${locale}/glowup/pc/c/${key}`;
   }
@@ -406,6 +410,15 @@ function MainCategoryIcon({
         <svg {...common}>
           <circle cx="12" cy="12" r="9" />
           <circle cx="12" cy="12" r="3.5" />
+        </svg>
+      );
+    case 'travel':
+      // Suitcase with handle
+      return (
+        <svg {...common}>
+          <rect x="3" y="7" width="18" height="13" rx="2" />
+          <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          <path d="M3 13h18" />
         </svg>
       );
     case 'hospital':
