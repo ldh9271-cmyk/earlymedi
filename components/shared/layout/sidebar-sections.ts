@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Briefcase,
   Calendar,
   ClipboardCheck,
   CreditCard,
@@ -45,6 +46,7 @@ export const agencySections: SidebarSection[] = [
     items: [
       { href: '/agency/patients', label: '환자 CRM', icon: UserCircle },
       { href: '/agency/hospitals', label: '병원 마켓플레이스', icon: Hospital },
+      { href: '/agency/listings', label: '글로우업 상품 관리', icon: Briefcase },
       { href: '/agency/partners', label: '파트너업체', icon: MapPin },
       { href: '/agency/freelancers', label: '프리랜서', icon: Users },
     ],
@@ -124,6 +126,7 @@ export const medicalSections: SidebarSection[] = [
       { href: '/medical/deposits', label: '예약금', icon: CreditCard },
       { href: '/medical/resources', label: '리소스 (의사·룸)', icon: Stethoscope },
       { href: '/medical/emr', label: 'EMR 연동', icon: FileText },
+      { href: '/medical/glowup-listings', label: '글로우업 부가 상품', icon: Briefcase },
     ],
   },
   {
@@ -156,6 +159,7 @@ export const partnerSections: SidebarSection[] = [
   {
     title: '운영',
     items: [
+      { href: '/partner/listings', label: '내 글로우업 상품', icon: Briefcase },
       { href: '/partner/menu', label: '메뉴 · 가격표', icon: Utensils },
       { href: '/partner/constraints', label: '시술 후 제약', icon: Truck },
       { href: '/partner/contracts', label: '계약', icon: TicketCheck },
