@@ -4,6 +4,12 @@ import { MainHeader } from './_components/main-header';
 import { MainFooter } from './_components/main-footer';
 import { fetchFeaturedListings, type ListingCard } from '@/lib/listings/query';
 
+// force-dynamic because MainHeader (client) uses useSearchParams() for
+// the filter pill — Next.js's static prerender refuses that without a
+// Suspense boundary. The page already does a DB call per request via
+// fetchFeaturedListings, so static prerender was never a win here.
+export const dynamic = 'force-dynamic';
+
 /**
  * Patient portal landing — Airbnb design language. Founder-ordered
  * sections (see chat 2026-06-23). "관심 분야를 선택하세요" Categories
