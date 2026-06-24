@@ -346,6 +346,7 @@ function Programs({
     featured: boolean;
     img: string;
     interest: string;
+    slug: string | null;
   }> = dbCards.length > 0
     ? dbCards.map((d) => ({
         name: d.title,
@@ -356,6 +357,7 @@ function Programs({
         featured: !!d.promoLabel,
         img: d.coverImageUrl ?? '',
         interest: d.interestKey ?? 'makeup',
+        slug: d.slug,
       }))
     : PROGRAMS.map((p, i) => ({
         // i18n fallback: image + featured + interest come from the
@@ -366,6 +368,7 @@ function Programs({
         name: t.samplePrograms[i]?.name ?? p.name,
         desc: t.samplePrograms[i]?.desc ?? p.desc,
         place: t.samplePrograms[i]?.place ?? p.place,
+        slug: null,
       }));
   return (
     <section id="programs" className="m-section" style={{ padding: '56px 0 0', scrollMarginTop: 200 }}>
@@ -380,7 +383,7 @@ function Programs({
         {cards.map((p) => (
           <Link
             key={p.name}
-            href={bookingHref(locale, p.name, p.interest)}
+            href={p.slug ? `/${locale}/listings/${p.slug}` : bookingHref(locale, p.name, p.interest)}
             style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
           >
             <div
@@ -577,7 +580,7 @@ function Course({
 // Same DB-first-with-fallback pattern as Programs. `dbCards` come
 // from partner_listings (category in 'food','restaurant').
 function Foods({
-  locale: _locale,
+  locale,
   dbCards,
   t,
 }: {
@@ -590,6 +593,7 @@ function Foods({
     place: string;
     booked: boolean;
     img: string;
+    slug: string | null;
   }> = dbCards.length > 0
     ? dbCards.map((d) => ({
         name: d.title,
@@ -597,12 +601,14 @@ function Foods({
           ?? (d.rating ? `★ ${(d.rating / 10).toFixed(1)}` : ''),
         booked: !!d.promoLabel,
         img: d.coverImageUrl ?? '',
+        slug: d.slug,
       }))
     : FOODS.map((f, i) => ({
         // Same fallback-with-dict-override pattern as Programs above.
         ...f,
         name: t.sampleFoods[i]?.name ?? f.name,
         place: t.sampleFoods[i]?.place ?? f.place,
+        slug: null,
       }));
   return (
     <section className="m-section" style={{ padding: '56px 0 0' }}>
@@ -614,38 +620,51 @@ function Foods({
           marginTop: 24,
         }}
       >
-        {cards.map((f) => (
-          <div key={f.name} style={{ cursor: 'pointer' }}>
-            <div
-              style={{
-                position: 'relative',
-                aspectRatio: '4/5', borderRadius: 14, overflow: 'hidden',
-                background: `#f2f2f2 url(${f.img}) center / cover`,
-              }}
-            >
-              {f.booked ? (
-                <div
-                  style={{
-                    position: 'absolute', top: 12, left: 12,
-                    background: '#fff', color: '#222',
-                    fontSize: 8, fontWeight: 700, letterSpacing: '0.32px',
-                    borderRadius: 9999, padding: '4px 8px',
-                    boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
-                  }}
-                >
-                  {t.foodsBookedBadge}
+        {cards.map((f) => {
+          const cardInner = (
+            <>
+              <div
+                style={{
+                  position: 'relative',
+                  aspectRatio: '4/5', borderRadius: 14, overflow: 'hidden',
+                  background: `#f2f2f2 url(${f.img}) center / cover`,
+                }}
+              >
+                {f.booked ? (
+                  <div
+                    style={{
+                      position: 'absolute', top: 12, left: 12,
+                      background: '#fff', color: '#222',
+                      fontSize: 8, fontWeight: 700, letterSpacing: '0.32px',
+                      borderRadius: 9999, padding: '4px 8px',
+                      boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
+                    }}
+                  >
+                    {t.foodsBookedBadge}
+                  </div>
+                ) : null}
+                <div style={{ position: 'absolute', top: 12, right: 12 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(0,0,0,0.45)" stroke="#fff" strokeWidth="1.8">
+                    <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
+                  </svg>
                 </div>
-              ) : null}
-              <div style={{ position: 'absolute', top: 12, right: 12 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(0,0,0,0.45)" stroke="#fff" strokeWidth="1.8">
-                  <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
-                </svg>
               </div>
-            </div>
-            <div className="m-card-name" style={{ fontSize: 16, fontWeight: 600, marginTop: 12 }}>{f.name}</div>
-            <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{f.place}</div>
-          </div>
-        ))}
+              <div className="m-card-name" style={{ fontSize: 16, fontWeight: 600, marginTop: 12 }}>{f.name}</div>
+              <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{f.place}</div>
+            </>
+          );
+          return f.slug ? (
+            <Link
+              key={f.name}
+              href={`/${locale}/listings/${f.slug}`}
+              style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
+            >
+              {cardInner}
+            </Link>
+          ) : (
+            <div key={f.name} style={{ cursor: 'pointer' }}>{cardInner}</div>
+          );
+        })}
       </div>
     </section>
   );

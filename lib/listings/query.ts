@@ -31,6 +31,17 @@ export type ListingCard = {
 };
 
 /**
+ * Full detail-page row — superset of ListingCard with the gallery
+ * URLs that the /listings/[slug] hero swiper renders. Kept separate
+ * from ListingCard so the landing query stays lean (no JSONB column
+ * hydration for cards that only show the cover).
+ */
+export type ListingDetail = ListingCard & {
+  galleryImageUrls: string[];
+  ownerOrgId: string | null;
+};
+
+/**
  * Fetch approved+featured listings in the given categories, ordered
  * by sort_order. Applies per-locale overrides (title / cover / loc)
  * via a single follow-up query keyed by listing ids.
@@ -145,4 +156,83 @@ export async function fetchFeaturedListings(opts: {
       details: (r.details ?? {}) as Record<string, unknown>,
     };
   });
+}
+
+/**
+ * Single-row fetch by slug for the /listings/[slug] detail page.
+ * Returns null when the slug doesn't resolve, when the listing
+ * isn't approved (so the page can 404 cleanly), or when the table
+ * isn't present yet. Applies the same per-locale override pattern
+ * as fetchFeaturedListings.
+ */
+export async function fetchListingBySlug(opts: {
+  locale: PublicLocale;
+  slug: string;
+}): Promise<ListingDetail | null> {
+  const { locale, slug } = opts;
+  let row: PartnerListing | null = null;
+  try {
+    const rows = await db
+      .select()
+      .from(partnerListings)
+      .where(
+        and(
+          eq(partnerListings.slug, slug),
+          eq(partnerListings.status, 'approved'),
+        ),
+      )
+      .limit(1);
+    row = rows[0] ?? null;
+  } catch {
+    return null;
+  }
+  if (!row) return null;
+
+  let override: {
+    title: string | null;
+    locationLabel: string | null;
+    coverImageUrl: string | null;
+    description: string | null;
+  } | null = null;
+  try {
+    const lcRows = await db
+      .select({
+        title: partnerListingLocaleContent.title,
+        locationLabel: partnerListingLocaleContent.locationLabel,
+        coverImageUrl: partnerListingLocaleContent.coverImageUrl,
+        description: partnerListingLocaleContent.description,
+      })
+      .from(partnerListingLocaleContent)
+      .where(
+        and(
+          eq(partnerListingLocaleContent.listingId, row.id),
+          eq(partnerListingLocaleContent.locale, locale),
+        ),
+      )
+      .limit(1);
+    override = lcRows[0] ?? null;
+  } catch {
+    /* locale table missing — fall through with no override */
+  }
+
+  return {
+    id: row.id,
+    category: row.category,
+    slug: row.slug,
+    title: override?.title?.trim() || row.title,
+    locationLabel: override?.locationLabel?.trim() || row.locationLabel,
+    priceWon: row.priceWon,
+    priceUnit: row.priceUnit,
+    coverImageUrl: override?.coverImageUrl || row.coverImageUrl,
+    promoLabel: row.promoLabel,
+    rating: row.rating,
+    reviewsCount: row.reviewsCount,
+    description: override?.description?.trim() || row.description,
+    interestKey: row.interestKey,
+    details: (row.details ?? {}) as Record<string, unknown>,
+    galleryImageUrls: Array.isArray(row.galleryImageUrls)
+      ? (row.galleryImageUrls as string[])
+      : [],
+    ownerOrgId: row.ownerOrgId ?? null,
+  };
 }
