@@ -29,9 +29,14 @@ import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
  * surface that uses inline styles throughout.
  */
 
+// Loose client-side validation: just non-empty + roughly email-shape.
+// Supabase signInWithPassword is the source of truth — it returns
+// "Invalid login credentials" if email/password don't match a row.
+// Stricter min(8) on the client would silently block legit users
+// whose accounts predate the rule.
 const passwordSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8).max(128),
+  email: z.string().email('올바른 이메일 주소를 입력해주세요.'),
+  password: z.string().min(1, '비밀번호를 입력해주세요.').max(200),
 });
 type PasswordValues = z.infer<typeof passwordSchema>;
 
@@ -201,6 +206,11 @@ export function PatientLoginForm({
             style={inputStyle}
             {...pwForm.register('email')}
           />
+          {pwForm.formState.errors.email ? (
+            <p style={{ fontSize: 12, color: '#c13515', margin: '6px 0 0' }}>
+              {pwForm.formState.errors.email.message}
+            </p>
+          ) : null}
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -244,9 +254,14 @@ export function PatientLoginForm({
               {showPassword ? <EyeOffIcon /> : <EyeIcon />}
             </button>
           </div>
+          {pwForm.formState.errors.password ? (
+            <p style={{ fontSize: 12, color: '#c13515', margin: '6px 0 0' }}>
+              {pwForm.formState.errors.password.message}
+            </p>
+          ) : null}
         </div>
         {error ? (
-          <p style={{ fontSize: 12, color: '#b91c1c', margin: 0 }}>{error}</p>
+          <p style={{ fontSize: 12, color: '#c13515', margin: 0 }}>{error}</p>
         ) : null}
         <button
           type="submit"
