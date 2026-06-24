@@ -138,14 +138,15 @@ export function MainHeader({
 
         <nav style={{ display: 'flex', alignItems: 'center', gap: 8, justifySelf: 'center' }}>
           <TopTab
-            href={`/${locale}/clinics`}
-            label="병원 찾기"
-            active={activeTab === 'clinics'}
+            href={`/${locale}/glowup/pc`}
+            label="여행 패키지"
+            active={activeTab === 'glowup'}
+            badge="NEW"
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
-                <path d="M4 21V8l8-5 8 5v13" />
-                <path d="M9 21v-6h6v6" />
-                <path d="M11 9h2M12 8v2" />
+                <rect x="3" y="7" width="18" height="13" rx="2" />
+                <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <path d="M3 13h18" />
               </svg>
             }
           />
@@ -161,15 +162,14 @@ export function MainHeader({
             }
           />
           <TopTab
-            href={`/${locale}/glowup/pc`}
-            label="여행 패키지"
-            active={activeTab === 'glowup'}
-            badge="NEW"
+            href={`/${locale}/clinics`}
+            label="병원 찾기"
+            active={activeTab === 'clinics'}
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
-                <rect x="3" y="7" width="18" height="13" rx="2" />
-                <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                <path d="M3 13h18" />
+                <path d="M4 21V8l8-5 8 5v13" />
+                <path d="M9 21v-6h6v6" />
+                <path d="M11 9h2M12 8v2" />
               </svg>
             }
           />
