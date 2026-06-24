@@ -225,6 +225,11 @@ const ja: Dictionary = {
       package: 'パッケージツアー',
       training: '研修パッケージ',
     },
+    search: {
+      main: 'グローアップを探す',
+      subtitle: 'サービス · 日付 · 人数',
+      filterCircle: 'フィルター',
+    },
     filter: {
       label: 'フィルター',
       title: 'フィルター',

@@ -15,16 +15,35 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   + '.m-mh-globe-btn { width: 36px !important; height: 36px !important; }'
   + '.m-mh-account-pill { padding: 4px 6px 4px 10px !important; }'
   + '.m-mh-account-avatar { width: 26px !important; height: 26px !important; }'
-  // 8 items in a 4 / 4 grid, centered. No fine-grid hack needed
-  // now that both rows are 4 wide; one 4-col grid fits both rows
-  // cleanly with consistent cell width.
-  + '.m-mh-cat-strip { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; row-gap: 4px !important; column-gap: 4px !important; padding: 6px 8px !important; overflow: visible !important; }'
-  + '.m-mh-cat-item { padding: 8px 2px !important; gap: 4px !important; min-width: 0 !important; }'
-  + '.m-mh-cat-icon { width: 22px !important; height: 22px !important; }'
-  + '.m-mh-cat-label { font-size: 11px !important; line-height: 1.2 !important; max-width: 100%; text-align: center; word-break: keep-all; }'
+
+  // Search pill row — shows ONLY on mobile (default display:none in
+  // the off-media CSS below; activated here). Airbnb-style 56px tall
+  // rounded pill with magnifier icon + main label + subtitle on the
+  // left, separate circular filter button on the right. Both link
+  // to /clinics for v1; richer search modal lands in a follow-up.
+  + '.m-mh-search-row { display: flex !important; align-items: center; gap: 8px; padding: 8px 12px 6px; }'
+  + '.m-mh-search-pill { flex: 1 1 auto; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 18px; border-radius: 9999px; border: 1px solid #ebebeb; background: #fff; box-shadow: rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.06) 0 1px 2px; color: #222; text-decoration: none; }'
+  + '.m-mh-search-main { font-size: 14px; font-weight: 600; line-height: 1.2; }'
+  + '.m-mh-search-sub { font-size: 12px; color: #6a6a6a; line-height: 1.2; margin-top: 2px; }'
+  + '.m-mh-search-filter { flex-shrink: 0; width: 42px; height: 42px; border-radius: 9999px; border: 1px solid #ebebeb; background: #fff; display: flex; align-items: center; justify-content: center; color: #222; text-decoration: none; box-shadow: rgba(0,0,0,0.04) 0 2px 6px; }'
+
+  // Category strip — single horizontal-scroll row with the same
+  // icon-over-label items. Active item gets a 2px underline like
+  // the Airbnb mobile reference (border already toggles via the
+  // inline isActive style; we just need the row to scroll).
+  + '.m-mh-cat-strip { display: flex !important; flex-wrap: nowrap !important; justify-content: flex-start !important; gap: 26px !important; padding: 4px 16px 0 !important; overflow-x: auto !important; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }'
+  + '.m-mh-cat-strip::-webkit-scrollbar { display: none; }'
+  + '.m-mh-cat-item { flex-shrink: 0 !important; padding: 10px 0 12px !important; gap: 4px !important; min-width: 0 !important; }'
+  + '.m-mh-cat-icon { width: 24px !important; height: 24px !important; }'
+  + '.m-mh-cat-label { font-size: 12px !important; line-height: 1.2 !important; text-align: center; word-break: keep-all; white-space: nowrap; }'
+
   + '.m-mh-filter { display: none !important; }'
   + '.m-mh-account-email { display: none !important; }'
-  + '}';
+  + '}'
+
+  // Desktop default — search pill hidden, only appears on mobile via
+  // the @media block above.
+  + '.m-mh-search-row { display: none; }';
 import {
   LOCALE_LABELS,
   PUBLIC_LOCALES,
@@ -528,7 +547,33 @@ export function MainHeader({
         </div>
       </div>
 
-      {/* Category strip — 전체 + 병원(dropdown) + 7 lifestyle */}
+      {/* Mobile search-pill row — between top utilities and the
+          category strip. Hidden on desktop (CSS default), shown on
+          phones via the @media block. Tap the pill or filter circle
+          to go to /clinics where filter chips live. */}
+      <div className="m-mh-search-row">
+        <Link href={`/${locale}/clinics`} className="m-mh-search-pill">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
+          </svg>
+          <span>
+            <span className="m-mh-search-main">{t.search.main}</span>
+            <span className="m-mh-search-sub" style={{ display: 'block' }}>{t.search.subtitle}</span>
+          </span>
+        </Link>
+        <Link
+          href={`/${locale}/clinics`}
+          className="m-mh-search-filter"
+          aria-label={t.search.filterCircle}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
+            <path d="M3 6h18M6 12h12M10 18h4" />
+          </svg>
+        </Link>
+      </div>
+
+      {/* Category strip — 8 lifestyle entries (전체/병원 dropdown + travel/lifestyle). */}
       <div className="m-mh-cat-strip-row" style={{ borderTop: '1px solid #ebebeb', background: '#ffffff' }}>
         <div
           className="m-mh-cat-strip"

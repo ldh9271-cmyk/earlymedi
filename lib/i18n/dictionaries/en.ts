@@ -238,6 +238,11 @@ const en: Dictionary = {
       package: 'Package Tour',
       training: 'Training Package',
     },
+    search: {
+      main: 'Find your glow-up',
+      subtitle: 'Service · Date · Guests',
+      filterCircle: 'Filters',
+    },
     filter: {
       label: 'Filters',
       title: 'Filters',

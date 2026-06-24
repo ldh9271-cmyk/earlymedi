@@ -249,6 +249,11 @@ const kr = {
       package: '패키지여행',
       training: '연수패키지',
     },
+    search: {
+      main: '글로우업 찾기',
+      subtitle: '서비스 · 날짜 · 인원',
+      filterCircle: '필터',
+    },
     filter: {
       label: '필터',
       title: '필터',

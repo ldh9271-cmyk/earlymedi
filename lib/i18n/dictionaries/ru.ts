@@ -226,6 +226,11 @@ const ru: Dictionary = {
       package: 'Пакетный тур',
       training: 'Учебный пакет',
     },
+    search: {
+      main: 'Найдите свой Glow-Up',
+      subtitle: 'Услуга · Дата · Гости',
+      filterCircle: 'Фильтр',
+    },
     filter: {
       label: 'Фильтр',
       title: 'Фильтр',

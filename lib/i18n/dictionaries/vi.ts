@@ -226,6 +226,11 @@ const vi: Dictionary = {
       package: 'Tour trọn gói',
       training: 'Gói đào tạo',
     },
+    search: {
+      main: 'Tìm hành trình glow-up',
+      subtitle: 'Dịch vụ · Ngày · Khách',
+      filterCircle: 'Bộ lọc',
+    },
     filter: {
       label: 'Bộ lọc',
       title: 'Bộ lọc',

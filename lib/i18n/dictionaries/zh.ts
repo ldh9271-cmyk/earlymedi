@@ -223,6 +223,11 @@ const zh: Dictionary = {
       package: '跟团游',
       training: '研修套餐',
     },
+    search: {
+      main: '寻找你的焕颜之旅',
+      subtitle: '服务 · 日期 · 人数',
+      filterCircle: '筛选',
+    },
     filter: {
       label: '筛选',
       title: '筛选',
