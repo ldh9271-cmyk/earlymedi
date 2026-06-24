@@ -6,11 +6,31 @@ import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { organizations } from '@/drizzle/schema/organizations';
-import { LISTING_CATEGORIES, categoryLabel } from '@/lib/listings/categories';
+import {
+  LISTING_CATEGORIES,
+  TRAVEL_PACKAGE_SUB_TYPES,
+  categoryLabel,
+  travelSubTypeLabel,
+} from '@/lib/listings/categories';
 import { createListingAction } from './_actions/listing-admin';
 
 export const metadata = { title: '글로우업 상품 관리 · 마스터' };
 export const dynamic = 'force-dynamic';
+
+type Row = {
+  id: string;
+  category: string;
+  title: string;
+  status: string;
+  featured: boolean;
+  sortOrder: number;
+  priceWon: number | null;
+  priceUnit: string | null;
+  coverImageUrl: string | null;
+  ownerName: string | null;
+  updatedAt: Date | null;
+  details: Record<string, unknown>;
+};
 
 /**
  * Master-only listings index — cross-org table of every non-medical
@@ -33,19 +53,7 @@ export default async function MasterListingsPage({
 
   const filter = searchParams.category;
 
-  let rows: Array<{
-    id: string;
-    category: string;
-    title: string;
-    status: string;
-    featured: boolean;
-    sortOrder: number;
-    priceWon: number | null;
-    priceUnit: string | null;
-    coverImageUrl: string | null;
-    ownerName: string | null;
-    updatedAt: Date | null;
-  }> = [];
+  let rows: Row[] = [];
   let dbError: string | null = null;
   try {
     const all = await db
@@ -61,11 +69,15 @@ export default async function MasterListingsPage({
         coverImageUrl: partnerListings.coverImageUrl,
         ownerName: organizations.name,
         updatedAt: partnerListings.updatedAt,
+        details: partnerListings.details,
       })
       .from(partnerListings)
       .leftJoin(organizations, eq(organizations.id, partnerListings.ownerOrgId))
       .orderBy(desc(partnerListings.updatedAt));
-    rows = filter ? all.filter((r) => r.category === filter) : all;
+    rows = (filter ? all.filter((r) => r.category === filter) : all).map((r) => ({
+      ...r,
+      details: (r.details ?? {}) as Record<string, unknown>,
+    }));
   } catch (e) {
     dbError = e instanceof Error ? e.message : 'db_error';
   }
@@ -189,70 +201,126 @@ export default async function MasterListingsPage({
             ? <>해당 카테고리에 등록된 상품이 없습니다. 위 폼에서 추가하세요.</>
             : <>등록된 상품이 없습니다. 위 폼에서 카테고리를 선택해 첫 상품을 등록하세요.</>}
         </div>
+      ) : filter === 'travel_package' ? (
+        // travel_package — group by details.subType so 자유여행 /
+        // 패키지여행 / 연수패키지 each get their own section header.
+        // Listings missing a subType fall into "미분류".
+        <TravelGroupedTable rows={rows} />
       ) : (
-        <div className="overflow-hidden rounded-xl border bg-card">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-xs uppercase tracking-wide">
-              <tr>
-                <th className="px-4 py-3 text-left">상품</th>
-                <th className="px-3 py-3 text-left">카테고리</th>
-                <th className="px-3 py-3 text-left">상태</th>
-                <th className="px-3 py-3 text-left">노출</th>
-                <th className="px-3 py-3 text-right">가격</th>
-                <th className="px-3 py-3 text-left">소유 조직</th>
-                <th className="px-3 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-t">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="h-10 w-10 shrink-0 overflow-hidden rounded bg-muted"
-                        style={{
-                          background: r.coverImageUrl
-                            ? `#f2f2f2 url(${r.coverImageUrl}) center / cover`
-                            : '#f2f2f2',
-                        }}
-                      />
-                      <span className="font-medium">{r.title}</span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-3">{categoryLabel(r.category)}</td>
-                  <td className="px-3 py-3">
-                    <StatusBadge status={r.status} />
-                  </td>
-                  <td className="px-3 py-3">
-                    {r.featured ? (
-                      <span className="rounded-full bg-[#ff385c]/10 px-2 py-0.5 text-[10px] font-medium text-[#ff385c]">
-                        FEATURED
-                      </span>
-                    ) : (
-                      <span className="text-[11px] text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-3 text-right tabular-nums">
-                    {r.priceWon
-                      ? `₩${r.priceWon.toLocaleString('ko-KR')} / ${r.priceUnit ?? ''}`
-                      : '—'}
-                  </td>
-                  <td className="px-3 py-3 text-muted-foreground">{r.ownerName ?? '—'}</td>
-                  <td className="px-3 py-3 text-right">
-                    <Link
-                      href={`/master/listings/${r.id}/edit`}
-                      className="text-xs font-medium text-foreground underline-offset-4 hover:underline"
-                    >
-                      편집 →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ListingTable rows={rows} />
       )}
     </div>
+  );
+}
+
+function ListingTable({ rows }: { rows: Row[] }): JSX.Element {
+  return (
+    <div className="overflow-hidden rounded-xl border bg-card">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/40 text-xs uppercase tracking-wide">
+          <tr>
+            <th className="px-4 py-3 text-left">상품</th>
+            <th className="px-3 py-3 text-left">카테고리</th>
+            <th className="px-3 py-3 text-left">상태</th>
+            <th className="px-3 py-3 text-left">노출</th>
+            <th className="px-3 py-3 text-right">가격</th>
+            <th className="px-3 py-3 text-left">소유 조직</th>
+            <th className="px-3 py-3" />
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <ListingRow key={r.id} row={r} />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function TravelGroupedTable({ rows }: { rows: Row[] }): JSX.Element {
+  // Bucket by subType in the fixed order (free → package → training →
+  // 미분류 last). Empty buckets are still shown so the master sees
+  // which sub-types still need content.
+  const buckets = new Map<string, Row[]>();
+  for (const sub of TRAVEL_PACKAGE_SUB_TYPES) buckets.set(sub.key, []);
+  buckets.set('__unset__', []);
+  for (const r of rows) {
+    const key = typeof r.details.subType === 'string' && r.details.subType
+      ? r.details.subType
+      : '__unset__';
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key)!.push(r);
+  }
+  return (
+    <div className="space-y-6">
+      {Array.from(buckets.entries()).map(([key, group]) => (
+        <section key={key}>
+          <div className="mb-2 flex items-baseline justify-between">
+            <h2 className="text-sm font-semibold">
+              {key === '__unset__' ? '미분류' : travelSubTypeLabel(key)}
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                {group.length}개
+              </span>
+            </h2>
+          </div>
+          {group.length === 0 ? (
+            <div className="rounded-lg border border-dashed bg-muted/10 px-4 py-6 text-center text-xs text-muted-foreground">
+              이 하위 카테고리에 등록된 상품이 없습니다.
+            </div>
+          ) : (
+            <ListingTable rows={group} />
+          )}
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function ListingRow({ row: r }: { row: Row }): JSX.Element {
+  return (
+    <tr className="border-t">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div
+            className="h-10 w-10 shrink-0 overflow-hidden rounded bg-muted"
+            style={{
+              background: r.coverImageUrl
+                ? `#f2f2f2 url(${r.coverImageUrl}) center / cover`
+                : '#f2f2f2',
+            }}
+          />
+          <span className="font-medium">{r.title}</span>
+        </div>
+      </td>
+      <td className="px-3 py-3">{categoryLabel(r.category)}</td>
+      <td className="px-3 py-3">
+        <StatusBadge status={r.status} />
+      </td>
+      <td className="px-3 py-3">
+        {r.featured ? (
+          <span className="rounded-full bg-[#ff385c]/10 px-2 py-0.5 text-[10px] font-medium text-[#ff385c]">
+            FEATURED
+          </span>
+        ) : (
+          <span className="text-[11px] text-muted-foreground">—</span>
+        )}
+      </td>
+      <td className="px-3 py-3 text-right tabular-nums">
+        {r.priceWon
+          ? `₩${r.priceWon.toLocaleString('ko-KR')} / ${r.priceUnit ?? ''}`
+          : '—'}
+      </td>
+      <td className="px-3 py-3 text-muted-foreground">{r.ownerName ?? '—'}</td>
+      <td className="px-3 py-3 text-right">
+        <Link
+          href={`/master/listings/${r.id}/edit`}
+          className="text-xs font-medium text-foreground underline-offset-4 hover:underline"
+        >
+          편집 →
+        </Link>
+      </td>
+    </tr>
   );
 }
 

@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { LISTING_CATEGORIES, LISTING_STATUSES } from '@/lib/listings/categories';
+import {
+  LISTING_CATEGORIES,
+  LISTING_STATUSES,
+  TRAVEL_PACKAGE_SUB_TYPES,
+} from '@/lib/listings/categories';
 
 /**
  * Master listing edit form — client-side because the category-specific
@@ -329,6 +333,8 @@ function CategoryFields({
       return <PhotoStudioFields details={details} setDetail={setDetail} />;
     case 'kpop_tour':
       return <KpopTourFields details={details} setDetail={setDetail} />;
+    case 'travel_package':
+      return <TravelPackageFields details={details} setDetail={setDetail} />;
     default:
       return (
         <p className="text-xs text-muted-foreground">
@@ -589,6 +595,94 @@ function PhotoStudioFields({
           />
           <span>포함</span>
         </label>
+      </Field>
+    </div>
+  );
+}
+
+function TravelPackageFields({
+  details,
+  setDetail,
+}: {
+  details: Record<string, unknown>;
+  setDetail: (key: string, value: unknown) => void;
+}): JSX.Element {
+  const subType = typeof details.subType === 'string' ? details.subType : '';
+  const includes = Array.isArray(details.includes) ? (details.includes as string[]).join('\n') : '';
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <Field label="여행 종류 (하위 카테고리)">
+        <select
+          value={subType}
+          onChange={(e) => setDetail('subType', e.target.value)}
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="">— 선택 —</option>
+          {TRAVEL_PACKAGE_SUB_TYPES.map((s) => (
+            <option key={s.key} value={s.key}>{s.label}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="기간 (일수)">
+        <input
+          type="number"
+          min={1}
+          value={(details.durationDays as number) ?? ''}
+          onChange={(e) => setDetail('durationDays', Number(e.target.value) || 0)}
+          placeholder="4박 5일 → 5"
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+        />
+      </Field>
+      <Field label="출발 도시">
+        <input
+          value={(details.origin as string) ?? ''}
+          onChange={(e) => setDetail('origin', e.target.value)}
+          placeholder="인천 / 김포"
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+        />
+      </Field>
+      <Field label="최소 인원">
+        <input
+          type="number"
+          min={1}
+          value={(details.minPax as number) ?? 1}
+          onChange={(e) => setDetail('minPax', Number(e.target.value) || 1)}
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+        />
+      </Field>
+      <Field label="가이드 동행">
+        <label className="flex h-10 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={!!details.guideIncluded}
+            onChange={(e) => setDetail('guideIncluded', e.target.checked)}
+          />
+          <span>통역/인솔 가이드 포함</span>
+        </label>
+      </Field>
+      <Field label="항공권 포함">
+        <label className="flex h-10 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={!!details.flightIncluded}
+            onChange={(e) => setDetail('flightIncluded', e.target.checked)}
+          />
+          <span>국제선 항공 포함</span>
+        </label>
+      </Field>
+      <Field label="포함 사항 (줄바꿈 구분)" className="sm:col-span-2">
+        <textarea
+          value={includes}
+          onChange={(e) =>
+            setDetail(
+              'includes',
+              e.target.value.split('\n').map((s) => s.trim()).filter(Boolean),
+            )
+          }
+          rows={4}
+          placeholder={`5성 호텔 4박\n전 일정 통역 가이드\n공항 픽업·샌딩\n4사 K팝 성지 입장권`}
+          className="w-full rounded-md border border-input bg-background p-3 text-sm"
+        />
       </Field>
     </div>
   );
