@@ -137,6 +137,10 @@ const ja: Dictionary = {
     haveAccount: 'すでにアカウントをお持ちですか？',
     goLogin: 'ログイン →',
     privacy: '登録時、利用規約とプライバシーポリシーに同意したものとみなされます。',
+    consentRequired: '登録前に下記の規約への同意が必要です。',
+    consentLabel: '利用規約とプライバシーポリシーに同意します。',
+    consentTerms: '利用規約',
+    consentPrivacy: 'プライバシーポリシー',
   },
   login: {
     badge: 'ゲスト専用',

@@ -126,6 +126,9 @@ export function PatientSignupForm({
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState<string | null>(null); // verified email when sent
   const [showPassword, setShowPassword] = useState(false);
+  // 약관 동의 — Google + 폼 제출 모두 이 체크박스에 게이트됨.
+  // 비-체크 상태에서 두 진입 경로 모두 disabled 처리.
+  const [agreed, setAgreed] = useState(false);
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -240,12 +243,77 @@ export function PatientSignupForm({
   const errs = form.formState.errors;
   return (
     <div className="space-y-5">
+      {/* 약관 동의 — Google 가입 / 폼 제출 모두 이 체크박스가 켜져야
+          활성화. 라벨 안의 두 링크는 /terms · /privacy 새 탭. */}
+      <div
+        style={{
+          border: '1px solid #ebebeb',
+          background: '#fafafa',
+          borderRadius: 10,
+          padding: '12px 14px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 10,
+        }}
+      >
+        <input
+          id="consent"
+          type="checkbox"
+          checked={agreed}
+          onChange={(e) => setAgreed(e.target.checked)}
+          style={{
+            width: 18, height: 18, marginTop: 2,
+            accentColor: '#ff385c', cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        />
+        <label
+          htmlFor="consent"
+          style={{ fontSize: 13, color: '#222', lineHeight: 1.55, cursor: 'pointer' }}
+        >
+          {dict.consentLabel.split(/(이용약관|개인정보처리방침|Terms of Service|Privacy Policy|服务条款|隐私政策|利用規約|プライバシーポリシー|Условия использования|Политика конфиденциальности|Điều khoản sử dụng|Chính sách bảo mật)/).map((part, i) => {
+            if (part === dict.consentTerms) {
+              return (
+                <a
+                  key={i}
+                  href={`/${locale}/terms`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#222', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}
+                >
+                  {part}
+                </a>
+              );
+            }
+            if (part === dict.consentPrivacy) {
+              return (
+                <a
+                  key={i}
+                  href={`/${locale}/privacy`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#222', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}
+                >
+                  {part}
+                </a>
+              );
+            }
+            return <span key={i}>{part}</span>;
+          })}
+        </label>
+      </div>
+      {!agreed ? (
+        <p style={{ fontSize: 12, color: '#9c9c9c', margin: 0 }}>
+          {dict.consentRequired}
+        </p>
+      ) : null}
+
       {/* Google OAuth — primary path for tech-savvy international users */}
       <button
         type="button"
         onClick={onGoogle}
-        disabled={googleLoading || submitting}
-        className="inline-flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60"
+        disabled={!agreed || googleLoading || submitting}
+        className="inline-flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <GoogleIcon className="h-4 w-4" />
         {googleLoading ? '…' : dict.googleCta}
@@ -415,13 +483,13 @@ export function PatientSignupForm({
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={!agreed || submitting}
           style={{
             width: '100%', height: 50, marginTop: 4,
-            background: submitting ? '#ffb3c1' : '#ff385c',
+            background: !agreed ? '#ffd1da' : submitting ? '#ffb3c1' : '#ff385c',
             color: '#fff', border: 'none', borderRadius: 10,
             fontWeight: 600, fontSize: 16,
-            cursor: submitting ? 'wait' : 'pointer',
+            cursor: !agreed ? 'not-allowed' : submitting ? 'wait' : 'pointer',
             fontFamily: 'inherit',
           }}
         >

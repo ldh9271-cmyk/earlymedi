@@ -138,6 +138,10 @@ const vi: Dictionary = {
     haveAccount: 'Đã có tài khoản?',
     goLogin: 'Đăng nhập →',
     privacy: 'Khi đăng ký, bạn đồng ý với Điều khoản và Chính sách bảo mật.',
+    consentRequired: 'Bạn cần đồng ý với các tài liệu dưới đây để đăng ký.',
+    consentLabel: 'Tôi đồng ý với Điều khoản sử dụng và Chính sách bảo mật.',
+    consentTerms: 'Điều khoản sử dụng',
+    consentPrivacy: 'Chính sách bảo mật',
   },
   login: {
     badge: 'Dành cho khách',

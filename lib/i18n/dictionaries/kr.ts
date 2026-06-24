@@ -149,6 +149,10 @@ const kr = {
     haveAccount: '이미 계정이 있으신가요?',
     goLogin: '로그인 →',
     privacy: '가입 시 이용약관 · 개인정보처리방침에 동의합니다.',
+    consentRequired: '아래 약관에 동의해야 가입할 수 있습니다.',
+    consentLabel: '이용약관과 개인정보처리방침에 동의합니다.',
+    consentTerms: '이용약관',
+    consentPrivacy: '개인정보처리방침',
   },
   login: {
     badge: '게스트 전용',

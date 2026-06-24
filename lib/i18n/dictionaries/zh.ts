@@ -135,6 +135,10 @@ const zh: Dictionary = {
     haveAccount: '已有账户？',
     goLogin: '登录 →',
     privacy: '注册即同意使用条款和隐私政策。',
+    consentRequired: '注册前请先同意以下条款。',
+    consentLabel: '我同意服务条款和隐私政策。',
+    consentTerms: '服务条款',
+    consentPrivacy: '隐私政策',
   },
   login: {
     badge: '客人专用',

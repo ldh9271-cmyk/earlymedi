@@ -138,6 +138,10 @@ const en: Dictionary = {
     haveAccount: 'Already have an account?',
     goLogin: 'Sign in →',
     privacy: 'By signing up you agree to the Terms of Service and Privacy Policy.',
+    consentRequired: 'You must agree to the documents below to sign up.',
+    consentLabel: 'I agree to the Terms of Service and Privacy Policy.',
+    consentTerms: 'Terms of Service',
+    consentPrivacy: 'Privacy Policy',
   },
   login: {
     badge: 'For Guests',
