@@ -177,7 +177,13 @@ export default async function GlowupPcPage({
         featured: !!d.promoLabel,
         img: d.coverImageUrl ?? '',
       }))
-    : PROGRAMS;
+    : PROGRAMS.map((p, i) => ({
+        // dict fallback for text fields when DB is empty
+        ...p,
+        name: dict.landing.samplePrograms[i]?.name ?? p.name,
+        desc: dict.landing.samplePrograms[i]?.desc ?? p.desc,
+        place: dict.landing.samplePrograms[i]?.place ?? p.place,
+      }));
 
   const foods = dbFoods.length > 0
     ? dbFoods.map((d) => ({
@@ -187,7 +193,11 @@ export default async function GlowupPcPage({
         booked: !!d.promoLabel,
         img: d.coverImageUrl ?? '',
       }))
-    : FOODS;
+    : FOODS.map((f, i) => ({
+        ...f,
+        name: dict.landing.sampleFoods[i]?.name ?? f.name,
+        place: dict.landing.sampleFoods[i]?.place ?? f.place,
+      }));
 
   const hotel = {
     title: dbHotel?.title ?? dict.landing.hotelTitle,

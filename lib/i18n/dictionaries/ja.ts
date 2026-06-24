@@ -298,6 +298,24 @@ const ja: Dictionary = {
       { title: '景福宮 · 漢江 · 聖水ショッピング', desc: '名所ツアー · 清潭・聖水で感性ショッピング' },
       { title: 'ロッテワールド · 出国',          desc: '水族館 · 免税ショッピング · 空港見送り' },
     ],
+    samplePrograms: [
+      { name: 'パーソナルカラー診断',     desc: 'プロコンサルタント 1:1 ドレーピング · 90 分',  place: '江南スタジオ' },
+      { name: 'スキン診断ケア',           desc: 'AI 肌分析 + オーダーケア · 120 分',           place: '清潭クリニック' },
+      { name: 'プロフィール撮影',         desc: 'ヘア・メイク + 専門スタジオ · 150 分',        place: '聖水スタジオ' },
+      { name: 'K-ビューティーメイク講座', desc: 'アーティストと 1:1 セルフレッスン · 100 分',  place: '明洞サロン' },
+    ],
+    sampleFoods: [
+      { name: '韓牛焼肉',         place: '江南 · ★ 4.9' },
+      { name: '全州ビビンバ',     place: '北村 · ★ 4.8' },
+      { name: '新堂洞トッポッキ', place: '新堂洞 · ★ 4.7' },
+      { name: '韓定食御膳',       place: '仁寺洞 · ★ 4.9' },
+    ],
+    kpopHouses: [
+      { area: '龍山', spot: 'HYBE Insight 博物館' },
+      { area: '聖水', spot: 'KWANGYA@SEOUL' },
+      { area: '江東', spot: 'JYP 社屋 + グッズショップ' },
+      { area: '合井', spot: 'YG 社屋 + カフェ' },
+    ],
   },
   common: {
     loading: '読み込み中…',

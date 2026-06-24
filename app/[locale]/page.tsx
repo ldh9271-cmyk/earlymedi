@@ -307,7 +307,16 @@ function Programs({
         img: d.coverImageUrl ?? '',
         interest: d.interestKey ?? 'makeup',
       }))
-    : PROGRAMS;
+    : PROGRAMS.map((p, i) => ({
+        // i18n fallback: image + featured + interest come from the
+        // local PROGRAMS table (asset + business logic), text fields
+        // override from dict.landing.samplePrograms so /en /zh /ja /ru
+        // /vi see translated copy when no DB row exists yet.
+        ...p,
+        name: t.samplePrograms[i]?.name ?? p.name,
+        desc: t.samplePrograms[i]?.desc ?? p.desc,
+        place: t.samplePrograms[i]?.place ?? p.place,
+      }));
   return (
     <section id="programs" style={{ padding: '56px 0 0', scrollMarginTop: 200 }}>
       <SectionHeader title={t.programsTitle} viewAllLabel={t.sectionViewAll} />
@@ -536,7 +545,12 @@ function Foods({
         booked: !!d.promoLabel,
         img: d.coverImageUrl ?? '',
       }))
-    : FOODS;
+    : FOODS.map((f, i) => ({
+        // Same fallback-with-dict-override pattern as Programs above.
+        ...f,
+        name: t.sampleFoods[i]?.name ?? f.name,
+        place: t.sampleFoods[i]?.place ?? f.place,
+      }));
   return (
     <section style={{ padding: '56px 0 0' }}>
       <SectionHeader title={t.foodsTitle} viewAllLabel={t.sectionViewAll} />
@@ -631,6 +645,14 @@ const KPOP_HOUSES: Array<{
 ];
 
 function KpopRow({ t }: { t: Dictionary['landing'] }): JSX.Element {
+  // Brand name + logo + card background stay hardcoded (asset +
+  // proper noun), but area/spot text comes from dict so non-Korean
+  // visitors see "Yongsan / HYBE Insight Museum" instead of "용산".
+  const houses = KPOP_HOUSES.map((h, i) => ({
+    ...h,
+    area: t.kpopHouses[i]?.area ?? h.area,
+    spot: t.kpopHouses[i]?.spot ?? h.spot,
+  }));
   return (
     <section style={{ padding: '40px 0 0' }}>
       <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>
@@ -642,7 +664,7 @@ function KpopRow({ t }: { t: Dictionary['landing'] }): JSX.Element {
           marginTop: 24,
         }}
       >
-        {KPOP_HOUSES.map((h) => (
+        {houses.map((h) => (
           <div key={h.brand}>
             <div
               style={{

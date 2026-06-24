@@ -299,6 +299,24 @@ const vi: Dictionary = {
       { title: 'Gyeongbokgung · Hangang · mua sắm Seongsu', desc: 'Tham quan danh thắng · mua sắm boutique Cheongdam/Seongsu' },
       { title: 'Lotte World · khởi hành',                 desc: 'Thủy cung · mua sắm miễn thuế · đưa tiễn sân bay' },
     ],
+    samplePrograms: [
+      { name: 'Phân tích màu cá nhân',     desc: 'Draping 1:1 với chuyên gia · 90 phút',          place: 'Studio Gangnam' },
+      { name: 'Chẩn đoán & chăm sóc da',   desc: 'Phân tích da bằng AI + chăm sóc riêng · 120 phút', place: 'Phòng khám Cheongdam' },
+      { name: 'Chụp ảnh hồ sơ chuyên nghiệp', desc: 'Tóc/trang điểm + studio chuyên nghiệp · 150 phút', place: 'Studio Seongsu' },
+      { name: 'Lớp trang điểm K-beauty',   desc: 'Tự trang điểm 1:1 với nghệ sĩ · 100 phút',      place: 'Salon Myeongdong' },
+    ],
+    sampleFoods: [
+      { name: 'BBQ thịt bò Hàn (Hanwoo)', place: 'Gangnam · ★ 4.9' },
+      { name: 'Bibimbap Jeonju',          place: 'Bukchon · ★ 4.8' },
+      { name: 'Tteokbokki Sindangdong',   place: 'Sindangdong · ★ 4.7' },
+      { name: 'Set Hanjeongsik',          place: 'Insadong · ★ 4.9' },
+    ],
+    kpopHouses: [
+      { area: 'Yongsan',  spot: 'HYBE Insight Museum' },
+      { area: 'Seongsu',  spot: 'KWANGYA@SEOUL' },
+      { area: 'Gangdong', spot: 'Trụ sở JYP + shop merch' },
+      { area: 'Hapjeong', spot: 'Trụ sở YG + café' },
+    ],
   },
   common: {
     loading: 'Đang tải…',

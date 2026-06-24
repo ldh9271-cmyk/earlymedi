@@ -322,6 +322,24 @@ const kr = {
       { title: '경복궁 · 한강 · 성수 쇼핑',    desc: '필수 명소 투어 · 청담·성수 감성 쇼핑' },
       { title: '롯데월드 · 출국',              desc: '아쿠아리움 · 면세 쇼핑 · 공항 샌딩' },
     ],
+    samplePrograms: [
+      { name: '퍼스널 컬러 진단',      desc: '전문 컨설턴트 1:1 드레이핑 · 90분',     place: '강남 스튜디오' },
+      { name: '피부 진단 케어',        desc: 'AI 피부 분석 + 맞춤 케어 · 120분',      place: '청담 클리닉' },
+      { name: '프로필 화보 촬영',      desc: '헤어·메이크업 + 전문 스튜디오 · 150분', place: '성수 스튜디오' },
+      { name: 'K-뷰티 메이크업 클래스', desc: '아티스트와 1:1 셀프 레슨 · 100분',     place: '명동 살롱' },
+    ],
+    sampleFoods: [
+      { name: '한우구이',     place: '강남 · ★ 4.9' },
+      { name: '전주 비빔밥',   place: '북촌 · ★ 4.8' },
+      { name: '신당동 떡볶이', place: '신당동 · ★ 4.7' },
+      { name: '한정식 반상',   place: '인사동 · ★ 4.9' },
+    ],
+    kpopHouses: [
+      { area: '용산', spot: 'HYBE 인사이트 박물관' },
+      { area: '성수', spot: 'KWANGYA@SEOUL' },
+      { area: '강동', spot: 'JYP 사옥 + 굿즈샵' },
+      { area: '합정', spot: 'YG 사옥 + 카페' },
+    ],
   },
 };
 

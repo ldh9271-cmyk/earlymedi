@@ -296,6 +296,24 @@ const zh: Dictionary = {
       { title: '景福宫 · 汉江 · 城水购物',  desc: '必去景点游览 · 清潭/城水精品购物' },
       { title: '乐天世界 · 出境',           desc: '水族馆 · 免税购物 · 机场送机' },
     ],
+    samplePrograms: [
+      { name: '个人色彩诊断',     desc: '专业顾问 1 对 1 披样 · 90 分钟',       place: '江南工作室' },
+      { name: '皮肤诊断护理',     desc: 'AI 皮肤分析 + 定制护理 · 120 分钟',    place: '清潭诊所' },
+      { name: '形象写真拍摄',     desc: '美发美妆 + 专业工作室 · 150 分钟',     place: '城水工作室' },
+      { name: 'K-beauty 化妆课', desc: '艺人 1 对 1 自助化妆课 · 100 分钟',    place: '明洞沙龙' },
+    ],
+    sampleFoods: [
+      { name: '韩牛烧烤',       place: '江南 · ★ 4.9' },
+      { name: '全州拌饭',       place: '北村 · ★ 4.8' },
+      { name: '新堂洞炒年糕',   place: '新堂洞 · ★ 4.7' },
+      { name: '韩定食套餐',     place: '仁寺洞 · ★ 4.9' },
+    ],
+    kpopHouses: [
+      { area: '龙山', spot: 'HYBE Insight 博物馆' },
+      { area: '城水', spot: 'KWANGYA@SEOUL' },
+      { area: '江东', spot: 'JYP 总部 + 周边店' },
+      { area: '合井', spot: 'YG 总部 + 咖啡厅' },
+    ],
   },
   common: {
     loading: '加载中…',

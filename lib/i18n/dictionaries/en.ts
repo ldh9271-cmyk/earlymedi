@@ -311,6 +311,24 @@ const en: Dictionary = {
       { title: 'Gyeongbokgung · Hangang · Seongsu',     desc: 'Must-see landmarks · Cheongdam & Seongsu boutique shopping' },
       { title: 'Lotte World · Departure',               desc: 'Aquarium · duty-free shopping · airport send-off' },
     ],
+    samplePrograms: [
+      { name: 'Personal color analysis',       desc: '1:1 professional draping · 90 min',         place: 'Gangnam Studio' },
+      { name: 'Skin diagnostic care',          desc: 'AI skin analysis + custom care · 120 min',  place: 'Cheongdam Clinic' },
+      { name: 'Profile photo shoot',           desc: 'Hair & makeup + pro studio · 150 min',      place: 'Seongsu Studio' },
+      { name: 'K-beauty makeup class',         desc: '1:1 self-application lesson · 100 min',     place: 'Myeongdong Salon' },
+    ],
+    sampleFoods: [
+      { name: 'Hanwoo Korean BBQ',  place: 'Gangnam · ★ 4.9' },
+      { name: 'Jeonju Bibimbap',    place: 'Bukchon · ★ 4.8' },
+      { name: 'Sindang Tteokbokki', place: 'Sindang · ★ 4.7' },
+      { name: 'Hanjeongsik Banbang', place: 'Insadong · ★ 4.9' },
+    ],
+    kpopHouses: [
+      { area: 'Yongsan', spot: 'HYBE Insight Museum' },
+      { area: 'Seongsu', spot: 'KWANGYA@SEOUL' },
+      { area: 'Gangdong', spot: 'JYP HQ + Goods Shop' },
+      { area: 'Hapjeong', spot: 'YG HQ + Café' },
+    ],
   },
 };
 
