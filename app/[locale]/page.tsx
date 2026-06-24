@@ -1,20 +1,20 @@
 import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
-import { getDictionary } from '@/lib/i18n/get-dictionary';
-import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { MainHeader } from './_components/main-header';
 
 /**
- * Patient portal landing — Airbnb design language, 7-section order
- * fixed by the founder (see chat 2026-06-23):
+ * Patient portal landing — Airbnb design language. Founder-ordered
+ * sections (see chat 2026-06-23). "관심 분야를 선택하세요" Categories
+ * grid was dropped 2026-06-23 to declutter the home — category entry
+ * still lives in the MainHeader sticky strip, so users haven't lost
+ * the way in.
  *
  *   1. Hero            — 서울에서 놀면서, 예뻐지는 4박 5일 (crossfade)
- *   2. Categories      — 관심 분야를 선택하세요 (8 SVG 카드)
- *   3. Programs        — 서울의 인기 뷰티 프로그램 (4 카드)
- *   4. Course          — 베스트셀러 · 올인원 코스 (5단계 일정 + sticky 예약)
- *   5. Foods           — 현지인만 아는 찐맛집 (4 카드)
- *   6. K-pop           — K-팝 성지 탐방 (HYBE/SM/JYP/YG)
- *   7. Hotel + Final CTA — 명동 5성 호텔 + 지금, 가장 빛나는 여행을 시작하세요
+ *   2. Programs        — 서울의 인기 뷰티 프로그램 (4 카드)
+ *   3. Course          — 베스트셀러 · 올인원 코스 (5단계 일정 + sticky 예약)
+ *   4. Foods           — 현지인만 아는 찐맛집 (4 카드)
+ *   5. K-pop           — K-팝 성지 탐방 (HYBE/SM/JYP/YG)
+ *   6. Hotel + Final CTA — 명동 5성 호텔 + 지금, 가장 빛나는 여행을 시작하세요
  *
  * Every booking CTA (Programs/Course/Hotel/Final) lands in the existing
  * /[locale]/inquiry form, which prefills program/interest and routes
@@ -115,12 +115,11 @@ const COURSE_PROGRAM = '4박 5일 글로우업 코스';
 const bookingHref = (locale: PublicLocale, program: string, interest: string): string =>
   `/${locale}/inquiry?program=${encodeURIComponent(program)}&interest=${interest}`;
 
-export default async function PublicLandingPage({
+export default function PublicLandingPage({
   params,
 }: {
   params: { locale: PublicLocale };
-}): Promise<JSX.Element> {
-  const dict = await getDictionary(params.locale);
+}): JSX.Element {
   const { locale } = params;
   return (
     <div
@@ -154,7 +153,6 @@ export default async function PublicLandingPage({
 
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
         <Hero />
-        <Categories locale={locale} dict={dict} />
         <Programs locale={locale} />
         <Course locale={locale} />
         <Foods locale={locale} />
@@ -241,95 +239,6 @@ function Hero(): JSX.Element {
             여행 둘러보기
           </Link>
         </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── 2. Categories ─────────────────────────────────────────────────
-function Categories({
-  locale,
-  dict,
-}: {
-  locale: PublicLocale;
-  dict: Dictionary;
-}): JSX.Element {
-  // Real photos, not the earlier SVG illustrations. Medical-specific
-  // shots (plastic_surgery/dental/hair/health_checkup) are fresh
-  // Unsplash JPEGs downloaded to /public/images/categories/. The other
-  // four reuse photos already shipped under /public/images/glowup-pc/
-  // (skincare bottle, Seoul cityscape, makeup flat-lay, photo-shoot
-  // portrait) since the subject already matches.
-  const items: Array<{
-    key: keyof Dictionary['categories']['items'];
-    img: string;
-  }> = [
-    { key: 'plastic_surgery', img: '/images/categories/plastic-surgery.jpg' },
-    { key: 'dermatology',     img: '/images/glowup-pc/0b3ab66a-79d6-49be-b4f6-8a626ee1fc2d.jpg' },
-    { key: 'dental',          img: '/images/categories/dental.jpg' },
-    { key: 'hair',            img: '/images/categories/hair.jpg' },
-    { key: 'health_checkup',  img: '/images/categories/health-checkup.jpg' },
-    { key: 'beauty_tour',     img: '/images/glowup-pc/79dac510-b190-481f-bff3-acd40a97ced6.jpg' },
-    { key: 'makeup',          img: '/images/glowup-pc/96a7e0c2-ea2f-4549-8875-a3be3c38c523.jpg' },
-    { key: 'photo_studio',    img: '/images/glowup-pc/10f945b3-775f-4fe8-aab6-7e434cfca9b5.jpg' },
-  ];
-  return (
-    <section style={{ padding: '48px 0 0' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-        <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>
-          {dict.categories.title}
-        </h2>
-        <Link
-          href={`/${locale}/clinics`}
-          style={{ fontSize: 14, fontWeight: 600, color: '#222', textDecoration: 'none' }}
-        >
-          {dict.categories.viewAll} ›
-        </Link>
-      </div>
-      <p style={{ fontSize: 15, color: '#6a6a6a', margin: '6px 0 0' }}>
-        {dict.categories.subtitle}
-      </p>
-      <div
-        style={{
-          marginTop: 28,
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20,
-        }}
-      >
-        {items.map((c) => {
-          const meta = dict.categories.items[c.key];
-          return (
-            <Link
-              key={c.key}
-              href={`/${locale}/clinics?category=${c.key}`}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <div
-                style={{
-                  aspectRatio: '1',
-                  borderRadius: 14,
-                  // photo + dark bottom gradient on top so the white
-                  // label is readable on any background (skincare flat-
-                  // lays in particular run very light).
-                  background:
-                    `linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0) 70%), ` +
-                    `#222 url(${c.img}) center / cover`,
-                  display: 'flex', alignItems: 'flex-end', padding: 18,
-                  transition: 'transform 0.2s ease',
-                }}
-              >
-                <span
-                  style={{
-                    color: '#fff', fontWeight: 700, fontSize: 18,
-                    textShadow: '0 2px 8px rgba(0,0,0,0.55)',
-                  }}
-                >
-                  {meta.label}
-                </span>
-              </div>
-              <div style={{ marginTop: 10, fontSize: 13, color: '#6a6a6a' }}>{meta.desc}</div>
-            </Link>
-          );
-        })}
       </div>
     </section>
   );
