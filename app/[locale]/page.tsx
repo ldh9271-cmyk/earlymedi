@@ -492,43 +492,49 @@ function Foods({ locale: _locale }: { locale: PublicLocale }): JSX.Element {
 }
 
 // ─── 6. K-pop ──────────────────────────────────────────────────────
-// 4-사 카드. 각 사 상표 로고를 직접 쓰면 trademark 위험이라
-// 시그너처 컬러 그라데이션 + 큰 워드마크 + 위치/특징 라벨 패턴으로
-// 차별화. 회사명 자체는 일반 명칭 사용이므로 OK.
+// 4-사 카드. founder 가 직접 업로드한 실제 BI 로고를 카드 중앙에
+// 배치. HYBE 로고는 흰색 워드마크라 검정 배경, 나머지 3개는 컬러
+// 로고라 흰색 배경. 위치 + 성지명 라벨은 카드 아래에 따로 (Programs
+// /Foods 카드와 동일한 "이미지 + 텍스트 분리" 패턴).
 const KPOP_HOUSES: Array<{
   brand: string;
   area: string;
   spot: string;
-  bg: string;
-  accent: string;
+  logo: string;
+  cardBg: string;
+  logoHeightPct: number;
 }> = [
   {
     brand: 'HYBE',
     area: '용산',
     spot: 'HYBE 인사이트 박물관',
-    bg: 'linear-gradient(135deg, #8b5cf6 0%, #312e81 100%)',
-    accent: '#c4b5fd',
+    logo: '/images/kpop/hybe.png',
+    cardBg: '#0c0c0c',
+    logoHeightPct: 28,
   },
   {
     brand: 'SM',
     area: '성수',
     spot: 'KWANGYA@SEOUL',
-    bg: 'linear-gradient(135deg, #ec4899 0%, #06b6d4 100%)',
-    accent: '#fbcfe8',
+    logo: '/images/kpop/sm.png',
+    cardBg: '#ffffff',
+    logoHeightPct: 50,
   },
   {
     brand: 'JYP',
     area: '강동',
     spot: 'JYP 사옥 + 굿즈샵',
-    bg: 'linear-gradient(135deg, #34d399 0%, #065f46 100%)',
-    accent: '#a7f3d0',
+    logo: '/images/kpop/jyp.png',
+    cardBg: '#ffffff',
+    logoHeightPct: 65,
   },
   {
     brand: 'YG',
     area: '합정',
     spot: 'YG 사옥 + 카페',
-    bg: 'linear-gradient(135deg, #facc15 0%, #1f1f1f 100%)',
-    accent: '#fef3c7',
+    logo: '/images/kpop/yg.jpg',
+    cardBg: '#ffffff',
+    logoHeightPct: 55,
   },
 ];
 
@@ -545,55 +551,29 @@ function KpopRow(): JSX.Element {
         }}
       >
         {KPOP_HOUSES.map((h) => (
-          <div
-            key={h.brand}
-            style={{
-              position: 'relative',
-              aspectRatio: '16/10', borderRadius: 14, overflow: 'hidden',
-              background: h.bg,
-              padding: 20,
-              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-              color: '#fff',
-            }}
-          >
-            {/* Subtle radial highlight for depth */}
+          <div key={h.brand}>
             <div
               style={{
-                position: 'absolute', inset: 0,
-                background:
-                  'radial-gradient(circle at 75% 20%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 60%)',
-                pointerEvents: 'none',
-              }}
-            />
-            <div
-              style={{
-                position: 'relative',
-                fontSize: 11, fontWeight: 600, letterSpacing: '0.6px',
-                color: h.accent, opacity: 0.95,
+                aspectRatio: '16/10', borderRadius: 14, overflow: 'hidden',
+                background: h.cardBg,
+                border: h.cardBg === '#ffffff' ? '1px solid #ebebeb' : 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              {h.area.toUpperCase()}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={h.logo}
+                alt={`${h.brand} 로고`}
+                style={{
+                  maxWidth: '70%',
+                  maxHeight: `${h.logoHeightPct}%`,
+                  objectFit: 'contain',
+                }}
+              />
             </div>
-            <div style={{ position: 'relative' }}>
-              <div
-                style={{
-                  fontSize: 38, fontWeight: 800,
-                  letterSpacing: h.brand === 'HYBE' ? 2 : 1.5,
-                  lineHeight: 1,
-                  textShadow: '0 2px 12px rgba(0,0,0,0.25)',
-                }}
-              >
-                {h.brand}
-              </div>
-              <div
-                style={{
-                  marginTop: 8,
-                  fontSize: 13, fontWeight: 500,
-                  color: 'rgba(255,255,255,0.92)',
-                }}
-              >
-                {h.spot}
-              </div>
+            <div style={{ marginTop: 12, fontSize: 16, fontWeight: 600 }}>{h.brand}</div>
+            <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>
+              {h.area} · {h.spot}
             </div>
           </div>
         ))}
