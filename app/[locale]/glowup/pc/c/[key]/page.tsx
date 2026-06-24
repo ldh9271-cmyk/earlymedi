@@ -51,10 +51,11 @@ export default async function CategoryDetailPage({
   }
   const p = CATEGORY_PRODUCTS[params.key as Exclude<PcCategoryKey, 'all'>];
   const dict = await getDictionary(params.locale);
+  const d = dict.detail;
   const bookHref = `/${params.locale}/checkout?cat=${p.key}`;
-  const titleEn = englishTitleForCategory(p.key);
   const hostName = hostNameForCategory(p.key);
   const highlights = highlightsForCategory(p);
+  const reviewsLabel = d.reviewsCount.replace('{n}', String(p.reviewCount));
 
   return (
     <div
@@ -114,9 +115,8 @@ export default async function CategoryDetailPage({
         {/* Title + meta */}
         <section style={{ padding: '20px 22px 0' }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: 0, lineHeight: 1.2 }}>
-            {titleEn}
+            {p.title}
           </h1>
-          <div style={{ fontSize: 15, color: '#6a6a6a', marginTop: 4 }}>{p.title}</div>
           <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, flexWrap: 'wrap' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
               <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
@@ -124,7 +124,7 @@ export default async function CategoryDetailPage({
             <strong style={{ fontWeight: 600 }}>{p.rating.toFixed(2)}</strong>
             <span>·</span>
             <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
-              {p.reviewCount} reviews
+              {reviewsLabel}
             </span>
             <span>·</span>
             <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>{p.metaLine}</span>
@@ -142,9 +142,9 @@ export default async function CategoryDetailPage({
             }}
           />
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600 }}>Hosted by {hostName}</div>
+            <div style={{ fontSize: 15, fontWeight: 600 }}>{d.hostedBy.replace('{name}', hostName)}</div>
             <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 2 }}>
-              Verified partner · 검증 파트너 · 4 yrs
+              {d.verifiedPartner} · {d.years.replace('{n}', '4')}
             </div>
           </div>
         </section>
@@ -154,7 +154,7 @@ export default async function CategoryDetailPage({
         {/* Why this is special */}
         <section style={{ padding: '0 22px' }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, lineHeight: 1.3 }}>
-            Why this is special · 이 프로그램이 특별한 이유
+            {d.whySpecial}
           </h2>
           <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 18 }}>
             {highlights.map((h, i) => (
@@ -177,7 +177,7 @@ export default async function CategoryDetailPage({
 
         {/* What's included — keep the original 4-bullet inclusions list. */}
         <section style={{ padding: '0 22px' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>포함 사항 · What&apos;s included</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{d.whatsIncluded}</h2>
           <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 11 }}>
             {p.includes.map((line) => (
               <div
@@ -208,7 +208,7 @@ export default async function CategoryDetailPage({
             <svg width="15" height="15" viewBox="0 0 24 24" fill="#222">
               <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
             </svg>
-            <span>{p.rating.toFixed(2)} · {p.reviewCount} reviews</span>
+            <span>{p.rating.toFixed(2)} · {reviewsLabel}</span>
           </div>
           <div
             style={{
@@ -219,8 +219,7 @@ export default async function CategoryDetailPage({
             }}
           >
             <p style={{ margin: 0, fontSize: 15, color: '#222', lineHeight: 1.5 }}>
-              &ldquo;The consultant was so thorough — I finally know my colors. The concierge even
-              booked my next appointment.&rdquo;
+              &ldquo;{d.sampleReviewBody}&rdquo;
             </p>
             <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
               <div
@@ -230,8 +229,8 @@ export default async function CategoryDetailPage({
                 }}
               />
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>Sarah</div>
-                <div style={{ fontSize: 12, color: '#6a6a6a' }}>United States · March 2026</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{d.sampleReviewerName}</div>
+                <div style={{ fontSize: 12, color: '#6a6a6a' }}>{d.sampleReviewerMeta}</div>
               </div>
             </div>
           </div>
@@ -243,7 +242,7 @@ export default async function CategoryDetailPage({
               textDecoration: 'underline', textUnderlineOffset: 3,
             }}
           >
-            Show all {p.reviewCount} reviews
+            {d.showAllReviews.replace('{n}', String(p.reviewCount))}
           </Link>
         </section>
       </main>
@@ -284,7 +283,7 @@ export default async function CategoryDetailPage({
             textDecoration: 'none', whiteSpace: 'nowrap',
           }}
         >
-          Reserve · 예약
+          {d.reserve}
         </Link>
       </div>
 
@@ -310,17 +309,6 @@ function floatingBtn(p: { left?: number }): React.CSSProperties {
   };
 }
 
-function englishTitleForCategory(key: CategoryProduct['key']): string {
-  switch (key) {
-    case 'color': return 'Personal color analysis';
-    case 'skin': return 'Skincare diagnosis';
-    case 'photo': return 'Profile portrait shoot';
-    case 'makeup': return 'K-beauty makeup class';
-    case 'kpop': return 'K-pop pilgrimage tour';
-    case 'food': return 'Premium Korean dining';
-    case 'hotel': return '5-star Myeongdong stay';
-  }
-}
 
 function hostNameForCategory(key: CategoryProduct['key']): string {
   switch (key) {

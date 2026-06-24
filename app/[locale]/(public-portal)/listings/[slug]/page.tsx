@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { fetchListingBySlug, type ListingDetail } from '@/lib/listings/query';
+import { getDictionary } from '@/lib/i18n/get-dictionary';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,11 +46,14 @@ export default async function ListingDetailPage({
   if (!listing) {
     notFound();
   }
+  const dict = await getDictionary(params.locale);
+  const d = dict.detail;
 
   const heroSrc = listing.coverImageUrl ?? listing.galleryImageUrls[0] ?? '';
   const galleryCount = Math.max(1, listing.galleryImageUrls.length || (listing.coverImageUrl ? 1 : 0));
   const rating = listing.rating ? (listing.rating / 10).toFixed(2) : '4.92';
   const reviewsCount = listing.reviewsCount > 0 ? listing.reviewsCount : 0;
+  const reviewsLabel = d.reviewsCount.replace('{n}', String(reviewsCount));
   const subtitleKr = subtitleForCategory(listing.category, listing.title);
   const hostName = hostNameForCategory(listing.category);
   const highlights = pickHighlights(listing);
@@ -128,7 +132,7 @@ export default async function ListingDetailPage({
           <strong style={{ fontWeight: 600 }}>{rating}</strong>
           <span style={{ color: '#222' }}>·</span>
           <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
-            {reviewsCount} reviews
+            {reviewsLabel}
           </span>
           {listing.locationLabel ? (
             <>
@@ -152,9 +156,9 @@ export default async function ListingDetailPage({
           }}
         />
         <div>
-          <div style={{ fontSize: 15, fontWeight: 600 }}>Hosted by {hostName}</div>
+          <div style={{ fontSize: 15, fontWeight: 600 }}>{d.hostedBy.replace('{name}', hostName)}</div>
           <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 2 }}>
-            Verified partner · 검증 파트너 · 4 yrs
+            {d.verifiedPartner} · {d.years.replace('{n}', '4')}
           </div>
         </div>
       </section>
@@ -164,7 +168,7 @@ export default async function ListingDetailPage({
       {/* Why this is special */}
       <section style={{ padding: '0 22px' }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, lineHeight: 1.3 }}>
-          Why this is special · 이 프로그램이 특별한 이유
+          {d.whySpecial}
         </h2>
         <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 18 }}>
           {highlights.map((h, i) => (
@@ -191,7 +195,7 @@ export default async function ListingDetailPage({
           <svg width="15" height="15" viewBox="0 0 24 24" fill="#222">
             <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
           </svg>
-          <span>{rating} · {reviewsCount} reviews</span>
+          <span>{rating} · {reviewsLabel}</span>
         </div>
         {reviewsCount > 0 ? (
           <>
@@ -204,7 +208,7 @@ export default async function ListingDetailPage({
               }}
             >
               <p style={{ margin: 0, fontSize: 15, color: '#222', lineHeight: 1.5 }}>
-                &ldquo;The consultant was so thorough — I finally know my colors. The concierge even booked my next appointment.&rdquo;
+                &ldquo;{d.sampleReviewBody}&rdquo;
               </p>
               <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div
@@ -214,8 +218,8 @@ export default async function ListingDetailPage({
                   }}
                 />
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>Sarah</div>
-                  <div style={{ fontSize: 12, color: '#6a6a6a' }}>United States · March 2026</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{d.sampleReviewerName}</div>
+                  <div style={{ fontSize: 12, color: '#6a6a6a' }}>{d.sampleReviewerMeta}</div>
                 </div>
               </div>
             </div>
@@ -227,7 +231,7 @@ export default async function ListingDetailPage({
                 textDecoration: 'underline', textUnderlineOffset: 3,
               }}
             >
-              Show all {reviewsCount} reviews
+              {d.showAllReviews.replace('{n}', String(reviewsCount))}
             </Link>
           </>
         ) : (
@@ -269,7 +273,7 @@ export default async function ListingDetailPage({
             textDecoration: 'none', whiteSpace: 'nowrap',
           }}
         >
-          Reserve · 예약
+          {d.reserve}
         </Link>
       </div>
     </div>

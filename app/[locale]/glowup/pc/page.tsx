@@ -17,52 +17,21 @@ export const dynamic = 'force-dynamic';
 /**
  * 여행 진입 페이지 — 자유여행 / 패키지여행 / 연수패키지 3카드 선택.
  *
- * 2026-06-25 founder 지시로 기존 /glowup/pc 의 hero · programs ·
- * course · foods · k-pop · hotel · final CTA 블록을 모두 제거하고
- * "여행 종류 · Pick your trip style" 한 섹션만 남김. 더 상세한
- * 콘텐츠는 각 카드 클릭 → /checkout?cat=hotel&sub=<key> 흐름에서
- * 이어지고, 추후 sub-key별 전용 랜딩이 생기면 라우팅만 갈아끼우면
- * 된다.
+ * 카드 텍스트 (제목·설명·기간) 는 dict.travel.<key> 에서, 이미지·
+ * 가격·라우트는 페이지 로컬 TRAVEL_VISUAL 에서 가져온다. 로케일
+ * 마다 한국어/영어/중국어/일본어/러시아어/베트남어로 자동 표시.
  */
 
 const IMG_BASE = '/images/glowup-pc';
 
-const TRAVEL_TYPES: ReadonlyArray<{
+const TRAVEL_VISUAL: ReadonlyArray<{
   key: 'free' | 'package' | 'training';
-  titleKr: string;
-  titleEn: string;
-  desc: string;
   img: string;
-  duration: string;
   priceFromWon: number;
 }> = [
-  {
-    key: 'free',
-    titleKr: '자유여행',
-    titleEn: 'Free travel',
-    desc: '드라이빙 가이드 포함. 원하는 시술·맛집·호텔만 골라 일정은 자유롭게. 1일 이용 기준.',
-    img: `${IMG_BASE}/00c1f04c-fb00-44c7-b991-2af98bddd6e2.jpg`,
-    duration: '1일 · 드라이빙 가이드 포함',
-    priceFromWon: 350_000,
-  },
-  {
-    key: 'package',
-    titleKr: '패키지여행',
-    titleEn: 'Package travel',
-    desc: '호텔·시술·맛집·K-팝 투어 풀패키지. 2박 3일부터 시작, 2–4인 1팀으로 운영.',
-    img: `${IMG_BASE}/79dac510-b190-481f-bff3-acd40a97ced6.jpg`,
-    duration: '2박 3일~ · 2–4인 1팀',
-    priceFromWon: 2_000_000,
-  },
-  {
-    key: 'training',
-    titleKr: '연수패키지',
-    titleEn: 'Training package',
-    desc: '의료진·전문가 대상 K-뷰티·K-메디컬 연수. 2박 3일부터, 클리닉 견학+워크숍+자격.',
-    img: `${IMG_BASE}/65b2c08d-ad5a-411e-a40e-fcbfec808c02.jpg`,
-    duration: '2박 3일~ · 견학+워크숍',
-    priceFromWon: 3_000_000,
-  },
+  { key: 'free',     img: `${IMG_BASE}/00c1f04c-fb00-44c7-b991-2af98bddd6e2.jpg`, priceFromWon: 350_000 },
+  { key: 'package',  img: `${IMG_BASE}/79dac510-b190-481f-bff3-acd40a97ced6.jpg`, priceFromWon: 2_000_000 },
+  { key: 'training', img: `${IMG_BASE}/65b2c08d-ad5a-411e-a40e-fcbfec808c02.jpg`, priceFromWon: 3_000_000 },
 ];
 
 const TRAVEL_TYPES_CSS =
@@ -102,10 +71,10 @@ export default async function GlowupPcPage({
         style={{ flex: 1, maxWidth: 1280, width: '100%', margin: '0 auto', padding: '32px 40px 80px' }}
       >
         <h2 className="m-tt-h2" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
-          여행 종류 · Pick your trip style
+          {dict.travel.sectionTitle}
         </h2>
         <p className="m-tt-sub" style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
-          3가지 여행 스타일 중 하나를 골라 시작하세요. 컨시어지가 도착부터 귀국까지 한 번에 챙겨드립니다.
+          {dict.travel.sectionSubtitle}
         </p>
         <div
           className="m-tt-grid"
@@ -114,47 +83,49 @@ export default async function GlowupPcPage({
             marginTop: 24,
           }}
         >
-          {TRAVEL_TYPES.map((t) => (
-            <Link
-              key={t.key}
-              href={`/${params.locale}/travel/${t.key}`}
-              style={{
-                display: 'block',
-                border: '1px solid #ebebeb', borderRadius: 16,
-                overflow: 'hidden', background: '#fff',
-                color: 'inherit', textDecoration: 'none',
-                boxShadow: 'rgba(0,0,0,0.02) 0 1px 2px, rgba(0,0,0,0.06) 0 4px 12px',
-              }}
-            >
-              <div
-                className="m-tt-card-img"
+          {TRAVEL_VISUAL.map((v) => {
+            const t = dict.travel[v.key];
+            return (
+              <Link
+                key={v.key}
+                href={`/${params.locale}/travel/${v.key}`}
                 style={{
-                  aspectRatio: '4/3',
-                  background: `#f2f2f2 url(${t.img}) center / cover`,
+                  display: 'block',
+                  border: '1px solid #ebebeb', borderRadius: 16,
+                  overflow: 'hidden', background: '#fff',
+                  color: 'inherit', textDecoration: 'none',
+                  boxShadow: 'rgba(0,0,0,0.02) 0 1px 2px, rgba(0,0,0,0.06) 0 4px 12px',
                 }}
-              />
-              <div style={{ padding: 18 }}>
-                <div className="m-tt-card-titleEn" style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.3px' }}>
-                  {t.titleEn}
-                </div>
-                <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{t.titleKr}</div>
-                <p style={{ fontSize: 14, color: '#3f3f3f', lineHeight: 1.5, margin: '12px 0 0' }}>
-                  {t.desc}
-                </p>
+              >
                 <div
+                  className="m-tt-card-img"
                   style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    marginTop: 14, paddingTop: 12, borderTop: '1px solid #ebebeb',
+                    aspectRatio: '4/3',
+                    background: `#f2f2f2 url(${v.img}) center / cover`,
                   }}
-                >
-                  <span style={{ fontSize: 13, color: '#6a6a6a' }}>{t.duration}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#222' }}>
-                    ₩{t.priceFromWon.toLocaleString('ko-KR')}~
-                  </span>
+                />
+                <div style={{ padding: 18 }}>
+                  <div className="m-tt-card-titleEn" style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.3px' }}>
+                    {t.title}
+                  </div>
+                  <p style={{ fontSize: 14, color: '#3f3f3f', lineHeight: 1.5, margin: '12px 0 0' }}>
+                    {t.cardDesc}
+                  </p>
+                  <div
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      marginTop: 14, paddingTop: 12, borderTop: '1px solid #ebebeb',
+                    }}
+                  >
+                    <span style={{ fontSize: 13, color: '#6a6a6a' }}>{t.duration}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#222' }}>
+                      ₩{v.priceFromWon.toLocaleString('ko-KR')}~
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </section>
 

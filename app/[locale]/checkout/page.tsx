@@ -4,9 +4,10 @@ import type { PublicLocale } from '@/lib/i18n/locales';
 import { fetchListingBySlug } from '@/lib/listings/query';
 import { CATEGORY_PRODUCTS } from '../glowup/pc/_components/category-products';
 import type { PcCategoryKey } from '../glowup/pc/_components/pc-header';
+import { getDictionary } from '@/lib/i18n/get-dictionary';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Confirm and pay · 결제' };
+export const metadata = { title: 'KoreaGlowUp' };
 
 /**
  * Confirm-and-pay screen — Airbnb-style listing checkout based on the
@@ -40,13 +41,17 @@ export default async function CheckoutPage({
   if (!summary) {
     notFound();
   }
-  const { title, subtitle, thumbBg, rating, location, priceWon, priceUnitLabel } = summary;
+  const dict = await getDictionary(params.locale);
+  const c = dict.checkout;
+  const { title, thumbBg, rating, location, priceWon, priceUnitLabel } = summary;
 
-  const date = stringParam(searchParams.date) || 'Mon, Nov 3, 2026';
-  const time = stringParam(searchParams.time) || '2:00 PM';
-  const guests = stringParam(searchParams.guests) || '1 guest';
+  const date = stringParam(searchParams.date) || c.defaultDate;
+  const time = stringParam(searchParams.time) || c.defaultTime;
+  const guests = stringParam(searchParams.guests) || c.oneGuest;
 
-  const lineLabel = `₩${priceWon.toLocaleString('ko-KR')} × 1 ${priceUnitLabel}`;
+  const lineLabel = c.lineSession
+    .replace('{price}', `₩${priceWon.toLocaleString('ko-KR')}`)
+    .replace('{unit}', priceUnitLabel);
   const lineAmount = priceWon;
   const serviceFee = Math.round((priceWon * 0.1) / 1000) * 1000;
   const total = lineAmount + serviceFee;
@@ -97,7 +102,7 @@ export default async function CheckoutPage({
           </svg>
         </Link>
         <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.3px' }}>
-          Confirm and pay · 결제
+          {c.title}
         </h1>
       </header>
 
@@ -113,8 +118,7 @@ export default async function CheckoutPage({
           />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.25 }}>{title}</div>
-            <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 3 }}>{subtitle}</div>
-            <div style={{ fontSize: 13, color: '#222', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ fontSize: 13, color: '#222', marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="#222" style={{ flexShrink: 0 }}>
                 <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
               </svg>
@@ -129,23 +133,23 @@ export default async function CheckoutPage({
 
         {/* Your trip */}
         <section style={{ padding: '0 22px' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>Your trip · 예약 정보</h2>
-          <TripRow label="Date · 날짜" value={date} />
-          <TripRow label="Time · 시간" value={time} />
-          <TripRow label="Guests · 인원" value={guests} />
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>{c.yourTrip}</h2>
+          <TripRow label={c.date} value={date} editLabel={c.edit} />
+          <TripRow label={c.time} value={time} editLabel={c.edit} />
+          <TripRow label={c.guests} value={guests} editLabel={c.edit} />
         </section>
 
         <Divider />
 
         {/* Price details */}
         <section style={{ padding: '0 22px' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>Price details · 요금</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>{c.priceDetails}</h2>
           <PriceRow
             label={lineLabel}
             value={`₩${lineAmount.toLocaleString('ko-KR')}`}
           />
           <PriceRow
-            label="Service fee · 수수료"
+            label={c.serviceFee}
             labelUnderlined
             value={`₩${serviceFee.toLocaleString('ko-KR')}`}
           />
@@ -156,7 +160,7 @@ export default async function CheckoutPage({
               fontSize: 16, fontWeight: 700,
             }}
           >
-            <span>Total (KRW)</span>
+            <span>{c.total} (KRW)</span>
             <span>₩{total.toLocaleString('ko-KR')}</span>
           </div>
         </section>
@@ -165,7 +169,7 @@ export default async function CheckoutPage({
 
         {/* Pay with */}
         <section style={{ padding: '0 22px' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>Pay with · 결제 수단</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>{c.payWith}</h2>
           <button
             type="button"
             style={{
@@ -181,13 +185,13 @@ export default async function CheckoutPage({
               <rect x="2" y="6" width="20" height="13" rx="2" />
               <path d="M2 10h20" />
             </svg>
-            <span style={{ flex: 1, textAlign: 'left' }}>Visa ···· 4242</span>
+            <span style={{ flex: 1, textAlign: 'left' }}>{c.cardPlaceholder}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
               <path d="M9 5l7 7-7 7" />
             </svg>
           </button>
           <div style={{ fontSize: 12, color: '#9c9c9c', marginTop: 8 }}>
-            결제 수단 연동은 준비 중입니다. 확인 시 컨시어지가 카카오/WhatsApp으로 결제 링크를 보내드려요.
+            {c.paymentNote}
           </div>
         </section>
       </main>
@@ -214,10 +218,10 @@ export default async function CheckoutPage({
             textDecoration: 'none',
           }}
         >
-          Confirm and pay · 결제하기
+          {c.confirmCta}
         </Link>
         <div style={{ textAlign: 'center', fontSize: 12, color: '#6a6a6a', marginTop: 8 }}>
-          You won&apos;t be charged until confirmed · 확정 전 미청구
+          {c.notChargedNote}
         </div>
       </div>
     </div>
@@ -230,7 +234,7 @@ function Divider(): JSX.Element {
   return <div style={{ height: 1, background: '#ebebeb', margin: '20px 22px' }} />;
 }
 
-function TripRow({ label, value }: { label: string; value: string }): JSX.Element {
+function TripRow({ label, value, editLabel }: { label: string; value: string; editLabel: string }): JSX.Element {
   return (
     <div
       style={{
@@ -251,7 +255,7 @@ function TripRow({ label, value }: { label: string; value: string }): JSX.Elemen
           padding: 0,
         }}
       >
-        Edit
+        {editLabel}
       </button>
     </div>
   );
@@ -289,7 +293,6 @@ type Summary = {
   /** slug or category key — used to build the back link. */
   id: string;
   title: string;
-  subtitle: string;
   thumbBg: string;
   rating: string;
   location: string;
@@ -312,8 +315,10 @@ async function resolveSummary({
     return {
       source: 'slug',
       id: slug,
-      title: titleEnForCategory(listing.category, listing.title),
-      subtitle: listing.title,
+      // Listing's own locale-aware title (DB locale override applied
+      // upstream in fetchListingBySlug). Keep it as the single line —
+      // no more bilingual EN+KR stacking.
+      title: listing.title,
       thumbBg: listing.coverImageUrl
         ? `#f2f2f2 url(${listing.coverImageUrl}) center / cover`
         : 'linear-gradient(135deg, #d8c7f5, #e7d6fb)',
@@ -335,13 +340,15 @@ async function resolveSummary({
     return {
       source: 'cat',
       id: cat,
-      title: titleEnForCategory(cat, p.title),
-      subtitle: p.title,
+      // CATEGORY_PRODUCTS titles are Korean today. When non-KR sample
+      // copy lands they should flow through dict per locale; for now
+      // we surface what the data has.
+      title: p.title,
       thumbBg: `#f2f2f2 url(${p.heroImg}) center / cover`,
       rating: p.rating.toFixed(2),
       location: p.metaLine.split('·')[0]?.trim() || 'Seoul',
       priceWon: p.priceWon,
-      priceUnitLabel: p.priceUnit === '박' ? 'night · 박' : p.priceUnit === '1인' ? 'person · 인' : 'session · 세션',
+      priceUnitLabel: p.priceUnit || '세션',
       interest: p.interest,
     };
   }
@@ -349,41 +356,11 @@ async function resolveSummary({
   return null;
 }
 
-function titleEnForCategory(category: string, fallback: string): string {
-  switch (category) {
-    case 'color':
-    case 'personal_color':
-      return 'Personal color analysis';
-    case 'skin':
-    case 'dermatology':
-      return 'Skincare diagnosis';
-    case 'photo':
-    case 'photo_studio':
-      return 'Profile portrait shoot';
-    case 'makeup':
-      return 'K-beauty makeup class';
-    case 'kpop':
-      return 'K-pop pilgrimage tour';
-    case 'food':
-    case 'restaurant':
-      return 'Premium Korean dining';
-    case 'hotel':
-      return '5-star Myeongdong stay';
-    default:
-      return fallback;
-  }
-}
-
 function priceUnitLabel(unit: string | null, category: string): string {
-  if (unit && unit.trim()) {
-    if (unit === '박') return 'night · 박';
-    if (unit === '1인' || unit === '인') return 'person · 인';
-    if (unit === '세션') return 'session · 세션';
-    return unit;
-  }
-  if (category === 'hotel') return 'night · 박';
-  if (category === 'food' || category === 'restaurant') return 'person · 인';
-  return 'session · 세션';
+  if (unit && unit.trim()) return unit;
+  if (category === 'hotel') return '박';
+  if (category === 'food' || category === 'restaurant') return '인';
+  return '세션';
 }
 
 function buildInquiryHref({

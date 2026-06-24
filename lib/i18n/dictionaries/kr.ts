@@ -350,6 +350,113 @@ const kr = {
       { area: '합정', spot: 'YG 사옥 + 카페' },
     ],
   },
+  // Shared chrome strings for the Airbnb-style detail pages
+  // (/listings/[slug], /glowup/pc/c/[key], /travel/[type]). Keeps
+  // section titles, CTAs, host card, and review labels in one place
+  // so each locale shows a single language instead of "EN · KR"
+  // bilingual headers.
+  detail: {
+    whySpecial: '이 프로그램이 특별한 이유',
+    whatsIncluded: '포함 사항',
+    reviewsCount: '후기 {n}개',
+    showAllReviews: '후기 {n}개 모두 보기',
+    hostedBy: '{name} 호스트',
+    verifiedPartner: '검증 파트너',
+    years: '{n}년차',
+    reserve: '예약하기',
+    sampleReviewBody: '컨설턴트가 정말 꼼꼼하셔서, 저에게 맞는 컬러를 드디어 알게 됐어요. 컨시어지가 다음 예약까지 잡아주셔서 완벽했어요.',
+    sampleReviewerName: '사라',
+    sampleReviewerMeta: '미국 · 2026년 3월',
+  },
+  checkout: {
+    title: '결제',
+    yourTrip: '예약 정보',
+    date: '날짜',
+    time: '시간',
+    guests: '인원',
+    edit: '변경',
+    oneGuest: '게스트 1명',
+    defaultDate: '2026년 11월 3일 (월)',
+    defaultTime: '오후 2:00',
+    priceDetails: '요금 내역',
+    lineSession: '{price} × 1{unit}',
+    serviceFee: '서비스 수수료',
+    total: '총 합계',
+    payWith: '결제 수단',
+    cardPlaceholder: 'Visa ···· 4242',
+    paymentNote: '결제 수단 연동은 준비 중입니다. 확인 시 컨시어지가 카카오/WhatsApp으로 결제 링크를 보내드려요.',
+    confirmCta: '결제하기',
+    notChargedNote: '예약 확정 전에는 요금이 청구되지 않습니다',
+  },
+  // Travel-type chooser surfaced on /glowup/pc and per-type detail
+  // pages /travel/free|package|training. Holds the section title +
+  // each type's localized title, duration, description, price note,
+  // highlights, and includes list.
+  travel: {
+    sectionTitle: '여행 종류',
+    sectionSubtitle: '3가지 여행 스타일 중 하나를 골라 시작하세요. 컨시어지가 도착부터 귀국까지 한 번에 챙겨드립니다.',
+    whySpecial: '이 여행이 특별한 이유',
+    free: {
+      title: '자유여행',
+      meta: '서울 전역 · 드라이빙 가이드 포함',
+      cardDesc: '드라이빙 가이드 포함. 원하는 시술·맛집·호텔만 골라 일정은 자유롭게. 1일 이용 기준.',
+      duration: '1일 · 드라이빙 가이드 포함',
+      priceUnit: '하루',
+      priceNote: '드라이빙 가이드 포함 · 1일 이용 기준',
+      highlights: [
+        { title: '드라이빙 가이드 포함', desc: '전용 차량 + 가이드 1일 동행. 시술·맛집·호텔 이동 한 번에. 차량·기사 포함가입니다.' },
+        { title: '일정 자유', desc: '원하는 시술·맛집·호텔만 골라 일정은 자유롭게. 컨시어지가 예약·통역만 지원합니다.' },
+        { title: '확정 전 무료 취소', desc: '예약 확정 전 무료 취소. 48시간 이내 변경 가능.' },
+      ],
+      includes: [
+        '드라이빙 가이드 + 전용 차량 (1일 8시간 기준)',
+        '시술·맛집·호텔 통역 (한·영·중·일)',
+        '예약 대행 (시술 · 식당 · 액티비티)',
+        '공항-호텔 픽업·드롭 옵션',
+      ],
+    },
+    package: {
+      title: '패키지여행',
+      meta: '2박 3일~ · 2–4인 1팀 · 명동·강남·청담',
+      cardDesc: '호텔·시술·맛집·K-팝 투어 풀패키지. 2박 3일부터 시작, 2–4인 1팀으로 운영합니다.',
+      duration: '2박 3일~ · 2–4인 1팀',
+      priceUnit: '2박 3일 · 1팀',
+      priceNote: '2박 3일 기준 · 2–4인 1팀 운영가',
+      highlights: [
+        { title: '2박 3일부터 풀패키지', desc: '2박 3일부터 호텔·시술·맛집·K-팝이 한 패키지에. 일정 늘리면 추가 비용으로 연장 가능합니다.' },
+        { title: '2~4인 1팀 운영', desc: '최소 2인 ~ 최대 4인까지 1팀으로 운영. 전담 컨시어지가 통역·이동·예약·후속 케어를 1팀에 한 명 배정합니다.' },
+        { title: '확정 전 무료 취소', desc: '예약 확정 전 무료 취소. 48시간 이내 변경 가능.' },
+      ],
+      includes: [
+        '명동 / 강남 4–5성 호텔 2박 (조식 포함, 연장 시 추가)',
+        '퍼스널 컬러 + 피부 진단 + 화보 촬영 중 택 2',
+        '한우구이 + 한정식 등 미슐랭 다이닝 2회',
+        'HYBE / SM / JYP / YG K-팝 성지 반일 투어',
+        '공항 픽업·드롭 + 전 일정 통역 가이드 1명 동행',
+      ],
+    },
+    training: {
+      title: '연수패키지',
+      meta: '2박 3일~ · 강남·청담 클리닉 견학',
+      cardDesc: '의료진·전문가 대상 K-뷰티·K-메디컬 연수. 2박 3일부터, 클리닉 견학+워크숍+자격.',
+      duration: '2박 3일~ · 견학+워크숍',
+      priceUnit: '1인',
+      priceNote: '2박 3일 기준 · 1인 (숙박 포함)',
+      highlights: [
+        { title: '클리닉 직접 체험', desc: '국내 톱티어 성형·피부·치과 클리닉 직접 견학. 실제 시술 시연 + Q&A 세션 포함.' },
+        { title: '워크숍 + 수료증', desc: 'K-뷰티 / K-메디컬 전문가 워크숍과 수료증 발급까지 한 번에.' },
+        { title: '2박 3일부터 맞춤', desc: '2박 3일부터 시작, 5일 / 7일 / 10일 연장 가능. 단체·기업 맞춤 커리큘럼 구성.' },
+      ],
+      includes: [
+        '클리닉 관리 1회 (피부)',
+        '스파 포함',
+        '전문가 워크숍 + 수료증',
+        '4성급 이상 숙박 2박 + 조식 (연장 시 추가)',
+        '의료 통역 전담 (한·영·중·일·러)',
+        '공항 픽업·드롭 + 2–4인 VIP 차량 이동',
+      ],
+    },
+  },
 };
 
 export default kr;
