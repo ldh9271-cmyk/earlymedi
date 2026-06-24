@@ -77,43 +77,6 @@ import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
  * outside-to-close via a documented mousedown listener.
  */
 
-type HospitalSubKey =
-  | 'plastic_surgery'
-  | 'dermatology'
-  | 'dental'
-  | 'hair'
-  | 'health_checkup'
-  | 'stem_cell'
-  | 'oriental'
-  | 'partner';
-
-// Stable order for the hospital dropdown. Display labels come from
-// dict.header.hospitalSubs.* (resolved at render via the `t` prop).
-const HOSPITAL_SUB_KEYS: ReadonlyArray<HospitalSubKey> = [
-  'plastic_surgery', 'dermatology', 'dental', 'hair',
-  'health_checkup', 'stem_cell', 'oriental', 'partner',
-];
-
-const HOSPITAL_SUB_DICT_KEY: Record<HospitalSubKey, keyof Dictionary['header']['hospitalSubs']> = {
-  plastic_surgery: 'plasticSurgery',
-  dermatology: 'dermatology',
-  dental: 'dental',
-  hair: 'hair',
-  health_checkup: 'healthCheckup',
-  stem_cell: 'stemCell',
-  oriental: 'oriental',
-  partner: 'partner',
-};
-
-/**
- * Travel sub-types — surfaced under the 여행 dropdown. Keys match
- * partner_listings.details.subType so /glowup/pc?sub=<key> can filter
- * the listings page directly when the user picks one.
- */
-type TravelSubKey = 'free' | 'package' | 'training';
-
-const TRAVEL_SUB_KEYS: ReadonlyArray<TravelSubKey> = ['free', 'package', 'training'];
-
 /**
  * Strip-level keys. `hospital` is the dropdown trigger; everything
  * else is a flat link. `all` is the leftmost reset (전체) that
@@ -182,13 +145,9 @@ export function MainHeader({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [hospitalOpen, setHospitalOpen] = useState(false);
-  const [travelOpen, setTravelOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  const hospitalRef = useRef<HTMLDivElement | null>(null);
-  const travelRef = useRef<HTMLDivElement | null>(null);
   const accountRef = useRef<HTMLDivElement | null>(null);
   const filterRef = useRef<HTMLDivElement | null>(null);
   const langRef = useRef<HTMLDivElement | null>(null);
@@ -230,15 +189,9 @@ export function MainHeader({
   // listener — checks each open dropdown's ref independently so they
   // can be open simultaneously (though UX-wise only one usually is).
   useEffect(() => {
-    if (!hospitalOpen && !travelOpen && !accountOpen && !filterOpen && !langOpen) return;
+    if (!accountOpen && !filterOpen && !langOpen) return;
     function onDown(e: MouseEvent): void {
       const t = e.target as Node;
-      if (hospitalOpen && hospitalRef.current && !hospitalRef.current.contains(t)) {
-        setHospitalOpen(false);
-      }
-      if (travelOpen && travelRef.current && !travelRef.current.contains(t)) {
-        setTravelOpen(false);
-      }
       if (accountOpen && accountRef.current && !accountRef.current.contains(t)) {
         setAccountOpen(false);
       }
@@ -251,7 +204,7 @@ export function MainHeader({
     }
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
-  }, [hospitalOpen, travelOpen, accountOpen, filterOpen, langOpen]);
+  }, [accountOpen, filterOpen, langOpen]);
 
   /**
    * Swap the locale prefix in the current pathname. Falls back to
@@ -588,95 +541,13 @@ export function MainHeader({
             const isActive = cKey === activeKey;
             const stroke = isActive ? '#222' : '#6a6a6a';
             const cLabel = t[MAIN_CATEGORY_DICT_KEY[cKey]];
-
-            // "병원" and "여행" both get click-toggle dropdown panels.
-            // Everything else is a flat <Link>.
-            if (cKey === 'hospital' || cKey === 'travel') {
-              const isHospital = cKey === 'hospital';
-              const open = isHospital ? hospitalOpen : travelOpen;
-              const setOpen = isHospital ? setHospitalOpen : setTravelOpen;
-              const panelRef = isHospital ? hospitalRef : travelRef;
-              const subs = isHospital
-                ? HOSPITAL_SUB_KEYS.map((s) => ({
-                    key: s,
-                    label: t.hospitalSubs[HOSPITAL_SUB_DICT_KEY[s]],
-                    href: `/${locale}/clinics?category=${s}`,
-                  }))
-                : TRAVEL_SUB_KEYS.map((s) => ({
-                    key: s,
-                    label: t.travelSubs[s],
-                    href: `/${locale}/glowup/pc?sub=${s}`,
-                  }));
-              return (
-                <div
-                  key={cKey}
-                  ref={panelRef}
-                  style={{ position: 'relative', flexShrink: 0 }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOpen((v) => !v)}
-                    className="m-mh-cat-item"
-                    style={{
-                      display: 'flex', flexDirection: 'column',
-                      alignItems: 'center', gap: 8,
-                      padding: '14px 0',
-                      borderBottom: isActive || open
-                        ? '2px solid #222'
-                        : '2px solid transparent',
-                      color: stroke, background: 'transparent', border: 'none',
-                      cursor: 'pointer', fontFamily: 'inherit',
-                    }}
-                  >
-                    <MainCategoryIcon kind={cKey} stroke={stroke} />
-                    <span className="m-mh-cat-label" style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
-                      {cLabel}
-                    </span>
-                  </button>
-                  {open ? (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 'calc(100% + 4px)', left: '50%',
-                        transform: 'translateX(-50%)',
-                        minWidth: 200,
-                        background: '#fff',
-                        border: '1px solid #ebebeb',
-                        borderRadius: 14,
-                        boxShadow:
-                          'rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.08) 0 8px 24px',
-                        padding: 8,
-                        zIndex: 60,
-                      }}
-                    >
-                      {subs.map((sub) => (
-                        <Link
-                          key={sub.key}
-                          href={sub.href}
-                          onClick={() => setOpen(false)}
-                          style={{
-                            display: 'block',
-                            padding: '10px 14px',
-                            fontSize: 14, color: '#222',
-                            borderRadius: 8,
-                            textDecoration: 'none',
-                          }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLAnchorElement).style.background = '#f7f7f7';
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
-                          }}
-                        >
-                          {sub.label}
-                        </Link>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            }
-
+            // 병원 / 여행 used to open click-toggle dropdowns, but the
+            // mobile category strip's overflow-y: hidden clipped the
+            // panel below the row — the dropdown rendered but was
+            // invisible, making the tap feel broken. Flat <Link>s now
+            // route to /clinics and /glowup/pc respectively; the
+            // sub-category chips that used to live in the dropdown
+            // surface on those landing pages instead.
             return (
               <Link
                 key={cKey}

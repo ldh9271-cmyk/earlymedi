@@ -68,6 +68,34 @@ const CATEGORY_LABELS: Record<string, string> = {
   photo_studio: '사진 스튜디오',
 };
 
+/**
+ * Sub-category chips shown at the top of /clinics — what used to live
+ * in the header dropdown. Order matches the founder-curated nav.
+ */
+const SUB_CHIPS: ReadonlyArray<{ key: string; label: string }> = [
+  { key: 'plastic_surgery', label: '성형외과' },
+  { key: 'dermatology',     label: '피부과' },
+  { key: 'dental',          label: '치과' },
+  { key: 'hair',            label: '모발' },
+  { key: 'health_checkup',  label: '건강검진' },
+  { key: 'stem_cell',       label: '줄기세포' },
+  { key: 'oriental',        label: '한방병원' },
+  { key: 'partner',         label: '파트너병원' },
+];
+
+// Inline mobile CSS — stored as plain string to dodge the SWC parser
+// quirk (see feedback_swc_inline_css memory).
+const CLINICS_MOBILE_CSS =
+  '@media (max-width: 768px) {'
+  + '.m-cl-page { padding: 20px 16px 80px !important; }'
+  + '.m-cl-title { font-size: 22px !important; }'
+  + '.m-cl-subtitle { font-size: 13px !important; }'
+  + '.m-cl-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 14px !important; margin-top: 18px !important; }'
+  + '.m-cl-card-name { font-size: 14px !important; }'
+  + '.m-cl-card-tags { font-size: 12px !important; }'
+  + '.m-cl-chips-row { padding: 0 16px !important; gap: 8px !important; }'
+  + '}';
+
 export default async function ClinicsListPage({
   params,
   searchParams,
@@ -269,8 +297,11 @@ export default async function ClinicsListPage({
     : dict.nav.clinics;
 
   return (
-    <section style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
+    <section className="m-cl-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
+      <style dangerouslySetInnerHTML={{ __html: CLINICS_MOBILE_CSS }} />
+
       <h1
+        className="m-cl-title"
         style={{
           fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px',
           margin: 0,
@@ -278,11 +309,39 @@ export default async function ClinicsListPage({
       >
         {headerLabel}
       </h1>
-      <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
+      <p className="m-cl-subtitle" style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
         {filtered.length > 0
           ? `${filtered.length}곳의 검증된 병원 · 후기 · 예상 비용 안내`
           : dict.featured.subtitle}
       </p>
+
+      {/* Sub-category chips — drill into 성형외과 / 피부과 / 치과
+          /… without going back to the header. Horizontal scroll on
+          mobile, wrap on desktop. */}
+      <div
+        className="m-cl-chips-row"
+        style={{
+          display: 'flex', flexWrap: 'wrap', gap: 8,
+          marginTop: 18, padding: 0,
+          overflowX: 'auto',
+        }}
+      >
+        <ChipLink
+          locale={params.locale}
+          href={`/${params.locale}/clinics`}
+          label="전체"
+          active={!categoryFilter}
+        />
+        {SUB_CHIPS.map((c) => (
+          <ChipLink
+            key={c.key}
+            locale={params.locale}
+            href={`/${params.locale}/clinics?category=${c.key}`}
+            label={c.label}
+            active={categoryFilter === c.key}
+          />
+        ))}
+      </div>
 
       {dbError ? (
         <div
@@ -308,6 +367,7 @@ export default async function ClinicsListPage({
         />
       ) : (
         <div
+          className="m-cl-grid"
           style={{
             marginTop: 28,
             display: 'grid',
@@ -374,16 +434,48 @@ function ClinicCard({
           marginTop: 12,
         }}
       >
-        <span style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.3 }}>
+        <span className="m-cl-card-name" style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.3 }}>
           {hospital.name}
         </span>
       </div>
-      <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 3 }}>
+      <div className="m-cl-card-tags" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 3 }}>
         {hospital.primaryCategories
           .slice(0, 3)
           .map((c) => CATEGORY_LABELS[c] || c)
           .join(' · ')}
       </div>
+    </Link>
+  );
+}
+
+function ChipLink({
+  locale: _locale,
+  href,
+  label,
+  active,
+}: {
+  locale: PublicLocale;
+  href: string;
+  label: string;
+  active: boolean;
+}): JSX.Element {
+  return (
+    <Link
+      href={href}
+      style={{
+        flexShrink: 0,
+        display: 'inline-flex', alignItems: 'center',
+        padding: '8px 14px',
+        borderRadius: 9999,
+        border: `1px solid ${active ? '#222' : '#dddddd'}`,
+        background: active ? '#222' : '#fff',
+        color: active ? '#fff' : '#222',
+        fontSize: 13, fontWeight: 500,
+        textDecoration: 'none',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {label}
     </Link>
   );
 }
