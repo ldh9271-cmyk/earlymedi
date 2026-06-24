@@ -492,6 +492,46 @@ function Foods({ locale: _locale }: { locale: PublicLocale }): JSX.Element {
 }
 
 // ─── 6. K-pop ──────────────────────────────────────────────────────
+// 4-사 카드. 각 사 상표 로고를 직접 쓰면 trademark 위험이라
+// 시그너처 컬러 그라데이션 + 큰 워드마크 + 위치/특징 라벨 패턴으로
+// 차별화. 회사명 자체는 일반 명칭 사용이므로 OK.
+const KPOP_HOUSES: Array<{
+  brand: string;
+  area: string;
+  spot: string;
+  bg: string;
+  accent: string;
+}> = [
+  {
+    brand: 'HYBE',
+    area: '용산',
+    spot: 'HYBE 인사이트 박물관',
+    bg: 'linear-gradient(135deg, #8b5cf6 0%, #312e81 100%)',
+    accent: '#c4b5fd',
+  },
+  {
+    brand: 'SM',
+    area: '성수',
+    spot: 'KWANGYA@SEOUL',
+    bg: 'linear-gradient(135deg, #ec4899 0%, #06b6d4 100%)',
+    accent: '#fbcfe8',
+  },
+  {
+    brand: 'JYP',
+    area: '강동',
+    spot: 'JYP 사옥 + 굿즈샵',
+    bg: 'linear-gradient(135deg, #34d399 0%, #065f46 100%)',
+    accent: '#a7f3d0',
+  },
+  {
+    brand: 'YG',
+    area: '합정',
+    spot: 'YG 사옥 + 카페',
+    bg: 'linear-gradient(135deg, #facc15 0%, #1f1f1f 100%)',
+    accent: '#fef3c7',
+  },
+];
+
 function KpopRow(): JSX.Element {
   return (
     <section style={{ padding: '40px 0 0' }}>
@@ -504,17 +544,57 @@ function KpopRow(): JSX.Element {
           marginTop: 24,
         }}
       >
-        {['HYBE', 'SM', 'JYP', 'YG'].map((label) => (
+        {KPOP_HOUSES.map((h) => (
           <div
-            key={label}
+            key={h.brand}
             style={{
-              aspectRatio: '16/10', borderRadius: 14,
-              background: '#222',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 700, fontSize: 26, letterSpacing: 1,
+              position: 'relative',
+              aspectRatio: '16/10', borderRadius: 14, overflow: 'hidden',
+              background: h.bg,
+              padding: 20,
+              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+              color: '#fff',
             }}
           >
-            {label}
+            {/* Subtle radial highlight for depth */}
+            <div
+              style={{
+                position: 'absolute', inset: 0,
+                background:
+                  'radial-gradient(circle at 75% 20%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 60%)',
+                pointerEvents: 'none',
+              }}
+            />
+            <div
+              style={{
+                position: 'relative',
+                fontSize: 11, fontWeight: 600, letterSpacing: '0.6px',
+                color: h.accent, opacity: 0.95,
+              }}
+            >
+              {h.area.toUpperCase()}
+            </div>
+            <div style={{ position: 'relative' }}>
+              <div
+                style={{
+                  fontSize: 38, fontWeight: 800,
+                  letterSpacing: h.brand === 'HYBE' ? 2 : 1.5,
+                  lineHeight: 1,
+                  textShadow: '0 2px 12px rgba(0,0,0,0.25)',
+                }}
+              >
+                {h.brand}
+              </div>
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 13, fontWeight: 500,
+                  color: 'rgba(255,255,255,0.92)',
+                }}
+              >
+                {h.spot}
+              </div>
+            </div>
           </div>
         ))}
       </div>
