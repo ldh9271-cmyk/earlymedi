@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { and, eq, inArray } from 'drizzle-orm';
-import { ArrowLeft, MapPin, Star, ShieldCheck, Sparkles, Award, Languages } from 'lucide-react';
 import type { Metadata } from 'next';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
@@ -11,16 +10,22 @@ import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content'
 
 export const dynamic = 'force-dynamic';
 
+const CATEGORY_LABELS: Record<string, string> = {
+  plastic_surgery: '성형외과',
+  dermatology: '피부과',
+  dental: '치과',
+  hair: '모발',
+  health_checkup: '건강검진',
+  beauty_tour: '뷰티 투어',
+  makeup: '메이크업',
+  photo_studio: '사진 스튜디오',
+};
+
 /**
- * Per-locale SEO metadata.
- *
+ * Per-locale SEO metadata — unchanged from the previous version.
  * Pulls seo_title / seo_description from hospital_locale_content for
- * the current locale. Falls back through: locale seoTitle → locale
- * name → base hospitals.name, and locale seoDescription → locale
- * intro → base hospitals.notes (first 160 chars). All four locales
- * thus get distinct <title>/<meta> tags pointing back to language-
- * specific URLs — exactly what search engines need to index each
- * /[locale]/clinics/[slug] independently.
+ * the current locale with falls back through locale name → base name
+ * and locale intro → base notes.
  */
 export async function generateMetadata({
   params,
@@ -112,20 +117,13 @@ export async function generateMetadata({
 }
 
 /**
- * Hospital detail page — anonymous public view.
+ * Hospital detail page — Airbnb design language.
  *
- * Composed sections:
- *   - Hero (name, location, hero image, badges)
- *   - About (description)
- *   - Specialties (primary_categories chips)
- *   - Doctors (placeholder grid; doctor entities arrive in Phase 2)
- *   - Before/After (placeholder)
- *   - Reviews (placeholder; verified-review pipeline in Phase 3)
- *   - Inquiry CTA
- *
- * The page is forgiving of partial data — most fields tolerate null
- * and just hide that section gracefully. This is intentional: we don't
- * want a half-onboarded clinic to display as "broken".
+ * Data layer is unchanged from the previous version (locale-first
+ * overrides with COALESCE-style fallback). What changed is the shell:
+ * 1280px max-width, Airbnb-style gallery mosaic (1 big + 4 small when
+ * we have 5+ images), title row with KOIHA badge inline, 2-column
+ * layout with a sticky #ff385c inquiry card on the right.
  */
 export default async function ClinicDetailPage({
   params,
@@ -134,26 +132,14 @@ export default async function ClinicDetailPage({
 }): Promise<JSX.Element> {
   const dict = await getDictionary(params.locale);
 
-  // Slug-matching is forgiving here because the slug can arrive as:
-  //   - exactly what the DB stored: '세라성형외과의원-OI4Vv'
-  //   - percent-encoded by some intermediaries: '%EC%84%B8%EB%9D%BC...'
-  //   - decoded twice if a proxy was over-eager
-  // We also intentionally DROP the countryCode='KR' filter — a hospital
-  // returned by the listing page must be visitable from the detail page,
-  // and the country filter belongs on the listing side, not detail lookup.
   let resolvedSlug = params.slug;
   try {
     resolvedSlug = decodeURIComponent(params.slug);
   } catch {
-    // malformed % escapes — fall back to raw value
+    /* malformed % escapes — fall back to raw */
   }
   const candidates = Array.from(new Set([params.slug, resolvedSlug]));
 
-  // Wide SELECT first. If the gallery_image_urls / landing_image_url
-  // migrations haven't run yet, Postgres throws `column ... does not
-  // exist`. Fall back to a minimal projection (without the new image
-  // columns) so the page still renders for the patient — they don't
-  // care about missing master-tooling features.
   type RowShape = {
     id: string;
     name: string;
@@ -213,10 +199,6 @@ export default async function ClinicDetailPage({
 
   if (!row) notFound();
 
-  // Per-locale content overrides. Read the row for the current locale;
-  // if anything is missing, fall back to the base hospital fields below.
-  // If the table itself is missing (migration not run), skip silently —
-  // the page still works off the legacy base columns.
   let lc: {
     name: string | null;
     intro: string | null;
@@ -243,17 +225,13 @@ export default async function ClinicDetailPage({
       .limit(1);
     if (r) lc = { ...r, galleryImageUrls: (r.galleryImageUrls ?? []) as string[] };
   } catch {
-    // Table missing — patient never sees an error, just falls back.
+    /* table missing — fall through to base */
   }
 
   const address = row.addressJson ?? {};
   const cats = (row.primaryCategories ?? []) as string[];
   const isKoiha = !!row.foreignPatientLicenseNumber;
 
-  // Locale-first resolution with COALESCE-style fallback to the base
-  // hospital row. Gallery falls back only if the locale's gallery is
-  // empty — a deliberately empty locale gallery (master cleared it)
-  // is preserved via the explicit length check on lc?.galleryImageUrls.
   const displayName = lc?.name?.trim() || row.name;
   const aboutText = lc?.intro?.trim() || row.notes?.trim() || null;
   const coverUrl = lc?.coverImageUrl || row.coverImageUrl;
@@ -264,201 +242,227 @@ export default async function ClinicDetailPage({
   const landingUrl = lc?.landingImageUrl || row.landingImageUrl || null;
 
   return (
-    <article className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <article style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
       <Link
         href={`/${params.locale}/clinics`}
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          color: '#222', fontSize: 14, fontWeight: 500,
+          textDecoration: 'none',
+        }}
       >
-        <ArrowLeft className="h-4 w-4" />
-        {dict.nav.clinics}
+        ← 모든 병원
       </Link>
 
-      {/* Hero — cover photo with optional thumbnail strip below.
-          aspect-[16/6] is ~33% shorter than the original 21:9, which
-          keeps the page-fold scannable on laptops. The thumbnail strip
-          (first 4 gallery images) repurposes content the master already
-          uploaded so the Hero feels populated even before a real cover
-          arrives. */}
-      <section className="overflow-hidden rounded-2xl border bg-card">
-        {coverUrl ? (
-          // Plain <img> for now — many cover URLs sit on hosts not in
-          // next.config.mjs remotePatterns yet. Will swap to <Image>
-          // once everything routes through Supabase Storage.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={coverUrl}
-            alt={displayName}
-            className="aspect-[16/6] w-full object-cover"
-            loading="eager"
-          />
-        ) : gallery.length > 0 ? (
-          // No cover but we have a gallery — assemble a 4-up mosaic so
-          // the Hero never looks empty when assets exist.
-          <div className="grid aspect-[16/6] grid-cols-4 gap-px bg-muted">
+      <h1
+        style={{
+          margin: '14px 0 4px',
+          fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px',
+          display: 'inline-flex', alignItems: 'center', gap: 12,
+        }}
+      >
+        {displayName}
+        {isKoiha ? (
+          <span
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: 11, fontWeight: 600,
+              background: '#ecfdf5', color: '#047857',
+              border: '1px solid #a7f3d0',
+              borderRadius: 9999, padding: '3px 9px',
+              letterSpacing: '0.3px',
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 12l2 2 4-4" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+            KOIHA
+          </span>
+        ) : null}
+      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#6a6a6a' }}>
+        {address.city ? <span>{address.city} · {row.countryCode}</span> : null}
+        {cats.length > 0 ? (
+          <span>
+            · {cats.slice(0, 3).map((c) => CATEGORY_LABELS[c] || c).join(' · ')}
+          </span>
+        ) : null}
+      </div>
+
+      {/* Hero gallery — Airbnb-style mosaic.
+          5+ images → 1 big + 4 small (60/40 split, 4 tiles in 2x2).
+          1 image → single cover.
+          0 image + 0 cover → soft gradient fallback. */}
+      <div style={{ marginTop: 20 }}>
+        {coverUrl && gallery.length >= 4 ? (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '2fr 1fr 1fr',
+              gridTemplateRows: '1fr 1fr',
+              gap: 8,
+              aspectRatio: '2/1',
+              borderRadius: 20, overflow: 'hidden',
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={coverUrl}
+              alt={displayName}
+              style={{
+                gridRow: '1 / span 2',
+                width: '100%', height: '100%', objectFit: 'cover',
+              }}
+              loading="eager"
+            />
             {gallery.slice(0, 4).map((url, idx) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={url}
                 src={url}
                 alt={`${displayName} ${idx + 1}`}
-                className="h-full w-full object-cover"
-                loading="eager"
-              />
-            ))}
-            {/* If fewer than 4, pad the rest with a soft gradient */}
-            {Array.from({ length: Math.max(0, 4 - gallery.length) }).map((_, i) => (
-              <div
-                key={`pad-${i}`}
-                className="bg-gradient-to-br from-brand-100 via-hospitality-100 to-care-100"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                loading={idx === 0 ? 'eager' : 'lazy'}
               />
             ))}
           </div>
-        ) : (
-          <div className="aspect-[16/6] bg-gradient-to-br from-brand-200 via-hospitality-200 to-care-200" />
-        )}
-
-        {/* Thumbnail strip — shown only when cover exists AND we have
-            extra gallery images to preview. Acts as a teaser for the
-            full "병원 둘러보기" section further down. */}
-        {coverUrl && gallery.length > 0 ? (
-          <div className="grid grid-cols-4 gap-1.5 border-t bg-muted/10 p-1.5">
+        ) : coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={coverUrl}
+            alt={displayName}
+            style={{
+              width: '100%', aspectRatio: '16/9', objectFit: 'cover',
+              borderRadius: 20, display: 'block',
+            }}
+            loading="eager"
+          />
+        ) : gallery.length > 0 ? (
+          <div
+            style={{
+              display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8,
+              aspectRatio: '16/6',
+              borderRadius: 20, overflow: 'hidden',
+            }}
+          >
             {gallery.slice(0, 4).map((url, idx) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={url}
                 src={url}
-                alt={`${displayName} 갤러리 ${idx + 1}`}
-                className="aspect-[4/3] w-full rounded object-cover"
-                loading="lazy"
+                alt={`${displayName} ${idx + 1}`}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                loading={idx === 0 ? 'eager' : 'lazy'}
               />
             ))}
           </div>
-        ) : null}
+        ) : (
+          <div
+            style={{
+              aspectRatio: '16/6', borderRadius: 20,
+              background: 'linear-gradient(135deg, #f7f7f7 0%, #ebebeb 100%)',
+            }}
+          />
+        )}
+      </div>
 
-        <div className="space-y-3 p-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{displayName}</h1>
-            {isKoiha ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-care-300 bg-care-50 px-2.5 py-0.5 text-xs font-medium text-care-800">
-                <ShieldCheck className="h-3 w-3" />
-                KOIHA
-              </span>
+      {/* Body — 2-column layout with sticky inquiry card */}
+      <div
+        style={{
+          display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 48,
+          marginTop: 32, alignItems: 'start',
+        }}
+      >
+        <div>
+          <h2 style={{ fontSize: 21, fontWeight: 700, margin: '0 0 12px' }}>
+            {dict.featured.title}
+          </h2>
+          <div style={{ fontSize: 15, lineHeight: 1.7, color: '#3f3f3f' }}>
+            {aboutText ? (
+              <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{aboutText}</p>
+            ) : !landingUrl ? (
+              <p style={{ color: '#6a6a6a', margin: 0 }}>병원 상세 소개는 곧 추가됩니다.</p>
             ) : null}
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            {address.city ? (
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" />
-                {address.city}, {row.countryCode}
-              </span>
-            ) : null}
-            <span className="inline-flex items-center gap-1">
-              <Star className="h-3.5 w-3.5 text-amber-500" />
-              <span>—</span>
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {cats.map((c) => (
-              <span
-                key={c}
-                className="rounded-full border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground"
-              >
-                {c}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-3">
-        <div className="space-y-8 lg:col-span-2">
-          {/* About + landing poster — uses hospitals.notes for the
-              bio text and hospitals.landingImageUrl for the long
-              vertical promo poster (clinic-supplied flyer). Both are
-              optional and mastered at /master/hospitals/[id]/edit.
-              The standalone "병원 둘러보기" gallery section was
-              removed: Hero already shows the first 4 gallery images
-              as a thumbnail strip, so duplicating them below felt
-              redundant. */}
-          <PlaceholderSection title={dict.featured.title} icon={Award}>
-            <div className="space-y-5">
-              {aboutText ? (
-                <p className="whitespace-pre-wrap leading-relaxed">{aboutText}</p>
-              ) : !landingUrl ? (
-                '병원 상세 소개는 곧 추가됩니다.'
-              ) : null}
-
-              {landingUrl ? (
-                // Full-width vertical poster. Image renders at its
-                // intrinsic aspect — most clinic flyers are 600–900
-                // wide × 2000+ tall, so we cap visible width with
-                // max-w but never crop vertically.
-                <div className="overflow-hidden rounded-lg border bg-muted">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={landingUrl}
-                    alt={`${displayName} 랜딩 포스터`}
-                    className="mx-auto block w-full"
-                    loading="lazy"
-                  />
-                </div>
-              ) : null}
+          {landingUrl ? (
+            <div
+              style={{
+                marginTop: 24,
+                overflow: 'hidden', borderRadius: 16,
+                border: '1px solid #ebebeb',
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={landingUrl}
+                alt={`${displayName} 랜딩 포스터`}
+                style={{ width: '100%', display: 'block' }}
+                loading="lazy"
+              />
             </div>
-          </PlaceholderSection>
+          ) : null}
 
-          <PlaceholderSection title={dict.nav.reviews} icon={Star}>
+          <div style={{ height: 1, background: '#ebebeb', margin: '32px 0' }} />
+
+          <h2 style={{ fontSize: 21, fontWeight: 700, margin: '0 0 12px' }}>
+            {dict.nav.reviews}
+          </h2>
+          <p style={{ fontSize: 14, color: '#6a6a6a', margin: 0 }}>
             실제 환자 후기는 검증 절차를 거쳐 곧 공개됩니다.
-          </PlaceholderSection>
+          </p>
         </div>
 
-        {/* Sticky inquiry side card */}
-        <aside className="lg:col-span-1">
-          <div className="sticky top-20 rounded-xl border bg-card p-5 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Languages className="h-4 w-4 text-brand-700" />
-              <h2 className="text-sm font-semibold">{dict.inquiryCta.title}</h2>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {dict.inquiryCta.subtitle}
-            </p>
-            <Link
-              href={`/${params.locale}/inquiry?hospital=${row.id}`}
-              className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
-            >
-              <Sparkles className="h-4 w-4" />
-              {dict.inquiryCta.submit}
-            </Link>
-            <Link
-              href={`/${params.locale}/ai-consult?hospital=${row.id}`}
-              className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-input bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted"
-            >
-              {dict.nav.aiConsult}
-            </Link>
+        {/* Sticky inquiry card — same shape as Course 예약 card on /kr */}
+        <div
+          style={{
+            position: 'sticky', top: 200,
+            border: '1px solid #dddddd', borderRadius: 14, padding: 24,
+            boxShadow:
+              'rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px 0, rgba(0,0,0,0.1) 0 4px 8px 0',
+          }}
+        >
+          <div style={{ fontSize: 16, fontWeight: 600 }}>{dict.inquiryCta.title}</div>
+          <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 18px', lineHeight: 1.5 }}>
+            {dict.inquiryCta.subtitle}
+          </p>
+          <Link
+            href={`/${params.locale}/inquiry?hospital=${row.id}`}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '100%', height: 50,
+              background: '#ff385c', color: '#fff',
+              borderRadius: 8,
+              fontWeight: 500, fontSize: 16,
+              textDecoration: 'none',
+            }}
+          >
+            {dict.inquiryCta.submit}
+          </Link>
+          <Link
+            href={`/${params.locale}/ai-consult?hospital=${row.id}`}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '100%', height: 50, marginTop: 10,
+              background: '#fff', color: '#222',
+              border: '1px solid #222', borderRadius: 8,
+              fontWeight: 500, fontSize: 16,
+              textDecoration: 'none',
+            }}
+          >
+            {dict.nav.aiConsult}
+          </Link>
+          <div
+            style={{
+              textAlign: 'center', fontSize: 13, color: '#6a6a6a',
+              marginTop: 14,
+            }}
+          >
+            예약 확정 전에는 요금이 청구되지 않습니다
           </div>
-        </aside>
+        </div>
       </div>
     </article>
-  );
-}
-
-function PlaceholderSection({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title: string;
-  icon: typeof Sparkles;
-  children: React.ReactNode;
-}): JSX.Element {
-  return (
-    <section>
-      <div className="mb-3 flex items-center gap-2">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-        <h2 className="text-lg font-semibold">{title}</h2>
-      </div>
-      <div className="rounded-lg border border-dashed bg-muted/10 px-4 py-6 text-sm text-muted-foreground">
-        {children}
-      </div>
-    </section>
   );
 }

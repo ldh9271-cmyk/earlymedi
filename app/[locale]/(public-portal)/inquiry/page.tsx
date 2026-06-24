@@ -8,16 +8,19 @@ import { InquiryForm } from './_components/inquiry-form';
 export const dynamic = 'force-dynamic';
 
 /**
- * Public inquiry form. On submit, creates a conversation row in the
- * inbox of a configured "intake" agency (env: INTAKE_AGENCY_ORG_ID),
- * falling back to the first available agency. From there it appears in
- * the normal /agency/inbox flow alongside KakaoTalk/WeChat messages,
- * with AI translation and reply suggestions all working as usual.
+ * Public inquiry form — Airbnb design language wrapper.
+ *
+ * On submit, creates a conversation row in the inbox of a configured
+ * "intake" agency (env: INTAKE_AGENCY_ORG_ID), falling back to the
+ * first available agency. From there it appears in the normal
+ * /agency/inbox flow alongside KakaoTalk/WeChat messages, with AI
+ * translation and reply suggestions all working as usual.
  *
  * Hospital list is loaded server-side and handed to the form as a
  * dropdown — patients can pick a specific clinic or leave it blank
- * ("아직 결정 안 함"), which is friendlier than the raw UUID we used
- * to embed in the message body.
+ * ("아직 결정 안 함"). Shell wrapper is centered to ~640px max-width
+ * inside the 1280 page rhythm so the form reads like an Airbnb
+ * checkout / contact-host card rather than a wide enterprise form.
  */
 export default async function InquiryPage({
   params,
@@ -28,8 +31,6 @@ export default async function InquiryPage({
 }): Promise<JSX.Element> {
   const dict = await getDictionary(params.locale);
 
-  // Load KR hospitals so the form can show them in a select. id + name
-  // only, capped at 200; we'll switch to a typeahead once we exceed that.
   let hospitalOptions: Array<{ id: string; name: string }> = [];
   try {
     hospitalOptions = await db
@@ -39,20 +40,28 @@ export default async function InquiryPage({
       .orderBy(sql`${hospitals.name} asc`)
       .limit(200);
   } catch {
-    // Fail open — if hospitals can't load, the form still works; the
-    // user just won't see a clinic dropdown.
+    /* fail open — form still works without the dropdown */
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      <header className="mb-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          {dict.inquiryCta.title}
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-          {dict.inquiryCta.subtitle}
-        </p>
-      </header>
+    <section style={{ maxWidth: 640, margin: '0 auto', padding: '40px 24px 80px' }}>
+      <h1
+        style={{
+          fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px',
+          margin: 0, textAlign: 'center',
+        }}
+      >
+        {dict.inquiryCta.title}
+      </h1>
+      <p
+        style={{
+          fontSize: 14, color: '#6a6a6a',
+          margin: '6px 0 28px', textAlign: 'center',
+          lineHeight: 1.5,
+        }}
+      >
+        {dict.inquiryCta.subtitle}
+      </p>
 
       <InquiryForm
         locale={params.locale}
@@ -71,6 +80,6 @@ export default async function InquiryPage({
           categories: dict.categories.items,
         }}
       />
-    </div>
+    </section>
   );
 }
