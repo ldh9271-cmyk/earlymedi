@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { BrandLockup } from './brand-mark';
+import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 
 /**
  * Patient-portal main header — sticky Airbnb-style nav for /[locale].
@@ -107,16 +109,52 @@ export function MainHeader({
   activeKey?: MainCategoryKey;
   activeTab?: 'clinics' | 'ai' | 'glowup';
 }): JSX.Element {
+  const router = useRouter();
   const [hospitalOpen, setHospitalOpen] = useState(false);
   const [travelOpen, setTravelOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const hospitalRef = useRef<HTMLDivElement | null>(null);
   const travelRef = useRef<HTMLDivElement | null>(null);
+  const accountRef = useRef<HTMLDivElement | null>(null);
 
-  // Click-outside-to-close for both dropdowns. One shared mousedown
+  // Auth state — null = unknown (initial), undefined = signed out,
+  // string = signed in (email). Subscribed via Supabase auth listener so
+  // the header updates immediately on login/logout without a refresh.
+  const [userEmail, setUserEmail] = useState<string | null | undefined>(null);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) {
+      setUserEmail(undefined);
+      return;
+    }
+    let mounted = true;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (mounted) setUserEmail(data.user?.email ?? undefined);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserEmail(session?.user?.email ?? undefined);
+    });
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  async function onSignOut(): Promise<void> {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    setAccountOpen(false);
+    router.replace(`/${locale}`);
+    router.refresh();
+  }
+
+  // Click-outside-to-close for all three dropdowns. One shared mousedown
   // listener — checks each open dropdown's ref independently so they
   // can be open simultaneously (though UX-wise only one usually is).
   useEffect(() => {
-    if (!hospitalOpen && !travelOpen) return;
+    if (!hospitalOpen && !travelOpen && !accountOpen) return;
     function onDown(e: MouseEvent): void {
       const t = e.target as Node;
       if (hospitalOpen && hospitalRef.current && !hospitalRef.current.contains(t)) {
@@ -125,10 +163,13 @@ export function MainHeader({
       if (travelOpen && travelRef.current && !travelRef.current.contains(t)) {
         setTravelOpen(false);
       }
+      if (accountOpen && accountRef.current && !accountRef.current.contains(t)) {
+        setAccountOpen(false);
+      }
     }
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
-  }, [hospitalOpen, travelOpen]);
+  }, [hospitalOpen, travelOpen, accountOpen]);
 
   return (
     <header
@@ -197,16 +238,25 @@ export function MainHeader({
         </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifySelf: 'end' }}>
-          <Link
-            href={`/${locale}/login`}
-            style={{
-              fontSize: 14, fontWeight: 600, color: '#222',
-              padding: '12px 14px', borderRadius: 9999, cursor: 'pointer',
-              textDecoration: 'none',
-            }}
-          >
-            로그인
-          </Link>
+          {/* Logged-out: "로그인" link. Logged-in: nothing here (email
+              dropdown takes its place in the pill below). */}
+          {userEmail === undefined ? (
+            <Link
+              href={`/${locale}/login`}
+              style={{
+                fontSize: 14, fontWeight: 600, color: '#222',
+                padding: '12px 14px', borderRadius: 9999, cursor: 'pointer',
+                textDecoration: 'none',
+              }}
+            >
+              로그인
+            </Link>
+          ) : userEmail ? (
+            <span style={{ fontSize: 13, color: '#6a6a6a', padding: '0 6px' }}>
+              {userEmail}
+            </span>
+          ) : null}
+
           <div style={{
             width: 40, height: 40, borderRadius: 9999,
             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
@@ -216,24 +266,106 @@ export function MainHeader({
               <path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" />
             </svg>
           </div>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            border: '1px solid #dddddd', borderRadius: 9999,
-            padding: '6px 8px 6px 14px', cursor: 'pointer',
-            boxShadow: 'rgba(0,0,0,0.04) 0 1px 2px',
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
-              <path d="M3 7h18M3 12h18M3 17h18" />
-            </svg>
-            <div style={{
-              width: 30, height: 30, borderRadius: 9999, background: '#717171',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
-                <circle cx="12" cy="9" r="4" />
-                <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6z" />
+
+          {/* Account pill — anchors a small dropdown when logged in
+              (sign-out + future profile/inquiries links). When signed
+              out, clicking jumps to /login. The avatar circle inside
+              the pill shows the user's first-letter initial when
+              logged in for instant visual confirmation. */}
+          <div ref={accountRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => {
+                if (userEmail) {
+                  setAccountOpen((v) => !v);
+                } else {
+                  router.push(`/${locale}/login`);
+                }
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                border: '1px solid #dddddd', borderRadius: 9999,
+                padding: '6px 8px 6px 14px',
+                cursor: 'pointer', background: '#fff',
+                boxShadow: 'rgba(0,0,0,0.04) 0 1px 2px',
+                fontFamily: 'inherit',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
+                <path d="M3 7h18M3 12h18M3 17h18" />
               </svg>
-            </div>
+              <div style={{
+                width: 30, height: 30, borderRadius: 9999,
+                background: userEmail ? '#ff385c' : '#717171',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontWeight: 600, fontSize: 13,
+              }}>
+                {userEmail ? (
+                  userEmail.charAt(0).toUpperCase()
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
+                    <circle cx="12" cy="9" r="4" />
+                    <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6z" />
+                  </svg>
+                )}
+              </div>
+            </button>
+            {accountOpen && userEmail ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 6px)', right: 0,
+                  minWidth: 240,
+                  background: '#fff',
+                  border: '1px solid #ebebeb',
+                  borderRadius: 14,
+                  boxShadow:
+                    'rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.08) 0 8px 24px',
+                  padding: 8,
+                  zIndex: 60,
+                }}
+              >
+                <div
+                  style={{
+                    padding: '10px 14px 12px',
+                    fontSize: 13, color: '#6a6a6a',
+                    borderBottom: '1px solid #ebebeb',
+                    marginBottom: 6,
+                  }}
+                >
+                  로그인됨<br />
+                  <span style={{ color: '#222', fontWeight: 600 }}>{userEmail}</span>
+                </div>
+                <Link
+                  href={`/${locale}/inquiry`}
+                  onClick={() => setAccountOpen(false)}
+                  style={{
+                    display: 'block', padding: '10px 14px',
+                    fontSize: 14, color: '#222',
+                    borderRadius: 8, textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#f7f7f7'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
+                >
+                  내 문의
+                </Link>
+                <button
+                  type="button"
+                  onClick={onSignOut}
+                  style={{
+                    width: '100%', textAlign: 'left',
+                    padding: '10px 14px',
+                    fontSize: 14, color: '#222',
+                    border: 'none', background: 'transparent',
+                    borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f7f7f7'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                >
+                  로그아웃
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
