@@ -109,7 +109,7 @@ const en: Dictionary = {
     copy: '© 2026 KoreaGlowUp · Compliant with Korea MOHW foreign-patient advertising guidelines',
   },
   signup: {
-    badge: 'Patient Sign-up',
+    badge: 'Guest Sign-up',
     title: 'Create your account',
     subtitle: 'Get appointments, payments, and recovery alerts in one place.',
     googleCta: 'Sign up with Google',
@@ -140,9 +140,9 @@ const en: Dictionary = {
     privacy: 'By signing up you agree to the Terms of Service and Privacy Policy.',
   },
   login: {
-    badge: 'For Patients',
-    title: 'Patient sign in',
-    subtitle: 'Sign in with Google, password, or a magic link.',
+    badge: 'For Guests',
+    title: 'Guest sign in',
+    subtitle: 'Sign in with Google or password.',
     googleCta: 'Continue with Google',
     or: 'Or with email',
     passwordTab: 'Password',

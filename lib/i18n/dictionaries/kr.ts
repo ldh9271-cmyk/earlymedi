@@ -120,7 +120,7 @@ const kr = {
     copy: '© 2026 KoreaGlowUp · 한국 보건복지부 외국인환자 유치 광고 가이드라인 준수',
   },
   signup: {
-    badge: '환자 회원가입',
+    badge: '게스트 가입',
     title: '계정 만들기',
     subtitle: '진료 일정·결제·회복 알림을 한 곳에서 받아보세요.',
     googleCta: 'Google로 가입',
@@ -151,9 +151,9 @@ const kr = {
     privacy: '가입 시 이용약관 · 개인정보처리방침에 동의합니다.',
   },
   login: {
-    badge: '환자 전용',
-    title: '환자 로그인',
-    subtitle: 'Google · 비밀번호 · 매직링크 중 편한 방법으로 접속하세요.',
+    badge: '게스트 전용',
+    title: '게스트 로그인',
+    subtitle: 'Google 또는 비밀번호로 접속하세요.',
     googleCta: 'Google로 계속하기',
     or: '또는 이메일로',
     passwordTab: '비밀번호',

@@ -108,7 +108,7 @@ const ja: Dictionary = {
     copy: '© 2026 KoreaGlowUp · 韓国保健福祉部の外国人患者誘致広告ガイドライン遵守',
   },
   signup: {
-    badge: '患者会員登録',
+    badge: 'ゲスト会員登録',
     title: 'アカウントを作成',
     subtitle: '予約・お支払い・回復の通知をひとつにまとめます。',
     googleCta: 'Googleで登録',
@@ -139,9 +139,9 @@ const ja: Dictionary = {
     privacy: '登録時、利用規約とプライバシーポリシーに同意したものとみなされます。',
   },
   login: {
-    badge: '患者専用',
-    title: '患者ログイン',
-    subtitle: 'Google · パスワード · マジックリンクのいずれかでログイン。',
+    badge: 'ゲスト専用',
+    title: 'ゲストログイン',
+    subtitle: 'Google またはパスワードでログイン。',
     googleCta: 'Googleで続行',
     or: 'またはメールで',
     passwordTab: 'パスワード',

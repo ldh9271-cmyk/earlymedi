@@ -106,7 +106,7 @@ const zh: Dictionary = {
     copy: '© 2026 KoreaGlowUp · 遵守韩国保健福祉部外国患者诱致广告指南',
   },
   signup: {
-    badge: '患者注册',
+    badge: '客人注册',
     title: '创建您的账户',
     subtitle: '一站式管理您的预约、付款和康复提醒。',
     googleCta: '使用 Google 注册',
@@ -137,9 +137,9 @@ const zh: Dictionary = {
     privacy: '注册即同意使用条款和隐私政策。',
   },
   login: {
-    badge: '患者专用',
-    title: '患者登录',
-    subtitle: '可使用 Google · 密码 · 魔法链接登录。',
+    badge: '客人专用',
+    title: '客人登录',
+    subtitle: '可使用 Google 或密码登录。',
     googleCta: '使用 Google 继续',
     or: '或使用邮箱',
     passwordTab: '密码',
