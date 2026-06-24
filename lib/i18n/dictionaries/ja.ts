@@ -285,6 +285,13 @@ const ja: Dictionary = {
     finalCtaSubtitle: '日付と人数を決めるだけで、あとは通訳ガイドと一緒に完璧に準備します。',
     finalCtaStart: '旅を始める',
     finalCtaConsult: '1:1 相談',
+    itinerary: [
+      { title: '到着 · パーソナルカラー診断',    desc: '専用車送迎 · 通訳ガイド · 明洞 5 つ星ホテルチェックイン' },
+      { title: 'スキンケア · 韓牛ダイニング',    desc: 'スキン診断プログラム · 地元おすすめ韓牛・カンジャンケジャン' },
+      { title: 'K-POP 聖地ツアー · 撮影',         desc: 'HYBE · SM · JYP · YG 巡り · プロフィール撮影スタジオ' },
+      { title: '景福宮 · 漢江 · 聖水ショッピング', desc: '名所ツアー · 清潭・聖水で感性ショッピング' },
+      { title: 'ロッテワールド · 出国',          desc: '水族館 · 免税ショッピング · 空港見送り' },
+    ],
   },
   common: {
     loading: '読み込み中…',

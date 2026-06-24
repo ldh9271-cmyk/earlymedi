@@ -286,6 +286,13 @@ const vi: Dictionary = {
     finalCtaSubtitle: 'Bạn chỉ cần chọn ngày và số khách — phần còn lại chúng tôi cùng hướng dẫn viên phiên dịch chuẩn bị trọn vẹn.',
     finalCtaStart: 'Bắt đầu hành trình',
     finalCtaConsult: 'Tư vấn 1:1',
+    itinerary: [
+      { title: 'Đón sân bay · phân tích màu cá nhân',     desc: 'Xe riêng đón · hướng dẫn viên phiên dịch · nhận phòng khách sạn 5★ Myeongdong' },
+      { title: 'Chăm sóc da · bữa tối thịt bò Hàn',       desc: 'Chương trình chẩn đoán da · thịt bò Hàn & cua ngâm tương người bản xứ yêu thích' },
+      { title: 'Tour thánh địa K-pop · chụp ảnh hồ sơ',   desc: 'Tham quan HYBE · SM · JYP · YG · studio ảnh hồ sơ' },
+      { title: 'Gyeongbokgung · Hangang · mua sắm Seongsu', desc: 'Tham quan danh thắng · mua sắm boutique Cheongdam/Seongsu' },
+      { title: 'Lotte World · khởi hành',                 desc: 'Thủy cung · mua sắm miễn thuế · đưa tiễn sân bay' },
+    ],
   },
   common: {
     loading: 'Đang tải…',

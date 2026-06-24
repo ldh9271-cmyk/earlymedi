@@ -283,6 +283,13 @@ const zh: Dictionary = {
     finalCtaSubtitle: '只需选择日期和人数,剩下的我们与翻译陪同为您完美准备。',
     finalCtaStart: '开始旅程',
     finalCtaConsult: '1:1 咨询',
+    itinerary: [
+      { title: '抵达 · 个人色彩诊断',       desc: '专车接机 · 翻译陪同 · 入住明洞五星酒店' },
+      { title: '皮肤护理 · 韩牛餐厅',       desc: '皮肤诊断项目 · 本地推荐韩牛烤肉与酱蟹' },
+      { title: 'K-pop 圣地游 · 写真拍摄',   desc: 'HYBE · SM · JYP · YG 探访 · 形象写真工作室' },
+      { title: '景福宫 · 汉江 · 城水购物',  desc: '必去景点游览 · 清潭/城水精品购物' },
+      { title: '乐天世界 · 出境',           desc: '水族馆 · 免税购物 · 机场送机' },
+    ],
   },
   common: {
     loading: '加载中…',

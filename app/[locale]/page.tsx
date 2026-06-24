@@ -112,13 +112,8 @@ const FOODS = [
   { name: '한정식 반상',  place: '인사동 · ★ 4.9', booked: false, img: `${IMG_BASE}/c9fd4dde-ac1d-49fa-80b3-04139ec41b8c.jpg` },
 ];
 
-const ITINERARY: Array<{ n: number; title: string; desc: string }> = [
-  { n: 1, title: '도착 · 퍼스널 컬러 진단', desc: '전용 차량 픽업 · 통역 가이드 · 명동 5성 호텔 체크인' },
-  { n: 2, title: '피부 진단 케어 · 한우 다이닝', desc: '스킨 진단 프로그램 · 현지인 추천 한우구이·간장게장' },
-  { n: 3, title: 'K-팝 성지 투어 · 화보 촬영', desc: 'HYBE·SM·JYP·YG 탐방 · 프로필 화보 스튜디오' },
-  { n: 4, title: '경복궁 · 한강 · 성수 쇼핑', desc: '필수 명소 투어 · 청담·성수 감성 쇼핑' },
-  { n: 5, title: '롯데월드 · 출국', desc: '아쿠아리움 · 면세 쇼핑 · 공항 샌딩' },
-];
+// Itinerary copy now lives in dict.landing.itinerary (6 locale).
+// We just inject the step number at render time.
 
 const COURSE_PROGRAM = '4박 5일 글로우업 코스';
 
@@ -408,25 +403,25 @@ function Course({
           </div>
           <div style={{ height: 1, background: '#ebebeb', margin: '24px 0' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {ITINERARY.map((d, i) => (
-              <div key={d.n} style={{ display: 'flex', gap: 18 }}>
+            {t.itinerary.map((d, i, arr) => (
+              <div key={i} style={{ display: 'flex', gap: 18 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <div
                     style={{
                       width: 36, height: 36, borderRadius: 9999,
-                      background: i === ITINERARY.length - 1 ? '#ff385c' : '#222',
+                      background: i === arr.length - 1 ? '#ff385c' : '#222',
                       color: '#fff',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 15, fontWeight: 600, flexShrink: 0,
                     }}
                   >
-                    {d.n}
+                    {i + 1}
                   </div>
-                  {i < ITINERARY.length - 1 ? (
+                  {i < arr.length - 1 ? (
                     <div style={{ width: 2, flex: 1, background: '#ebebeb' }} />
                   ) : null}
                 </div>
-                <div style={{ paddingBottom: i === ITINERARY.length - 1 ? 0 : 22 }}>
+                <div style={{ paddingBottom: i === arr.length - 1 ? 0 : 22 }}>
                   <div style={{ fontSize: 16, fontWeight: 600 }}>{d.title}</div>
                   <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 4, lineHeight: 1.5 }}>
                     {d.desc}

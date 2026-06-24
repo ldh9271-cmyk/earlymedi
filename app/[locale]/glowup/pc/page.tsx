@@ -103,13 +103,8 @@ const FOODS = [
 ];
 
 
-const ITINERARY = [
-  { n: 1, title: '도착 · 퍼스널 컬러 진단', desc: '전용 차량 픽업 · 통역 가이드 · 명동 5성 호텔 체크인' },
-  { n: 2, title: '피부 진단 케어 · 한우 다이닝', desc: '스킨 진단 프로그램 · 현지인 추천 한우구이·간장게장' },
-  { n: 3, title: 'K-팝 성지 투어 · 화보 촬영', desc: 'HYBE·SM·JYP·YG 탐방 · 프로필 화보 스튜디오' },
-  { n: 4, title: '경복궁 · 한강 · 성수 쇼핑', desc: '필수 명소 투어 · 청담·성수 감성 쇼핑' },
-  { n: 5, title: '롯데월드 · 출국', desc: '아쿠아리움 · 면세 쇼핑 · 공항 샌딩' },
-];
+// Itinerary copy now lives in dict.landing.itinerary (6 locale).
+// We just add the step number `n` at render time.
 
 export default async function GlowupPcPage({
   params,
@@ -162,15 +157,15 @@ export default async function GlowupPcPage({
     : FOODS;
 
   const hotel = {
-    title: dbHotel?.title ?? '명동 중심 프리미엄 5성 호텔',
+    title: dbHotel?.title ?? dict.landing.hotelTitle,
     img: dbHotel?.coverImageUrl ?? HOTEL_IMG,
     rating: dbHotel?.rating ? (dbHotel.rating / 10).toFixed(1) : '4.9',
     description:
       dbHotel?.description ??
-      '스파·루프탑·조식 뷔페까지 갖춘 명동 중심 호텔에서 4박. 모든 코스 일정의 이동 동선을 가장 가깝게 설계했습니다.',
+      dict.landing.hotelDescription,
     priceWon: dbHotel?.priceWon ?? 320_000,
     priceUnit: dbHotel?.priceUnit ?? '박',
-    promoLabel: dbHotel?.promoLabel ?? '게스트 선호',
+    promoLabel: dbHotel?.promoLabel ?? dict.landing.hotelPromoLabel,
   };
 
   return (
@@ -268,7 +263,7 @@ export default async function GlowupPcPage({
                   padding: '6px 12px',
                 }}
               >
-                <span style={{ color: '#ff385c' }}>★</span> 게스트 선호 · 평점 4.9
+                <span style={{ color: '#ff385c' }}>★</span> {dict.landing.heroBadge}
               </div>
               <h1
                 style={{
@@ -279,7 +274,7 @@ export default async function GlowupPcPage({
                   letterSpacing: '-1px',
                 }}
               >
-                서울에서 놀면서,<br />예뻐지는 4박 5일
+                {dict.landing.heroTitleLine1}<br />{dict.landing.heroTitleLine2}
               </h1>
               <p
                 style={{
@@ -290,7 +285,7 @@ export default async function GlowupPcPage({
                   color: 'rgba(255,255,255,0.92)',
                 }}
               >
-                퍼스널 컬러 진단부터 K-팝 성지, 현지인 찐맛집까지. 노는 사이 더 예뻐지는 올인원 K-뷰티 여행.
+                {dict.landing.heroSubtitle}
               </p>
               <Link
                 href={`/${params.locale}/glowup`}
@@ -310,7 +305,7 @@ export default async function GlowupPcPage({
                   textDecoration: 'none',
                 }}
               >
-                여행 둘러보기
+                {dict.landing.heroCta}
               </Link>
             </div>
           </div>
@@ -318,7 +313,7 @@ export default async function GlowupPcPage({
 
         {/* ===== PROGRAMS GRID ===== */}
         <section id="programs" style={{ padding: '48px 0 0' }}>
-          <SectionHeader title="서울의 인기 뷰티 프로그램" />
+          <SectionHeader title={dict.landing.programsTitle} viewAllLabel={dict.landing.sectionViewAll} />
           <div
             style={{
               display: 'grid',
@@ -357,7 +352,7 @@ export default async function GlowupPcPage({
                         boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
                       }}
                     >
-                      게스트 선호
+                      {dict.landing.programsFeaturedBadge}
                     </div>
                   ) : null}
                   <div
@@ -412,7 +407,7 @@ export default async function GlowupPcPage({
                 <div style={{ fontSize: 14, color: '#6a6a6a' }}>{p.place}</div>
                 <div style={{ fontSize: 15, marginTop: 6 }}>
                   <span style={{ fontWeight: 600 }}>{p.price}</span>{' '}
-                  <span style={{ color: '#6a6a6a' }}>세션</span>
+                  <span style={{ color: '#6a6a6a' }}>{dict.landing.programsPerSession}</span>
                 </div>
               </Link>
             ))}
@@ -421,7 +416,7 @@ export default async function GlowupPcPage({
 
         {/* ===== SIGNATURE COURSE ===== */}
         <section id="course" style={{ padding: '56px 0 0' }}>
-          <SectionHeader title="베스트셀러 · 올인원 코스" />
+          <SectionHeader title={dict.landing.courseTitle} viewAllLabel={dict.landing.sectionViewAll} />
           <div
             style={{
               display: 'grid',
@@ -442,22 +437,22 @@ export default async function GlowupPcPage({
                 }}
               />
               <h3 style={{ fontSize: 21, fontWeight: 700, margin: '24px 0 0' }}>
-                4박 5일 글로우업 코스
+                {dict.landing.courseName}
               </h3>
               <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 4 }}>
-                뷰티 케어 · 찐맛집 · K-팝 성지 · 명소 · 5성 호텔
+                {dict.landing.courseDesc}
               </div>
               <div style={{ height: 1, background: '#ebebeb', margin: '24px 0' }} />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {ITINERARY.map((d, i) => (
-                  <div key={d.n} style={{ display: 'flex', gap: 18 }}>
+                {dict.landing.itinerary.map((d, i, arr) => (
+                  <div key={i} style={{ display: 'flex', gap: 18 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <div
                         style={{
                           width: 36,
                           height: 36,
                           borderRadius: 9999,
-                          background: i === ITINERARY.length - 1 ? '#ff385c' : '#222',
+                          background: i === arr.length - 1 ? '#ff385c' : '#222',
                           color: '#fff',
                           display: 'flex',
                           alignItems: 'center',
@@ -467,15 +462,15 @@ export default async function GlowupPcPage({
                           flexShrink: 0,
                         }}
                       >
-                        {d.n}
+                        {i + 1}
                       </div>
-                      {i < ITINERARY.length - 1 ? (
+                      {i < arr.length - 1 ? (
                         <div style={{ width: 2, flex: 1, background: '#ebebeb' }} />
                       ) : null}
                     </div>
                     <div
                       style={{
-                        paddingBottom: i === ITINERARY.length - 1 ? 0 : 22,
+                        paddingBottom: i === arr.length - 1 ? 0 : 22,
                       }}
                     >
                       <div style={{ fontSize: 16, fontWeight: 600 }}>{d.title}</div>
@@ -516,7 +511,7 @@ export default async function GlowupPcPage({
               >
                 <div>
                   <span style={{ fontSize: 21, fontWeight: 700 }}>₩1,890,000</span>{' '}
-                  <span style={{ fontSize: 15, color: '#6a6a6a' }}>/ 1인</span>
+                  <span style={{ fontSize: 15, color: '#6a6a6a' }}>{dict.landing.coursePerPerson}</span>
                 </div>
                 <span
                   style={{
@@ -530,7 +525,7 @@ export default async function GlowupPcPage({
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
                     <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
                   </svg>
-                  4.9 · 후기 318개
+                  4.9 · {dict.landing.courseReviews}
                 </span>
               </div>
               <div
@@ -549,8 +544,8 @@ export default async function GlowupPcPage({
                       borderBottom: '1px solid #c1c1c1',
                     }}
                   >
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>출발일</div>
-                    <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>날짜 추가</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>{dict.landing.courseDeparture}</div>
+                    <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{dict.landing.courseAddDate}</div>
                   </div>
                   <div
                     style={{
@@ -558,13 +553,13 @@ export default async function GlowupPcPage({
                       borderBottom: '1px solid #c1c1c1',
                     }}
                   >
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>종료일</div>
-                    <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>날짜 추가</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>{dict.landing.courseEnd}</div>
+                    <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{dict.landing.courseAddDate}</div>
                   </div>
                 </div>
                 <div style={{ padding: '12px 14px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>인원</div>
-                  <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>게스트 1명</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3px' }}>{dict.landing.coursePax}</div>
+                  <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{dict.landing.courseGuest1}</div>
                 </div>
               </div>
               <Link
@@ -586,7 +581,7 @@ export default async function GlowupPcPage({
                   textDecoration: 'none',
                 }}
               >
-                예약하기
+                {dict.landing.courseBook}
               </Link>
               <div
                 style={{
@@ -596,12 +591,12 @@ export default async function GlowupPcPage({
                   marginTop: 12,
                 }}
               >
-                예약 확정 전에는 요금이 청구되지 않습니다
+                {dict.landing.courseNotCharged}
               </div>
               <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
-                <RowBreakdown label="₩1,890,000 × 1인" value="₩1,890,000" />
-                <RowBreakdown label="통역 가이드 동행" value="포함" />
-                <RowBreakdown label="5성 호텔 4박" value="포함" />
+                <RowBreakdown label={`₩1,890,000 × 1 ${dict.landing.coursePersonUnit}`} value="₩1,890,000" />
+                <RowBreakdown label={dict.landing.courseInterpreter} value={dict.landing.courseIncluded} />
+                <RowBreakdown label={dict.landing.courseHotel4} value={dict.landing.courseIncluded} />
                 <div style={{ height: 1, background: '#ebebeb', margin: '6px 0' }} />
                 <div
                   style={{
@@ -611,7 +606,7 @@ export default async function GlowupPcPage({
                     fontSize: 16,
                   }}
                 >
-                  <span>총 합계</span>
+                  <span>{dict.landing.courseTotal}</span>
                   <span>₩1,890,000</span>
                 </div>
               </div>
@@ -621,7 +616,7 @@ export default async function GlowupPcPage({
 
         {/* ===== FOOD & K-POP ===== */}
         <section id="explore" style={{ padding: '56px 0 0' }}>
-          <SectionHeader title="현지인만 아는 찐맛집" />
+          <SectionHeader title={dict.landing.foodsTitle} viewAllLabel={dict.landing.sectionViewAll} />
           <div
             style={{
               display: 'grid',
@@ -657,7 +652,7 @@ export default async function GlowupPcPage({
                         boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
                       }}
                     >
-                      예약 대행
+                      {dict.landing.foodsBookedBadge}
                     </div>
                   ) : null}
                   <div style={{ position: 'absolute', top: 12, right: 12 }}>
@@ -688,7 +683,7 @@ export default async function GlowupPcPage({
               margin: '40px 0 0',
             }}
           >
-            K-팝 성지 탐방
+            {dict.landing.kpopTitle}
           </h2>
           <div
             style={{
@@ -776,9 +771,9 @@ export default async function GlowupPcPage({
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', marginTop: 20 }}>
                 {[
-                  '스파 · 루프탑 · 피트니스 무료 이용',
-                  '조식 뷔페 4일 포함',
-                  '명동·남산·동대문 도보 이동권',
+                  dict.landing.hotelAmenity1,
+                  dict.landing.hotelAmenity2,
+                  dict.landing.hotelAmenity3,
                 ].map((amen, idx) => (
                   <div
                     key={amen}
@@ -814,7 +809,7 @@ export default async function GlowupPcPage({
         {/* ===== INSPIRATION CTA ===== */}
         <section style={{ padding: '64px 0 8px', textAlign: 'center' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
-            지금, 가장 빛나는 여행을 시작하세요
+            {dict.landing.finalCtaTitle}
           </h2>
           <p
             style={{
@@ -825,7 +820,7 @@ export default async function GlowupPcPage({
               lineHeight: 1.5,
             }}
           >
-            날짜와 인원만 정하면, 나머지는 통역 가이드와 함께 완벽하게 준비해 드립니다.
+            {dict.landing.finalCtaSubtitle}
           </p>
           <div
             style={{
@@ -852,7 +847,7 @@ export default async function GlowupPcPage({
                 textDecoration: 'none',
               }}
             >
-              여행 시작하기
+              {dict.landing.finalCtaStart}
             </Link>
             <Link
               href={`/${params.locale}/inquiry`}
@@ -870,7 +865,7 @@ export default async function GlowupPcPage({
                 textDecoration: 'none',
               }}
             >
-              1:1 상담
+              {dict.landing.finalCtaConsult}
             </Link>
           </div>
         </section>
@@ -881,7 +876,13 @@ export default async function GlowupPcPage({
   );
 }
 
-function SectionHeader({ title }: { title: string }): JSX.Element {
+function SectionHeader({
+  title,
+  viewAllLabel,
+}: {
+  title: string;
+  viewAllLabel: string;
+}): JSX.Element {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>{title}</h2>
@@ -896,7 +897,7 @@ function SectionHeader({ title }: { title: string }): JSX.Element {
           cursor: 'pointer',
         }}
       >
-        전체 보기 <span style={{ fontSize: 16 }}>›</span>
+        {viewAllLabel} <span style={{ fontSize: 16 }}>›</span>
       </span>
     </div>
   );

@@ -298,6 +298,13 @@ const en: Dictionary = {
     finalCtaSubtitle: 'Pick your date and party size — we handle the rest with your interpreter guide.',
     finalCtaStart: 'Start the trip',
     finalCtaConsult: '1:1 consult',
+    itinerary: [
+      { title: 'Arrival · Personal color analysis',     desc: 'Private vehicle pickup · interpreter guide · 5-star hotel check-in in Myeongdong' },
+      { title: 'Skin care · Korean BBQ dinner',         desc: 'Skin diagnostic program · locally recommended hanwoo & soy-marinated crab' },
+      { title: 'K-pop landmark tour · profile shoot',   desc: 'HYBE · SM · JYP · YG visit · profile photo studio' },
+      { title: 'Gyeongbokgung · Hangang · Seongsu',     desc: 'Must-see landmarks · Cheongdam & Seongsu boutique shopping' },
+      { title: 'Lotte World · Departure',               desc: 'Aquarium · duty-free shopping · airport send-off' },
+    ],
   },
 };
 
