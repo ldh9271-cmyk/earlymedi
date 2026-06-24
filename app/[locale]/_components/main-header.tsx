@@ -103,8 +103,13 @@ export type MainCategoryKey =
   | 'hospital'
   | 'color' | 'skin' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel';
 
+// '전체' was the leftmost reset that landed on /clinics. Dropped from
+// the visible strip 2026-06-25 — the lifestyle categories already imply
+// "all" through their union, and the slot crowded the mobile 2-row grid.
+// The 'all' key stays in MainCategoryKey + dict so callers still pass
+// activeKey="all" to mean "no specific category highlighted".
 const MAIN_CATEGORY_KEYS: ReadonlyArray<MainCategoryKey> = [
-  'all', 'travel', 'hospital',
+  'travel', 'hospital',
   'color', 'skin', 'photo', 'makeup', 'kpop', 'food', 'hotel',
 ];
 
