@@ -140,7 +140,7 @@ const kr = {
     emailHint: '본인 확인 메일이 발송됩니다',
     messengerLabel: '주 사용 메신저',
     messengerIdLabel: '메신저 ID',
-    messengerIdHint: '의료기관이 빠르게 연락드릴 수 있도록',
+    messengerIdHint: '문의 주시면 빠르게 연락 드리겠습니다.',
     submitCta: '가입하기',
     submitting: '가입 중…',
     sentTitle: '본인 확인 메일을 보냈습니다',

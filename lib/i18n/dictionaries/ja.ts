@@ -128,7 +128,7 @@ const ja: Dictionary = {
     emailHint: '確認メールを送信します',
     messengerLabel: 'よく使うメッセンジャー',
     messengerIdLabel: 'メッセンジャー ID',
-    messengerIdHint: '病院が速やかに連絡できるように',
+    messengerIdHint: 'お問い合わせいただければ、すぐにご連絡いたします。',
     submitCta: '登録する',
     submitting: '登録中…',
     sentTitle: '確認メールを送信しました',

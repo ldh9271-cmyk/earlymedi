@@ -129,7 +129,7 @@ const en: Dictionary = {
     emailHint: "We'll send a verification link",
     messengerLabel: 'Preferred messenger',
     messengerIdLabel: 'Messenger ID',
-    messengerIdHint: 'So the clinic can reach you quickly',
+    messengerIdHint: 'We will get back to you shortly after your inquiry.',
     submitCta: 'Sign up',
     submitting: 'Signing up…',
     sentTitle: 'Verification email sent',

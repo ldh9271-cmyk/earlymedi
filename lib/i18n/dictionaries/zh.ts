@@ -126,7 +126,7 @@ const zh: Dictionary = {
     emailHint: '我们将发送验证链接',
     messengerLabel: '常用通讯软件',
     messengerIdLabel: '通讯软件 ID',
-    messengerIdHint: '便于医院快速联系您',
+    messengerIdHint: '咨询后我们会尽快回复您。',
     submitCta: '注册',
     submitting: '注册中…',
     sentTitle: '已发送验证邮件',
