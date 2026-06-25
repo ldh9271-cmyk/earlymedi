@@ -108,6 +108,14 @@ export const hospitals = pgTable(
 
     notes: text('notes'),
 
+    /**
+     * 마스터/에이전시 콘솔의 노출 순서. 낮을수록 먼저. partner_listings
+     * 의 sortOrder 와 동일한 컨벤션: 100 을 기본으로 두고 위/아래로
+     * 슬라이드. /master/hospitals 페이지에서 inline number input 으로
+     * 조정.
+     */
+    sortOrder: integer('sort_order').notNull().default(100),
+
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

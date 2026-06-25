@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '../client';
 import {
   hospitalDepositPolicies,
@@ -38,7 +38,14 @@ export async function listHospitals(
     })
     .from(hospitals)
     .where(and(...where))
-    .orderBy(desc(hospitals.isActiveForMatching), desc(hospitals.rating))
+    // sortOrder 우선 → 활성 우선 → 평점 → 등록일.
+    // 마스터/에이전시가 sortOrder 로 명시적 노출 순서를 잡을 수 있게.
+    .orderBy(
+      asc(hospitals.sortOrder),
+      desc(hospitals.isActiveForMatching),
+      desc(hospitals.rating),
+      desc(hospitals.createdAt),
+    )
     .limit(limit);
 
   return rows.map((r) => ({ ...r.hospital, doctorCount: r.doctorCount }));

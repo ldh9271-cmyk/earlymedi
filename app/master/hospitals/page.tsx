@@ -10,6 +10,7 @@ import { organizations } from '@/drizzle/schema/organizations';
 import { Card, CardContent } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
+import { updateHospitalSortOrderAction } from './_actions/sort-order';
 
 export const metadata = { title: '병원 통합 관리 · 마스터' };
 export const dynamic = 'force-dynamic';
@@ -62,6 +63,7 @@ export default async function MasterHospitalsPage({
     orgName: string | null;
     orgAccountType: string | null;
     foreignPatientLicenseNumber: string | null;
+    sortOrder: number;
     createdAt: Date | null;
   }> = [];
   let loadError: string | null = null;
@@ -77,11 +79,12 @@ export default async function MasterHospitalsPage({
         orgName: organizations.name,
         orgAccountType: organizations.accountType,
         foreignPatientLicenseNumber: hospitals.foreignPatientLicenseNumber,
+        sortOrder: hospitals.sortOrder,
         createdAt: hospitals.createdAt,
       })
       .from(hospitals)
       .innerJoin(organizations, eq(hospitals.organizationId, organizations.id))
-      .orderBy(desc(hospitals.createdAt))
+      .orderBy(asc(hospitals.sortOrder), desc(hospitals.createdAt))
       .limit(200);
     rows = data.map((r) => ({
       ...r,
@@ -233,6 +236,9 @@ export default async function MasterHospitalsPage({
           <table className="w-full text-xs">
             <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
               <tr>
+                <th className="px-3 py-2 text-left font-semibold w-[88px]">
+                  순서<span className="ml-1 text-[10px] font-normal text-muted-foreground/70">(낮을수록 먼저)</span>
+                </th>
                 <th className="px-3 py-2 text-left font-semibold">병원명</th>
                 <th className="px-3 py-2 text-left font-semibold">카테고리</th>
                 <th className="px-3 py-2 text-left font-semibold">소속 Agency</th>
@@ -245,6 +251,29 @@ export default async function MasterHospitalsPage({
             <tbody className="divide-y">
               {filtered.map((h) => (
                 <tr key={h.id} className="hover:bg-muted/30">
+                  <td className="px-3 py-2 align-middle">
+                    <form
+                      action={updateHospitalSortOrderAction}
+                      className="flex items-center gap-1"
+                    >
+                      <input type="hidden" name="id" value={h.id} />
+                      <input
+                        type="number"
+                        name="sortOrder"
+                        defaultValue={h.sortOrder ?? 100}
+                        min={0}
+                        max={9999}
+                        className="h-7 w-[60px] rounded border border-input bg-background px-2 text-xs"
+                      />
+                      <button
+                        type="submit"
+                        title="순서 저장"
+                        className="rounded border border-input bg-background px-1.5 py-1 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        ✓
+                      </button>
+                    </form>
+                  </td>
                   <td className="px-3 py-2 font-medium">{h.name}</td>
                   <td className="px-3 py-2">
                     <div className="flex flex-wrap gap-1">
