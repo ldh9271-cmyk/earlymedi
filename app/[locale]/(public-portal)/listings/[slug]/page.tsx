@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { fetchListingBySlug, type ListingDetail } from '@/lib/listings/query';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import { DetailInfo } from './_components/detail-info';
 
 export const dynamic = 'force-dynamic';
 
@@ -178,23 +179,9 @@ export default async function ListingDetailPage({
         </div>
       </section>
 
-      {/* Optional 상품 상세 랜딩 이미지 — full-width banner between hero and title.
-          Stored in details.detailLandingImageUrl JSONB key; rendered only when set. */}
-      {(() => {
-        const landing = typeof listing.details.detailLandingImageUrl === 'string'
-          ? listing.details.detailLandingImageUrl
-          : '';
-        return landing ? (
-          <div style={{ maxWidth: 1280, margin: '12px auto 0', padding: '0 12px' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={landing}
-              alt={`${listing.title} 상세`}
-              style={{ display: 'block', width: '100%', height: 'auto', borderRadius: 14 }}
-            />
-          </div>
-        ) : null;
-      })()}
+      {/* 상세 랜딩 이미지는 더 이상 full-bleed 로 렌더하지 않는다 —
+          좌측 콘텐츠 칼럼 내부 "상세 정보" 섹션에서 truncated +
+          "이미지 더보기" 토글 + 지도와 함께 노출. (DetailInfo 사용) */}
 
       {/* Desktop ≥1024 splits into 2 cols:
             LEFT  — title / host / why-special / includes / reviews
@@ -284,6 +271,35 @@ export default async function ListingDetailPage({
           ))}
         </div>
       </section>
+
+      {/* 상세 정보 — detail landing image + Google map. Renders only
+          when at least one of (detailLandingImageUrl, address) is set
+          in details JSONB. Image starts truncated to 600px with an
+          "이미지 더보기" expand button. */}
+      {(() => {
+        const landingUrl = typeof listing.details.detailLandingImageUrl === 'string'
+          ? listing.details.detailLandingImageUrl
+          : '';
+        const address = typeof listing.details.address === 'string'
+          ? listing.details.address
+          : '';
+        if (!landingUrl && !address) return null;
+        return (
+          <>
+            <Divider />
+            <section style={{ padding: '0 22px' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px', lineHeight: 1.3 }}>
+                상세 정보
+              </h2>
+              <DetailInfo
+                imageUrl={landingUrl || undefined}
+                address={address || undefined}
+                venueName={listing.title}
+              />
+            </section>
+          </>
+        );
+      })()}
 
       <Divider />
 

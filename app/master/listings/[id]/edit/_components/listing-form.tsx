@@ -249,6 +249,17 @@ export function ListingEditForm({
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               />
             </Field>
+            <Field label="지도 표시용 주소 (선택)">
+              <input
+                value={(details.address as string | undefined) ?? ''}
+                onChange={(e) => setDetail('address', e.target.value)}
+                placeholder="예: 대구 중구 달구벌대로 2095 (덕산동, 삼성생명) 3층 310, 311호"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              />
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                입력 시 상세 페이지 하단에 Google 지도 자동 표시. 비워두면 지도 섹션 숨김.
+              </p>
+            </Field>
             <Field label="가격 (원)">
               <input
                 name="priceWon"
