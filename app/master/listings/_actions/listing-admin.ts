@@ -174,7 +174,11 @@ export async function updateListingAction(formData: FormData): Promise<void> {
  *     편집 페이지에서 직접.
  *   - 끝나면 inserted=N / skipped=N 쿼리로 /master/listings 로 redirect.
  */
-export async function seedFitProductsAction(): Promise<void> {
+// `<form action={fn}>` 패턴에서 Next.js 가 폼 submit 을 action 에
+// 라우팅하려면 함수가 FormData 를 받는 시그니처여야 한다. seed 액션
+// 은 폼 데이터를 쓰지 않지만 인자 이름을 _formData 로 받아 시그니처
+// 만 맞춤 (실제 사용 안 함).
+export async function seedFitProductsAction(_formData: FormData): Promise<void> {
   await requireMaster();
   const ownerOrgId = await defaultOwnerOrgId();
   if (!ownerOrgId) redirect('/master/listings?error=no_owner');
