@@ -16,6 +16,7 @@ import {
   createListingAction,
   seedFitProductsAction,
   seedGangnamFoodAction,
+  seedSeoulHotelsAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { DeleteListingButton } from './_components/delete-listing-button';
@@ -52,7 +53,7 @@ export default async function MasterListingsPage({
 }: {
   searchParams: {
     category?: string; error?: string;
-    seedFit?: string; seedGangnamFood?: string;
+    seedFit?: string; seedGangnamFood?: string; seedSeoulHotels?: string;
     mergeRestaurant?: string;
     inserted?: string; skipped?: string;
     updated?: string;
@@ -186,6 +187,36 @@ export default async function MasterListingsPage({
           className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
         >
           레스토랑 → 맛집 통합
+        </button>
+      </form>
+
+      {/* 서울 호텔 일괄 등록 결과 배너 */}
+      {searchParams.seedSeoulHotels === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">서울 호텔 30종 일괄 등록 완료</span>
+          {' — '}
+          신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 스킵.
+        </div>
+      ) : null}
+
+      {/* 서울 6개 권역 외국인 FIT 호텔 30종 일괄 등록 트리거 */}
+      <form
+        action={seedSeoulHotelsAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-sky-300 bg-sky-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">서울 6개 권역 외국인 FIT 호텔 30종 일괄 등록</p>
+          <p className="mt-0.5">
+            강남·서초·건대·성수·명동·홍대 각 5개씩. 3성·4성·5성 골고루. 각 행에
+            details.address (지도 자동 노출) + grade · region · recommendedFor ·
+            imageKeywords (사진 큐레이션 힌트) · seoTags 포함.
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-sky-400 bg-white px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-50"
+        >
+          호텔 30종 일괄 등록
         </button>
       </form>
 

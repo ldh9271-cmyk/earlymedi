@@ -20,6 +20,7 @@ import {
 } from '@/lib/listings/categories';
 import { FIT_PRODUCTS } from '@/lib/listings/fit-products';
 import { GANGNAM_FOOD_PRODUCTS } from '@/lib/listings/gangnam-food-products';
+import { SEOUL_HOTEL_PRODUCTS } from '@/lib/listings/seoul-hotel-products';
 
 async function requireMaster(): Promise<true | never> {
   const supabase = createSupabaseServerClient();
@@ -277,6 +278,66 @@ export async function seedGangnamFoodAction(_formData: FormData): Promise<void> 
 
   revalidateListingSurfaces();
   redirect(`/master/listings?seedGangnamFood=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 서울 6개 권역 외국인 FIT 추천 호텔 30곳 일괄 등록.
+ *
+ *   - 각 행: category='hotel', status='approved', details 에 address
+ *     (구글 지도) + grade + region + recommendedFor + imageKeywords
+ *     (사진 큐레이션 힌트) + seoTags (Open Graph / 검색 최적화) 까지
+ *     저장.
+ *   - 멱등: 같은 slug 가 이미 있으면 skip.
+ *   - 끝나면 seedSeoulHotels=ok&inserted=N&skipped=N redirect.
+ */
+export async function seedSeoulHotelsAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of SEOUL_HOTEL_PRODUCTS) {
+    const slug = slugify(p.title);
+    const existing = await db
+      .select({ id: partnerListings.id })
+      .from(partnerListings)
+      .where(eq(partnerListings.slug, slug))
+      .limit(1);
+    if (existing.length > 0) {
+      skipped += 1;
+      continue;
+    }
+    await db.insert(partnerListings).values({
+      ownerOrgId: ownerOrgId as string,
+      category: 'hotel',
+      slug,
+      title: p.title,
+      description: p.description,
+      locationLabel: p.locationLabel,
+      addressJson: { city: '서울' },
+      status: 'approved',
+      featured: false,
+      sortOrder: 100,
+      priceWon: p.priceWon,
+      priceUnit: p.priceUnit,
+      interestKey: 'hotel',
+      promoLabel: p.promoLabel ?? null,
+      details: {
+        address: p.address,
+        grade: p.grade,
+        region: p.region,
+        recommendedFor: [...p.recommendedFor],
+        imageKeywords: [...p.imageKeywords],
+        seoTags: [...p.seoTags],
+      },
+    });
+    inserted += 1;
+  }
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings?seedSeoulHotels=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /**
