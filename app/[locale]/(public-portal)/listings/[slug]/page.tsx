@@ -4,6 +4,7 @@ import type { PublicLocale } from '@/lib/i18n/locales';
 import { fetchListingBySlug, type ListingDetail } from '@/lib/listings/query';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { DetailInfo } from './_components/detail-info';
+import { HeroMobileCarousel } from './_components/hero-mobile-carousel';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,8 +99,18 @@ export default async function ListingDetailPage({
       {/* Inline mobile CSS — hero gallery collapses to single square. */}
       <style dangerouslySetInnerHTML={{ __html: LISTING_HERO_CSS }} />
 
+      {/* 모바일 (<769) 전용 가로 스와이프 캐러셀 — cover + 갤러리
+          이미지를 한 장씩 보여준다. 데스크톱에서는 LISTING_HERO_CSS
+          가 display:none 처리. */}
+      <div className="m-lh-mobile-only">
+        <HeroMobileCarousel
+          slides={[heroSrc, ...listing.galleryImageUrls].filter(Boolean)}
+          backHref={`/${params.locale}`}
+        />
+      </div>
+
       {/* Desktop: Airbnb 1-large + 2x2-thumbs grid (uses cover + first 4 galleryImageUrls).
-          Mobile: single square hero with counter. */}
+          Mobile: hidden via CSS — replaced by HeroMobileCarousel above. */}
       <section
         className="m-lh-gallery"
         style={{
@@ -468,11 +479,11 @@ const LISTING_HERO_CSS = ''
   +   '.m-ld-right { display: none !important; }'
   + '}'
   + '@media (max-width: 768px) {'
-  +   '.m-lh-gallery { grid-template-columns: 1fr !important; grid-template-rows: auto !important; padding: 0 !important; gap: 0 !important; }'
-  +   '.m-lh-main { grid-row: auto !important; grid-column: auto !important; aspect-ratio: 1/1 !important; max-height: 460px !important; border-radius: 0 !important; }'
-  +   '.m-lh-thumb { display: none !important; }'
-  +   '.m-lh-controls { right: 14px !important; }'
-  +   '.m-lh-counter { right: 14px !important; }'
+  +   '.m-lh-gallery { display: none !important; }'
+  +   '.m-lh-mobile-only { display: block !important; }'
+  + '}'
+  + '@media (min-width: 769px) {'
+  +   '.m-lh-mobile-only { display: none !important; }'
   + '}'
   // Desktop (≥1024) — hide the bottom sticky bar since the right
   // card carries the Reserve CTA inside the content frame.
