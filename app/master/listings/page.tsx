@@ -178,8 +178,8 @@ export default async function MasterListingsPage({
         <div className="text-xs text-muted-foreground">
           <p className="font-semibold text-foreground">레스토랑 → 맛집 통합 (일회성)</p>
           <p className="mt-0.5">
-            2026-06-25 기준 "레스토랑" 카테고리가 dropdown 에서 제거되고 "맛집"으로 통합됐어요.
-            기존 category=&quot;restaurant&quot; 행이 있으면 한 번에 food 로 이전. 없으면 0건 업데이트.
+            2026-06-25 기준 &lsquo;레스토랑&rsquo; 카테고리가 dropdown 에서 제거되고 &lsquo;맛집&rsquo;으로 통합됐어요.
+            기존 category=&lsquo;restaurant&rsquo; 행이 있으면 한 번에 food 로 이전. 없으면 0건 업데이트.
           </p>
         </div>
         <button
