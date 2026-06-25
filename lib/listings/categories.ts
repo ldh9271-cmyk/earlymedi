@@ -1,5 +1,5 @@
 /**
- * Single source of truth for non-medical listing categories.
+ * Single source of truth for marketplace listing categories.
  *
  * Used by:
  *   - /master/listings UI (category select + per-category form fields)
@@ -7,10 +7,13 @@
  *   - /kr landing page (groups DB rows into the right section)
  *   - Account-type permission gate (which actor can create what)
  *
- * Hospitals are NOT in this list — they're managed via the existing
- * hospitals table and /master/hospitals. This file only covers the
- * "everything else" surface (hotel / restaurants / 맛집 / beauty /
- * photo / K-pop).
+ * Hospitals (`hospital`) live here too as of 2026-06-25 — masters can
+ * register promotional hospital cards via this same UI alongside
+ * hotels, restaurants and lifestyle services. The authoritative
+ * clinical record (KOIHA registration, RLS-gated patient data, etc.)
+ * still belongs to the `hospitals` table reachable from
+ * /master/hospitals; partner_listings rows tagged `hospital` are
+ * marketing-surface entries that point at one of those records.
  */
 
 export type ListingCategory =
@@ -24,13 +27,14 @@ export type ListingCategory =
   | 'makeup'
   | 'photo_studio'
   | 'kpop_tour'
-  | 'travel_package';
+  | 'travel_package'
+  | 'hospital';      // 병원 — split into 8 진료과 via details.subType.
 
 export const LISTING_CATEGORIES: ReadonlyArray<{
   key: ListingCategory;
   label: string;
   /** Where this category surfaces on the /kr landing. */
-  surface: 'programs' | 'foods' | 'kpop' | 'hotel' | 'travel';
+  surface: 'programs' | 'foods' | 'kpop' | 'hotel' | 'travel' | 'clinics';
   /** Default price unit suggestion shown in the master form. */
   defaultPriceUnit: string;
   /** Pre-checked interest chip on /inquiry?interest=. */
@@ -45,6 +49,7 @@ export const LISTING_CATEGORIES: ReadonlyArray<{
   { key: 'photo_studio',   label: '사진 스튜디오',  surface: 'programs', defaultPriceUnit: '세션', interestKey: 'photo' },
   { key: 'kpop_tour',      label: 'K-팝 투어',      surface: 'kpop',     defaultPriceUnit: '1인',  interestKey: 'kpop' },
   { key: 'travel_package', label: '여행 패키지',    surface: 'travel',   defaultPriceUnit: '1인',  interestKey: 'beauty_tour' },
+  { key: 'hospital',       label: '병원',           surface: 'clinics',  defaultPriceUnit: '회',   interestKey: 'plastic_surgery' },
 ];
 
 /**
@@ -67,6 +72,41 @@ export const TRAVEL_PACKAGE_SUB_TYPES: ReadonlyArray<{
 
 export function travelSubTypeLabel(key: string | undefined): string {
   return TRAVEL_PACKAGE_SUB_TYPES.find((s) => s.key === key)?.label ?? '미분류';
+}
+
+/**
+ * Sub-types for `hospital` — 8 진료과 matching the existing /clinics
+ * filter chips (성형외과 / 피부과 / 치과 / 모발 / 건강검진 / 줄기세포 /
+ * 한방병원 / 파트너병원). Stored on a listing's `details.subType` so
+ * /master/listings can group hospital rows by department the same way
+ * travel_package groups by sub-type.
+ */
+export type HospitalSubType =
+  | 'plastic_surgery'
+  | 'dermatology'
+  | 'dental'
+  | 'hair_loss'
+  | 'health_checkup'
+  | 'stem_cell'
+  | 'oriental'
+  | 'partner';
+
+export const HOSPITAL_SUB_TYPES: ReadonlyArray<{
+  key: HospitalSubType;
+  label: string;
+}> = [
+  { key: 'plastic_surgery', label: '성형외과' },
+  { key: 'dermatology',     label: '피부과' },
+  { key: 'dental',          label: '치과' },
+  { key: 'hair_loss',       label: '모발' },
+  { key: 'health_checkup',  label: '건강검진' },
+  { key: 'stem_cell',       label: '줄기세포' },
+  { key: 'oriental',        label: '한방병원' },
+  { key: 'partner',         label: '파트너병원' },
+];
+
+export function hospitalSubTypeLabel(key: string | undefined): string {
+  return HOSPITAL_SUB_TYPES.find((s) => s.key === key)?.label ?? '미분류';
 }
 
 export const LISTING_CATEGORY_KEYS = LISTING_CATEGORIES.map((c) => c.key);
@@ -93,9 +133,9 @@ export function canCreateCategory(
 ): boolean {
   if (accountType === 'agency') return true; // agency = 여행사 등록 → 전 카테고리
   if (accountType === 'medical') {
-    // hospitals are managed elsewhere; medical orgs can register
-    // ancillary services attached to their hospital.
-    return category === 'restaurant' || category === 'food';
+    // Medical orgs register their own hospital + ancillary services
+    // attached to it (in-house cafe / 식당 etc.).
+    return category === 'hospital' || category === 'restaurant' || category === 'food';
   }
   if (accountType === 'non_medical') {
     if (partnerSubtype === 'hotel') return category === 'hotel' || category === 'restaurant';

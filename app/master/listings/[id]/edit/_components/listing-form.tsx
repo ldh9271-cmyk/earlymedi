@@ -5,6 +5,7 @@ import {
   LISTING_CATEGORIES,
   LISTING_STATUSES,
   TRAVEL_PACKAGE_SUB_TYPES,
+  HOSPITAL_SUB_TYPES,
   type ListingStatus,
 } from '@/lib/listings/categories';
 
@@ -348,6 +349,8 @@ function CategoryFields({
       return <KpopTourFields details={details} setDetail={setDetail} />;
     case 'travel_package':
       return <TravelPackageFields details={details} setDetail={setDetail} />;
+    case 'hospital':
+      return <HospitalFields details={details} setDetail={setDetail} />;
     default:
       return (
         <p className="text-xs text-muted-foreground">
@@ -747,6 +750,69 @@ function KpopTourFields({
             onChange={(e) => setDetail('guideIncluded', e.target.checked)}
           />
           <span>통역 가이드 동행</span>
+        </label>
+      </Field>
+    </div>
+  );
+}
+
+/**
+ * 병원(hospital) 카테고리 — 진료과 sub-type + 대표 시술명 + 시술
+ * 소요 시간 + 외국인 환자 통역 여부. partner_listings 테이블의
+ * details JSONB 에 `subType` / `procedureName` / `durationMin` /
+ * `interpreterIncluded` 키로 저장.
+ *
+ * 마스터 등록 정보는 마케팅 surface 용. 임상 데이터(KOIHA 등록,
+ * 환자 RLS, 진료 차트)는 별도의 hospitals 테이블이 정본.
+ */
+function HospitalFields({
+  details,
+  setDetail,
+}: {
+  details: Record<string, unknown>;
+  setDetail: (key: string, value: unknown) => void;
+}): JSX.Element {
+  const subType = typeof details.subType === 'string' ? details.subType : '';
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <Field label="진료과 (하위 카테고리)">
+        <select
+          value={subType}
+          onChange={(e) => setDetail('subType', e.target.value)}
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="">— 선택 —</option>
+          {HOSPITAL_SUB_TYPES.map((s) => (
+            <option key={s.key} value={s.key}>{s.label}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="대표 시술 / 프로그램명">
+        <input
+          value={(details.procedureName as string) ?? ''}
+          onChange={(e) => setDetail('procedureName', e.target.value)}
+          placeholder="예: 보톡스 · 라식 · 임플란트"
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+        />
+      </Field>
+      <Field label="소요 시간 (분)">
+        <input
+          type="number"
+          min={0}
+          value={(details.durationMin as number) ?? ''}
+          onChange={(e) => setDetail('durationMin', Number(e.target.value) || 0)}
+          placeholder="60"
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+        />
+      </Field>
+      <Field label="외국인 환자 통역">
+        <label className="flex h-10 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={!!details.interpreterIncluded}
+            onChange={(e) => setDetail('interpreterIncluded', e.target.checked)}
+          />
+          <span>전담 통역 포함 (EN / 中 / 日 / 露)</span>
         </label>
       </Field>
     </div>
