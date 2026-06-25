@@ -6,12 +6,26 @@ import { getDictionary } from '@/lib/i18n/get-dictionary';
 
 export const dynamic = 'force-dynamic';
 
+// Next.js 14 가끔 dynamic param 을 percent-encoded 상태로 넘기는
+// 사례가 있다 (특히 한글이 들어간 slug). DB 의 slug 컬럼은 한글
+// 그대로 저장되어 있으니, 두 형태 모두 시도해 본다.
+function decodedSlug(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: { locale: PublicLocale; slug: string };
 }): Promise<{ title: string }> {
-  const listing = await fetchListingBySlug({ locale: params.locale, slug: params.slug });
+  const listing = await fetchListingBySlug({
+    locale: params.locale,
+    slug: decodedSlug(params.slug),
+  });
   return { title: listing ? `${listing.title} · KoreaGlowUp` : 'Listing · KoreaGlowUp' };
 }
 
@@ -42,7 +56,10 @@ export default async function ListingDetailPage({
 }: {
   params: { locale: PublicLocale; slug: string };
 }): Promise<JSX.Element> {
-  const listing = await fetchListingBySlug({ locale: params.locale, slug: params.slug });
+  const listing = await fetchListingBySlug({
+    locale: params.locale,
+    slug: decodedSlug(params.slug),
+  });
   if (!listing) {
     notFound();
   }
