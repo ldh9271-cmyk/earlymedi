@@ -13,6 +13,7 @@ import {
   travelSubTypeLabel,
 } from '@/lib/listings/categories';
 import { createListingAction } from './_actions/listing-admin';
+import { DeleteListingButton } from './_components/delete-listing-button';
 
 export const metadata = { title: '글로우업 상품 관리 · 마스터' };
 export const dynamic = 'force-dynamic';
@@ -313,12 +314,16 @@ function ListingRow({ row: r }: { row: Row }): JSX.Element {
       </td>
       <td className="px-3 py-3 text-muted-foreground">{r.ownerName ?? '—'}</td>
       <td className="px-3 py-3 text-right">
-        <Link
-          href={`/master/listings/${r.id}/edit`}
-          className="text-xs font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          편집 →
-        </Link>
+        <div className="flex items-center justify-end gap-3">
+          <Link
+            href={`/master/listings/${r.id}/edit`}
+            className="text-xs font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            편집 →
+          </Link>
+          <span className="text-muted-foreground/40">|</span>
+          <DeleteListingButton id={r.id} title={r.title} />
+        </div>
       </td>
     </tr>
   );
