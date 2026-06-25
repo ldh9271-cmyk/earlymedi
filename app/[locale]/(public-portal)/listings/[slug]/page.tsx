@@ -103,11 +103,11 @@ export default async function ListingDetailPage({
         className="m-lh-gallery"
         style={{
           position: 'relative',
-          maxWidth: 1280,
+          maxWidth: 1100,
           margin: '0 auto',
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
-          gridTemplateRows: 'repeat(2, 230px)',
+          gridTemplateRows: 'repeat(2, 170px)',
           gap: 8,
           padding: '0 12px',
           height: 'auto',
