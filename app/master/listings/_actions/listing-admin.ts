@@ -10,6 +10,8 @@ import {
   partnerListingLocaleContent,
 } from '@/drizzle/schema/partner-listings';
 import { organizations } from '@/drizzle/schema/organizations';
+import { hospitals } from '@/drizzle/schema/hospitals';
+import { categoryListings } from '@/drizzle/schema/category-listings';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { uploadListingImage } from '@/lib/storage/listing-images';
@@ -344,67 +346,125 @@ export async function seedSeoulHotelsAction(_formData: FormData): Promise<void> 
 /**
  * 강남·서초 외국인 FIT 추천 성형외과 11곳 일괄 등록.
  *
- *   - 각 행: category='hospital', status='approved', interestKey=
- *     'plastic_surgery', priceWon=0, priceUnit='상담', details 에
- *     subType='plastic_surgery' (HOSPITAL_SUB_TYPES 매칭) + address
- *     (Google 지도) + procedureName/interpreterIncluded (HospitalFields
- *     호환) + phone / nearestStation / signatureProcedures /
- *     openingYear / imageKeywords / seoTags 일괄 저장.
- *   - 멱등: 같은 slug 있으면 skip.
- *   - 끝나면 seedPlasticSurgery=ok&inserted=N&skipped=N redirect.
+ * 노출 surface 3곳에 모두 들어가도록 한 번에 3 테이블 insert:
+ *   1) hospitals — /agency/hospitals 병원 마켓플레이스 + /kr/clinics
+ *      페이지 (organizationId = 첫 agency org).
+ *   2) category_listings — categoryKey='plastic_surgery', procedureSlug=''
+ *      로 묶어 /kr/clinics?category=plastic_surgery 에 카드 노출.
+ *   3) partner_listings — 마스터 통합 마켓플레이스 (/master/listings
+ *      "병원" chip 필터에서 일관 관리).
+ *
+ * 멱등:
+ *   - hospitals.slug 는 (organizationId, slug) UNIQUE → 같은 org 에
+ *     같은 slug 있으면 skip.
+ *   - category_listings 도 (categoryKey, procedureSlug, hospitalId)
+ *     UNIQUE 라 한 번 더 안전.
+ *   - partner_listings.slug 체크는 기존과 동일.
  */
 export async function seedPlasticSurgeryAction(_formData: FormData): Promise<void> {
   await requireMaster();
   const ownerOrgId = await defaultOwnerOrgId();
   if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+  const orgId = ownerOrgId as string;
 
   let inserted = 0;
   let skipped = 0;
 
   for (const p of PLASTIC_SURGERY_PRODUCTS) {
     const slug = slugify(p.title);
-    const existing = await db
+
+    // 1) hospitals — agency org 소유로 insert. 이미 있으면 select 로
+    //    id 만 가져와 category_listings 연결만 진행.
+    const existingHospital = await db
+      .select({ id: hospitals.id })
+      .from(hospitals)
+      .where(and(eq(hospitals.organizationId, orgId), eq(hospitals.slug, slug)))
+      .limit(1);
+
+    let hospitalId: string | null = null;
+    const existingRow = existingHospital[0];
+    if (existingRow) {
+      hospitalId = existingRow.id;
+      skipped += 1;
+    } else {
+      const insertResult = await db
+        .insert(hospitals)
+        .values({
+          organizationId: orgId,
+          name: p.title,
+          slug,
+          countryCode: 'KR',
+          addressJson: { line1: p.address, city: '서울' },
+          primaryCategories: ['plastic_surgery'],
+          languagesSpoken: p.interpreterIncluded
+            ? ['ko', 'en', 'zh', 'ja']
+            : ['ko'],
+          // 등록 직후 매칭 가능 상태로 — 마스터가 필요 시 비활성 가능.
+          isActiveForMatching: true,
+        })
+        .returning({ id: hospitals.id });
+      hospitalId = insertResult[0]?.id ?? null;
+      if (hospitalId) inserted += 1;
+    }
+    if (!hospitalId) continue;
+
+    // 2) category_listings — 성형외과 카테고리 페이지 노출. ON CONFLICT
+    //    같은 row 가 있어도 unique index 가 막아주므로 try/catch 로 감쌈.
+    try {
+      await db.insert(categoryListings).values({
+        categoryKey: 'plastic_surgery',
+        procedureSlug: '',
+        hospitalId,
+        sortOrder: 100,
+        promoLabel: p.promoLabel ?? null,
+      });
+    } catch {
+      /* 이미 등록된 매칭 — skip */
+    }
+
+    // 3) partner_listings — 통합 마켓플레이스 (master/listings) 노출.
+    const existingPartnerListing = await db
       .select({ id: partnerListings.id })
       .from(partnerListings)
       .where(eq(partnerListings.slug, slug))
       .limit(1);
-    if (existing.length > 0) {
-      skipped += 1;
-      continue;
+    if (existingPartnerListing.length === 0) {
+      await db.insert(partnerListings).values({
+        ownerOrgId: orgId,
+        category: 'hospital',
+        slug,
+        title: p.title,
+        description: p.description,
+        locationLabel: p.locationLabel,
+        addressJson: { city: '서울' },
+        status: 'approved',
+        featured: false,
+        sortOrder: 100,
+        priceWon: 0,
+        priceUnit: '상담',
+        interestKey: 'plastic_surgery',
+        promoLabel: p.promoLabel ?? null,
+        details: {
+          subType: 'plastic_surgery',
+          procedureName: p.procedureName,
+          interpreterIncluded: p.interpreterIncluded ?? false,
+          address: p.address,
+          phone: p.phone,
+          nearestStation: p.nearestStation,
+          signatureProcedures: [...p.signatureProcedures],
+          ...(p.openingYear ? { openingYear: p.openingYear } : {}),
+          imageKeywords: [...p.imageKeywords],
+          seoTags: [...p.seoTags],
+          hospitalId,
+        },
+      });
     }
-    await db.insert(partnerListings).values({
-      ownerOrgId: ownerOrgId as string,
-      category: 'hospital',
-      slug,
-      title: p.title,
-      description: p.description,
-      locationLabel: p.locationLabel,
-      addressJson: { city: '서울' },
-      status: 'approved',
-      featured: false,
-      sortOrder: 100,
-      // 가격은 상담 기반이라 0 으로 두고 priceUnit 으로 표기.
-      priceWon: 0,
-      priceUnit: '상담',
-      interestKey: 'plastic_surgery',
-      promoLabel: p.promoLabel ?? null,
-      details: {
-        subType: 'plastic_surgery',
-        procedureName: p.procedureName,
-        interpreterIncluded: p.interpreterIncluded ?? false,
-        address: p.address,
-        phone: p.phone,
-        nearestStation: p.nearestStation,
-        signatureProcedures: [...p.signatureProcedures],
-        ...(p.openingYear ? { openingYear: p.openingYear } : {}),
-        imageKeywords: [...p.imageKeywords],
-        seoTags: [...p.seoTags],
-      },
-    });
-    inserted += 1;
   }
 
   revalidateListingSurfaces();
+  // /agency/hospitals, /kr/clinics 도 재검증.
+  revalidatePath('/agency/hospitals');
+  revalidatePath('/kr/clinics', 'layout');
   redirect(`/master/listings?seedPlasticSurgery=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
