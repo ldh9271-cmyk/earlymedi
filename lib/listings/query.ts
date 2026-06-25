@@ -159,6 +159,91 @@ export async function fetchFeaturedListings(opts: {
 }
 
 /**
+ * Multi-row fetch for the category-landing surfaces
+ * (/travel/[type], /glowup/pc/c/[key]). Returns every approved
+ * listing matching the given categories — and optionally a
+ * details.subType — ordered by sortOrder ASC.
+ *
+ * Drops the legacy single-row fallback pattern: when no rows match,
+ * the page shows an explicit "준비 중" empty state instead of fake
+ * sample content.
+ */
+export async function fetchListingsForSurface(opts: {
+  locale: PublicLocale;
+  categories: ListingCategory[];
+  subType?: string;
+}): Promise<ListingCard[]> {
+  const { locale, categories, subType } = opts;
+  if (categories.length === 0) return [];
+  let rows: PartnerListing[] = [];
+  try {
+    const whereParts: SQL[] = [
+      inArray(partnerListings.category, categories),
+      eq(partnerListings.status, 'approved'),
+    ];
+    if (subType) {
+      whereParts.push(sql`${partnerListings.details}->>'subType' = ${subType}`);
+    }
+    rows = await db
+      .select()
+      .from(partnerListings)
+      .where(and(...whereParts))
+      .orderBy(asc(partnerListings.sortOrder));
+  } catch {
+    return [];
+  }
+  if (rows.length === 0) return [];
+
+  let overrides = new Map<string, {
+    title: string | null;
+    locationLabel: string | null;
+    coverImageUrl: string | null;
+    description: string | null;
+  }>();
+  try {
+    const ids = rows.map((r) => r.id);
+    const lcRows = await db
+      .select({
+        listingId: partnerListingLocaleContent.listingId,
+        title: partnerListingLocaleContent.title,
+        locationLabel: partnerListingLocaleContent.locationLabel,
+        coverImageUrl: partnerListingLocaleContent.coverImageUrl,
+        description: partnerListingLocaleContent.description,
+      })
+      .from(partnerListingLocaleContent)
+      .where(
+        and(
+          inArray(partnerListingLocaleContent.listingId, ids),
+          eq(partnerListingLocaleContent.locale, locale),
+        ),
+      );
+    overrides = new Map(lcRows.map((r) => [r.listingId, r]));
+  } catch {
+    /* locale table missing — keep base values */
+  }
+
+  return rows.map((r): ListingCard => {
+    const o = overrides.get(r.id);
+    return {
+      id: r.id,
+      category: r.category,
+      slug: r.slug,
+      title: o?.title?.trim() || r.title,
+      locationLabel: o?.locationLabel?.trim() || r.locationLabel,
+      priceWon: r.priceWon,
+      priceUnit: r.priceUnit,
+      coverImageUrl: o?.coverImageUrl || r.coverImageUrl,
+      promoLabel: r.promoLabel,
+      rating: r.rating,
+      reviewsCount: r.reviewsCount,
+      description: o?.description?.trim() || r.description,
+      interestKey: r.interestKey,
+      details: (r.details ?? {}) as Record<string, unknown>,
+    };
+  });
+}
+
+/**
  * Fetch the first approved travel_package listing with a matching
  * details.subType (free / package / training). Returns null when no
  * row matches so /travel/[type] can fall back to the dict-driven
