@@ -12,7 +12,11 @@ import {
   categoryLabel,
   travelSubTypeLabel,
 } from '@/lib/listings/categories';
-import { createListingAction, seedFitProductsAction } from './_actions/listing-admin';
+import {
+  createListingAction,
+  seedFitProductsAction,
+  seedGangnamFoodAction,
+} from './_actions/listing-admin';
 import { DeleteListingButton } from './_components/delete-listing-button';
 
 export const metadata = { title: '글로우업 상품 관리 · 마스터' };
@@ -45,7 +49,11 @@ type Row = {
 export default async function MasterListingsPage({
   searchParams,
 }: {
-  searchParams: { category?: string; error?: string; seedFit?: string; inserted?: string; skipped?: string };
+  searchParams: {
+    category?: string; error?: string;
+    seedFit?: string; seedGangnamFood?: string;
+    inserted?: string; skipped?: string;
+  };
 }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -122,6 +130,15 @@ export default async function MasterListingsPage({
         </div>
       ) : null}
 
+      {/* 강남 맛집 일괄 등록 결과 배너. */}
+      {searchParams.seedGangnamFood === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">강남·서초 맛집 10종 일괄 등록 완료</span>
+          {' — '}
+          신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 스킵.
+        </div>
+      ) : null}
+
       {/* FIT 자유여행 기본 상품 일괄 등록 트리거 */}
       <form
         action={seedFitProductsAction}
@@ -139,6 +156,27 @@ export default async function MasterListingsPage({
           className="rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
         >
           FIT 11종 일괄 등록
+        </button>
+      </form>
+
+      {/* 강남·서초 외국인 FIT 맛집 일괄 등록 트리거 */}
+      <form
+        action={seedGangnamFoodAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-amber-300 bg-amber-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">강남·서초 외국인 FIT 맛집 10종 일괄 등록</p>
+          <p className="mt-0.5">
+            비언유주얼·무월식탁·다몽집·하이디라오·타이엘리펀트·마을양조장·정돈·슈퍼집·까마리·
+            백종원 원조쌈밥집. 각 행에 details.address 가 들어가 상세 페이지에서 Google 지도
+            자동 노출. 같은 이름의 상품이 이미 있으면 자동 스킵 (멱등).
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-50"
+        >
+          맛집 10종 일괄 등록
         </button>
       </form>
 

@@ -19,6 +19,7 @@ import {
   type ListingCategory,
 } from '@/lib/listings/categories';
 import { FIT_PRODUCTS } from '@/lib/listings/fit-products';
+import { GANGNAM_FOOD_PRODUCTS } from '@/lib/listings/gangnam-food-products';
 
 async function requireMaster(): Promise<true | never> {
   const supabase = createSupabaseServerClient();
@@ -220,6 +221,62 @@ export async function seedFitProductsAction(_formData: FormData): Promise<void> 
 
   revalidateListingSurfaces();
   redirect(`/master/listings?seedFit=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 강남·서초 외국인 FIT 추천 맛집 10곳 일괄 등록.
+ *
+ *   - 각 행: category='food', status='approved', details.address
+ *     설정 (지도 자동 노출), details.cuisine / details.signatureMenu
+ *     도 함께 저장.
+ *   - 멱등: 같은 slug 가 이미 있으면 skip.
+ *   - 끝나면 seedGangnamFood=ok&inserted=N&skipped=N redirect.
+ */
+export async function seedGangnamFoodAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of GANGNAM_FOOD_PRODUCTS) {
+    const slug = slugify(p.title);
+    const existing = await db
+      .select({ id: partnerListings.id })
+      .from(partnerListings)
+      .where(eq(partnerListings.slug, slug))
+      .limit(1);
+    if (existing.length > 0) {
+      skipped += 1;
+      continue;
+    }
+    await db.insert(partnerListings).values({
+      ownerOrgId: ownerOrgId as string,
+      category: 'food',
+      slug,
+      title: p.title,
+      description: p.description,
+      locationLabel: p.locationLabel,
+      addressJson: { city: '서울' },
+      status: 'approved',
+      featured: false,
+      sortOrder: 100,
+      priceWon: p.priceWon,
+      priceUnit: p.priceUnit,
+      interestKey: 'food',
+      promoLabel: p.promoLabel ?? null,
+      details: {
+        address: p.address,
+        cuisine: p.cuisine,
+        signatureMenu: p.signatureMenu,
+      },
+    });
+    inserted += 1;
+  }
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings?seedGangnamFood=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /** Delete a listing entirely. Cascades to locale_content via FK. */
