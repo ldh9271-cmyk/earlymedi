@@ -177,21 +177,19 @@ export default async function ClinicsListPage({
 
       if (listingRows.length > 0) {
         const ids = listingRows.map((r) => r.hospitalId);
-        const hospitalsById = new Map(
-          (
-            await db
-              .select({
-                id: hospitals.id,
-                name: hospitals.name,
-                slug: hospitals.slug,
-                countryCode: hospitals.countryCode,
-                primaryCategories: hospitals.primaryCategories,
-                coverImageUrl: hospitals.coverImageUrl,
-              })
-              .from(hospitals)
-              .where(inArray(hospitals.id, ids))
-          ).map((h) => [h.id, h]),
-        );
+        const hospitalRows = await db
+          .select({
+            id: hospitals.id,
+            name: hospitals.name,
+            slug: hospitals.slug,
+            countryCode: hospitals.countryCode,
+            primaryCategories: hospitals.primaryCategories,
+            coverImageUrl: hospitals.coverImageUrl,
+            sortOrder: hospitals.sortOrder,
+          })
+          .from(hospitals)
+          .where(inArray(hospitals.id, ids));
+        const hospitalsById = new Map(hospitalRows.map((h) => [h.id, h]));
         filtered = listingRows
           .map((l) => {
             const h = hospitalsById.get(l.hospitalId);
@@ -204,9 +202,14 @@ export default async function ClinicsListPage({
               primaryCategories: (h.primaryCategories ?? []) as string[],
               promoLabel: l.promoLabel,
               coverImageUrl: h.coverImageUrl,
+              _sortOrder: h.sortOrder,
             };
           })
-          .filter((r): r is ClinicRow => r !== null);
+          .filter((r): r is ClinicRow & { _sortOrder: number } => r !== null)
+          // hospitals.sortOrder 우선 — master 페이지의 노출 순서를 단일 진실원으로 사용.
+          // category_listings.sortOrder 는 사용하지 않음 (이중 관리 회피).
+          .sort((a, b) => a._sortOrder - b._sortOrder)
+          .map(({ _sortOrder: _, ...rest }) => rest);
       } else {
         const whereParts = [eq(hospitals.countryCode, 'KR')];
         if (minRating !== null) whereParts.push(gte(hospitals.rating, minRating));
@@ -222,7 +225,7 @@ export default async function ClinicsListPage({
           })
           .from(hospitals)
           .where(and(...whereParts))
-          .orderBy(sql`${hospitals.createdAt} desc`)
+          .orderBy(sql`${hospitals.sortOrder} asc, ${hospitals.createdAt} desc`)
           .limit(50);
         filtered = fetched
           .map((r) => ({
@@ -248,7 +251,7 @@ export default async function ClinicsListPage({
         })
         .from(hospitals)
         .where(and(...whereParts))
-        .orderBy(sql`${hospitals.createdAt} desc`)
+        .orderBy(sql`${hospitals.sortOrder} asc, ${hospitals.createdAt} desc`)
         .limit(50);
       filtered = fetched
         .map((r) => ({
