@@ -16,6 +16,7 @@ import {
   createListingAction,
   seedFitProductsAction,
   seedGangnamFoodAction,
+  migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { DeleteListingButton } from './_components/delete-listing-button';
 
@@ -52,7 +53,9 @@ export default async function MasterListingsPage({
   searchParams: {
     category?: string; error?: string;
     seedFit?: string; seedGangnamFood?: string;
+    mergeRestaurant?: string;
     inserted?: string; skipped?: string;
+    updated?: string;
   };
 }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
@@ -156,6 +159,33 @@ export default async function MasterListingsPage({
           className="rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
         >
           FIT 11종 일괄 등록
+        </button>
+      </form>
+
+      {/* 레스토랑 → 맛집 일괄 마이그레이션 트리거 */}
+      {searchParams.mergeRestaurant === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">레스토랑 → 맛집 통합 완료</span>
+          {' — '}
+          {searchParams.updated ?? '0'}건 카테고리 이전.
+        </div>
+      ) : null}
+      <form
+        action={migrateRestaurantToFoodAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">레스토랑 → 맛집 통합 (일회성)</p>
+          <p className="mt-0.5">
+            2026-06-25 기준 "레스토랑" 카테고리가 dropdown 에서 제거되고 "맛집"으로 통합됐어요.
+            기존 category=&quot;restaurant&quot; 행이 있으면 한 번에 food 로 이전. 없으면 0건 업데이트.
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+        >
+          레스토랑 → 맛집 통합
         </button>
       </form>
 

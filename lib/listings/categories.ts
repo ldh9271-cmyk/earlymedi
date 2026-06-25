@@ -41,7 +41,10 @@ export const LISTING_CATEGORIES: ReadonlyArray<{
   interestKey: string;
 }> = [
   { key: 'hotel',          label: '호텔',           surface: 'hotel',    defaultPriceUnit: '박',   interestKey: 'hotel' },
-  { key: 'restaurant',     label: '레스토랑',       surface: 'foods',    defaultPriceUnit: '1인',  interestKey: 'food' },
+  // 2026-06-25: 'restaurant' 가 dropdown 에서 제거됨 — '맛집' 으로 통합.
+  // 기존 restaurant 행은 마이그레이션 액션 (migrateRestaurantToFoodAction)
+  // 으로 일괄 food 로 이전. ListingCategory 타입 유니온에는 'restaurant'
+  // 가 남아있어 historical 데이터 읽기는 그대로 호환.
   { key: 'food',           label: '맛집',           surface: 'foods',    defaultPriceUnit: '1인',  interestKey: 'food' },
   { key: 'personal_color', label: '퍼스널 컬러',    surface: 'programs', defaultPriceUnit: '세션', interestKey: 'dermatology' },
   { key: 'hair',           label: '헤어샵',         surface: 'programs', defaultPriceUnit: '세션', interestKey: 'makeup' },
@@ -134,12 +137,13 @@ export function canCreateCategory(
   if (accountType === 'agency') return true; // agency = 여행사 등록 → 전 카테고리
   if (accountType === 'medical') {
     // Medical orgs register their own hospital + ancillary services
-    // attached to it (in-house cafe / 식당 etc.).
-    return category === 'hospital' || category === 'restaurant' || category === 'food';
+    // attached to it (in-house cafe / 식당 etc.). 'restaurant' is no
+    // longer in the dropdown — 'food' covers both.
+    return category === 'hospital' || category === 'food';
   }
   if (accountType === 'non_medical') {
-    if (partnerSubtype === 'hotel') return category === 'hotel' || category === 'restaurant';
-    if (partnerSubtype === 'restaurant') return category === 'restaurant' || category === 'food';
+    if (partnerSubtype === 'hotel') return category === 'hotel' || category === 'food';
+    if (partnerSubtype === 'restaurant') return category === 'food';
     if (partnerSubtype === 'beauty') return ['personal_color', 'hair', 'makeup'].includes(category);
     if (partnerSubtype === 'photo')  return category === 'photo_studio';
     if (partnerSubtype === 'tour')   return category === 'kpop_tour' || category === 'travel_package';

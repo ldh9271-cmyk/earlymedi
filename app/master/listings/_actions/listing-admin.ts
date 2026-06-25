@@ -279,6 +279,26 @@ export async function seedGangnamFoodAction(_formData: FormData): Promise<void> 
   redirect(`/master/listings?seedGangnamFood=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
+/**
+ * 기존 category='restaurant' 행을 일괄 'food' 로 이전.
+ *
+ *   - 2026-06-25 '레스토랑' 카테고리가 dropdown 에서 제거되고 '맛집'
+ *     으로 통합되면서 기존 데이터를 합치기 위한 일회성 액션.
+ *   - 멱등 — 'restaurant' 행이 없으면 0건 업데이트 후 그대로 redirect.
+ *   - revalidateListingSurfaces 로 /kr, /master 등 surface 캐시
+ *     동시에 무효화.
+ */
+export async function migrateRestaurantToFoodAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const updated = await db
+    .update(partnerListings)
+    .set({ category: 'food', updatedAt: new Date() })
+    .where(eq(partnerListings.category, 'restaurant'))
+    .returning({ id: partnerListings.id });
+  revalidateListingSurfaces();
+  redirect(`/master/listings?mergeRestaurant=ok&updated=${updated.length}`);
+}
+
 /** Delete a listing entirely. Cascades to locale_content via FK. */
 export async function deleteListingAction(formData: FormData): Promise<void> {
   await requireMaster();
