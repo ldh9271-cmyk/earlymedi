@@ -196,7 +196,24 @@ export default async function ListingDetailPage({
         ) : null;
       })()}
 
-      <div style={{ maxWidth: 760, margin: '24px auto 0' }}>
+      {/* Desktop ≥1024 splits into 2 cols:
+            LEFT  — title / host / why-special / includes / reviews
+            RIGHT — sticky booking card (320 wide)
+          Mobile/tablet collapse to single column (m-ld-grid CSS).
+          Container itself is max-width 1280, padded for breathing room. */}
+      <div
+        className="m-ld-grid"
+        style={{
+          maxWidth: 1280,
+          margin: '24px auto 0',
+          padding: '0 56px',
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) 360px',
+          gap: 80,
+          alignItems: 'start',
+        }}
+      >
+      <div className="m-ld-left">
 
       {/* Title + meta */}
       <section style={{ padding: '20px 22px 0' }}>
@@ -321,10 +338,58 @@ export default async function ListingDetailPage({
           </p>
         )}
       </section>
-      </div>{/* close maxWidth wrapper — sticky bar below stays full-bleed */}
+      </div>{/* close .m-ld-left */}
 
-      {/* Sticky reserve bar — full-bleed, safe-area aware. */}
+      {/* RIGHT — desktop-only sticky booking card. Hidden on mobile
+          (m-ld-right has display:none below 1024 via media query). */}
+      <aside className="m-ld-right" style={{ position: 'sticky', top: 120 }}>
+        <div
+          style={{
+            border: '1px solid #ebebeb',
+            borderRadius: 16,
+            background: '#fff',
+            padding: 24,
+            boxShadow: 'rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.08) 0 8px 24px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 22, fontWeight: 700 }}>{priceLabel}</span>
+            <span style={{ fontSize: 14, color: '#6a6a6a' }}>/ {priceUnit}</span>
+          </div>
+          <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 4 }}>
+            세금·서비스 수수료 별도
+          </div>
+          <Link
+            href={reserveHref}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginTop: 18, height: 52,
+              background: '#ff385c', color: '#fff',
+              borderRadius: 12,
+              fontSize: 16, fontWeight: 700,
+              textDecoration: 'none',
+            }}
+          >
+            {d.reserve}
+          </Link>
+          <div style={{ textAlign: 'center', fontSize: 12, color: '#6a6a6a', marginTop: 10 }}>
+            예약 확정 전에는 요금이 청구되지 않습니다
+          </div>
+          <div style={{ height: 1, background: '#ebebeb', margin: '18px 0' }} />
+          <div style={{ fontSize: 13, color: '#3f3f3f', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Row label="컨시어지 동행" value="포함" />
+            <Row label="예약·통역 대행" value="포함" />
+            <Row label="확정 전 무료 취소" value="48h" />
+          </div>
+        </div>
+      </aside>
+
+      </div>{/* close .m-ld-grid */}
+
+      {/* Mobile/tablet sticky reserve bar — hidden on desktop where
+          the right-column card takes over. */}
       <div
+        className="m-ld-bottom-bar"
         style={{
           position: 'fixed',
           left: 0, right: 0, bottom: 0,
@@ -366,16 +431,37 @@ function Divider(): JSX.Element {
   return <div style={{ height: 1, background: '#ebebeb', margin: '24px 22px' }} />;
 }
 
+function Row({ label, value }: { label: string; value: string }): JSX.Element {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+      <span style={{ color: '#6a6a6a' }}>{label}</span>
+      <span style={{ fontWeight: 600 }}>{value}</span>
+    </div>
+  );
+}
+
 // Hero gallery — desktop 2-col (cover left, 4 thumbs right 2x2);
 // mobile flattens to single square. The .m-lh-thumb-2/3 hide on
 // mobile so the gallery is just cover + 2 small thumbs on phones.
 const LISTING_HERO_CSS = ''
+  // Mobile + tablet (<1024) — flatten the desktop 2-col body, hide the
+  // sticky right card, show the bottom reserve bar, collapse the hero
+  // gallery to a single square.
+  + '@media (max-width: 1023px) {'
+  +   '.m-ld-grid { grid-template-columns: 1fr !important; padding: 0 !important; gap: 0 !important; }'
+  +   '.m-ld-right { display: none !important; }'
+  + '}'
   + '@media (max-width: 768px) {'
   +   '.m-lh-gallery { grid-template-columns: 1fr !important; grid-template-rows: auto !important; padding: 0 !important; gap: 0 !important; }'
-  +   '.m-lh-main { grid-row: auto !important; aspect-ratio: 1/1 !important; max-height: 460px !important; border-radius: 0 !important; }'
+  +   '.m-lh-main { grid-row: auto !important; grid-column: auto !important; aspect-ratio: 1/1 !important; max-height: 460px !important; border-radius: 0 !important; }'
   +   '.m-lh-thumb { display: none !important; }'
   +   '.m-lh-controls { right: 14px !important; }'
   +   '.m-lh-counter { right: 14px !important; }'
+  + '}'
+  // Desktop (≥1024) — hide the bottom sticky bar since the right
+  // card carries the Reserve CTA inside the content frame.
+  + '@media (min-width: 1024px) {'
+  +   '.m-ld-bottom-bar { display: none !important; }'
   + '}';
 
 function floatingBtnInline(): React.CSSProperties {
