@@ -178,7 +178,7 @@ export function PatientSignupForm({
       }
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', `/${locale}`);
-      const { error: e } = await supabase.auth.signUp({
+      const { data, error: e } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -206,14 +206,62 @@ export function PatientSignupForm({
               ? '이미 가입된 이메일입니다. 로그인을 시도해 주세요.'
               : 'This email is already registered. Try signing in instead.',
           );
+        } else if (m.includes('rate limit') || m.includes('email rate')) {
+          setError(
+            locale === 'kr'
+              ? '이메일 발송 한도 초과(시간당 3–4건). 잠시 후 다시 시도해 주세요. 운영자는 Supabase Dashboard → Authentication → Settings 에서 SMTP를 연결해 주세요.'
+              : 'Email rate limit hit (3–4/hr on Supabase default). Try again later. Admin: connect SMTP in Supabase Dashboard → Authentication → Settings.',
+          );
         } else {
           setError(e.message);
         }
         return;
       }
+      // Supabase 가 'Confirm email' OFF 상태면 signUp 이 즉시 세션을
+      // 반환하고 이메일은 발송되지 않는다 (사용자 즉시 로그인 상태).
+      // 그 경우 사용자에게 "메일 확인" UI 를 보여주면 영원히 기다리게
+      // 되니 바로 홈으로 보낸다.
+      if (data.session) {
+        window.location.href = `/${locale}`;
+        return;
+      }
       setSent(values.email);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-up failed');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  // 사용자가 "다시 보내기" 누르면 실제로 Supabase resend API 호출.
+  // (기존엔 setSent(null) 로 폼 상태만 리셋하고 메일은 안 갔다.)
+  async function onResend(): Promise<void> {
+    if (!sent) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) {
+        setError('Supabase not connected (demo mode).');
+        return;
+      }
+      const redirectTo = new URL('/api/auth/callback', window.location.origin);
+      redirectTo.searchParams.set('next', `/${locale}`);
+      const { error: e } = await supabase.auth.resend({
+        type: 'signup',
+        email: sent,
+        options: { emailRedirectTo: redirectTo.toString() },
+      });
+      if (e) {
+        const m = e.message.toLowerCase();
+        setError(
+          m.includes('rate') && locale === 'kr'
+            ? '이메일 발송 한도 초과. 잠시 후 다시 시도해 주세요.'
+            : e.message,
+        );
+        return;
+      }
+      // 폼 상태는 그대로(sent UI 유지) — 사용자가 새로 받은 메일을 기다리도록.
     } finally {
       setSubmitting(false);
     }
@@ -229,13 +277,29 @@ export function PatientSignupForm({
           {dict.sentBody}{' '}
           <strong className="break-all">{sent}</strong>
         </p>
-        <button
-          type="button"
-          onClick={() => setSent(null)}
-          className="text-xs text-care-700 underline hover:text-care-900"
-        >
-          {dict.sentRetry}
-        </button>
+        <p className="text-xs text-care-700">
+          메일이 안 보이면 <strong>스팸함</strong>을 확인하거나, 1–2분 뒤에 다시 보내기 해 주세요.
+        </p>
+        {error ? (
+          <p className="text-xs text-rose-600">{error}</p>
+        ) : null}
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={onResend}
+            className="text-xs text-care-700 underline hover:text-care-900 disabled:opacity-60"
+          >
+            {submitting ? '발송 중…' : '확인 메일 다시 보내기'}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSent(null); setError(null); }}
+            className="text-xs text-care-700 underline hover:text-care-900"
+          >
+            {dict.sentRetry}
+          </button>
+        </div>
       </div>
     );
   }
