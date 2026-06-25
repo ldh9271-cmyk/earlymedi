@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, eq, gte, inArray, lte, type SQL } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, lte, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import {
   partnerListings,
@@ -156,6 +156,95 @@ export async function fetchFeaturedListings(opts: {
       details: (r.details ?? {}) as Record<string, unknown>,
     };
   });
+}
+
+/**
+ * Fetch the first approved travel_package listing with a matching
+ * details.subType (free / package / training). Returns null when no
+ * row matches so /travel/[type] can fall back to the dict-driven
+ * sample copy.
+ *
+ * Doesn't require `featured=true` — masters often approve a real
+ * listing without flagging it featured, and we still want it to take
+ * precedence over the hardcoded sample on its own per-type page.
+ *
+ * details.subType is a JSONB key. Drizzle's sql template runs a
+ * `->> 'subType'` extraction so the filter happens server-side.
+ */
+export async function fetchTravelTypeListing(opts: {
+  locale: PublicLocale;
+  subType: 'free' | 'package' | 'training';
+}): Promise<ListingDetail | null> {
+  const { locale, subType } = opts;
+  let row: PartnerListing | null = null;
+  try {
+    const rows = await db
+      .select()
+      .from(partnerListings)
+      .where(
+        and(
+          eq(partnerListings.category, 'travel_package'),
+          eq(partnerListings.status, 'approved'),
+          // details->>'subType' = subType  → match the JSON-stored
+          // sub-type that the master form writes via setDetail.
+          sql`${partnerListings.details}->>'subType' = ${subType}`,
+        ),
+      )
+      .orderBy(asc(partnerListings.sortOrder))
+      .limit(1);
+    row = rows[0] ?? null;
+  } catch {
+    return null;
+  }
+  if (!row) return null;
+
+  let override: {
+    title: string | null;
+    locationLabel: string | null;
+    coverImageUrl: string | null;
+    description: string | null;
+  } | null = null;
+  try {
+    const lcRows = await db
+      .select({
+        title: partnerListingLocaleContent.title,
+        locationLabel: partnerListingLocaleContent.locationLabel,
+        coverImageUrl: partnerListingLocaleContent.coverImageUrl,
+        description: partnerListingLocaleContent.description,
+      })
+      .from(partnerListingLocaleContent)
+      .where(
+        and(
+          eq(partnerListingLocaleContent.listingId, row.id),
+          eq(partnerListingLocaleContent.locale, locale),
+        ),
+      )
+      .limit(1);
+    override = lcRows[0] ?? null;
+  } catch {
+    /* locale table missing — keep base values */
+  }
+
+  return {
+    id: row.id,
+    category: row.category,
+    slug: row.slug,
+    title: override?.title?.trim() || row.title,
+    locationLabel: override?.locationLabel?.trim() || row.locationLabel,
+    priceWon: row.priceWon,
+    priceUnit: row.priceUnit,
+    coverImageUrl: override?.coverImageUrl || row.coverImageUrl,
+    promoLabel: row.promoLabel,
+    rating: row.rating,
+    reviewsCount: row.reviewsCount,
+    description: override?.description?.trim() || row.description,
+    interestKey: row.interestKey,
+    details: (row.details ?? {}) as Record<string, unknown>,
+    galleryImageUrls: Array.isArray(row.galleryImageUrls)
+      ? (row.galleryImageUrls as string[])
+      : [],
+    ownerOrgId: row.ownerOrgId ?? null,
+  };
 }
 
 /**

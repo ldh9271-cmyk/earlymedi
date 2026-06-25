@@ -6,6 +6,7 @@ import { MainFooter } from '../../_components/main-footer';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { LOCALE_LABELS } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
+import { fetchTravelTypeListing } from '@/lib/listings/query';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,7 +93,31 @@ export default async function TravelTypeDetailPage({
   }
   const dict = await getDictionary(params.locale);
   const t = dict.travel[params.type as TravelType];
-  const m = TRAVEL_META[params.type as TravelType];
+  const meta = TRAVEL_META[params.type as TravelType];
+  // DB-backed listing for this travel sub-type. When the master has
+  // registered+approved a partner_listings row with category=
+  // 'travel_package' and details.subType matching, its real
+  // title/cover/price/location/rating override the sample copy.
+  const dbListing = await fetchTravelTypeListing({
+    locale: params.locale,
+    subType: params.type as TravelType,
+  });
+  const m = {
+    ...meta,
+    heroImg: dbListing?.coverImageUrl || meta.heroImg,
+    rating: dbListing?.rating ? dbListing.rating / 10 : meta.rating,
+    reviewsCount: dbListing && dbListing.reviewsCount > 0 ? dbListing.reviewsCount : meta.reviewsCount,
+    priceWon: dbListing?.priceWon ?? meta.priceWon,
+  };
+  const displayTitle = dbListing?.title || t.title;
+  const displayMeta = dbListing?.locationLabel || t.meta;
+  const displayPriceUnit = dbListing?.priceUnit || t.priceUnit;
+  // Reserve CTA: prefer DB slug → /listings/[slug] when available so
+  // visitors land on the real listing detail; otherwise fall back to
+  // the generic checkout for the travel sub-type.
+  const reserveHref = dbListing
+    ? `/${params.locale}/listings/${dbListing.slug}`
+    : `/${params.locale}/checkout?cat=hotel&sub=${meta.key}`;
 
   const reviewsLabel = dict.detail.reviewsCount.replace('{n}', String(m.reviewsCount));
   const hostedByLabel = dict.detail.hostedBy.replace('{name}', m.hostName);
@@ -157,7 +182,7 @@ export default async function TravelTypeDetailPage({
         {/* Title + meta */}
         <section style={{ padding: '20px 22px 0' }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: 0, lineHeight: 1.2 }}>
-            {t.title}
+            {displayTitle}
           </h1>
           <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, flexWrap: 'wrap' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
@@ -169,7 +194,7 @@ export default async function TravelTypeDetailPage({
               {reviewsLabel}
             </span>
             <span>·</span>
-            <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>{t.meta}</span>
+            <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>{displayMeta}</span>
           </div>
         </section>
 
@@ -282,7 +307,7 @@ export default async function TravelTypeDetailPage({
           <div style={{ fontSize: 15 }}>
             <span style={{ fontWeight: 700 }}>₩{m.priceWon.toLocaleString('ko-KR')}</span>
             <span style={{ color: '#6a6a6a', fontWeight: 400 }}>
-              {' '}/ {t.priceUnit}
+              {' '}/ {displayPriceUnit}
             </span>
           </div>
           <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 2 }}>
@@ -290,7 +315,7 @@ export default async function TravelTypeDetailPage({
           </div>
         </div>
         <Link
-          href={`/${params.locale}/checkout?cat=hotel&sub=${m.key}`}
+          href={reserveHref}
           style={{
             background: '#ff385c', color: '#fff',
             fontSize: 15, fontWeight: 700,
