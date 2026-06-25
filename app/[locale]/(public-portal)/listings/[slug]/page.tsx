@@ -78,7 +78,11 @@ export default async function ListingDetailPage({
     ? `₩${listing.priceWon.toLocaleString('ko-KR')}`
     : '문의';
   const priceUnit = priceUnitLabel(listing.priceUnit, listing.category);
-  const reserveHref = `/${params.locale}/checkout?slug=${encodeURIComponent(listing.slug)}`;
+  // String concat instead of template literal — SWC's JSX parser
+  // mis-counts braces when ${encodeURIComponent(...)} sits before
+  // the next <div> and throws "Unexpected token `div`". See memory
+  // feedback_swc_inline_css for the same family of bug.
+  const reserveHref = '/' + params.locale + '/checkout?slug=' + encodeURIComponent(listing.slug);
 
   return (
     <div
@@ -90,6 +94,10 @@ export default async function ListingDetailPage({
         paddingBottom: 96,
       }}
     >
+      {/* All content scoped to a centered max-width 760 column so the
+          page reads the same on phone and desktop (no awkward
+          left-anchored hero on PC). */}
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
       {/* Hero square + floating controls */}
       <section
         style={{
@@ -257,6 +265,7 @@ export default async function ListingDetailPage({
           </p>
         )}
       </section>
+      </div>{/* close maxWidth wrapper — sticky bar below stays full-bleed */}
 
       {/* Sticky reserve bar — full-bleed, safe-area aware. */}
       <div
