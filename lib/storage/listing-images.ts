@@ -20,7 +20,9 @@ export async function uploadListingImage({
   locale,
 }: {
   listingId: string;
-  purpose: 'cover' | 'gallery';
+  /** cover = thumbnail (small), gallery = appended array,
+   *  detail_landing = single long-form landing banner. */
+  purpose: 'cover' | 'gallery' | 'detail_landing';
   file: File;
   locale?: 'kr' | 'en' | 'zh' | 'ja';
 }): Promise<{ ok: true; url: string } | { ok: false; error: string }> {

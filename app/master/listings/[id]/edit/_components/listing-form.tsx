@@ -144,6 +144,70 @@ export function ListingEditForm({
         </div>
       </section>
 
+      {/* 상품 상세 랜딩 이미지 — long-form banner image surfaced
+          full-width on the public detail page between the hero gallery
+          and the title. Single image (replaces previous). Stored in
+          details.detailLandingImageUrl. */}
+      <section className="rounded-xl border bg-card p-5">
+        <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h2 className="text-sm font-semibold">상품 상세 랜딩 이미지</h2>
+          <span className="text-[11px] text-muted-foreground">
+            추천 — 가로 <strong className="font-medium text-foreground">1280 px</strong>,
+            세로는 자유 (긴 상세 설명 배너) · WebP 권장 · 업로드 한도 10 MB
+          </span>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-[260px,1fr]">
+          <div>
+            <div
+              className="w-full overflow-hidden rounded-md border"
+              style={{
+                aspectRatio: (() => {
+                  const url = (details.detailLandingImageUrl as string | undefined) ?? '';
+                  return url ? 'auto' : '16/9';
+                })(),
+                background: (() => {
+                  const url = (details.detailLandingImageUrl as string | undefined) ?? '';
+                  return url
+                    ? `#f2f2f2 url(${url}) center top / cover no-repeat`
+                    : '#f7f7f7';
+                })(),
+                minHeight: 140,
+              }}
+            />
+            <form action={uploadAction} className="mt-2">
+              <input type="hidden" name="id" value={listing.id} />
+              <input type="hidden" name="purpose" value="detail_landing" />
+              <input
+                type="file"
+                name="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.currentTarget.files?.[0]) {
+                    e.currentTarget.form?.requestSubmit();
+                  }
+                }}
+                className="text-[11px]"
+              />
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                파일 선택 시 자동 업로드 (최대 10MB) · 기존 이미지 교체
+              </p>
+            </form>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            <p className="mb-2">
+              상세 페이지에서 hero 갤러리와 제목 사이에 가로 전체 폭으로 노출되는
+              긴 배너 이미지입니다. 상품의 설명·일정·포함사항을 시각화한 디자인 이미지를
+              올리면 사용자가 스크롤하면서 바로 정보를 확인할 수 있어요.
+            </p>
+            <ul className="ml-4 list-disc space-y-1">
+              <li>가로 폭은 1280 px 권장 (모바일에서는 자동으로 축소).</li>
+              <li>세로 길이는 자유 — 너무 길면 사용자 이탈 위험이 있어요.</li>
+              <li>주요 정보는 위쪽에 배치 (스크롤 없이 보이게).</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* Main edit form */}
       <form action={updateAction} className="grid gap-6">
         <input type="hidden" name="id" value={listing.id} />

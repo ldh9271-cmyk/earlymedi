@@ -94,45 +94,81 @@ export default async function ListingDetailPage({
         paddingBottom: 96,
       }}
     >
-      {/* All content scoped to a centered max-width 760 column so the
-          page reads the same on phone and desktop (no awkward
-          left-anchored hero on PC). */}
-      <div style={{ maxWidth: 760, margin: '0 auto' }}>
-      {/* Hero square + floating controls */}
+      {/* Inline mobile CSS — hero gallery collapses to single square. */}
+      <style dangerouslySetInnerHTML={{ __html: LISTING_HERO_CSS }} />
+
+      {/* Desktop: Airbnb 1-large + 2x2-thumbs grid (uses cover + first 4 galleryImageUrls).
+          Mobile: single square hero with counter. */}
       <section
+        className="m-lh-gallery"
         style={{
           position: 'relative',
-          aspectRatio: '1 / 1',
-          maxHeight: 460,
-          background: heroSrc
-            ? `#f2f2f2 url(${heroSrc}) center / cover`
-            : 'linear-gradient(135deg, #d8c7f5, #e7d6fb)',
+          maxWidth: 1280,
+          margin: '0 auto',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gridTemplateRows: 'repeat(2, 230px)',
+          gap: 8,
+          padding: '0 12px',
+          height: 'auto',
         }}
       >
-        <Link
-          href={`/${params.locale}`}
-          aria-label="Back"
-          style={floatingBtn({ left: 14 })}
+        <div
+          className="m-lh-main"
+          style={{
+            gridColumn: 'span 2',
+            gridRow: 'span 2',
+            background: heroSrc
+              ? `#f2f2f2 url(${heroSrc}) center / cover`
+              : 'linear-gradient(135deg, #d8c7f5, #e7d6fb)',
+            borderRadius: 14,
+            position: 'relative',
+            minHeight: 280,
+          }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
-            <path d="M15 5l-7 7 7 7" />
-          </svg>
-        </Link>
-        <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 8 }}>
-          <button type="button" aria-label="Share" style={floatingBtn({})}>
+          <Link
+            href={`/${params.locale}`}
+            aria-label="Back"
+            style={floatingBtn({ left: 14 })}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </Link>
+        </div>
+        {/* 4 thumbs — fall back to a soft gradient when DB has fewer images. */}
+        {[0, 1, 2, 3].map((i) => {
+          const src = listing.galleryImageUrls[i];
+          return (
+            <div
+              key={i}
+              className={`m-lh-thumb m-lh-thumb-${i}`}
+              style={{
+                background: src
+                  ? `#f2f2f2 url(${src}) center / cover`
+                  : 'linear-gradient(135deg, #f7f7f7 0%, #ebebeb 100%)',
+                borderRadius: 14,
+              }}
+            />
+          );
+        })}
+        {/* Share + save buttons — pinned top-right of the gallery cluster. */}
+        <div className="m-lh-controls" style={{ position: 'absolute', top: 14, right: 26, display: 'flex', gap: 8 }}>
+          <button type="button" aria-label="Share" style={floatingBtnInline()}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
               <path d="M4 12v8h16v-8M12 3v13M8 7l4-4 4 4" />
             </svg>
           </button>
-          <button type="button" aria-label="Save" style={floatingBtn({})}>
+          <button type="button" aria-label="Save" style={floatingBtnInline()}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
               <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
             </svg>
           </button>
         </div>
         <div
+          className="m-lh-counter"
           style={{
-            position: 'absolute', bottom: 14, right: 14,
+            position: 'absolute', bottom: 14, right: 26,
             background: 'rgba(0,0,0,0.65)', color: '#fff',
             fontSize: 12, fontWeight: 600,
             padding: '4px 10px', borderRadius: 9999,
@@ -141,6 +177,26 @@ export default async function ListingDetailPage({
           1 / {galleryCount}
         </div>
       </section>
+
+      {/* Optional 상품 상세 랜딩 이미지 — full-width banner between hero and title.
+          Stored in details.detailLandingImageUrl JSONB key; rendered only when set. */}
+      {(() => {
+        const landing = typeof listing.details.detailLandingImageUrl === 'string'
+          ? listing.details.detailLandingImageUrl
+          : '';
+        return landing ? (
+          <div style={{ maxWidth: 1280, margin: '12px auto 0', padding: '0 12px' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={landing}
+              alt={`${listing.title} 상세`}
+              style={{ display: 'block', width: '100%', height: 'auto', borderRadius: 14 }}
+            />
+          </div>
+        ) : null;
+      })()}
+
+      <div style={{ maxWidth: 760, margin: '24px auto 0' }}>
 
       {/* Title + meta */}
       <section style={{ padding: '20px 22px 0' }}>
@@ -308,6 +364,27 @@ export default async function ListingDetailPage({
 
 function Divider(): JSX.Element {
   return <div style={{ height: 1, background: '#ebebeb', margin: '24px 22px' }} />;
+}
+
+// Hero gallery — desktop 2-col (cover left, 4 thumbs right 2x2);
+// mobile flattens to single square. The .m-lh-thumb-2/3 hide on
+// mobile so the gallery is just cover + 2 small thumbs on phones.
+const LISTING_HERO_CSS = ''
+  + '@media (max-width: 768px) {'
+  +   '.m-lh-gallery { grid-template-columns: 1fr !important; grid-template-rows: auto !important; padding: 0 !important; gap: 0 !important; }'
+  +   '.m-lh-main { grid-row: auto !important; aspect-ratio: 1/1 !important; max-height: 460px !important; border-radius: 0 !important; }'
+  +   '.m-lh-thumb { display: none !important; }'
+  +   '.m-lh-controls { right: 14px !important; }'
+  +   '.m-lh-counter { right: 14px !important; }'
+  + '}';
+
+function floatingBtnInline(): React.CSSProperties {
+  return {
+    width: 36, height: 36, borderRadius: 9999,
+    background: '#fff', border: 'none', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    boxShadow: 'rgba(0,0,0,0.15) 0 2px 6px',
+  };
 }
 
 function floatingBtn(p: { left?: number }): React.CSSProperties {

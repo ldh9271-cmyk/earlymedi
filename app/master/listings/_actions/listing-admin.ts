@@ -182,7 +182,7 @@ export async function uploadListingImageAction(formData: FormData): Promise<void
   await requireMaster();
   const id = String(formData.get('id') ?? '');
   const purpose = String(formData.get('purpose') ?? 'cover');
-  if (!id || (purpose !== 'cover' && purpose !== 'gallery')) {
+  if (!id || (purpose !== 'cover' && purpose !== 'gallery' && purpose !== 'detail_landing')) {
     redirect('/master/listings?error=bad_upload');
   }
   const file = formData.get('file');
@@ -192,7 +192,7 @@ export async function uploadListingImageAction(formData: FormData): Promise<void
 
   const res = await uploadListingImage({
     listingId: id,
-    purpose: purpose as 'cover' | 'gallery',
+    purpose: purpose as 'cover' | 'gallery' | 'detail_landing',
     file: file as File,
   });
   if (!res.ok) {
@@ -204,7 +204,7 @@ export async function uploadListingImageAction(formData: FormData): Promise<void
       .update(partnerListings)
       .set({ coverImageUrl: res.url, updatedAt: new Date() })
       .where(eq(partnerListings.id, id));
-  } else {
+  } else if (purpose === 'gallery') {
     // append to existing gallery array
     const [cur] = await db
       .select({ gallery: partnerListings.galleryImageUrls })
@@ -215,6 +215,23 @@ export async function uploadListingImageAction(formData: FormData): Promise<void
     await db
       .update(partnerListings)
       .set({ galleryImageUrls: next, updatedAt: new Date() })
+      .where(eq(partnerListings.id, id));
+  } else {
+    // detail_landing — replaces the previous landing image. Stored on
+    // details.detailLandingImageUrl since partner_listings has no
+    // dedicated column (no migration required).
+    const [cur] = await db
+      .select({ details: partnerListings.details })
+      .from(partnerListings)
+      .where(eq(partnerListings.id, id))
+      .limit(1);
+    const nextDetails = {
+      ...((cur?.details ?? {}) as Record<string, unknown>),
+      detailLandingImageUrl: res.url,
+    };
+    await db
+      .update(partnerListings)
+      .set({ details: nextDetails, updatedAt: new Date() })
       .where(eq(partnerListings.id, id));
   }
 
