@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
 import { updateHospitalSortOrderAction } from './_actions/sort-order';
+import { DeleteHospitalButton } from './_components/delete-hospital-button';
 
 export const metadata = { title: '병원 통합 관리 · 마스터' };
 export const dynamic = 'force-dynamic';
@@ -43,7 +44,7 @@ const CATEGORY_LABELS: Record<string, { ko: string; en: string }> = {
 export default async function MasterHospitalsPage({
   searchParams,
 }: {
-  searchParams: { category?: string };
+  searchParams: { category?: string; deleted?: string; sort?: string; error?: string };
 }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -143,6 +144,17 @@ export default async function MasterHospitalsPage({
           </p>
         </div>
       </header>
+
+      {searchParams.deleted === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
+          병원이 삭제되었습니다.
+        </div>
+      ) : null}
+      {searchParams.error ? (
+        <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-900">
+          처리 중 오류: {searchParams.error}
+        </div>
+      ) : null}
 
       {/* New-hospital launcher */}
       <Card className="mb-6 border-brand-200 bg-brand-50/30">
@@ -322,6 +334,8 @@ export default async function MasterHospitalsPage({
                       >
                         열기 →
                       </Link>
+                      <span className="text-muted-foreground/40">·</span>
+                      <DeleteHospitalButton id={h.id} name={h.name} />
                     </div>
                   </td>
                 </tr>
