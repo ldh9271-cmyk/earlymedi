@@ -21,6 +21,7 @@ import {
 import { FIT_PRODUCTS } from '@/lib/listings/fit-products';
 import { GANGNAM_FOOD_PRODUCTS } from '@/lib/listings/gangnam-food-products';
 import { SEOUL_HOTEL_PRODUCTS } from '@/lib/listings/seoul-hotel-products';
+import { PLASTIC_SURGERY_PRODUCTS } from '@/lib/listings/gangnam-plastic-surgery-products';
 
 async function requireMaster(): Promise<true | never> {
   const supabase = createSupabaseServerClient();
@@ -338,6 +339,73 @@ export async function seedSeoulHotelsAction(_formData: FormData): Promise<void> 
 
   revalidateListingSurfaces();
   redirect(`/master/listings?seedSeoulHotels=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 강남·서초 외국인 FIT 추천 성형외과 11곳 일괄 등록.
+ *
+ *   - 각 행: category='hospital', status='approved', interestKey=
+ *     'plastic_surgery', priceWon=0, priceUnit='상담', details 에
+ *     subType='plastic_surgery' (HOSPITAL_SUB_TYPES 매칭) + address
+ *     (Google 지도) + procedureName/interpreterIncluded (HospitalFields
+ *     호환) + phone / nearestStation / signatureProcedures /
+ *     openingYear / imageKeywords / seoTags 일괄 저장.
+ *   - 멱등: 같은 slug 있으면 skip.
+ *   - 끝나면 seedPlasticSurgery=ok&inserted=N&skipped=N redirect.
+ */
+export async function seedPlasticSurgeryAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of PLASTIC_SURGERY_PRODUCTS) {
+    const slug = slugify(p.title);
+    const existing = await db
+      .select({ id: partnerListings.id })
+      .from(partnerListings)
+      .where(eq(partnerListings.slug, slug))
+      .limit(1);
+    if (existing.length > 0) {
+      skipped += 1;
+      continue;
+    }
+    await db.insert(partnerListings).values({
+      ownerOrgId: ownerOrgId as string,
+      category: 'hospital',
+      slug,
+      title: p.title,
+      description: p.description,
+      locationLabel: p.locationLabel,
+      addressJson: { city: '서울' },
+      status: 'approved',
+      featured: false,
+      sortOrder: 100,
+      // 가격은 상담 기반이라 0 으로 두고 priceUnit 으로 표기.
+      priceWon: 0,
+      priceUnit: '상담',
+      interestKey: 'plastic_surgery',
+      promoLabel: p.promoLabel ?? null,
+      details: {
+        subType: 'plastic_surgery',
+        procedureName: p.procedureName,
+        interpreterIncluded: p.interpreterIncluded ?? false,
+        address: p.address,
+        phone: p.phone,
+        nearestStation: p.nearestStation,
+        signatureProcedures: [...p.signatureProcedures],
+        ...(p.openingYear ? { openingYear: p.openingYear } : {}),
+        imageKeywords: [...p.imageKeywords],
+        seoTags: [...p.seoTags],
+      },
+    });
+    inserted += 1;
+  }
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings?seedPlasticSurgery=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /**

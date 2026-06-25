@@ -17,6 +17,7 @@ import {
   seedFitProductsAction,
   seedGangnamFoodAction,
   seedSeoulHotelsAction,
+  seedPlasticSurgeryAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { DeleteListingButton } from './_components/delete-listing-button';
@@ -53,7 +54,8 @@ export default async function MasterListingsPage({
 }: {
   searchParams: {
     category?: string; error?: string;
-    seedFit?: string; seedGangnamFood?: string; seedSeoulHotels?: string;
+    seedFit?: string; seedGangnamFood?: string;
+    seedSeoulHotels?: string; seedPlasticSurgery?: string;
     mergeRestaurant?: string;
     inserted?: string; skipped?: string;
     updated?: string;
@@ -198,6 +200,36 @@ export default async function MasterListingsPage({
           신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 스킵.
         </div>
       ) : null}
+
+      {/* 성형외과 일괄 등록 결과 배너 */}
+      {searchParams.seedPlasticSurgery === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">강남·서초 성형외과 11종 일괄 등록 완료</span>
+          {' — '}
+          신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 스킵.
+        </div>
+      ) : null}
+
+      {/* 강남·서초 외국인 FIT 성형외과 11종 일괄 등록 트리거 */}
+      <form
+        action={seedPlasticSurgeryAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-fuchsia-300 bg-fuchsia-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">강남·서초 외국인 FIT 성형외과 11종 일괄 등록</p>
+          <p className="mt-0.5">
+            드림·스템케이·셀러블153·세라·나비·유니크·서울동안·김지연위쉬·리앤채움·글로비·순플러스.
+            병원 카테고리 + 진료과 sub-type=성형외과, details 에 주소(지도) · 전화 · 근처 역 ·
+            대표시술 · 이미지 키워드 · SEO 태그 일괄 저장.
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-fuchsia-400 bg-white px-3 py-1.5 text-xs font-semibold text-fuchsia-800 hover:bg-fuchsia-50"
+        >
+          성형외과 11종 일괄 등록
+        </button>
+      </form>
 
       {/* 서울 6개 권역 외국인 FIT 호텔 30종 일괄 등록 트리거 */}
       <form
