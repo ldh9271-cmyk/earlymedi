@@ -18,6 +18,7 @@ import {
   isListingCategory,
   type ListingCategory,
 } from '@/lib/listings/categories';
+import { FIT_PRODUCTS } from '@/lib/listings/fit-products';
 
 async function requireMaster(): Promise<true | never> {
   const supabase = createSupabaseServerClient();
@@ -161,6 +162,60 @@ export async function updateListingAction(formData: FormData): Promise<void> {
 
   revalidateListingSurfaces();
   redirect(`/master/listings/${id}/edit?ok=1`);
+}
+
+/**
+ * FIT (자유여행) 기본 11개 상품을 partner_listings 에 한 번에 등록.
+ *
+ *   - 각 행: status='approved', details.subType='free' (자유여행),
+ *     sortOrder=100, owner=첫 agency org (createListingAction 과 동일
+ *     기본값).
+ *   - 멱등: 같은 slug 가 이미 있으면 skip — 단가/문구 수정은 마스터
+ *     편집 페이지에서 직접.
+ *   - 끝나면 inserted=N / skipped=N 쿼리로 /master/listings 로 redirect.
+ */
+export async function seedFitProductsAction(): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of FIT_PRODUCTS) {
+    const slug = slugify(p.title);
+    // 기존 행 존재 여부 — slug 는 partner_listings.slug UNIQUE.
+    const existing = await db
+      .select({ id: partnerListings.id })
+      .from(partnerListings)
+      .where(eq(partnerListings.slug, slug))
+      .limit(1);
+    if (existing.length > 0) {
+      skipped += 1;
+      continue;
+    }
+    await db.insert(partnerListings).values({
+      ownerOrgId: ownerOrgId as string,
+      category: p.category,
+      slug,
+      title: p.title,
+      description: p.description,
+      status: 'approved',
+      featured: false,
+      sortOrder: 100,
+      priceWon: p.priceWon,
+      priceUnit: p.priceUnit,
+      interestKey: p.interestKey,
+      details: {
+        subType: 'free',
+        ...(p.detailsExtra ?? {}),
+      },
+    });
+    inserted += 1;
+  }
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings?seedFit=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /** Delete a listing entirely. Cascades to locale_content via FK. */

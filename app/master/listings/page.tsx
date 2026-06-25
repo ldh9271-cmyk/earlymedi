@@ -12,7 +12,7 @@ import {
   categoryLabel,
   travelSubTypeLabel,
 } from '@/lib/listings/categories';
-import { createListingAction } from './_actions/listing-admin';
+import { createListingAction, seedFitProductsAction } from './_actions/listing-admin';
 import { DeleteListingButton } from './_components/delete-listing-button';
 
 export const metadata = { title: '글로우업 상품 관리 · 마스터' };
@@ -45,7 +45,7 @@ type Row = {
 export default async function MasterListingsPage({
   searchParams,
 }: {
-  searchParams: { category?: string; error?: string };
+  searchParams: { category?: string; error?: string; seedFit?: string; inserted?: string; skipped?: string };
 }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -112,6 +112,35 @@ export default async function MasterListingsPage({
           ← 마스터 홈
         </Link>
       </div>
+
+      {/* FIT 일괄 등록 결과 배너 — seedFitProductsAction 완료 시 표시. */}
+      {searchParams.seedFit === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">FIT 자유여행 상품 일괄 등록 완료</span>
+          {' — '}
+          신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 스킵.
+        </div>
+      ) : null}
+
+      {/* FIT 자유여행 기본 상품 일괄 등록 트리거 */}
+      <form
+        action={seedFitProductsAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-rose-200 bg-rose-50/40 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">FIT 자유여행 기본 상품 일괄 등록</p>
+          <p className="mt-0.5">
+            이동·픽업 5종 · 통역 2종 · 숙소 3종 · 예약대행 1종 = 총 11개. 자유여행 sub-type
+            으로 status=공개, 같은 이름의 상품이 이미 있으면 자동 스킵 (멱등).
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+        >
+          FIT 11종 일괄 등록
+        </button>
+      </form>
 
       {/* New-listing form (top of page, always visible) */}
       <form
