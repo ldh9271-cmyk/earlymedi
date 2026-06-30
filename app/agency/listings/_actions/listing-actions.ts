@@ -129,10 +129,15 @@ export async function updateListingAction(formData: FormData): Promise<void> {
   const reviewsCount = parseIntOrNull(formData.get('reviewsCount')) ?? 0;
   const description = String(formData.get('description') ?? '').trim() || null;
   const interestKey = String(formData.get('interestKey') ?? '').trim() || null;
-  // Agency cannot self-approve. Status only flips to 'pending'
-  // (submit for review) or 'draft'. Master moves to 'approved'.
+  // 4개 상태 모두 허용 — 운영 초기에 마스터가 이 콘솔에서 직접
+  // 승인까지 처리. 추후 외부 agency 가 합류하면 isMasterEmail
+  // 체크로 제한할 수 있음.
   const statusRaw = String(formData.get('status') ?? 'draft');
-  const status = statusRaw === 'pending' ? 'pending' : 'draft';
+  const status =
+    statusRaw === 'approved' ? 'approved'
+    : statusRaw === 'rejected' ? 'rejected'
+    : statusRaw === 'pending'  ? 'pending'
+    : 'draft';
   const city = String(formData.get('city') ?? '').trim();
 
   let details: Record<string, unknown> = {};
