@@ -7,6 +7,7 @@ export type MobileCategoryKind =
   | 'all'
   | 'color'
   | 'skin'
+  | 'hair'
   | 'photo'
   | 'makeup'
   | 'kpop'
@@ -50,6 +51,15 @@ export function MobileCategoryIcon({
       return (
         <svg {...common}>
           <path d="M12 3c3 4 5 6.5 5 9.5A5 5 0 0 1 7 12.5C7 9.5 9 7 12 3z" />
+        </svg>
+      );
+    case 'hair':
+      // 가위 — 헤어샵
+      return (
+        <svg {...common}>
+          <circle cx="6" cy="6" r="2.5" />
+          <circle cx="6" cy="18" r="2.5" />
+          <path d="M8 7.5L20 18M8 16.5L20 6" />
         </svg>
       );
     case 'photo':

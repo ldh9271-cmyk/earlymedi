@@ -218,9 +218,10 @@ const en: Dictionary = {
     catHospital: 'Clinics',
     catColor: 'Personal Color',
     catSkin: 'Skin Care',
-    catPhoto: 'Photo Shoot',
-    catMakeup: 'Makeup',
-    catKpop: 'K-pop Spots',
+    catHair: 'Hair Salon',
+    catPhoto: 'Photo Studio',
+    catMakeup: 'Makeup Salon',
+    catKpop: 'K-pop Tour',
     catFood: 'Restaurants',
     catHotel: 'Hotels',
     hospitalSubs: {

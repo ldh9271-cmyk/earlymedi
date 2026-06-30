@@ -206,9 +206,10 @@ const vi: Dictionary = {
     catHospital: 'Phòng khám',
     catColor: 'Màu cá nhân',
     catSkin: 'Chăm sóc da',
-    catPhoto: 'Chụp ảnh',
-    catMakeup: 'Trang điểm',
-    catKpop: 'Thánh địa K-pop',
+    catHair: 'Tiệm tóc',
+    catPhoto: 'Studio ảnh',
+    catMakeup: 'Tiệm trang điểm',
+    catKpop: 'Tour K-pop',
     catFood: 'Quán ăn',
     catHotel: 'Khách sạn',
     hospitalSubs: {

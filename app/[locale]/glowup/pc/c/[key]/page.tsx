@@ -21,19 +21,20 @@ export const dynamic = 'force-dynamic';
  */
 
 const VALID_KEYS = new Set<Exclude<PcCategoryKey, 'all'>>([
-  'color', 'skin', 'photo', 'makeup', 'kpop', 'food', 'hotel',
+  'color', 'skin', 'hair', 'photo', 'makeup', 'kpop', 'food', 'hotel',
 ]);
 
 /**
  * Map a glow-up category key to the partner_listings categories that
- * should surface on it. Multiple keys aggregate (food maps to both
- * 'food' and 'restaurant' so curated cards and 맛집 cards co-mingle).
+ * should surface on it. 2026-06-30 — 'hair' 가 별도 카테고리로 분리되어
+ * 'makeup' 은 메이크업샵만, 'hair' 는 헤어샵만 보여줌.
  */
 const KEY_TO_CATEGORIES: Record<Exclude<PcCategoryKey, 'all'>, ListingCategory[]> = {
   color:  ['personal_color'],
   skin:   ['personal_color'],
+  hair:   ['hair'],
   photo:  ['photo_studio'],
-  makeup: ['makeup', 'hair'],
+  makeup: ['makeup'],
   kpop:   ['kpop_tour'],
   food:   ['food', 'restaurant'],
   hotel:  ['hotel'],
@@ -42,11 +43,12 @@ const KEY_TO_CATEGORIES: Record<Exclude<PcCategoryKey, 'all'>, ListingCategory[]
 const PAGE_TITLE: Record<Exclude<PcCategoryKey, 'all'>, { title: string; subtitle: string }> = {
   color:  { title: '퍼스널 컬러',   subtitle: '나에게 맞는 컬러를 찾는 1:1 진단·드레이핑 프로그램' },
   skin:   { title: '피부 케어',     subtitle: 'AI 진단부터 트리트먼트까지, 맞춤 피부 관리' },
-  photo:  { title: '화보 촬영',     subtitle: '프로필·여행·웨딩 — 전문 스튜디오 + 헤어/메이크업' },
-  makeup: { title: '메이크업',      subtitle: '아티스트 1:1 레슨 · 자기 메이크업 완성하기' },
-  kpop:   { title: 'K-팝 성지 투어', subtitle: 'HYBE · SM · JYP · YG — 4사 성지와 굿즈 동행' },
-  food:   { title: '서울 맛집',      subtitle: '한우구이 · 한정식 · 미슐랭 다이닝 큐레이션' },
-  hotel:  { title: '호텔',           subtitle: '명동 · 강남 · 청담 — 프리미엄 숙박' },
+  hair:   { title: '헤어샵',        subtitle: '강남·청담 K-스타일링 — 컷·펌·컬러 전문 살롱' },
+  photo:  { title: '사진 스튜디오', subtitle: '프로필·여행·웨딩 — 전문 스튜디오 + 헤어/메이크업' },
+  makeup: { title: '메이크업샵',    subtitle: '아티스트 1:1 레슨 · 자기 메이크업 완성하기' },
+  kpop:   { title: 'K-팝 투어',     subtitle: 'HYBE · SM · JYP · YG — 4사 성지와 굿즈 동행' },
+  food:   { title: '서울 맛집',     subtitle: '한우구이 · 한정식 · 미슐랭 다이닝 큐레이션' },
+  hotel:  { title: '호텔',          subtitle: '명동 · 강남 · 청담 — 프리미엄 숙박' },
 };
 
 const LIST_CSS =

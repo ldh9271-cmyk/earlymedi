@@ -86,17 +86,15 @@ export type MainCategoryKey =
   | 'all'
   | 'travel'
   | 'hospital'
-  | 'color' | 'skin' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel';
+  | 'color' | 'skin' | 'hair' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel';
 
-// Founder-ordered strip (2026-06-25): row 1 = travel / hospital /
-// food / hotel (the high-intent "trip" anchors), row 2 = skin /
-// photo / makeup / kpop (the K-beauty + culture exploration row).
-// '전체' was dropped earlier (lifestyle categories imply the union);
-// 'color' (퍼스널컬러) is hidden from the strip but its key + dict
-// + /glowup/pc/c/color route stay live so deep-links still work.
+// 2026-06-30 — 마스터 카테고리 (관리자 /agency/listings) 와 동기화.
+// 순서: 여행 · 병원 · 호텔 · 맛집 · 퍼스널컬러 · 헤어샵 · 메이크업샵 ·
+// 사진 스튜디오 · K-팝 투어. 'skin' (피부케어) 은 strip 에서 제외하지만
+// 타입/route 는 유지 — 과거 딥링크 호환.
 const MAIN_CATEGORY_KEYS: ReadonlyArray<MainCategoryKey> = [
-  'travel', 'hospital', 'food', 'hotel',
-  'skin', 'photo', 'makeup', 'kpop',
+  'travel', 'hospital', 'hotel', 'food',
+  'color', 'hair', 'makeup', 'photo', 'kpop',
 ];
 
 // Narrow to only the `cat*` keys (which are always plain strings).
@@ -104,7 +102,7 @@ const MAIN_CATEGORY_KEYS: ReadonlyArray<MainCategoryKey> = [
 // keys like 'hospitalSubs', and TS would refuse to render the union
 // as ReactNode.
 type CatDictKey =
-  | 'catAll' | 'catTravel' | 'catHospital' | 'catColor' | 'catSkin'
+  | 'catAll' | 'catTravel' | 'catHospital' | 'catColor' | 'catSkin' | 'catHair'
   | 'catPhoto' | 'catMakeup' | 'catKpop' | 'catFood' | 'catHotel';
 
 const MAIN_CATEGORY_DICT_KEY: Record<MainCategoryKey, CatDictKey> = {
@@ -113,6 +111,7 @@ const MAIN_CATEGORY_DICT_KEY: Record<MainCategoryKey, CatDictKey> = {
   hospital: 'catHospital',
   color: 'catColor',
   skin: 'catSkin',
+  hair: 'catHair',
   photo: 'catPhoto',
   makeup: 'catMakeup',
   kpop: 'catKpop',
@@ -683,6 +682,15 @@ function MainCategoryIcon({
       return (
         <svg {...common}>
           <path d="M12 3c3 4 5 6.5 5 9.5A5 5 0 0 1 7 12.5C7 9.5 9 7 12 3z" />
+        </svg>
+      );
+    case 'hair':
+      // Scissors — 헤어샵
+      return (
+        <svg {...common}>
+          <circle cx="6" cy="6" r="2.5" />
+          <circle cx="6" cy="18" r="2.5" />
+          <path d="M8 7.5L20 18M8 16.5L20 6" />
         </svg>
       );
     case 'photo':

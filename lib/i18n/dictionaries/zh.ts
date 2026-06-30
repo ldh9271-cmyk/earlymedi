@@ -203,9 +203,10 @@ const zh: Dictionary = {
     catHospital: '医院',
     catColor: '个人色彩',
     catSkin: '皮肤护理',
-    catPhoto: '写真摄影',
-    catMakeup: '化妆',
-    catKpop: 'K-pop 圣地',
+    catHair: '美发沙龙',
+    catPhoto: '写真工作室',
+    catMakeup: '化妆沙龙',
+    catKpop: 'K-pop 之旅',
     catFood: '美食',
     catHotel: '酒店',
     hospitalSubs: {

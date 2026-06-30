@@ -206,9 +206,10 @@ const ru: Dictionary = {
     catHospital: 'Клиники',
     catColor: 'Цветотип',
     catSkin: 'Уход за кожей',
-    catPhoto: 'Фотосессия',
-    catMakeup: 'Макияж',
-    catKpop: 'K-pop места',
+    catHair: 'Парикмахерская',
+    catPhoto: 'Фотостудия',
+    catMakeup: 'Салон макияжа',
+    catKpop: 'K-pop тур',
     catFood: 'Рестораны',
     catHotel: 'Отели',
     hospitalSubs: {

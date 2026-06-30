@@ -31,7 +31,7 @@ export type CategoryProduct = {
   /** Image used in the hero band — JPEG from /public/images/glowup-pc. */
   heroImg: string;
   /** Which patient-portal interest chip to auto-check on the inquiry form. */
-  interest: 'plastic_surgery' | 'dermatology' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel';
+  interest: 'plastic_surgery' | 'dermatology' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel' | 'hair';
 };
 
 export const CATEGORY_PRODUCTS: Record<Exclude<PcCategoryKey, 'all'>, CategoryProduct> = {
@@ -70,6 +70,24 @@ export const CATEGORY_PRODUCTS: Record<Exclude<PcCategoryKey, 'all'>, CategoryPr
     priceUnit: '세션',
     heroImg: `${IMG}/0b3ab66a-79d6-49be-b4f6-8a626ee1fc2d.jpg`,
     interest: 'dermatology',
+  },
+  hair: {
+    key: 'hair',
+    title: 'K-스타일링 헤어 살롱',
+    subtitle: '컷·펌·컬러 — 강남 K-팝 스타일리스트 90분',
+    metaLine: '강남 살롱',
+    rating: 4.9,
+    reviewCount: 142,
+    includes: [
+      '1:1 상담 + 두피·모발 진단',
+      '컷·펌·컬러 중 1택 시술',
+      '아이돌 메이크업 호환 헤어 스타일링',
+      '외국인 통역 가이드 동행 (영·중·일)',
+    ],
+    priceWon: 130_000,
+    priceUnit: '세션',
+    heroImg: `${IMG}/96a7e0c2-ea2f-4549-8875-a3be3c38c523.jpg`,
+    interest: 'hair',
   },
   photo: {
     key: 'photo',

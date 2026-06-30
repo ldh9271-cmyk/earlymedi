@@ -205,9 +205,10 @@ const ja: Dictionary = {
     catHospital: '病院',
     catColor: 'パーソナルカラー',
     catSkin: 'スキンケア',
-    catPhoto: '写真撮影',
-    catMakeup: 'メイクアップ',
-    catKpop: 'K-POP 聖地',
+    catHair: 'ヘアサロン',
+    catPhoto: '写真スタジオ',
+    catMakeup: 'メイクサロン',
+    catKpop: 'K-POP ツアー',
     catFood: 'グルメ',
     catHotel: 'ホテル',
     hospitalSubs: {
