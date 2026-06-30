@@ -18,6 +18,7 @@ import {
   seedGangnamFoodAction,
   seedSeoulHotelsAction,
   seedPlasticSurgeryAction,
+  seedDermatologyAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { DeleteListingButton } from './_components/delete-listing-button';
@@ -55,7 +56,7 @@ export default async function MasterListingsPage({
   searchParams: {
     category?: string; error?: string;
     seedFit?: string; seedGangnamFood?: string;
-    seedSeoulHotels?: string; seedPlasticSurgery?: string;
+    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string;
     mergeRestaurant?: string;
     inserted?: string; skipped?: string;
     updated?: string;
@@ -228,6 +229,38 @@ export default async function MasterListingsPage({
           className="rounded-md border border-fuchsia-400 bg-white px-3 py-1.5 text-xs font-semibold text-fuchsia-800 hover:bg-fuchsia-50"
         >
           성형외과 11종 일괄 등록
+        </button>
+      </form>
+
+      {/* 피부과 일괄 등록 결과 배너 */}
+      {searchParams.seedDermatology === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">서울 피부과 22종 일괄 등록 완료</span>
+          {' — '}
+          신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 스킵
+          (중복 슬러그는 dermatology 카테고리로 cross-listing 만 추가).
+        </div>
+      ) : null}
+
+      {/* 서울 외국인 FIT 피부과 22종 일괄 등록 트리거 */}
+      <form
+        action={seedDermatologyAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-pink-300 bg-pink-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">서울 외국인 FIT 피부과 22종 일괄 등록</p>
+          <p className="mt-0.5">
+            드림피부과·스템케이·도자기·오라클·청담아르덴·메이린(압구정/일산/더현대)·셀러블153·
+            클림(홍대/명동)·오테나·세라·리앤채움·얼라이브·닥터손유나·라미체·비오페이스·더힐(동대문)·
+            리베리(명동)·엠레드(청담)·페이브(용산) 등. dermatology 카테고리 + details 풀세트.
+            중복 슬러그(드림·셀러블153·세라)는 cross-listing 만 등록.
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-pink-400 bg-white px-3 py-1.5 text-xs font-semibold text-pink-800 hover:bg-pink-50"
+        >
+          피부과 22종 일괄 등록
         </button>
       </form>
 

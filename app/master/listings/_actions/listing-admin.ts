@@ -24,6 +24,7 @@ import { FIT_PRODUCTS } from '@/lib/listings/fit-products';
 import { GANGNAM_FOOD_PRODUCTS } from '@/lib/listings/gangnam-food-products';
 import { SEOUL_HOTEL_PRODUCTS } from '@/lib/listings/seoul-hotel-products';
 import { PLASTIC_SURGERY_PRODUCTS } from '@/lib/listings/gangnam-plastic-surgery-products';
+import { DERMATOLOGY_PRODUCTS } from '@/lib/listings/seoul-dermatology-products';
 
 async function requireMaster(): Promise<true | never> {
   const supabase = createSupabaseServerClient();
@@ -433,6 +434,82 @@ export async function seedPlasticSurgeryAction(_formData: FormData): Promise<voi
   revalidatePath('/agency/hospitals');
   revalidatePath('/kr/clinics', 'layout');
   redirect(`/master/listings?seedPlasticSurgery=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 서울 외국인 FIT 추천 피부과/클리닉 22곳 일괄 등록.
+ *
+ *   1) hospitals — agency org 소유로 insert (slug 기준 멱등). 같은 slug
+ *      가 이미 있으면 (예: 드림성형외과, 셀러블153강남의원, 세라성형외과
+ *      성형외과 시드와 중복) 기존 hospitalId 재사용.
+ *   2) category_listings — categoryKey='dermatology' 로 추가. 이미
+ *      성형외과로 등록된 행도 피부과 카테고리에 cross-listing.
+ *   3) partner_listings 인서트 없음 — 2026-06-25 정책 (병원은
+ *      hospitals 단일 진실원).
+ */
+export async function seedDermatologyAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+  const orgId = ownerOrgId as string;
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of DERMATOLOGY_PRODUCTS) {
+    const slug = slugify(p.title);
+
+    const existingHospital = await db
+      .select({ id: hospitals.id })
+      .from(hospitals)
+      .where(and(eq(hospitals.organizationId, orgId), eq(hospitals.slug, slug)))
+      .limit(1);
+
+    let hospitalId: string | null = null;
+    const existingRow = existingHospital[0];
+    if (existingRow) {
+      hospitalId = existingRow.id;
+      skipped += 1;
+    } else {
+      const insertResult = await db
+        .insert(hospitals)
+        .values({
+          organizationId: orgId,
+          name: p.title,
+          slug,
+          countryCode: 'KR',
+          addressJson: { line1: p.address, city: '서울' },
+          primaryCategories: ['dermatology'],
+          languagesSpoken: p.interpreterIncluded
+            ? ['ko', 'en', 'zh', 'ja']
+            : ['ko'],
+          isActiveForMatching: true,
+        })
+        .returning({ id: hospitals.id });
+      hospitalId = insertResult[0]?.id ?? null;
+      if (hospitalId) inserted += 1;
+    }
+    if (!hospitalId) continue;
+
+    // category_listings — dermatology 카테고리 페이지 노출. UNIQUE
+    // (categoryKey, procedureSlug, hospitalId) 라 중복 안전.
+    try {
+      await db.insert(categoryListings).values({
+        categoryKey: 'dermatology',
+        procedureSlug: '',
+        hospitalId,
+        sortOrder: 100,
+        promoLabel: p.promoLabel ?? null,
+      });
+    } catch {
+      /* 이미 등록 — skip */
+    }
+  }
+
+  revalidateListingSurfaces();
+  revalidatePath('/agency/hospitals');
+  revalidatePath('/kr/clinics', 'layout');
+  redirect(`/master/listings?seedDermatology=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /**
