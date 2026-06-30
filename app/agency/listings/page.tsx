@@ -188,14 +188,25 @@ export default async function AgencyListingsPage({
                 <tr key={r.id} className="border-t">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="h-10 w-10 shrink-0 overflow-hidden rounded bg-muted"
-                        style={{
-                          background: r.coverImageUrl
-                            ? `#f2f2f2 url(${r.coverImageUrl}) center / cover`
-                            : '#f2f2f2',
-                        }}
-                      />
+                      {r.coverImageUrl ? (
+                        // 섬네일은 48×64 px (h-12 w-16) 로 확보 — 40×40
+                        // 보다 컨텐츠 식별이 쉬움. CSS background-image
+                        // 대신 <img> 로 렌더링하면 onError 등 디버깅이
+                        // 가능하고 일부 브라우저 캐시 차이도 사라짐.
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={r.coverImageUrl}
+                          alt={r.title}
+                          className="h-12 w-16 shrink-0 rounded border bg-muted object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="flex h-12 w-16 shrink-0 items-center justify-center rounded border border-dashed bg-muted/30 text-[9px] text-muted-foreground"
+                          aria-label="대표 이미지 없음"
+                        >
+                          이미지
+                        </div>
+                      )}
                       <span className="font-medium">{r.title}</span>
                     </div>
                   </td>
