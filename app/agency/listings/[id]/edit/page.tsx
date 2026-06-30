@@ -134,6 +134,9 @@ export default async function AgencyListingEditPage({
         updateAction={updateListingAction}
         uploadAction={uploadListingImageAction}
         removeGalleryAction={removeGalleryImageAction}
+        // Agency 는 self-approve 불가 — 'approved' / 'rejected' 옵션 숨김.
+        // 액션 측에서도 동일하게 거부하지만 UI 에서 노출 안 해야 혼란이 없음.
+        allowedStatuses={['draft', 'pending']}
       />
 
       <div className="mt-10 rounded-xl border bg-card p-5">

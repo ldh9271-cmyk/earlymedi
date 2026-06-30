@@ -33,6 +33,7 @@ export function ListingEditForm({
   updateAction,
   uploadAction,
   removeGalleryAction,
+  allowedStatuses,
 }: {
   listing: {
     id: string;
@@ -58,6 +59,13 @@ export function ListingEditForm({
   updateAction: (formData: FormData) => Promise<void>;
   uploadAction: (formData: FormData) => Promise<void>;
   removeGalleryAction: (formData: FormData) => Promise<void>;
+  /**
+   * 상태 dropdown 에 노출할 옵션 화이트리스트. 미지정 시 전체
+   * (master 용). Agency 는 ['draft','pending'] 만 전달 — agency 액션이
+   * 'approved'/'rejected' 를 silent 하게 'draft' 로 다운그레이드하던
+   * 혼란을 제거하기 위함. 승인은 마스터 페이지에서만 가능.
+   */
+  allowedStatuses?: ReadonlyArray<ListingStatus>;
 }): JSX.Element {
   const [details, setDetails] = useState<Record<string, unknown>>(listing.details);
 
@@ -321,13 +329,26 @@ export function ListingEditForm({
             <Field label="상태">
               <select
                 name="status"
-                defaultValue={listing.status}
+                defaultValue={
+                  // 화이트리스트가 있고 현재 값이 거기 없으면 (예: 이미
+                  // 'approved' 인데 agency UI 에서 열었을 때) 'pending'
+                  // 으로 fallback — 폼이 무엇을 저장할지 사용자에게
+                  // 명확히 보이게.
+                  allowedStatuses && !allowedStatuses.includes(listing.status as ListingStatus)
+                    ? 'pending'
+                    : listing.status
+                }
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
-                {LISTING_STATUSES.map((s) => (
+                {(allowedStatuses ?? LISTING_STATUSES).map((s) => (
                   <option key={s} value={s}>{STATUS_LABELS_KR[s]}</option>
                 ))}
               </select>
+              {allowedStatuses && !allowedStatuses.includes('approved' as ListingStatus) ? (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  공개(승인) 처리는 마스터만 가능합니다. 검수 대기로 저장하면 마스터가 검토 후 공개합니다.
+                </p>
+              ) : null}
             </Field>
             <Field label="정렬 (낮을수록 먼저)">
               <input
