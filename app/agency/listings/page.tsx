@@ -4,7 +4,7 @@ import { db } from '@/lib/db/client';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { requireAccess } from '@/lib/auth/route-guards';
 import {
-  LISTING_CATEGORIES,
+  LISTING_CATEGORIES_MARKETPLACE,
   canCreateCategory,
   categoryLabel,
 } from '@/lib/listings/categories';
@@ -61,7 +61,11 @@ export default async function AgencyListingsPage({
       .from(partnerListings)
       .where(eq(partnerListings.ownerOrgId, ctx.orgId))
       .orderBy(desc(partnerListings.updatedAt));
-    rows = filter ? all.filter((r) => r.category === filter) : all;
+    // 'hospital' 은 글로우업 상품관리에서 제외 — 병원 마켓플레이스
+    // (/agency/hospitals) 가 단일 진실원. 과거 시드로 만들어진 hospital
+    // 행이 남아있으면 여기서도 가려서 중복 노출을 방지.
+    const nonHospital = all.filter((r) => r.category !== 'hospital');
+    rows = filter ? nonHospital.filter((r) => r.category === filter) : nonHospital;
   } catch (e) {
     dbError = e instanceof Error ? e.message : 'db_error';
   }
@@ -69,7 +73,7 @@ export default async function AgencyListingsPage({
   // Agency is the super-actor on the partner side — every category
   // allowed. Helper still consulted so the rule is enforced
   // centrally if the policy ever changes.
-  const allowedCategories = LISTING_CATEGORIES.filter((c) =>
+  const allowedCategories = LISTING_CATEGORIES_MARKETPLACE.filter((c) =>
     canCreateCategory('agency', null, c.key),
   );
 

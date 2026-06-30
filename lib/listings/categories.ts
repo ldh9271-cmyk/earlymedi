@@ -114,6 +114,16 @@ export function hospitalSubTypeLabel(key: string | undefined): string {
 
 export const LISTING_CATEGORY_KEYS = LISTING_CATEGORIES.map((c) => c.key);
 
+/**
+ * 글로우업 상품관리 (partner_listings) 마켓플레이스 표면에서 노출되는
+ * 카테고리만. `hospital` 은 hospitals 테이블이 단일 진실원이므로
+ * 마켓플레이스 UI 에서 제외 (병원 마켓플레이스 /agency/hospitals 에서
+ * 별도 관리). 2026-06-25 정책.
+ */
+export const LISTING_CATEGORIES_MARKETPLACE = LISTING_CATEGORIES.filter(
+  (c) => c.key !== 'hospital',
+);
+
 export function isListingCategory(x: string): x is ListingCategory {
   return (LISTING_CATEGORY_KEYS as readonly string[]).includes(x);
 }

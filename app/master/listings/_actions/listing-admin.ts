@@ -422,43 +422,10 @@ export async function seedPlasticSurgeryAction(_formData: FormData): Promise<voi
       /* 이미 등록된 매칭 — skip */
     }
 
-    // 3) partner_listings — 통합 마켓플레이스 (master/listings) 노출.
-    const existingPartnerListing = await db
-      .select({ id: partnerListings.id })
-      .from(partnerListings)
-      .where(eq(partnerListings.slug, slug))
-      .limit(1);
-    if (existingPartnerListing.length === 0) {
-      await db.insert(partnerListings).values({
-        ownerOrgId: orgId,
-        category: 'hospital',
-        slug,
-        title: p.title,
-        description: p.description,
-        locationLabel: p.locationLabel,
-        addressJson: { city: '서울' },
-        status: 'approved',
-        featured: false,
-        sortOrder: 100,
-        priceWon: 0,
-        priceUnit: '상담',
-        interestKey: 'plastic_surgery',
-        promoLabel: p.promoLabel ?? null,
-        details: {
-          subType: 'plastic_surgery',
-          procedureName: p.procedureName,
-          interpreterIncluded: p.interpreterIncluded ?? false,
-          address: p.address,
-          phone: p.phone,
-          nearestStation: p.nearestStation,
-          signatureProcedures: [...p.signatureProcedures],
-          ...(p.openingYear ? { openingYear: p.openingYear } : {}),
-          imageKeywords: [...p.imageKeywords],
-          seoTags: [...p.seoTags],
-          hospitalId,
-        },
-      });
-    }
+    // 3) partner_listings 인서트는 더 이상 하지 않음 — 2026-06-25 정책.
+    // 병원은 hospitals + category_listings 만 단일 진실원으로 사용하며
+    // 글로우업 상품관리 (partner_listings) 에는 노출하지 않음.
+    // /kr/clinics 는 hospitals + category_listings 만 읽으므로 영향 없음.
   }
 
   revalidateListingSurfaces();
