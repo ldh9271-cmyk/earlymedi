@@ -88,6 +88,7 @@ export type HospitalSubType =
   | 'plastic_surgery'
   | 'dermatology'
   | 'dental'
+  | 'ophthalmology'
   | 'hair_loss'
   | 'health_checkup'
   | 'stem_cell'
@@ -101,6 +102,7 @@ export const HOSPITAL_SUB_TYPES: ReadonlyArray<{
   { key: 'plastic_surgery', label: '성형외과' },
   { key: 'dermatology',     label: '피부과' },
   { key: 'dental',          label: '치과' },
+  { key: 'ophthalmology',   label: '안과' },
   { key: 'hair_loss',       label: '모발' },
   { key: 'health_checkup',  label: '건강검진' },
   { key: 'stem_cell',       label: '줄기세포' },

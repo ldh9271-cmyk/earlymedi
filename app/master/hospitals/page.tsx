@@ -32,12 +32,12 @@ const CATEGORY_LABELS: Record<string, { ko: string; en: string }> = {
   plastic_surgery: { ko: '성형외과', en: 'Plastic Surgery' },
   dermatology: { ko: '피부과', en: 'Dermatology' },
   dental: { ko: '치과', en: 'Dental' },
+  ophthalmology: { ko: '안과', en: 'Ophthalmology' },
   hair: { ko: '모발', en: 'Hair' },
   health_checkup: { ko: '건강검진', en: 'Health Checkup' },
   beauty_tour: { ko: '뷰티 투어', en: 'Beauty Tour' },
   makeup: { ko: '헤어·메이크업', en: 'Hair & Makeup' },
   photo_studio: { ko: '사진 스튜디오', en: 'Photo Studio' },
-  ophthalmology: { ko: '안과', en: 'Ophthalmology' },
   oriental: { ko: '한방', en: 'Oriental Medicine' },
 };
 
