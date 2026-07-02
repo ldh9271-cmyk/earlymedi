@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { desc, eq } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
@@ -21,6 +21,7 @@ import {
   seedDermatologyAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
+import { updateListingSortOrderAction } from './_actions/sort-order';
 import { DeleteListingButton } from './_components/delete-listing-button';
 
 export const metadata = { title: '글로우업 상품 관리 · 마스터' };
@@ -60,6 +61,7 @@ export default async function MasterListingsPage({
     mergeRestaurant?: string;
     inserted?: string; skipped?: string;
     updated?: string;
+    sort?: string;
   };
 }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
@@ -89,7 +91,8 @@ export default async function MasterListingsPage({
       })
       .from(partnerListings)
       .leftJoin(organizations, eq(organizations.id, partnerListings.ownerOrgId))
-      .orderBy(desc(partnerListings.updatedAt));
+      // sortOrder 우선 → 최근 업데이트 순. /master/hospitals 와 동일 컨벤션.
+      .orderBy(asc(partnerListings.sortOrder), desc(partnerListings.updatedAt));
     rows = (filter ? all.filter((r) => r.category === filter) : all).map((r) => ({
       ...r,
       details: (r.details ?? {}) as Record<string, unknown>,
@@ -400,8 +403,13 @@ export default async function MasterListingsPage({
         // 패키지여행 / 연수패키지 each get their own section header.
         // Listings missing a subType fall into "미분류".
         <TravelGroupedTable rows={rows} />
-      ) : (
+      ) : filter ? (
+        // 특정 카테고리 필터: 단일 flat 테이블. sortOrder 로 정렬됨.
         <ListingTable rows={rows} />
+      ) : (
+        // 전체 뷰: 카테고리별로 섹션 분할. 각 섹션 안에서 sortOrder 로 정렬.
+        // /master/hospitals 처럼 카테고리별 노출 순서를 독립적으로 관리 가능.
+        <CategoryGroupedTable rows={rows} />
       )}
     </div>
   );
@@ -413,6 +421,9 @@ function ListingTable({ rows }: { rows: Row[] }): JSX.Element {
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-xs uppercase tracking-wide">
           <tr>
+            <th className="px-3 py-3 text-left w-[100px]">
+              순서<span className="ml-1 text-[10px] font-normal normal-case text-muted-foreground/70">(낮을수록 먼저)</span>
+            </th>
             <th className="px-4 py-3 text-left">상품</th>
             <th className="px-3 py-3 text-left">카테고리</th>
             <th className="px-3 py-3 text-left">상태</th>
@@ -428,6 +439,45 @@ function ListingTable({ rows }: { rows: Row[] }): JSX.Element {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/**
+ * 전체 뷰: 카테고리별로 섹션 분할. 각 섹션에서 sortOrder 로 정렬되어
+ * 카테고리마다 노출 순서를 독립적으로 관리할 수 있음. LISTING_CATEGORIES
+ * 순서를 따라 상단부터 노출.
+ */
+function CategoryGroupedTable({ rows }: { rows: Row[] }): JSX.Element {
+  const buckets = new Map<string, Row[]>();
+  for (const c of LISTING_CATEGORIES) buckets.set(c.key, []);
+  buckets.set('__other__', []);
+  for (const r of rows) {
+    if (buckets.has(r.category)) {
+      buckets.get(r.category)!.push(r);
+    } else {
+      buckets.get('__other__')!.push(r);
+    }
+  }
+  return (
+    <div className="space-y-6">
+      {Array.from(buckets.entries()).map(([key, group]) => {
+        if (group.length === 0) return null; // 빈 카테고리는 숨김
+        const label = key === '__other__' ? '기타' : categoryLabel(key);
+        return (
+          <section key={key}>
+            <div className="mb-2 flex items-baseline justify-between">
+              <h2 className="text-sm font-semibold">
+                {label}
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {group.length}개
+                </span>
+              </h2>
+            </div>
+            <ListingTable rows={group} />
+          </section>
+        );
+      })}
     </div>
   );
 }
@@ -474,6 +524,26 @@ function TravelGroupedTable({ rows }: { rows: Row[] }): JSX.Element {
 function ListingRow({ row: r }: { row: Row }): JSX.Element {
   return (
     <tr className="border-t">
+      <td className="px-3 py-3 align-middle">
+        <form action={updateListingSortOrderAction} className="flex items-center gap-1">
+          <input type="hidden" name="id" value={r.id} />
+          <input
+            type="number"
+            name="sortOrder"
+            defaultValue={r.sortOrder}
+            min={0}
+            max={9999}
+            className="h-7 w-[60px] rounded border border-input bg-background px-2 text-xs"
+          />
+          <button
+            type="submit"
+            title="순서 저장"
+            className="rounded border border-input bg-background px-1.5 py-1 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            ✓
+          </button>
+        </form>
+      </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <div
