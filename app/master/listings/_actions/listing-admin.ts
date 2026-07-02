@@ -492,7 +492,8 @@ export async function seedDermatologyAction(_formData: FormData): Promise<void> 
     if (!hospitalId) continue;
 
     // category_listings — dermatology 카테고리 페이지 노출. UNIQUE
-    // (categoryKey, procedureSlug, hospitalId) 라 중복 안전.
+    // (categoryKey, procedureSlug, hospitalId) 라 insert 중복 안전.
+    // 이미 있는 경우엔 promoLabel 을 최신값으로 UPDATE (SEO 뱃지 재적용).
     try {
       await db.insert(categoryListings).values({
         categoryKey: 'dermatology',
@@ -502,7 +503,13 @@ export async function seedDermatologyAction(_formData: FormData): Promise<void> 
         promoLabel: p.promoLabel ?? null,
       });
     } catch {
-      /* 이미 등록 — skip */
+      await db
+        .update(categoryListings)
+        .set({ promoLabel: p.promoLabel ?? null })
+        .where(and(
+          eq(categoryListings.categoryKey, 'dermatology'),
+          eq(categoryListings.hospitalId, hospitalId),
+        ));
     }
   }
 
