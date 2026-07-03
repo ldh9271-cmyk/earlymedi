@@ -27,6 +27,7 @@ import { PLASTIC_SURGERY_PRODUCTS } from '@/lib/listings/gangnam-plastic-surgery
 import { DERMATOLOGY_PRODUCTS } from '@/lib/listings/seoul-dermatology-products';
 import { OPHTHALMOLOGY_PRODUCTS } from '@/lib/listings/seoul-ophthalmology-products';
 import { DENTAL_PRODUCTS } from '@/lib/listings/seoul-dental-products';
+import { HAIR_LOSS_PRODUCTS } from '@/lib/listings/seoul-hair-loss-products';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 
 async function requireMaster(): Promise<true | never> {
@@ -735,6 +736,111 @@ export async function seedDentalAction(_formData: FormData): Promise<void> {
   revalidatePath('/agency/hospitals');
   revalidatePath('/kr/clinics', 'layout');
   redirect(`/master/listings?seedDental=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 서울 외국인 FIT 추천 모발이식·탈모 12곳 일괄 등록.
+ *
+ * 안과·치과 시드와 동일 패턴: hospitals + category_listings +
+ * hospital_locale_content(KR/EN) 3 테이블 upsert. partner_listings
+ * 인서트 없음. category_key='hair_loss'.
+ *
+ * SEO 6종은 hospital_locale_content 에 저장 (seoTitle, seoDescription).
+ */
+export async function seedHairLossAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+  const orgId = ownerOrgId as string;
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of HAIR_LOSS_PRODUCTS) {
+    const existingHospital = await db
+      .select({ id: hospitals.id })
+      .from(hospitals)
+      .where(and(eq(hospitals.organizationId, orgId), eq(hospitals.slug, p.slug)))
+      .limit(1);
+
+    let hospitalId: string | null = null;
+    const existingRow = existingHospital[0];
+    if (existingRow) {
+      hospitalId = existingRow.id;
+      skipped += 1;
+    } else {
+      const insertResult = await db
+        .insert(hospitals)
+        .values({
+          organizationId: orgId,
+          name: p.title,
+          slug: p.slug,
+          countryCode: 'KR',
+          addressJson: { line1: p.address, city: '서울' },
+          primaryCategories: ['hair_loss'],
+          languagesSpoken: [...p.languagesSpoken],
+          isActiveForMatching: true,
+        })
+        .returning({ id: hospitals.id });
+      hospitalId = insertResult[0]?.id ?? null;
+      if (hospitalId) inserted += 1;
+    }
+    if (!hospitalId) continue;
+
+    try {
+      await db.insert(categoryListings).values({
+        categoryKey: 'hair_loss',
+        procedureSlug: '',
+        hospitalId,
+        sortOrder: 100,
+        promoLabel: p.promoLabel,
+      });
+    } catch {
+      await db
+        .update(categoryListings)
+        .set({ promoLabel: p.promoLabel })
+        .where(and(
+          eq(categoryListings.categoryKey, 'hair_loss'),
+          eq(categoryListings.hospitalId, hospitalId),
+        ));
+    }
+
+    // KR + EN 로케일 콘텐츠 upsert (SEO 6종 저장)
+    for (const [locale, name] of [
+      ['kr', p.title] as const,
+      ['en', p.englishTitle] as const,
+    ]) {
+      try {
+        await db.insert(hospitalLocaleContent).values({
+          hospitalId,
+          locale,
+          name,
+          intro: p.description,
+          seoTitle: p.seoTitle,
+          seoDescription: p.seoDescription,
+        });
+      } catch {
+        await db
+          .update(hospitalLocaleContent)
+          .set({
+            name,
+            intro: p.description,
+            seoTitle: p.seoTitle,
+            seoDescription: p.seoDescription,
+            updatedAt: new Date(),
+          })
+          .where(and(
+            eq(hospitalLocaleContent.hospitalId, hospitalId),
+            eq(hospitalLocaleContent.locale, locale),
+          ));
+      }
+    }
+  }
+
+  revalidateListingSurfaces();
+  revalidatePath('/agency/hospitals');
+  revalidatePath('/kr/clinics', 'layout');
+  redirect(`/master/listings?seedHairLoss=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /**

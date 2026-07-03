@@ -21,6 +21,7 @@ import {
   seedDermatologyAction,
   seedOphthalmologyAction,
   seedDentalAction,
+  seedHairLossAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -59,7 +60,7 @@ export default async function MasterListingsPage({
   searchParams: {
     category?: string; error?: string;
     seedFit?: string; seedGangnamFood?: string;
-    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string; seedOphthalmology?: string; seedDental?: string;
+    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string; seedOphthalmology?: string; seedDental?: string; seedHairLoss?: string;
     mergeRestaurant?: string;
     inserted?: string; skipped?: string;
     updated?: string;
@@ -326,6 +327,36 @@ export default async function MasterListingsPage({
           className="rounded-md border border-teal-400 bg-white px-3 py-1.5 text-xs font-semibold text-teal-800 hover:bg-teal-50"
         >
           치과 2종 일괄 등록
+        </button>
+      </form>
+
+      {/* 모발이식·탈모 일괄 등록 결과 배너 */}
+      {searchParams.seedHairLoss === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">서울 모발이식·탈모 12종 일괄 등록 완료</span>
+          {' — '}
+          신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 스킵.
+        </div>
+      ) : null}
+
+      {/* 서울 외국인 FIT 모발이식·탈모 12종 일괄 등록 트리거 */}
+      <form
+        action={seedHairLossAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-amber-300 bg-amber-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">서울 외국인 FIT 모발이식·탈모 12종 일괄 등록</p>
+          <p className="mt-0.5">
+            맥스웰·모제림·모먼트·모아이·모우다·용닥터·리치모아·모아만·세븐레마·루트·
+            메이린(탈모)·더힐피부과(탈모). hair_loss 카테고리 + hospital_locale_content
+            (KR/EN) SEO 6종 저장. 메이린·더힐은 피부과와 별도 슬러그로 탈모 특화 프로필 신규 등록.
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-50"
+        >
+          모발이식·탈모 12종 일괄 등록
         </button>
       </form>
 
