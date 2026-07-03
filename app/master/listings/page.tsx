@@ -20,6 +20,7 @@ import {
   seedPlasticSurgeryAction,
   seedDermatologyAction,
   seedOphthalmologyAction,
+  seedDentalAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -58,7 +59,7 @@ export default async function MasterListingsPage({
   searchParams: {
     category?: string; error?: string;
     seedFit?: string; seedGangnamFood?: string;
-    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string; seedOphthalmology?: string;
+    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string; seedOphthalmology?: string; seedDental?: string;
     mergeRestaurant?: string;
     inserted?: string; skipped?: string;
     updated?: string;
@@ -295,6 +296,36 @@ export default async function MasterListingsPage({
           className="rounded-md border border-cyan-400 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-800 hover:bg-cyan-50"
         >
           안과 11종 일괄 등록
+        </button>
+      </form>
+
+      {/* 치과 일괄 등록 결과 배너 */}
+      {searchParams.seedDental === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">서울 치과 일괄 등록 완료</span>
+          {' — '}
+          신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 재정렬.
+        </div>
+      ) : null}
+
+      {/* 서울 외국인 FIT 치과 일괄 등록 트리거 */}
+      <form
+        action={seedDentalAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-teal-300 bg-teal-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">서울 외국인 FIT 치과 일괄 등록</p>
+          <p className="mt-0.5">
+            세라치과(삼성동) · 뉴욕화이트치과(선릉). dental 카테고리 + hospital_locale_content
+            (KR/EN) 에 SEO 6종 저장. sortOrder=110·120 으로 향후 1~10번 슬롯 예약.
+            재실행 시 순서·SEO 만 최신값으로 UPDATE.
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-teal-400 bg-white px-3 py-1.5 text-xs font-semibold text-teal-800 hover:bg-teal-50"
+        >
+          치과 2종 일괄 등록
         </button>
       </form>
 
