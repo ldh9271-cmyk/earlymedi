@@ -25,6 +25,8 @@ import { GANGNAM_FOOD_PRODUCTS } from '@/lib/listings/gangnam-food-products';
 import { SEOUL_HOTEL_PRODUCTS } from '@/lib/listings/seoul-hotel-products';
 import { PLASTIC_SURGERY_PRODUCTS } from '@/lib/listings/gangnam-plastic-surgery-products';
 import { DERMATOLOGY_PRODUCTS } from '@/lib/listings/seoul-dermatology-products';
+import { OPHTHALMOLOGY_PRODUCTS } from '@/lib/listings/seoul-ophthalmology-products';
+import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 
 async function requireMaster(): Promise<true | never> {
   const supabase = createSupabaseServerClient();
@@ -517,6 +519,110 @@ export async function seedDermatologyAction(_formData: FormData): Promise<void> 
   revalidatePath('/agency/hospitals');
   revalidatePath('/kr/clinics', 'layout');
   redirect(`/master/listings?seedDermatology=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 서울 외국인 FIT 추천 안과 11곳 일괄 등록.
+ *
+ *   1) hospitals — SEO 슬러그를 hospitals.slug 로 사용, primary_categories=
+ *      ['ophthalmology']. hospitals.description 에 본문, languages_spoken
+ *      에 외국인 응대 언어 배열.
+ *   2) category_listings — categoryKey='ophthalmology'. UNIQUE 충돌 시
+ *      promoLabel 만 UPDATE.
+ *   3) partner_listings 인서트 없음.
+ *
+ * SEO 6종 (seoTitle · seoDescription · seoTags · englishTitle ·
+ * ogDescription · imageKeywords) 은 hospitals.details JSONB 에 저장.
+ */
+export async function seedOphthalmologyAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+  const orgId = ownerOrgId as string;
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of OPHTHALMOLOGY_PRODUCTS) {
+    const existingHospital = await db
+      .select({ id: hospitals.id })
+      .from(hospitals)
+      .where(and(eq(hospitals.organizationId, orgId), eq(hospitals.slug, p.slug)))
+      .limit(1);
+
+    let hospitalId: string | null = null;
+    const existingRow = existingHospital[0];
+    if (existingRow) {
+      hospitalId = existingRow.id;
+      skipped += 1;
+    } else {
+      const insertResult = await db
+        .insert(hospitals)
+        .values({
+          organizationId: orgId,
+          name: p.title,
+          slug: p.slug,
+          countryCode: 'KR',
+          addressJson: { line1: p.address, city: '서울' },
+          primaryCategories: ['ophthalmology'],
+          languagesSpoken: [...p.languagesSpoken],
+          isActiveForMatching: true,
+        })
+        .returning({ id: hospitals.id });
+      hospitalId = insertResult[0]?.id ?? null;
+      if (hospitalId) inserted += 1;
+    }
+    if (!hospitalId) continue;
+
+    try {
+      await db.insert(categoryListings).values({
+        categoryKey: 'ophthalmology',
+        procedureSlug: '',
+        hospitalId,
+        sortOrder: 100,
+        promoLabel: p.promoLabel,
+      });
+    } catch {
+      await db
+        .update(categoryListings)
+        .set({ promoLabel: p.promoLabel })
+        .where(and(
+          eq(categoryListings.categoryKey, 'ophthalmology'),
+          eq(categoryListings.hospitalId, hospitalId),
+        ));
+    }
+
+    // hospital_locale_content — KR/EN 두 로케일에 본문 + SEO 저장.
+    // ON CONFLICT (hospital_id, locale) UNIQUE 라 재실행 안전.
+    for (const [locale, name, intro, seoTitle, seoDesc] of [
+      ['kr', p.title,         p.description, p.seoTitle,          p.seoDescription],
+      ['en', p.englishTitle,  p.description, p.seoTitle,          p.seoDescription],
+    ] as const) {
+      try {
+        await db.insert(hospitalLocaleContent).values({
+          hospitalId,
+          locale,
+          name,
+          intro,
+          seoTitle,
+          seoDescription: seoDesc,
+        });
+      } catch {
+        await db
+          .update(hospitalLocaleContent)
+          .set({ name, intro, seoTitle, seoDescription: seoDesc, updatedAt: new Date() })
+          .where(and(
+            eq(hospitalLocaleContent.hospitalId, hospitalId),
+            eq(hospitalLocaleContent.locale, locale),
+          ));
+      }
+    }
+  }
+
+  revalidateListingSurfaces();
+  revalidatePath('/agency/hospitals');
+  revalidatePath('/kr/clinics', 'layout');
+  redirect(`/master/listings?seedOphthalmology=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /**
