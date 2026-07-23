@@ -22,6 +22,7 @@ import {
   seedOphthalmologyAction,
   seedDentalAction,
   seedHairLossAction,
+  seedHealthCheckupAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -60,7 +61,7 @@ export default async function MasterListingsPage({
   searchParams: {
     category?: string; error?: string;
     seedFit?: string; seedGangnamFood?: string;
-    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string; seedOphthalmology?: string; seedDental?: string; seedHairLoss?: string;
+    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string; seedOphthalmology?: string; seedDental?: string; seedHairLoss?: string; seedHealthCheckup?: string;
     mergeRestaurant?: string;
     inserted?: string; skipped?: string;
     updated?: string;
@@ -357,6 +358,36 @@ export default async function MasterListingsPage({
           className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-50"
         >
           모발이식·탈모 12종 일괄 등록
+        </button>
+      </form>
+
+      {/* 건강검진 일괄 등록 결과 배너 */}
+      {searchParams.seedHealthCheckup === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">서울 건강검진 12종 일괄 등록 완료</span>
+          {' — '}
+          신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 스킵.
+        </div>
+      ) : null}
+
+      {/* 서울 외국인 FIT 건강검진 12종 일괄 등록 트리거 */}
+      <form
+        action={seedHealthCheckupAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-lime-300 bg-lime-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">서울 외국인 FIT 건강검진 12종 일괄 등록</p>
+          <p className="mt-0.5">
+            필수 6곳(서울아산·삼성서울·서울성모·중앙대·강남세브란스·강남웰니스) + 추천 6곳
+            (서울대강남센터·차움·KMI·하나로·건강관리협회·셀러블153). health_checkup 카테고리 +
+            hospital_locale_content(KR/EN) SEO 6종 — 브랜드 GlowUpTour 통일.
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-lime-500 bg-white px-3 py-1.5 text-xs font-semibold text-lime-800 hover:bg-lime-50"
+        >
+          건강검진 12종 일괄 등록
         </button>
       </form>
 
