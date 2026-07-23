@@ -23,6 +23,7 @@ import {
   seedDentalAction,
   seedHairLossAction,
   seedHealthCheckupAction,
+  seedStemCellAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -61,7 +62,7 @@ export default async function MasterListingsPage({
   searchParams: {
     category?: string; error?: string;
     seedFit?: string; seedGangnamFood?: string;
-    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string; seedOphthalmology?: string; seedDental?: string; seedHairLoss?: string; seedHealthCheckup?: string;
+    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string; seedOphthalmology?: string; seedDental?: string; seedHairLoss?: string; seedHealthCheckup?: string; seedStemCell?: string;
     mergeRestaurant?: string;
     inserted?: string; skipped?: string;
     updated?: string;
@@ -388,6 +389,36 @@ export default async function MasterListingsPage({
           className="rounded-md border border-lime-500 bg-white px-3 py-1.5 text-xs font-semibold text-lime-800 hover:bg-lime-50"
         >
           건강검진 12종 일괄 등록
+        </button>
+      </form>
+
+      {/* 줄기세포 일괄 등록 결과 배너 */}
+      {searchParams.seedStemCell === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">서울 줄기세포·재생의료 12종 일괄 등록 완료</span>
+          {' — '}
+          신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 스킵.
+        </div>
+      ) : null}
+
+      {/* 서울 외국인 FIT 줄기세포 12종 일괄 등록 트리거 */}
+      <form
+        action={seedStemCellAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-violet-300 bg-violet-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">서울 외국인 FIT 줄기세포·재생의료 12종 일괄 등록</p>
+          <p className="mt-0.5">
+            EHL바이오(필수)·셀러블153·강남세란·셀피아·밴셀·셀리크·모즈·리숨·메종프리베·
+            리치모아·글로비·스템케이. stem_cell 카테고리 + hospital_locale_content(KR/EN)
+            SEO — 브랜드 GlowUpTour. 중복 병원은 줄기세포 전용 슬러그로 별도 프로필.
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-violet-400 bg-white px-3 py-1.5 text-xs font-semibold text-violet-800 hover:bg-violet-50"
+        >
+          줄기세포 12종 일괄 등록
         </button>
       </form>
 
