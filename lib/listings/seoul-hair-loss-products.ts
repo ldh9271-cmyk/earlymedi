@@ -3,7 +3,8 @@
  *
  * 마스터 콘솔의 "모발이식·탈모 12종 일괄 등록" 버튼이 이 배열을 읽어
  * hospitals + category_listings + hospital_locale_content(KR/EN) 에
- * 카테고리='hair_loss' 로 upsert. partner_listings 인서트는 없음.
+ * 카테고리='hair' 로 upsert (공개 /kr/clinics 칩 키와 동일 — 2026-07-03
+ * 'hair_loss' 오기입을 'hair' 로 정정). partner_listings 인서트는 없음.
  *
  * 주의: 메이린클리닉·더힐피부과는 피부과 시드에도 존재하지만 여기선
  * 사용자 지정 슬러그(`maylin-clinic-hair-loss-apgujeong`,

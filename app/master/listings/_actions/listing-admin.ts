@@ -743,7 +743,7 @@ export async function seedDentalAction(_formData: FormData): Promise<void> {
  *
  * 안과·치과 시드와 동일 패턴: hospitals + category_listings +
  * hospital_locale_content(KR/EN) 3 테이블 upsert. partner_listings
- * 인서트 없음. category_key='hair_loss'.
+ * 인서트 없음. category_key='hair' (공개 /kr/clinics 칩 키와 동일).
  *
  * SEO 6종은 hospital_locale_content 에 저장 (seoTitle, seoDescription).
  */
@@ -777,7 +777,7 @@ export async function seedHairLossAction(_formData: FormData): Promise<void> {
           slug: p.slug,
           countryCode: 'KR',
           addressJson: { line1: p.address, city: '서울' },
-          primaryCategories: ['hair_loss'],
+          primaryCategories: ['hair'],
           languagesSpoken: [...p.languagesSpoken],
           isActiveForMatching: true,
         })
@@ -789,7 +789,7 @@ export async function seedHairLossAction(_formData: FormData): Promise<void> {
 
     try {
       await db.insert(categoryListings).values({
-        categoryKey: 'hair_loss',
+        categoryKey: 'hair',
         procedureSlug: '',
         hospitalId,
         sortOrder: 100,
@@ -800,7 +800,7 @@ export async function seedHairLossAction(_formData: FormData): Promise<void> {
         .update(categoryListings)
         .set({ promoLabel: p.promoLabel })
         .where(and(
-          eq(categoryListings.categoryKey, 'hair_loss'),
+          eq(categoryListings.categoryKey, 'hair'),
           eq(categoryListings.hospitalId, hospitalId),
         ));
     }
