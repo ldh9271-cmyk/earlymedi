@@ -58,11 +58,11 @@ Supabase 가 발송 직전에 다음 변수를 실제 값으로 치환합니다:
 
 **Supabase Dashboard → Authentication → URL Configuration**
 
-- **Site URL**: `https://earlymedi.vercel.app`
+- **Site URL**: `https://www.glowuptour.com`
 - **Redirect URLs** (allowlist) 에 다음 모두 추가:
-  - `https://earlymedi.vercel.app/api/auth/callback`
-  - `https://earlymedi.vercel.app/api/auth/callback?**`
-  - `https://earlymedi.vercel.app/**` (전체 와일드카드 — 환자 PWA 미래 확장 대비)
+  - `https://www.glowuptour.com/api/auth/callback`
+  - `https://www.glowuptour.com/api/auth/callback?**`
+  - `https://www.glowuptour.com/**` (전체 와일드카드 — 환자 PWA 미래 확장 대비)
   - `http://localhost:3000/api/auth/callback` (로컬 개발용)
 
 ---

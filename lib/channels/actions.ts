@@ -171,7 +171,7 @@ export async function connectChannelAction(rawInput: ConnectChannelInput): Promi
   // Build the webhook URL the user pastes back into the messenger's console.
   const appBase =
     process.env.NEXT_PUBLIC_APP_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://earlymedi.vercel.app');
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://www.glowuptour.com');
   const webhookUrl = `${appBase}${def.webhookPath}?org=${orgId}&channel=${row.id}`;
 
   return { channelId: row.id, webhookUrl };
