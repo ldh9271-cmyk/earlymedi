@@ -31,6 +31,7 @@ import { HAIR_LOSS_PRODUCTS } from '@/lib/listings/seoul-hair-loss-products';
 import { HEALTH_CHECKUP_PRODUCTS } from '@/lib/listings/seoul-health-checkup-products';
 import { STEM_CELL_PRODUCTS } from '@/lib/listings/seoul-stem-cell-products';
 import { ORIENTAL_PRODUCTS } from '@/lib/listings/seoul-oriental-products';
+import { PARTNER_PRODUCTS } from '@/lib/listings/seoul-partner-products';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 
 async function requireMaster(): Promise<true | never> {
@@ -1159,6 +1160,113 @@ export async function seedOrientalAction(_formData: FormData): Promise<void> {
   revalidatePath('/agency/hospitals');
   revalidatePath('/kr/clinics', 'layout');
   redirect(`/master/listings?seedOriental=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 서울 외국인 FIT 추천 파트너병원 24곳 일괄 등록.
+ *
+ * 정형외과·척추·관절(7) + 비뇨의학과(3) + 산부인과(2) + 이비인후과(2) +
+ * 내과·소화기(3) + 외과·화상·통증·재활·신경과·소아과(7).
+ *
+ * 한방 시드와 동일 패턴: hospitals + category_listings +
+ * hospital_locale_content(KR/EN) 3 테이블 upsert. category_key=
+ * 'partner' (공개 /kr/clinics 칩 키와 동일). 각 병원의 실제 진료과는
+ * seed.specialty + description 에 기재. SEO 브랜드 GlowUpTour.
+ */
+export async function seedPartnerAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+  const orgId = ownerOrgId as string;
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of PARTNER_PRODUCTS) {
+    const existingHospital = await db
+      .select({ id: hospitals.id })
+      .from(hospitals)
+      .where(and(eq(hospitals.organizationId, orgId), eq(hospitals.slug, p.slug)))
+      .limit(1);
+
+    let hospitalId: string | null = null;
+    const existingRow = existingHospital[0];
+    if (existingRow) {
+      hospitalId = existingRow.id;
+      skipped += 1;
+    } else {
+      const insertResult = await db
+        .insert(hospitals)
+        .values({
+          organizationId: orgId,
+          name: p.title,
+          slug: p.slug,
+          countryCode: 'KR',
+          addressJson: { line1: p.address, city: '서울' },
+          primaryCategories: ['partner'],
+          languagesSpoken: [...p.languagesSpoken],
+          isActiveForMatching: true,
+        })
+        .returning({ id: hospitals.id });
+      hospitalId = insertResult[0]?.id ?? null;
+      if (hospitalId) inserted += 1;
+    }
+    if (!hospitalId) continue;
+
+    try {
+      await db.insert(categoryListings).values({
+        categoryKey: 'partner',
+        procedureSlug: '',
+        hospitalId,
+        sortOrder: 100,
+        promoLabel: p.promoLabel,
+      });
+    } catch {
+      await db
+        .update(categoryListings)
+        .set({ promoLabel: p.promoLabel })
+        .where(and(
+          eq(categoryListings.categoryKey, 'partner'),
+          eq(categoryListings.hospitalId, hospitalId),
+        ));
+    }
+
+    // KR + EN 로케일 콘텐츠 upsert (SEO 저장)
+    for (const [locale, name] of [
+      ['kr', p.title] as const,
+      ['en', p.englishTitle] as const,
+    ]) {
+      try {
+        await db.insert(hospitalLocaleContent).values({
+          hospitalId,
+          locale,
+          name,
+          intro: p.description,
+          seoTitle: p.seoTitle,
+          seoDescription: p.seoDescription,
+        });
+      } catch {
+        await db
+          .update(hospitalLocaleContent)
+          .set({
+            name,
+            intro: p.description,
+            seoTitle: p.seoTitle,
+            seoDescription: p.seoDescription,
+            updatedAt: new Date(),
+          })
+          .where(and(
+            eq(hospitalLocaleContent.hospitalId, hospitalId),
+            eq(hospitalLocaleContent.locale, locale),
+          ));
+      }
+    }
+  }
+
+  revalidateListingSurfaces();
+  revalidatePath('/agency/hospitals');
+  revalidatePath('/kr/clinics', 'layout');
+  redirect(`/master/listings?seedPartner=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /**

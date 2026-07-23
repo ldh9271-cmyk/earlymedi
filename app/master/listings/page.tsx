@@ -25,6 +25,7 @@ import {
   seedHealthCheckupAction,
   seedStemCellAction,
   seedOrientalAction,
+  seedPartnerAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -63,7 +64,7 @@ export default async function MasterListingsPage({
   searchParams: {
     category?: string; error?: string;
     seedFit?: string; seedGangnamFood?: string;
-    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string; seedOphthalmology?: string; seedDental?: string; seedHairLoss?: string; seedHealthCheckup?: string; seedStemCell?: string; seedOriental?: string;
+    seedSeoulHotels?: string; seedPlasticSurgery?: string; seedDermatology?: string; seedOphthalmology?: string; seedDental?: string; seedHairLoss?: string; seedHealthCheckup?: string; seedStemCell?: string; seedOriental?: string; seedPartner?: string;
     mergeRestaurant?: string;
     inserted?: string; skipped?: string;
     updated?: string;
@@ -450,6 +451,38 @@ export default async function MasterListingsPage({
           className="rounded-md border border-orange-400 bg-white px-3 py-1.5 text-xs font-semibold text-orange-800 hover:bg-orange-50"
         >
           한방병원 12종 일괄 등록
+        </button>
+      </form>
+
+      {/* 파트너병원 일괄 등록 결과 배너 */}
+      {searchParams.seedPartner === 'ok' ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span className="font-semibold">서울 파트너병원 24종 일괄 등록 완료</span>
+          {' — '}
+          신규 {searchParams.inserted ?? '0'}건 등록, 기존 {searchParams.skipped ?? '0'}건 스킵.
+        </div>
+      ) : null}
+
+      {/* 서울 외국인 FIT 파트너병원 24종 일괄 등록 트리거 */}
+      <form
+        action={seedPartnerAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">서울 외국인 FIT 파트너병원 24종 일괄 등록</p>
+          <p className="mt-0.5">
+            정형·척추·관절 7 (연세사랑·강남세브란스척추·베드로·우리들·나누리·청담튼튼·SNU서울) +
+            비뇨 3 (스탠탑·서울N·강남J) + 산부인과 2 (강남차병원·차 여성의학연구소) +
+            이비인후 2 (하나·코아) + 내과 3 (강남탑·지인·속편한) +
+            외과·화상·통증·재활·신경·소아 7 (기쁨·베스티안·안강·연세베스트·미래신경과·곰돌이·제일정형).
+            partner 카테고리 + SEO — 브랜드 GlowUpTour.
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-slate-400 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50"
+        >
+          파트너병원 24종 일괄 등록
         </button>
       </form>
 
