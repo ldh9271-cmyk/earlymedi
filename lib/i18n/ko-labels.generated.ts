@@ -101,6 +101,13 @@ export const KO_LABELS = {
     "ru": "24/7 365 дней: Мочекаменная болезнь",
     "vi": "24/7 365 ngày sỏi tiết niệu"
   },
+  "3D 전광판 성지": {
+    "en": "3D Billboard Mecca",
+    "zh": "3D大屏圣地",
+    "ja": "3D大型ビジョン聖地",
+    "ru": "Мекка 3D-экранов",
+    "vi": "Thánh địa màn hình 3D"
+  },
   "3개층 통합 메디컬": {
     "en": "Integrated 3-Floor Medical Center",
     "zh": "3层综合医疗中心",
@@ -171,6 +178,13 @@ export const KO_LABELS = {
     "ru": "Специализация на CEO-профилях",
     "vi": "Chuyên chụp ảnh CEO"
   },
+  "DDP 직결": {
+    "en": "Directly Connected to DDP",
+    "zh": "直通DDP",
+    "ja": "DDP直結",
+    "ru": "Прямой выход к DDP",
+    "vi": "Kết nối trực tiếp DDP"
+  },
   "FIMS 비수술 통증": {
     "en": "FIMS Non-Surgical Pain Care",
     "zh": "FIMS非手术疼痛治疗",
@@ -226,6 +240,13 @@ export const KO_LABELS = {
     "ja": "K-POPアイドルメイク",
     "ru": "Макияж K-pop айдолов",
     "vi": "Trang điểm idol K-Pop"
+  },
+  "SM 본사 스토어": {
+    "en": "SM HQ Store",
+    "zh": "SM总部商店",
+    "ja": "SM本社ストア",
+    "ru": "Магазин в штаб-квартире SM",
+    "vi": "Cửa hàng trụ sở SM"
   },
   "VIP 센터 운영": {
     "en": "VIP Center",
@@ -416,6 +437,13 @@ export const KO_LABELS = {
     "ru": "Международный врач-консультант (Juvederm · Thermage)",
     "vi": "Bác sĩ cố vấn quốc tế (Juvederm · Thermage)"
   },
+  "굿즈샵+카페": {
+    "en": "Goods Shop + Cafe",
+    "zh": "周边店+咖啡馆",
+    "ja": "グッズショップ+カフェ",
+    "ru": "Магазин мерча + кафе",
+    "vi": "Cửa hàng phụ kiện + Cà phê"
+  },
   "난치성 피부 한방 특화": {
     "en": "Intractable Skin Oriental Medicine Specialist",
     "zh": "难治性皮肤韩医特化",
@@ -535,6 +563,13 @@ export const KO_LABELS = {
     "ru": "Международный прием: русский и монгольский",
     "vi": "Khám quốc tế tiếng Nga & tiếng Mông Cổ"
   },
+  "럭키드로우 성지": {
+    "en": "Lucky Draw Mecca",
+    "zh": "幸运抽奖圣地",
+    "ja": "ラッキードローの聖地",
+    "ru": "Мекка Lucky Draw",
+    "vi": "Thánh địa Lucky Draw"
+  },
   "레지던스형 · 평점 8.8": {
     "en": "Residence Type · Rating 8.8",
     "zh": "公寓式 Residence · 评分 8.8",
@@ -618,6 +653,20 @@ export const KO_LABELS = {
     "ja": "免税店直結",
     "ru": "Прямой выход к Duty Free",
     "vi": "Kết nối trực tiếp cửa hàng miễn thuế"
+  },
+  "무료 도보 코스": {
+    "en": "Free Walking Course",
+    "zh": "免费徒步路线",
+    "ja": "無料ウォーキングコース",
+    "ru": "Бесплатный пешеходный маршрут",
+    "vi": "Tuyến đường đi bộ miễn phí"
+  },
+  "무료 입장": {
+    "en": "Free Admission",
+    "zh": "免费入场",
+    "ja": "入場無料",
+    "ru": "Бесплатный вход",
+    "vi": "Vào cửa miễn phí"
   },
   "물광 메이크업 원조": {
     "en": "Original Glass Skin Makeup",
@@ -710,6 +759,13 @@ export const KO_LABELS = {
     "ru": "Легенда бьюти-индустрии",
     "vi": "Huyền thoại ngành làm đẹp"
   },
+  "블랙핑크 성지": {
+    "en": "BLACKPINK Mecca",
+    "zh": "BLACKPINK圣地",
+    "ja": "BLACKPINKの聖地",
+    "ru": "Мекка BLACKPINK",
+    "vi": "Thánh địa BLACKPINK"
+  },
   "비자검사 지정·6개층 대규모": {
     "en": "Visa Medical Exam Center · 6 Floors",
     "zh": "签证体检指定·6层超大规模",
@@ -723,6 +779,13 @@ export const KO_LABELS = {
     "ja": "サウナ無料利用",
     "ru": "Бесплатная сауна",
     "vi": "Miễn phí sử dụng phòng xông hơi"
+  },
+  "사전 예약제": {
+    "en": "Reservation Only",
+    "zh": "需提前预约",
+    "ja": "事前予約制",
+    "ru": "По предварительной записи",
+    "vi": "Yêu cầu đặt trước"
   },
   "상급종합병원·호텔 인접": {
     "en": "Near Tertiary Hospital & Hotel",
@@ -857,6 +920,13 @@ export const KO_LABELS = {
     "ru": "Стиль диктора",
     "vi": "Phong cách phát thanh viên"
   },
+  "아미 필수 성지": {
+    "en": "Must-Visit ARMY Mecca",
+    "zh": "ARMY必访圣地",
+    "ja": "ARMY必見の聖地",
+    "ru": "Мекка для ARMY",
+    "vi": "Thánh địa phải đến của ARMY"
+  },
   "아이유 단골": {
     "en": "Frequented by IU",
     "zh": "IU 常客店铺",
@@ -983,6 +1053,13 @@ export const KO_LABELS = {
     "ru": "Палата восстановления для иностранцев · VIP",
     "vi": "Phòng hồi phục dành riêng cho người nước ngoài · VIP"
   },
+  "외부 촬영 무료": {
+    "en": "Free Exterior Photography",
+    "zh": "室外拍照免费",
+    "ja": "外部撮影無料",
+    "ru": "Бесплатная съёмка снаружи",
+    "vi": "Chụp ảnh bên ngoài miễn phí"
+  },
   "원스톱 메디컬 빌딩": {
     "en": "One-Stop Medical Building",
     "zh": "一站式医疗大楼",
@@ -1004,12 +1081,26 @@ export const KO_LABELS = {
     "ru": "Наибольшее количество случаев кератоконуса в Корее",
     "vi": "Số ca giác mạc chóp nhiều nhất Hàn Quốc"
   },
+  "유료 · 사전 예약제": {
+    "en": "Paid · Reservation Only",
+    "zh": "收费 · 需提前预约",
+    "ja": "有料 · 事前予約制",
+    "ru": "Платно · По предварительной записи",
+    "vi": "Trả phí · Yêu cầu đặt trước"
+  },
   "유튜브 50만 뷰티에이징": {
     "en": "YouTube 500K Beauty Aging",
     "zh": "YouTube 50万 Beauty Aging",
     "ja": "YouTube 50万ビューティーエイジング",
     "ru": "YouTube 500 тыс. просмотров Beauty Aging",
     "vi": "YouTube 500k lượt xem về Beauty Aging"
+  },
+  "응원봉 성지": {
+    "en": "Lightstick Mecca",
+    "zh": "应援棒圣地",
+    "ja": "ペンライトの聖地",
+    "ru": "Мекка лайтстиков",
+    "vi": "Thánh địa Lightstick"
   },
   "의료기관 시술": {
     "en": "Medical Clinic Procedure",
@@ -1333,12 +1424,26 @@ export const KO_LABELS = {
     "ru": "Стильно и аккуратно",
     "vi": "Thời thượng & Tỉ mỉ"
   },
+  "특전 포토카드": {
+    "en": "Special Photocard",
+    "zh": "特典小卡",
+    "ja": "特典フォトカード",
+    "ru": "Эксклюзивная фотокарта",
+    "vi": "Thẻ ảnh đặc quyền"
+  },
   "특허 셀프테스터": {
     "en": "Patented Self-Tester",
     "zh": "专利自测仪",
     "ja": "特許取得セルフテスター",
     "ru": "Запатентованный селф-тестер",
     "vi": "Thiết bị tự kiểm tra có bằng sáng chế"
+  },
+  "팬사인회 응모": {
+    "en": "Fansign Entry",
+    "zh": "粉丝签名会抽奖",
+    "ja": "ファンサイン会応募",
+    "ru": "Заявка на фансайн",
+    "vi": "Đăng ký fan sign"
   },
   "포브스 선정": {
     "en": "Forbes Selected",

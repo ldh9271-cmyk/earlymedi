@@ -4,6 +4,7 @@ import type { PublicLocale } from '@/lib/i18n/locales';
 import { fetchListingBySlug, type ListingDetail } from '@/lib/listings/query';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { localizePriceUnit } from '@/lib/i18n/price-unit';
+import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { DetailInfo } from './_components/detail-info';
 import { HeroMobileCarousel } from './_components/hero-mobile-carousel';
 
@@ -77,10 +78,18 @@ export default async function ListingDetailPage({
   const subtitleKr = subtitleForCategory(listing.category, d.subtitles);
   const hostName = hostNameForCategory(listing.category);
   const highlights = pickHighlights(listing, params.locale, d.defaultHighlights);
+  // 가격 미설정 상품은 details.priceRange 자유형 라벨('무료 입장' 등)
+  // 우선 — K팝 성지 같은 무료 스팟이 '문의'로 보이지 않도록.
+  const freeformPrice =
+    typeof listing.details.priceRange === 'string' ? listing.details.priceRange : null;
   const priceLabel = listing.priceWon
     ? `₩${listing.priceWon.toLocaleString('ko-KR')}`
-    : '문의';
-  const priceUnit = localizePriceUnit(listing.priceUnit, listing.category, d.units, params.locale);
+    : freeformPrice
+      ? localizeKoLabel(freeformPrice, params.locale)
+      : d.inquire;
+  const priceUnit = listing.priceWon
+    ? localizePriceUnit(listing.priceUnit, listing.category, d.units, params.locale)
+    : '';
   // String concat instead of template literal — SWC's JSX parser
   // mis-counts braces when ${encodeURIComponent(...)} sits before
   // the next <div> and throws "Unexpected token `div`". See memory

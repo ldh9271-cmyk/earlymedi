@@ -38,6 +38,7 @@ import { SEOUL_MAKEUP_PRODUCTS } from '@/lib/listings/seoul-makeup-products';
 import { SEOUL_HAIR_PRODUCTS } from '@/lib/listings/seoul-hair-products';
 import { SEOUL_PMU_PRODUCTS } from '@/lib/listings/seoul-pmu-products';
 import { SEOUL_PHOTO_PRODUCTS } from '@/lib/listings/seoul-photo-products';
+import { SEOUL_KPOP_PRODUCTS } from '@/lib/listings/seoul-kpop-products';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 
 async function requireMaster(): Promise<true | never> {
@@ -739,6 +740,80 @@ export async function seedSeoulPhotoAction(_formData: FormData): Promise<void> {
 
   revalidateListingSurfaces();
   redirect(`/master/listings?seedSeoulPhoto=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 서울 K팝 성지/굿즈샵 12곳 일괄 등록 (HYBE·SM·JYP·YG + 강남권).
+ *
+ *   - category='kpop_tour', status='approved'. 무료 스팟 위주라
+ *     priceWon 은 null — 카드/상세 가격 자리엔 details.priceRange
+ *     ('무료 입장' 등)가 ko-label 맵으로 번역되어 표시.
+ *   - details 에 address(구글 지도) + station/contents/priceRange/tip
+ *     + subType='free' + seoTags + og 저장.
+ *   - SEO 메타는 partner_listing_locale_content 의 kr 행에 저장 —
+ *     translate-locale-content.mjs 가 이후 5개 로케일 생성.
+ *   - 멱등: 같은 slug 가 이미 있으면 skip.
+ */
+export async function seedSeoulKpopAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of SEOUL_KPOP_PRODUCTS) {
+    const existing = await db
+      .select({ id: partnerListings.id })
+      .from(partnerListings)
+      .where(eq(partnerListings.slug, p.slug))
+      .limit(1);
+    if (existing.length > 0) {
+      skipped += 1;
+      continue;
+    }
+    const [row] = await db
+      .insert(partnerListings)
+      .values({
+        ownerOrgId: ownerOrgId as string,
+        category: 'kpop_tour',
+        slug: p.slug,
+        title: p.title,
+        description: p.description,
+        locationLabel: p.locationLabel,
+        addressJson: { city: '서울' },
+        status: 'approved',
+        featured: false,
+        sortOrder: 100,
+        priceWon: null,
+        priceUnit: null,
+        interestKey: 'kpop',
+        promoLabel: p.promoLabel,
+        details: {
+          address: p.address,
+          station: p.station,
+          contents: p.contents,
+          priceRange: p.priceRange,
+          tip: p.tip,
+          subType: 'free',
+          seoTags: [...p.seoTags],
+          og: p.ogDescription,
+        },
+      })
+      .returning({ id: partnerListings.id });
+    if (row) {
+      await db.insert(partnerListingLocaleContent).values({
+        listingId: row.id,
+        locale: 'kr',
+        seoTitle: p.seoTitle,
+        seoDescription: p.seoDescription,
+      });
+    }
+    inserted += 1;
+  }
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings?seedSeoulKpop=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /**

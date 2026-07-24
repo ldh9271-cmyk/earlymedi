@@ -170,10 +170,18 @@ function ListingCardLink({
   d: Dictionary['detail'];
 }): JSX.Element {
   const rating = listing.rating ? (listing.rating / 10).toFixed(2) : null;
+  // 가격 미설정 상품은 details.priceRange 자유형 라벨('무료 입장' 등)
+  // 우선 — K팝 성지 같은 무료 스팟이 '문의'로 보이지 않도록.
+  const freeform =
+    typeof listing.details.priceRange === 'string' ? listing.details.priceRange : null;
   const price = listing.priceWon
     ? `₩${listing.priceWon.toLocaleString('ko-KR')}`
-    : d.inquire;
-  const unit = localizePriceUnit(listing.priceUnit, listing.category, d.units, locale);
+    : freeform
+      ? localizeKoLabel(freeform, locale)
+      : d.inquire;
+  const unit = listing.priceWon
+    ? localizePriceUnit(listing.priceUnit, listing.category, d.units, locale)
+    : '';
   return (
     <Link
       href={`/${locale}/listings/${listing.slug}`}

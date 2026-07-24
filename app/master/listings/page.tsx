@@ -32,6 +32,7 @@ import {
   seedSeoulHairAction,
   seedSeoulPmuAction,
   seedSeoulPhotoAction,
+  seedSeoulKpopAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -657,6 +658,27 @@ export default async function MasterListingsPage({
           className="rounded-md border border-cyan-400 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-800 hover:bg-cyan-50"
         >
           사진 스튜디오 10종 일괄 등록
+        </button>
+      </form>
+
+      {/* 서울 K팝 성지/굿즈샵 일괄 등록 트리거 */}
+      <form
+        action={seedSeoulKpopAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-violet-300 bg-violet-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">서울 K팝 성지/굿즈샵 12종 일괄 등록</p>
+          <p className="mt-0.5">
+            하이브 본사·하이브 인사이트·광야@서울·SM타운 DDP·JYP 더스퀘어·YG 더세임·
+            K스타로드·Ktown4u·핫트랙스·위드뮤·뮤직코리아·코엑스 스팟. category=kpop_tour,
+            무료 스팟은 priceRange 라벨 표시. 같은 slug 는 자동 스킵 (멱등).
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-violet-400 bg-white px-3 py-1.5 text-xs font-semibold text-violet-800 hover:bg-violet-50"
+        >
+          K팝 투어 12종 일괄 등록
         </button>
       </form>
 
