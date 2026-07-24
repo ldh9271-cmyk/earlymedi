@@ -283,6 +283,83 @@ export default async function ListingDetailPage({
         </div>
       </section>
 
+      {/* 여행 일정 — details.itinerary 가 있는 여행 패키지 전용 섹션.
+          [{ day: '1일차', title: '도착 & 호텔 체크인',
+             items: ['공항 픽업 → 명동 호텔', ...] }] 구조를 데이별
+          타임라인 카드로 렌더. 2026-07-24 K-뷰티 투어 패키지용 추가. */}
+      {(() => {
+        const raw = listing.details.itinerary;
+        if (!Array.isArray(raw) || raw.length === 0) return null;
+        const days = raw
+          .map((d) => {
+            const o = d as { day?: string; title?: string; items?: unknown[] };
+            return {
+              day: typeof o.day === 'string' ? o.day : '',
+              title: typeof o.title === 'string' ? o.title : '',
+              items: Array.isArray(o.items)
+                ? o.items.filter((x): x is string => typeof x === 'string')
+                : [],
+            };
+          })
+          .filter((d) => d.day && d.items.length > 0);
+        if (days.length === 0) return null;
+        return (
+          <>
+            <Divider />
+            <section style={{ padding: '0 22px' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 18px', lineHeight: 1.3 }}>
+                여행 일정
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {days.map((d, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      border: '1px solid #ebebeb', borderRadius: 14,
+                      padding: '18px 20px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                      <span
+                        style={{
+                          flexShrink: 0,
+                          background: '#ff385c', color: '#fff',
+                          fontSize: 12, fontWeight: 700,
+                          borderRadius: 9999, padding: '4px 12px',
+                        }}
+                      >
+                        {d.day}
+                      </span>
+                      <span style={{ fontSize: 15, fontWeight: 700 }}>{d.title}</span>
+                    </div>
+                    <ul style={{ margin: '12px 0 0', padding: 0, listStyle: 'none' }}>
+                      {d.items.map((item, j) => (
+                        <li
+                          key={j}
+                          style={{
+                            display: 'flex', alignItems: 'flex-start', gap: 10,
+                            fontSize: 14, color: '#3f3f3f', lineHeight: 1.6,
+                            padding: '4px 0',
+                          }}
+                        >
+                          <span
+                            style={{
+                              flexShrink: 0, width: 5, height: 5, borderRadius: 9999,
+                              background: 'rgba(255,56,92,0.5)', marginTop: 9,
+                            }}
+                          />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        );
+      })()}
+
       {/* 상세 정보 — detail landing image + Google map. Renders only
           when at least one of (detailLandingImageUrl, address) is set
           in details JSONB. Image starts truncated to 600px with an
