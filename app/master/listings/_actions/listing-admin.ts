@@ -35,6 +35,7 @@ import { PARTNER_PRODUCTS } from '@/lib/listings/seoul-partner-products';
 import { SEOUL_NAIL_PRODUCTS } from '@/lib/listings/seoul-nail-products';
 import { SEOUL_PERSONAL_COLOR_PRODUCTS } from '@/lib/listings/seoul-personal-color-products';
 import { SEOUL_MAKEUP_PRODUCTS } from '@/lib/listings/seoul-makeup-products';
+import { SEOUL_HAIR_PRODUCTS } from '@/lib/listings/seoul-hair-products';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 
 async function requireMaster(): Promise<true | never> {
@@ -515,6 +516,79 @@ export async function seedSeoulMakeupAction(_formData: FormData): Promise<void> 
 
   revalidateListingSurfaces();
   redirect(`/master/listings?seedSeoulMakeup=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 청담·압구정 외국인 FIT 추천 헤어샵 9곳 일괄 등록.
+ *
+ *   - category='hair', status='approved', details 에 address(구글
+ *     지도) + phone/station/services/priceRange/foreignerSupport
+ *     + subType='free' + seoTags + og 저장.
+ *   - SEO 메타는 partner_listing_locale_content 의 kr 행에 저장 —
+ *     translate-locale-content.mjs 가 이후 5개 로케일 생성.
+ *   - 멱등: 같은 slug 가 이미 있으면 skip.
+ */
+export async function seedSeoulHairAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of SEOUL_HAIR_PRODUCTS) {
+    const existing = await db
+      .select({ id: partnerListings.id })
+      .from(partnerListings)
+      .where(eq(partnerListings.slug, p.slug))
+      .limit(1);
+    if (existing.length > 0) {
+      skipped += 1;
+      continue;
+    }
+    const [row] = await db
+      .insert(partnerListings)
+      .values({
+        ownerOrgId: ownerOrgId as string,
+        category: 'hair',
+        slug: p.slug,
+        title: p.title,
+        description: p.description,
+        locationLabel: p.locationLabel,
+        addressJson: { city: '서울' },
+        status: 'approved',
+        featured: false,
+        sortOrder: 100,
+        priceWon: p.priceWon,
+        priceUnit: '세션',
+        interestKey: 'makeup',
+        promoLabel: p.promoLabel,
+        details: {
+          address: p.address,
+          phone: p.phone ?? null,
+          station: p.station,
+          services: p.services,
+          priceRange: p.priceRange,
+          foreignerSupport: p.foreignerSupport,
+          subType: 'free',
+          seoTags: [...p.seoTags],
+          og: p.ogDescription,
+        },
+      })
+      .returning({ id: partnerListings.id });
+    if (row) {
+      await db.insert(partnerListingLocaleContent).values({
+        listingId: row.id,
+        locale: 'kr',
+        seoTitle: p.seoTitle,
+        seoDescription: p.seoDescription,
+      });
+    }
+    inserted += 1;
+  }
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings?seedSeoulHair=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /**

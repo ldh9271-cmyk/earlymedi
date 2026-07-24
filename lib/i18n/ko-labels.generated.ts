@@ -157,6 +157,13 @@ export const KO_LABELS = {
     "ru": "5 языков · Осмотр и лечение «под ключ»",
     "vi": "Thông dịch 5 ngôn ngữ · Khám-điều trị 1 điểm"
   },
+  "BTS·트와이스 스타일링": {
+    "en": "BTS·TWICE Styling",
+    "zh": "BTS·TWICE 造型",
+    "ja": "BTS・TWICEスタイリング",
+    "ru": "Стиль BTS·TWICE",
+    "vi": "Tạo kiểu BTS·TWICE"
+  },
   "FIMS 비수술 통증": {
     "en": "FIMS Non-Surgical Pain Care",
     "zh": "FIMS非手术疼痛治疗",
@@ -184,6 +191,13 @@ export const KO_LABELS = {
     "ja": "JCI認証・4ヶ国語対応",
     "ru": "Сертификация JCI · Поддержка на 4 языках",
     "vi": "Chứng nhận JCI · Hỗ trợ 4 ngôn ngữ"
+  },
+  "K단발·레이어드컷": {
+    "en": "K-Bob·Layered Cut",
+    "zh": "韩系短发·层次剪",
+    "ja": "Kボブ・レイヤードカット",
+    "ru": "K-боб·Слоистая стрижка",
+    "vi": "Tóc ngắn K·Cắt layered"
   },
   "K메디컬투어 협력기관": {
     "en": "K-Medical Tour Partner",
@@ -353,6 +367,13 @@ export const KO_LABELS = {
     "ru": "1-й клеточный центр в Корее · Глобальная сеть",
     "vi": "Cơ sở tế bào đầu tiên tại Hàn Quốc · Mạng lưới toàn cầu"
   },
+  "국내 최대 브랜드 본점": {
+    "en": "Korea's Largest Brand Flagship",
+    "zh": "韩国最大品牌总店",
+    "ja": "韓国最大ブランド flagship 本店",
+    "ru": "Крупнейший флагман бренда в Корее",
+    "vi": "Trụ sở thương hiệu lớn nhất HQ"
+  },
   "국내 최대·7개국어 코디네이터": {
     "en": "Korea's Largest · 7-Language Coordinators",
     "zh": "韩国最大·7种语言协调员",
@@ -507,6 +528,13 @@ export const KO_LABELS = {
     "ru": "1 мин от станции Rodeo",
     "vi": "1 phút từ Ga Rodeo"
   },
+  "로레알 파리 아티스트": {
+    "en": "L'Oréal Paris Artist",
+    "zh": "巴黎欧莱雅艺术家",
+    "ja": "ロレアル パリ アーティスト",
+    "ru": "Артист L'Oréal Paris",
+    "vi": "Nghệ sĩ L'Oréal Paris"
+  },
   "롯데 L7 라이프스타일": {
     "en": "Lotte L7 Lifestyle",
     "zh": "乐天 L7 Lifestyle",
@@ -520,6 +548,13 @@ export const KO_LABELS = {
     "ja": "ルーフトップ無料利用",
     "ru": "Бесплатный доступ на крышу",
     "vi": "Miễn phí sử dụng rooftop"
+  },
+  "맨즈 아이돌 특화": {
+    "en": "Male Idol Specialist",
+    "zh": "男团偶像特化",
+    "ja": "メンズアイドル特化",
+    "ru": "Мужские айдол-образы",
+    "vi": "Chuyên phong cách idol nam"
   },
   "메리어트 Moxy": {
     "en": "Marriott Moxy",
@@ -710,6 +745,13 @@ export const KO_LABELS = {
     "ru": "1-я категория в оценке потребителей 3 года подряд",
     "vi": "Hạng 1 Đánh giá người tiêu dùng 3 năm liên tiếp"
   },
+  "송혜교 스타일링": {
+    "en": "Song Hye-kyo Styling",
+    "zh": "宋慧乔造型",
+    "ja": "ソン・ヘギョ スタイリング",
+    "ru": "Стиль Сон Хе Гё",
+    "vi": "Tạo kiểu Song Hye-kyo"
+  },
   "수영장 무료 이용": {
     "en": "Free Pool Access",
     "zh": "免费使用游泳池",
@@ -766,12 +808,26 @@ export const KO_LABELS = {
     "ru": "Стиль диктора",
     "vi": "Phong cách phát thanh viên"
   },
+  "아이유 단골": {
+    "en": "Frequented by IU",
+    "zh": "IU 常客店铺",
+    "ja": "IU行きつけ",
+    "ru": "Любимое место IU",
+    "vi": "Tiệm quen của IU"
+  },
   "암케어센터·입원 가능": {
     "en": "Cancer Care Center · Inpatient Available",
     "zh": "癌症护理中心·可住院",
     "ja": "癌ケアセンター・入院可能",
     "ru": "Онкоцентр · Возможна госпитализация",
     "vi": "Trung tâm chăm sóc ung thư · Có thể nhập viện"
+  },
+  "에스파 단골": {
+    "en": "Frequented by aespa",
+    "zh": "aespa 常客店铺",
+    "ja": "aespa行きつけ",
+    "ru": "Любимое место aespa",
+    "vi": "Tiệm quen của aespa"
   },
   "여성 전문의 · 37년 무사고": {
     "en": "Female Specialist · 37 Years Accident-Free",
@@ -1115,6 +1171,13 @@ export const KO_LABELS = {
     "ja": "ヘルニア国内最多・メッシュフリー",
     "ru": "Максимум операций по грыже в Корее · Без сетки",
     "vi": "Phẫu thuật thoát vị nhiều nhất Hàn Quốc · Không dùng lưới"
+  },
+  "토탈 뷰티 랜드마크": {
+    "en": "Total Beauty Landmark",
+    "zh": "全方位美妆地标",
+    "ja": "トータルビューティー ランドマーク",
+    "ru": "Центр комплексной красоты",
+    "vi": "Biểu tượng làm đẹp toàn diện"
   },
   "토탈뷰티 원스톱": {
     "en": "One-Stop Total Beauty",
