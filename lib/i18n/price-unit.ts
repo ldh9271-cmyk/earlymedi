@@ -1,4 +1,5 @@
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
+import { localizeKoLabel } from './ko-label';
 
 type Units = Dictionary['detail']['units'];
 
@@ -26,7 +27,24 @@ export function localizePriceUnit(
   if (raw && locale === 'kr') return raw;
   if (raw) {
     const key = KO_TO_KEY[raw];
-    return key ? units[key] : raw;
+    if (key) return units[key];
+    // 복합 단위 '1인 (코스)' → 'person (course)'
+    const paren = raw.match(/^(.+?)\s*\((.+)\)$/);
+    if (paren) {
+      const outer = (paren[1] ?? '').trim();
+      const inner = (paren[2] ?? '').trim();
+      const a = KO_TO_KEY[outer];
+      const b = KO_TO_KEY[inner];
+      if (a) return `${units[a]} (${b ? units[b] : localizeKoLabel(inner, locale)})`;
+    }
+    // 'N박' → 'N nights'
+    const nNight = raw.match(/^(\d+)\s*박$/);
+    if (nNight) {
+      const n = Number(nNight[1]);
+      return `${n} ${units.night}${locale === 'en' && n > 1 ? 's' : ''}`;
+    }
+    // 자유형('실비+수수료 10%' 등) → 생성된 번역 맵 fallback
+    return localizeKoLabel(raw, locale);
   }
   if (category === 'hotel') return units.night;
   if (category === 'food' || category === 'restaurant') return units.person;

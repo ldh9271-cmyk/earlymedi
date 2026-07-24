@@ -10,19 +10,7 @@ import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content'
 
 export const dynamic = 'force-dynamic';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  plastic_surgery: '성형외과',
-  dermatology: '피부과',
-  dental: '치과',
-  hair: '모발',
-  health_checkup: '건강검진',
-  stem_cell: '줄기세포',
-  oriental: '한방병원',
-  partner: '파트너병원',
-  beauty_tour: '뷰티 투어',
-  makeup: '메이크업',
-  photo_studio: '사진 스튜디오',
-};
+// 카테고리 라벨은 dict.clinicsPage.categories 에서 로케일별로 조회.
 
 /**
  * Per-locale SEO metadata — unchanged from the previous version.
@@ -256,7 +244,7 @@ export default async function ClinicDetailPage({
           textDecoration: 'none',
         }}
       >
-        ← 모든 병원
+        ← {dict.clinicsPage.backToAll}
       </Link>
 
       <h1
@@ -290,7 +278,7 @@ export default async function ClinicDetailPage({
         {address.city ? <span>{address.city} · {row.countryCode}</span> : null}
         {cats.length > 0 ? (
           <span>
-            · {cats.slice(0, 3).map((c) => CATEGORY_LABELS[c] || c).join(' · ')}
+            · {cats.slice(0, 3).map((c) => (dict.clinicsPage.categories as Record<string, string>)[c] || c).join(' · ')}
           </span>
         ) : null}
       </div>
@@ -387,7 +375,7 @@ export default async function ClinicDetailPage({
             {aboutText ? (
               <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{aboutText}</p>
             ) : !landingUrl ? (
-              <p style={{ color: '#6a6a6a', margin: 0 }}>병원 상세 소개는 곧 추가됩니다.</p>
+              <p style={{ color: '#6a6a6a', margin: 0 }}>{dict.clinicsPage.introComingSoon}</p>
             ) : null}
           </div>
 
@@ -402,7 +390,7 @@ export default async function ClinicDetailPage({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={landingUrl}
-                alt={`${displayName} 랜딩 포스터`}
+                alt={displayName}
                 style={{ width: '100%', display: 'block' }}
                 loading="lazy"
               />
@@ -415,7 +403,7 @@ export default async function ClinicDetailPage({
             {dict.nav.reviews}
           </h2>
           <p style={{ fontSize: 14, color: '#6a6a6a', margin: 0 }}>
-            실제 환자 후기는 검증 절차를 거쳐 곧 공개됩니다.
+            {dict.clinicsPage.reviewsComingSoon}
           </p>
         </div>
 
@@ -464,7 +452,7 @@ export default async function ClinicDetailPage({
               marginTop: 14,
             }}
           >
-            예약 확정 전에는 요금이 청구되지 않습니다
+            {dict.detail.noChargeYet}
           </div>
         </div>
       </div>

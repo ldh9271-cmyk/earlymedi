@@ -3,6 +3,8 @@ import { eq, inArray, sql, and, gte } from 'drizzle-orm';
 import { BrandMark } from '../../_components/brand-mark';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
+import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { categoryListings } from '@/drizzle/schema/category-listings';
@@ -55,36 +57,24 @@ function cityFilterMatch(
   return cityWhitelist.some((w) => city.includes(w));
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  plastic_surgery: '성형외과',
-  dermatology: '피부과',
-  dental: '치과',
-  ophthalmology: '안과',
-  hair: '모발',
-  health_checkup: '건강검진',
-  stem_cell: '줄기세포',
-  oriental: '한방병원',
-  partner: '파트너병원',
-  beauty_tour: '뷰티 투어',
-  makeup: '메이크업',
-  photo_studio: '사진 스튜디오',
-};
-
 /**
  * Sub-category chips shown at the top of /clinics — what used to live
  * in the header dropdown. Order matches the founder-curated nav.
+ * Labels come from dict.clinicsPage.categories per locale.
  */
-const SUB_CHIPS: ReadonlyArray<{ key: string; label: string }> = [
-  { key: 'plastic_surgery', label: '성형외과' },
-  { key: 'dermatology',     label: '피부과' },
-  { key: 'dental',          label: '치과' },
-  { key: 'ophthalmology',   label: '안과' },
-  { key: 'hair',            label: '모발' },
-  { key: 'health_checkup',  label: '건강검진' },
-  { key: 'stem_cell',       label: '줄기세포' },
-  { key: 'oriental',        label: '한방병원' },
-  { key: 'partner',         label: '파트너병원' },
+const SUB_CHIP_KEYS: ReadonlyArray<CategoryLabelKey> = [
+  'plastic_surgery', 'dermatology', 'dental', 'ophthalmology', 'hair',
+  'health_checkup', 'stem_cell', 'oriental', 'partner',
 ];
+
+type CategoryLabelKey = keyof Dictionary['clinicsPage']['categories'];
+
+function categoryLabel(
+  key: string,
+  labels: Dictionary['clinicsPage']['categories'],
+): string {
+  return (labels as Record<string, string>)[key] || key;
+}
 
 // Inline mobile CSS — stored as plain string to dodge the SWC parser
 // quirk (see feedback_swc_inline_css memory).
@@ -299,7 +289,7 @@ export default async function ClinicsListPage({
   }
 
   const headerLabel = categoryFilter
-    ? CATEGORY_LABELS[categoryFilter] || dict.nav.clinics
+    ? categoryLabel(categoryFilter, dict.clinicsPage.categories) || dict.nav.clinics
     : dict.nav.clinics;
 
   return (
@@ -317,7 +307,7 @@ export default async function ClinicsListPage({
       </h1>
       <p className="m-cl-subtitle" style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
         {filtered.length > 0
-          ? `${filtered.length}곳의 검증된 병원 · 후기 · 예상 비용 안내`
+          ? dict.clinicsPage.countSubtitle.replace('{n}', String(filtered.length))
           : dict.featured.subtitle}
       </p>
 
@@ -335,16 +325,16 @@ export default async function ClinicsListPage({
         <ChipLink
           locale={params.locale}
           href={`/${params.locale}/clinics`}
-          label="전체"
+          label={dict.clinicsPage.all}
           active={!categoryFilter}
         />
-        {SUB_CHIPS.map((c) => (
+        {SUB_CHIP_KEYS.map((key) => (
           <ChipLink
-            key={c.key}
+            key={key}
             locale={params.locale}
-            href={`/${params.locale}/clinics?category=${c.key}`}
-            label={c.label}
-            active={categoryFilter === c.key}
+            href={`/${params.locale}/clinics?category=${key}`}
+            label={dict.clinicsPage.categories[key]}
+            active={categoryFilter === key}
           />
         ))}
       </div>
@@ -386,6 +376,7 @@ export default async function ClinicsListPage({
               key={h.id}
               hospital={h}
               locale={params.locale}
+              categoryLabels={dict.clinicsPage.categories}
             />
           ))}
         </div>
@@ -397,9 +388,11 @@ export default async function ClinicsListPage({
 function ClinicCard({
   hospital,
   locale,
+  categoryLabels,
 }: {
   hospital: ClinicRow;
   locale: PublicLocale;
+  categoryLabels: Dictionary['clinicsPage']['categories'];
 }): JSX.Element {
   return (
     <Link
@@ -480,7 +473,7 @@ function ClinicCard({
               boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
             }}
           >
-            {hospital.promoLabel}
+            {localizeKoLabel(hospital.promoLabel, locale)}
           </div>
         ) : null}
         <div style={{ position: 'absolute', top: 12, right: 12 }}>
@@ -502,7 +495,7 @@ function ClinicCard({
       <div className="m-cl-card-tags" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 3 }}>
         {hospital.primaryCategories
           .slice(0, 3)
-          .map((c) => CATEGORY_LABELS[c] || c)
+          .map((c) => categoryLabel(c, categoryLabels))
           .join(' · ')}
       </div>
     </Link>

@@ -6,6 +6,7 @@ import { MainFooter } from '../../../../_components/main-footer';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { localizePriceUnit } from '@/lib/i18n/price-unit';
+import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { fetchListingsForSurface, type ListingCard } from '@/lib/listings/query';
 import type { ListingCategory } from '@/lib/listings/categories';
 import { type PcCategoryKey } from '../../_components/pc-header';
@@ -42,16 +43,7 @@ const KEY_TO_CATEGORIES: Record<Exclude<PcCategoryKey, 'all'>, ListingCategory[]
   hotel:  ['hotel'],
 };
 
-const PAGE_TITLE: Record<Exclude<PcCategoryKey, 'all'>, { title: string; subtitle: string }> = {
-  color:  { title: '퍼스널 컬러',   subtitle: '나에게 맞는 컬러를 찾는 1:1 진단·드레이핑 프로그램' },
-  skin:   { title: '피부 케어',     subtitle: 'AI 진단부터 트리트먼트까지, 맞춤 피부 관리' },
-  hair:   { title: '헤어샵',        subtitle: '강남·청담 K-스타일링 — 컷·펌·컬러 전문 살롱' },
-  photo:  { title: '사진 스튜디오', subtitle: '프로필·여행·웨딩 — 전문 스튜디오 + 헤어/메이크업' },
-  makeup: { title: '메이크업샵',    subtitle: '아티스트 1:1 레슨 · 자기 메이크업 완성하기' },
-  kpop:   { title: 'K-팝 투어',     subtitle: 'HYBE · SM · JYP · YG — 4사 성지와 굿즈 동행' },
-  food:   { title: '서울 맛집',     subtitle: '한우구이 · 한정식 · 미슐랭 다이닝 큐레이션' },
-  hotel:  { title: '호텔',          subtitle: '명동 · 강남 · 청담 — 프리미엄 숙박' },
-};
+// 히어로 타이틀·부제는 dict.pcCategory[key] 에서 로케일별로 가져온다.
 
 const LIST_CSS =
   '@media (max-width: 768px) {'
@@ -70,7 +62,8 @@ export async function generateMetadata({
   params: { locale: PublicLocale; key: string };
 }) {
   if (!VALID_KEYS.has(params.key as Exclude<PcCategoryKey, 'all'>)) return {};
-  const p = PAGE_TITLE[params.key as Exclude<PcCategoryKey, 'all'>];
+  const dict = await getDictionary(params.locale);
+  const p = dict.pcCategory[params.key as Exclude<PcCategoryKey, 'all'>];
   return { title: `${p.title} · KoreaGlowUp`, description: p.subtitle };
 }
 
@@ -84,7 +77,7 @@ export default async function CategoryListPage({
   }
   const key = params.key as Exclude<PcCategoryKey, 'all'>;
   const dict = await getDictionary(params.locale);
-  const meta = PAGE_TITLE[key];
+  const meta = dict.pcCategory[key];
   const listings = await fetchListingsForSurface({
     locale: params.locale,
     categories: KEY_TO_CATEGORIES[key],
@@ -141,7 +134,7 @@ export default async function CategoryListPage({
         </p>
 
         {listings.length === 0 ? (
-          <EmptyState locale={params.locale} />
+          <EmptyState locale={params.locale} t={dict.pcCategory} />
         ) : (
           <div
             className="m-cl-grid"
@@ -212,7 +205,7 @@ function ListingCardLink({
               boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
             }}
           >
-            {listing.promoLabel}
+            {localizeKoLabel(listing.promoLabel, locale)}
           </div>
         ) : null}
       </div>
@@ -269,7 +262,13 @@ function ListingCardLink({
   );
 }
 
-function EmptyState({ locale }: { locale: PublicLocale }): JSX.Element {
+function EmptyState({
+  locale,
+  t,
+}: {
+  locale: PublicLocale;
+  t: Dictionary['pcCategory'];
+}): JSX.Element {
   return (
     <div
       style={{
@@ -286,10 +285,10 @@ function EmptyState({ locale }: { locale: PublicLocale }): JSX.Element {
         <path d="M8 12h8M12 8v8" />
       </svg>
       <h3 style={{ fontSize: 18, fontWeight: 700, margin: '14px 0 0' }}>
-        지금 큐레이션 중입니다
+        {t.emptyTitle}
       </h3>
       <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0', maxWidth: 360, marginInline: 'auto' }}>
-        이 카테고리의 상품은 곧 공개됩니다. 원하시는 일정·예산을 알려주시면 컨시어지가 직접 안내드려요.
+        {t.emptyBody}
       </p>
       <Link
         href={`/${locale}/inquiry`}
@@ -303,7 +302,7 @@ function EmptyState({ locale }: { locale: PublicLocale }): JSX.Element {
           textDecoration: 'none',
         }}
       >
-        1:1 상담 시작하기
+        {t.emptyCta}
       </Link>
     </div>
   );

@@ -6,6 +6,7 @@ import { MainFooter } from '../../_components/main-footer';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { localizePriceUnit } from '@/lib/i18n/price-unit';
+import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { fetchListingsForSurface, type ListingCard } from '@/lib/listings/query';
 
 export const dynamic = 'force-dynamic';
@@ -188,7 +189,7 @@ function ListingCardLink({
               boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
             }}
           >
-            {listing.promoLabel}
+            {localizeKoLabel(listing.promoLabel, locale)}
           </div>
         ) : null}
       </div>
