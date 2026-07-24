@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, eq, gte, inArray, lte, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, notInArray, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import {
   partnerListings,
@@ -92,6 +92,36 @@ export async function fetchFeaturedListings(opts: {
       .from(partnerListings)
       .where(and(...whereParts))
       .orderBy(asc(partnerListings.sortOrder));
+
+    // Featured 큐레이션이 limit 에 못 미치면 나머지를 실등록 상품
+    // (approved, featured 무관) 으로 채움 — 마스터가 아직 featured 를
+    // 지정하지 않아도 메인이 가상 샘플 대신 실상품을 노출하도록.
+    // 2026-07-24 메인 실데이터 연결.
+    const want = typeof limit === 'number' ? limit : 0;
+    if (want > 0 && rows.length < want) {
+      const fillParts: SQL[] = [
+        inArray(partnerListings.category, categories),
+        eq(partnerListings.status, 'approved'),
+      ];
+      if (typeof priceMin === 'number' && priceMin > 0) {
+        fillParts.push(gte(partnerListings.priceWon, priceMin));
+      }
+      if (typeof priceMax === 'number' && priceMax > 0) {
+        fillParts.push(lte(partnerListings.priceWon, priceMax));
+      }
+      if (typeof minRating === 'number' && minRating > 0) {
+        fillParts.push(gte(partnerListings.rating, minRating));
+      }
+      const seen = rows.map((r) => r.id);
+      if (seen.length > 0) fillParts.push(notInArray(partnerListings.id, seen));
+      const fill = await db
+        .select()
+        .from(partnerListings)
+        .where(and(...fillParts))
+        .orderBy(asc(partnerListings.sortOrder), desc(partnerListings.updatedAt))
+        .limit(want * 2); // 도시 필터로 걸러질 여유분 포함
+      rows = [...rows, ...fill];
+    }
   } catch {
     return [];
   }

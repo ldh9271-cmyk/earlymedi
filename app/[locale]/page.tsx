@@ -228,7 +228,7 @@ export default async function PublicLandingPage({
         <Programs locale={locale} dbCards={dbPrograms} t={dict.landing} />
         <Course locale={locale} t={dict.landing} />
         <Foods locale={locale} dbCards={dbFoods} t={dict.landing} />
-        <KpopRow t={dict.landing} />
+        <KpopRow locale={locale} t={dict.landing} />
         <HotelAndFinalCta locale={locale} dbHotel={dbHotel} t={dict.landing} />
       </main>
 
@@ -372,7 +372,7 @@ function Programs({
       }));
   return (
     <section id="programs" className="m-section" style={{ padding: '56px 0 0', scrollMarginTop: 200 }}>
-      <SectionHeader title={t.programsTitle} viewAllLabel={t.sectionViewAll} />
+      <SectionHeader title={t.programsTitle} viewAllLabel={t.sectionViewAll} href={`/${locale}/glowup/pc`} />
       <div
         className="m-grid-4"
         style={{
@@ -444,7 +444,7 @@ function Course({
 }): JSX.Element {
   return (
     <section className="m-section" style={{ padding: '56px 0 0' }}>
-      <SectionHeader title={t.courseTitle} viewAllLabel={t.sectionViewAll} />
+      <SectionHeader title={t.courseTitle} viewAllLabel={t.sectionViewAll} href={`/${locale}/travel/package`} />
       <div
         className="m-course-grid"
         style={{
@@ -612,7 +612,7 @@ function Foods({
       }));
   return (
     <section className="m-section" style={{ padding: '56px 0 0' }}>
-      <SectionHeader title={t.foodsTitle} viewAllLabel={t.sectionViewAll} />
+      <SectionHeader title={t.foodsTitle} viewAllLabel={t.sectionViewAll} href={`/${locale}/glowup/pc/c/food`} />
       <div
         className="m-grid-4"
         style={{
@@ -717,20 +717,20 @@ const KPOP_HOUSES: Array<{
   },
 ];
 
-function KpopRow({ t }: { t: Dictionary['landing'] }): JSX.Element {
+function KpopRow({ locale, t }: { locale: PublicLocale; t: Dictionary['landing'] }): JSX.Element {
   // Brand name + logo + card background stay hardcoded (asset +
   // proper noun), but area/spot text comes from dict so non-Korean
   // visitors see "Yongsan / HYBE Insight Museum" instead of "용산".
+  // 카드 클릭 시 K-팝 투어 카테고리 목록으로 이동 (실상품 연결).
   const houses = KPOP_HOUSES.map((h, i) => ({
     ...h,
     area: t.kpopHouses[i]?.area ?? h.area,
     spot: t.kpopHouses[i]?.spot ?? h.spot,
   }));
+  const kpopHref = `/${locale}/glowup/pc/c/kpop`;
   return (
     <section className="m-section" style={{ padding: '40px 0 0' }}>
-      <h2 className="m-section-h2" style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>
-        {t.kpopTitle}
-      </h2>
+      <SectionHeader title={t.kpopTitle} viewAllLabel={t.sectionViewAll} href={kpopHref} />
       <div
         className="m-kpop-grid"
         style={{
@@ -739,7 +739,11 @@ function KpopRow({ t }: { t: Dictionary['landing'] }): JSX.Element {
         }}
       >
         {houses.map((h) => (
-          <div key={h.brand}>
+          <Link
+            key={h.brand}
+            href={kpopHref}
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
             <div
               style={{
                 aspectRatio: '16/10', borderRadius: 14, overflow: 'hidden',
@@ -763,7 +767,7 @@ function KpopRow({ t }: { t: Dictionary['landing'] }): JSX.Element {
             <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>
               {h.area} · {h.spot}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </section>
@@ -814,6 +818,10 @@ function HotelAndFinalCta({
     priceUnit: dbHotel?.priceUnit ?? '박',
     promoLabel: dbHotel?.promoLabel ?? t.hotelPromoLabel,
   };
+  // 실상품 연결: DB 호텔이 있으면 해당 상세로, 없으면 호텔 카테고리로.
+  const hotelHref = dbHotel?.slug
+    ? `/${locale}/listings/${dbHotel.slug}`
+    : `/${locale}/glowup/pc/c/hotel`;
   return (
     <>
       <section className="m-section" style={{ padding: '56px 0 0' }}>
@@ -824,16 +832,25 @@ function HotelAndFinalCta({
             alignItems: 'center',
           }}
         >
-          <div
+          <Link
+            href={hotelHref}
             style={{
+              display: 'block',
               aspectRatio: '5/4', borderRadius: 20, overflow: 'hidden',
               background: `#f2f2f2 url(${hotel.img}) center / cover`,
             }}
           />
           <div>
-            <div className="m-hotel-title" style={{ fontSize: 21, fontWeight: 600, letterSpacing: '-0.18px' }}>
+            <Link
+              href={hotelHref}
+              className="m-hotel-title"
+              style={{
+                fontSize: 21, fontWeight: 600, letterSpacing: '-0.18px',
+                color: 'inherit', textDecoration: 'none',
+              }}
+            >
               {hotel.title}
-            </div>
+            </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 24 }}>
               <svg className="m-hotel-rating-wing" width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
                 <path d="M20 4C10 10 8 26 12 40c1.5 5 3 12 2 20" />
@@ -943,22 +960,29 @@ function HotelAndFinalCta({
 function SectionHeader({
   title,
   viewAllLabel,
+  href,
 }: {
   title: string;
   viewAllLabel: string;
+  /** 전체보기 목적지 — 해당 카테고리 목록 페이지. 없으면 라벨 숨김. */
+  href?: string;
 }): JSX.Element {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <h2 className="m-section-h2" style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.44px', margin: 0 }}>{title}</h2>
-      <span
-        className="m-section-viewall"
-        style={{
-          display: 'flex', alignItems: 'center', gap: 4,
-          color: '#222', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-        }}
-      >
-        {viewAllLabel} <span style={{ fontSize: 16 }}>›</span>
-      </span>
+      {href ? (
+        <Link
+          href={href}
+          className="m-section-viewall"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            color: '#222', fontSize: 14, fontWeight: 600,
+            textDecoration: 'none',
+          }}
+        >
+          {viewAllLabel} <span style={{ fontSize: 16 }}>›</span>
+        </Link>
+      ) : null}
     </div>
   );
 }
