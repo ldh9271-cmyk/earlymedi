@@ -26,6 +26,7 @@ import {
   seedStemCellAction,
   seedOrientalAction,
   seedPartnerAction,
+  seedSeoulNailAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -525,6 +526,27 @@ export default async function MasterListingsPage({
           className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-50"
         >
           맛집 10종 일괄 등록
+        </button>
+      </form>
+
+      {/* 강남·서초·청담 외국인 FIT 네일샵 일괄 등록 트리거 */}
+      <form
+        action={seedSeoulNailAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-pink-300 bg-pink-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">강남·서초·청담 네일샵 12종 일괄 등록</p>
+          <p className="mt-0.5">
+            유니스텔라·네일탐투나·위치네일즈·공간네일·미미에덴·제이원·포유뷰티·네일팰리스·
+            강남네일맑음·플로우네일·H2네일·서초 심야네일. category=nail, SEO 메타는
+            locale content(kr) 에 저장. 같은 slug 가 이미 있으면 자동 스킵 (멱등).
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-pink-400 bg-white px-3 py-1.5 text-xs font-semibold text-pink-800 hover:bg-pink-50"
+        >
+          네일샵 12종 일괄 등록
         </button>
       </form>
 

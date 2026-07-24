@@ -3,6 +3,13 @@
 // 직접 수정하지 말고 스크립트를 다시 실행할 것.
 /* eslint-disable */
 export const KO_LABELS = {
+  "100% 예약제": {
+    "en": "100% By Appointment",
+    "zh": "100%预约制",
+    "ja": "100%完全予約制",
+    "ru": "100% по записи",
+    "vi": "100% Đặt lịch trước"
+  },
   "18~20층 3개층 규모": {
     "en": "3 Floors (18th–20th F)",
     "zh": "占地3层（18~20楼）",
@@ -44,6 +51,13 @@ export const KO_LABELS = {
     "ja": "1名（コース）",
     "ru": "1 чел. (курс)",
     "vi": "1 người (gói)"
+  },
+  "1층 접근성": {
+    "en": "Easy 1st Floor Access",
+    "zh": "1楼位置方便",
+    "ja": "1階でアクセス抜群",
+    "ru": "Удобный доступ на 1 этаже",
+    "vi": "Vị trí tầng 1 thuận tiện"
   },
   "2023년 리뉴얼": {
     "en": "Renewed in 2023",
@@ -178,6 +192,13 @@ export const KO_LABELS = {
     "ru": "Партнер K-Medical Tour",
     "vi": "Đối tác K-Medical Tour"
   },
+  "K팝 셀럽 네일 성지": {
+    "en": "K-pop Celeb Nail Mecca",
+    "zh": "K-pop明星美甲圣地",
+    "ja": "K-POPセレブネイルの聖地",
+    "ru": "Мекка K-pop ногтевого дизайна",
+    "vi": "Thánh địa Nail Celeb K-pop"
+  },
   "VIP 센터 운영": {
     "en": "VIP Center",
     "zh": "运营VIP中心",
@@ -198,6 +219,13 @@ export const KO_LABELS = {
     "ja": "Visit Seoul 医療観光公式登録",
     "ru": "Официальный член Visit Seoul Medical Tourism",
     "vi": "Đối tác chính thức Visit Seoul Du lịch Y tế"
+  },
+  "감성 네일": {
+    "en": "Aesthetic Nails",
+    "zh": "氛围感美甲",
+    "ja": "ニュアンスネイル",
+    "ru": "Эстетичный маникюр",
+    "vi": "Nail nghệ thuật phong cách"
   },
   "강남구 의료관광 공식 협력": {
     "en": "Gangnam-gu Official Medical Tourism Partner",
@@ -521,6 +549,27 @@ export const KO_LABELS = {
     "ru": "Полдня",
     "vi": "Nửa ngày"
   },
+  "발톱교정 특화": {
+    "en": "Toenail Correction Specialist",
+    "zh": "趾甲矫正特化",
+    "ja": "巻き爪矯正特化",
+    "ru": "Специализация: коррекция ногтей",
+    "vi": "Chuyên chỉnh hình móng chân"
+  },
+  "밤 11시 심야 운영": {
+    "en": "Open Late until 11 PM",
+    "zh": "营业至深夜11点",
+    "ja": "夜11時まで深夜営業",
+    "ru": "Ночная работа до 23:00",
+    "vi": "Mở cửa muộn đến 23:00"
+  },
+  "밤 9시까지 운영": {
+    "en": "Open until 9 PM",
+    "zh": "营业至晚上9点",
+    "ja": "夜9時まで営業",
+    "ru": "Работает до 21:00",
+    "vi": "Mở cửa đến 21:00"
+  },
   "보건복지부장관상 수상": {
     "en": "Minister of Health Award Winner",
     "zh": "荣获保健福祉部长官奖",
@@ -695,6 +744,27 @@ export const KO_LABELS = {
     "ja": "女医院長・女性/ヘアライン特化",
     "ru": "Женщина-главврач · Специализация: женщины/линия роста волос",
     "vi": "Viện trưởng nữ · Chuyên sâu cho nữ/Đường viền tóc"
+  },
+  "연예인 단골 살롱": {
+    "en": "Celebrity Favorite Salon",
+    "zh": "明星常客美甲店",
+    "ja": "芸能人御用達サロン",
+    "ru": "Любимый салон знаменитостей",
+    "vi": "Salon quen thuộc của sao"
+  },
+  "연장 아트 전문 본점": {
+    "en": "Extension & Art Specialist HQ",
+    "zh": "延长与艺术美甲专业总店",
+    "ja": "スカルプ＆アート専門本店",
+    "ru": "Главный филиал: наращивание и дизайн",
+    "vi": "Trụ sở chính chuyên nối móng & vẽ nghệ thuật"
+  },
+  "영어 응대·2개 지점": {
+    "en": "English Service·2 Branches",
+    "zh": "英语服务·2家分店",
+    "ja": "英語対応・2店舗",
+    "ru": "Английский язык·2 филиала",
+    "vi": "Tiếng Anh·2 chi nhánh"
   },
   "예약 필수": {
     "en": "Reservation Required",
@@ -899,6 +969,13 @@ export const KO_LABELS = {
     "ru": "Специализация: позвоночник · 1500+ иностранцев в год",
     "vi": "Chuyên khoa Cột sống · 1.500+ bệnh nhân quốc tế/năm"
   },
+  "첫 방문 할인": {
+    "en": "First Visit Discount",
+    "zh": "首次到店优惠",
+    "ja": "初回訪問割引",
+    "ru": "Скидка на первое посещение",
+    "vi": "Giảm giá cho lần đầu"
+  },
   "청담 럭셔리 라인": {
     "en": "Cheongdam Luxury Line",
     "zh": "清潭奢华系列",
@@ -954,6 +1031,13 @@ export const KO_LABELS = {
     "ja": "ヘルニア国内最多・メッシュフリー",
     "ru": "Максимум операций по грыже в Корее · Без сетки",
     "vi": "Phẫu thuật thoát vị nhiều nhất Hàn Quốc · Không dùng lưới"
+  },
+  "토탈뷰티 원스톱": {
+    "en": "One-Stop Total Beauty",
+    "zh": "一站式综合美容",
+    "ja": "ワンストップ・トータルビューティー",
+    "ru": "Комплексная бьюти-студия «все в одном»",
+    "vi": "Dịch vụ làm đẹp toàn diện One-Stop"
   },
   "통합의학·코엑스 도보권": {
     "en": "Integrative Medicine · Walking Distance to COEX",

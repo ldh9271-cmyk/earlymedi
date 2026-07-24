@@ -32,6 +32,7 @@ import { HEALTH_CHECKUP_PRODUCTS } from '@/lib/listings/seoul-health-checkup-pro
 import { STEM_CELL_PRODUCTS } from '@/lib/listings/seoul-stem-cell-products';
 import { ORIENTAL_PRODUCTS } from '@/lib/listings/seoul-oriental-products';
 import { PARTNER_PRODUCTS } from '@/lib/listings/seoul-partner-products';
+import { SEOUL_NAIL_PRODUCTS } from '@/lib/listings/seoul-nail-products';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 
 async function requireMaster(): Promise<true | never> {
@@ -290,6 +291,80 @@ export async function seedGangnamFoodAction(_formData: FormData): Promise<void> 
 
   revalidateListingSurfaces();
   redirect(`/master/listings?seedGangnamFood=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 강남·서초·청담 외국인 FIT 추천 네일샵 12곳 일괄 등록.
+ *
+ *   - category='nail', status='approved', details 에 address(구글 지도)
+ *     + phone/station/services/priceRange/foreignerSupport/hours
+ *     + subType='free' + seoTags + og 저장.
+ *   - SEO 메타(타이틀·디스크립션)는 partner_listing_locale_content 의
+ *     kr 행에 저장 — translate-locale-content.mjs 가 이후 5개 로케일 생성.
+ *   - 멱등: 같은 slug 가 이미 있으면 skip.
+ */
+export async function seedSeoulNailAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const p of SEOUL_NAIL_PRODUCTS) {
+    const existing = await db
+      .select({ id: partnerListings.id })
+      .from(partnerListings)
+      .where(eq(partnerListings.slug, p.slug))
+      .limit(1);
+    if (existing.length > 0) {
+      skipped += 1;
+      continue;
+    }
+    const [row] = await db
+      .insert(partnerListings)
+      .values({
+        ownerOrgId: ownerOrgId as string,
+        category: 'nail',
+        slug: p.slug,
+        title: p.title,
+        description: p.description,
+        locationLabel: p.locationLabel,
+        addressJson: { city: '서울' },
+        status: 'approved',
+        featured: false,
+        sortOrder: 100,
+        priceWon: p.priceWon,
+        priceUnit: '세션',
+        interestKey: 'makeup',
+        promoLabel: p.promoLabel,
+        details: {
+          address: p.address,
+          phone: p.phone ?? null,
+          station: p.station,
+          services: p.services,
+          priceRange: p.priceRange,
+          foreignerSupport: p.foreignerSupport,
+          hours: p.hours ?? null,
+          subType: 'free',
+          seoTags: [...p.seoTags],
+          og: p.ogDescription,
+        },
+      })
+      .returning({ id: partnerListings.id });
+    if (row) {
+      await db.insert(partnerListingLocaleContent).values({
+        listingId: row.id,
+        locale: 'kr',
+        seoTitle: p.seoTitle,
+        seoDescription: p.seoDescription,
+      });
+    }
+    inserted += 1;
+  }
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings?seedSeoulNail=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /**
