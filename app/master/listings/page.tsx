@@ -27,6 +27,7 @@ import {
   seedOrientalAction,
   seedPartnerAction,
   seedSeoulNailAction,
+  seedSeoulPersonalColorAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -547,6 +548,27 @@ export default async function MasterListingsPage({
           className="rounded-md border border-pink-400 bg-white px-3 py-1.5 text-xs font-semibold text-pink-800 hover:bg-pink-50"
         >
           네일샵 12종 일괄 등록
+        </button>
+      </form>
+
+      {/* 강남·서초 외국인 FIT 퍼스널컬러 일괄 등록 트리거 */}
+      <form
+        action={seedSeoulPersonalColorAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-purple-300 bg-purple-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">강남·서초 퍼스널컬러 9종 일괄 등록</p>
+          <p className="mt-0.5">
+            컬러홀릭·컬러라이즈·컬러플레이스·마이컬러랩·이미지호·에이타입·강남 이미지메이킹·
+            삼성동 아카데미·논현 헤어+컬러 살롱. category=personal_color, SEO 메타는
+            locale content(kr) 에 저장. 같은 slug 가 이미 있으면 자동 스킵 (멱등).
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-purple-400 bg-white px-3 py-1.5 text-xs font-semibold text-purple-800 hover:bg-purple-50"
+        >
+          퍼스널컬러 9종 일괄 등록
         </button>
       </form>
 

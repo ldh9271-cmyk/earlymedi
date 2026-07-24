@@ -213,6 +213,13 @@ export const KO_LABELS = {
     "ru": "VVIP Полный уход",
     "vi": "Chăm sóc toàn diện VVIP"
   },
+  "Visit Seoul 공식 등재": {
+    "en": "Officially Listed on Visit Seoul",
+    "zh": "Visit Seoul 官方收录",
+    "ja": "Visit Seoul 公式掲載",
+    "ru": "Официально на Visit Seoul",
+    "vi": "Được niêm yết trên Visit Seoul"
+  },
   "Visit Seoul 의료관광 공식 등재": {
     "en": "Visit Seoul Official Medical Tourism Partner",
     "zh": "Visit Seoul医疗观光官方登记",
@@ -556,6 +563,13 @@ export const KO_LABELS = {
     "ru": "Специализация: коррекция ногтей",
     "vi": "Chuyên chỉnh hình móng chân"
   },
+  "밤 10시까지 운영": {
+    "en": "Open until 10 PM",
+    "zh": "营业至晚10点",
+    "ja": "夜10時まで営業",
+    "ru": "Открыто до 22:00",
+    "vi": "Mở cửa đến 22h"
+  },
   "밤 11시 심야 운영": {
     "en": "Open Late until 11 PM",
     "zh": "营业至深夜11点",
@@ -752,6 +766,13 @@ export const KO_LABELS = {
     "ru": "Любимый салон знаменитостей",
     "vi": "Salon quen thuộc của sao"
   },
+  "연예인 방문 컨설팅": {
+    "en": "Celebrity-Visited Consulting",
+    "zh": "明星光顾咨询",
+    "ja": "芸能人来店コンサルティング",
+    "ru": "Консультации, посещаемые звездами",
+    "vi": "Tư vấn đón người nổi tiếng"
+  },
   "연장 아트 전문 본점": {
     "en": "Extension & Art Specialist HQ",
     "zh": "延长与艺术美甲专业总店",
@@ -765,6 +786,13 @@ export const KO_LABELS = {
     "ja": "英語対応・2店舗",
     "ru": "Английский язык·2 филиала",
     "vi": "Tiếng Anh·2 chi nhánh"
+  },
+  "영어 컨설팅 전문": {
+    "en": "English Consulting Specialist",
+    "zh": "专业英文咨询",
+    "ja": "英語コンサルティング専門",
+    "ru": "Консультации на английском",
+    "vi": "Chuyên tư vấn tiếng Anh"
   },
   "예약 필수": {
     "en": "Reservation Required",
@@ -906,6 +934,20 @@ export const KO_LABELS = {
     "ru": "Весь день",
     "vi": "Cả ngày"
   },
+  "주 7일 예약제": {
+    "en": "7 Days a Week by Appointment",
+    "zh": "每周7天预约制",
+    "ja": "週7日予約制",
+    "ru": "Запись 7 дней в неделю",
+    "vi": "Đặt lịch 7 ngày/tuần"
+  },
+  "주말 운영": {
+    "en": "Open on Weekends",
+    "zh": "周末营业",
+    "ja": "週末営業",
+    "ru": "Работаем по выходным",
+    "vi": "Mở cửa cuối tuần"
+  },
   "주말·야간진료": {
     "en": "Weekend & Night Care",
     "zh": "周末·夜间诊疗",
@@ -940,6 +982,13 @@ export const KO_LABELS = {
     "ja": "幹細胞・PRP結合移植",
     "ru": "Комбинированная трансплантация стволовых клеток и PRP",
     "vi": "Cấy ghép kết hợp Tế bào gốc · PRP"
+  },
+  "진단+헤어염색 원스톱": {
+    "en": "One-Stop Diagnosis + Hair Dye",
+    "zh": "诊断+染发 一站式",
+    "ja": "診断＋ヘアカラー ワンストップ",
+    "ru": "Диагностика + окрашивание «всё в одном»",
+    "vi": "Trọn gói Chẩn đoán + Nhuộm tóc"
   },
   "차움 프리미엄·VIP 특화": {
     "en": "Chaum Premium · VIP Specialized",
@@ -1004,6 +1053,13 @@ export const KO_LABELS = {
     "ru": "Консьерж-сервис",
     "vi": "Dịch vụ concierge"
   },
+  "컬러+스피치 종합": {
+    "en": "Comprehensive Color + Speech",
+    "zh": "色彩+演讲 综合",
+    "ja": "カラー＋スピーチ総合",
+    "ru": "Комплекс: Цвет + Спич",
+    "vi": "Tổng hợp Màu sắc + Diễn thuyết"
+  },
   "코질환 특화": {
     "en": "Specialized in Nasal Diseases",
     "zh": "鼻部疾病专科",
@@ -1052,6 +1108,13 @@ export const KO_LABELS = {
     "ja": "TuneFace Key Doctor専門病院",
     "ru": "Клиника экспертов TuneFace (Key Doctor)",
     "vi": "Bệnh viện chuyên khoa TuneFace Key Doctor"
+  },
+  "특허 셀프테스터": {
+    "en": "Patented Self-Tester",
+    "zh": "专利自测仪",
+    "ja": "特許取得セルフテスター",
+    "ru": "Запатентованный селф-тестер",
+    "vi": "Thiết bị tự kiểm tra có bằng sáng chế"
   },
   "포브스 선정": {
     "en": "Forbes Selected",
