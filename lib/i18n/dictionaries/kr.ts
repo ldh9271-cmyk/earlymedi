@@ -359,6 +359,11 @@ const kr = {
   detail: {
     whySpecial: '이 프로그램이 특별한 이유',
     whatsIncluded: '포함 사항',
+    firstReviewCta: '첫 리뷰의 주인공이 되어보세요 — 시술 후 30일 내 리뷰 작성 시 다음 예약 5% 할인.',
+    units: {
+      person: '1인', night: '박', session: '세션', visit: '회',
+      halfDay: '반일', fullDay: '종일', consult: '상담', course: '코스',
+    },
     taxNote: '세금·서비스 수수료 별도',
     noChargeYet: '예약 확정 전에는 요금이 청구되지 않습니다',
     rowConcierge: '컨시어지 동행',

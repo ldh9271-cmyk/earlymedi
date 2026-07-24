@@ -343,6 +343,11 @@ const vi: Dictionary = {
   detail: {
     whySpecial: 'Vì sao chương trình này đặc biệt',
     whatsIncluded: 'Đã bao gồm',
+    firstReviewCta: 'Hãy là người đánh giá đầu tiên — viết đánh giá trong 30 ngày sau trải nghiệm để được giảm 5% cho lần đặt tiếp theo.',
+    units: {
+      person: 'người', night: 'đêm', session: 'buổi', visit: 'lần',
+      halfDay: 'nửa ngày', fullDay: 'cả ngày', consult: 'tư vấn', course: 'khóa',
+    },
     taxNote: 'Chưa gồm thuế và phí dịch vụ',
     noChargeYet: 'Chưa thu phí cho đến khi xác nhận đặt chỗ',
     rowConcierge: 'Concierge đồng hành',

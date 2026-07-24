@@ -340,6 +340,11 @@ const zh: Dictionary = {
   detail: {
     whySpecial: '此项目的特别之处',
     whatsIncluded: '包含内容',
+    firstReviewCta: '成为第一位评价者 — 体验后30天内撰写评价，下次预订可享5%优惠。',
+    units: {
+      person: '每人', night: '每晚', session: '每节', visit: '每次',
+      halfDay: '半天', fullDay: '全天', consult: '咨询', course: '套餐',
+    },
     taxNote: '不含税金及服务费',
     noChargeYet: '预订确认前不会扣款',
     rowConcierge: '礼宾陪同',

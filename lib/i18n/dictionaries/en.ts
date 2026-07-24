@@ -343,6 +343,11 @@ const en: Dictionary = {
   detail: {
     whySpecial: 'Why this is special',
     whatsIncluded: "What's included",
+    firstReviewCta: 'Be the first to review — write one within 30 days of your visit and get 5% off your next booking.',
+    units: {
+      person: 'person', night: 'night', session: 'session', visit: 'visit',
+      halfDay: 'half day', fullDay: 'full day', consult: 'consultation', course: 'course',
+    },
     taxNote: 'Taxes & service fees not included',
     noChargeYet: "You won't be charged until confirmation",
     rowConcierge: 'Concierge escort',

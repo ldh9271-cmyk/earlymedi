@@ -79,7 +79,7 @@ export default async function ListingDetailPage({
   const priceLabel = listing.priceWon
     ? `₩${listing.priceWon.toLocaleString('ko-KR')}`
     : '문의';
-  const priceUnit = priceUnitLabel(listing.priceUnit, listing.category);
+  const priceUnit = priceUnitLabel(listing.priceUnit, listing.category, d.units, params.locale);
   // String concat instead of template literal — SWC's JSX parser
   // mis-counts braces when ${encodeURIComponent(...)} sits before
   // the next <div> and throws "Unexpected token `div`". See memory
@@ -450,7 +450,7 @@ export default async function ListingDetailPage({
           </>
         ) : (
           <p style={{ fontSize: 14, color: '#6a6a6a', marginTop: 10 }}>
-            첫 리뷰의 주인공이 되어보세요 — 시술 후 30일 내 리뷰 작성 시 다음 예약 5% 할인.
+            {d.firstReviewCta}
           </p>
         )}
       </section>
@@ -729,9 +729,29 @@ function hostNameForCategory(category: string): string {
   }
 }
 
-function priceUnitLabel(unit: string | null, category: string): string {
-  if (unit && unit.trim()) return unit;
-  if (category === 'hotel') return 'night · 박';
-  if (category === 'food' || category === 'restaurant') return 'person · 인';
-  return 'session · 세션';
+function priceUnitLabel(
+  unit: string | null,
+  category: string,
+  u: {
+    person: string; night: string; session: string; visit: string;
+    halfDay: string; fullDay: string; consult: string; course: string;
+  },
+  locale: string,
+): string {
+  // DB priceUnit 은 한국어('1인'·'박'·'세션'…)로 저장됨 — 비한국어
+  // 로케일에선 dict.units 로 매핑해 현지화. 미등록 단위는 원문 유지.
+  const raw = unit?.trim() ?? '';
+  if (raw && locale === 'kr') return raw;
+  const KO_TO_KEY: Record<string, keyof typeof u> = {
+    '1인': 'person', '인': 'person', '박': 'night', '세션': 'session',
+    '회': 'visit', '반일': 'halfDay', '종일': 'fullDay',
+    '상담': 'consult', '코스': 'course',
+  };
+  if (raw) {
+    const key = KO_TO_KEY[raw];
+    return key ? u[key] : raw;
+  }
+  if (category === 'hotel') return u.night;
+  if (category === 'food' || category === 'restaurant') return u.person;
+  return u.session;
 }

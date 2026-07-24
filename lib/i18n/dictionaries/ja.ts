@@ -342,6 +342,11 @@ const ja: Dictionary = {
   detail: {
     whySpecial: 'このプログラムが特別な理由',
     whatsIncluded: '含まれるもの',
+    firstReviewCta: '最初のレビューを書いてみませんか — 施術後30日以内のレビュー投稿で次回予約が5%OFF。',
+    units: {
+      person: '1名', night: '1泊', session: '1セッション', visit: '1回',
+      halfDay: '半日', fullDay: '終日', consult: '相談', course: 'コース',
+    },
     taxNote: '税金・サービス料別途',
     noChargeYet: '予約確定前は請求されません',
     rowConcierge: 'コンシェルジュ同行',
