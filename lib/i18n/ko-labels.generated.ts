@@ -101,6 +101,13 @@ export const KO_LABELS = {
     "ru": "24/7 365 дней: Мочекаменная болезнь",
     "vi": "24/7 365 ngày sỏi tiết niệu"
   },
+  "3D 당일 보철": {
+    "en": "Same-Day 3D Prosthetics",
+    "zh": "3D当日假牙",
+    "ja": "3D即日補綴",
+    "ru": "3D-протезирование за 1 день",
+    "vi": "Phục hình răng 3D trong ngày"
+  },
   "3D 전광판 성지": {
     "en": "3D Billboard Mecca",
     "zh": "3D大屏圣地",
@@ -437,6 +444,13 @@ export const KO_LABELS = {
     "ru": "1-й осмотр по дизайну тела в Корее",
     "vi": "Khám thiết kế cơ thể đầu tiên tại Hàn Quốc"
   },
+  "국내 최초 치과종합병원": {
+    "en": "Korea's First General Dental Hospital",
+    "zh": "韩国首家综合牙科医院",
+    "ja": "韓国初の歯科総合病院",
+    "ru": "Первая в Корее стоматологическая больница",
+    "vi": "Bệnh viện nha khoa tổng hợp đầu tiên tại Hàn Quốc"
+  },
   "국제 자문의 (Juvederm·Thermage)": {
     "en": "International Advisory Doctor (Juvederm · Thermage)",
     "zh": "国际顾问医师 (Juvederm·Thermage)",
@@ -527,6 +541,13 @@ export const KO_LABELS = {
     "ja": "当日日常復帰ヒドゥンカット",
     "ru": "Hidden Cut с возвратом к жизни в тот же день",
     "vi": "Hidden Cut phục hồi sinh hoạt ngay trong ngày"
+  },
+  "대통령자문의 출신 원장": {
+    "en": "Head Doctor, Former Presidential Physician",
+    "zh": "前总统顾问医生院长",
+    "ja": "元・大統領諮問医の院長",
+    "ru": "Главврач — экс-консультант президента",
+    "vi": "Viện trưởng từng là bác sĩ tư vấn Tổng thống"
   },
   "대학병원 출신 원장 직접 집도": {
     "en": "Ex-Univ Hospital Doctor Direct Operation",
@@ -808,6 +829,13 @@ export const KO_LABELS = {
     "ru": "Рядом с высшей больницей и отелем",
     "vi": "Gần bệnh viện tuyến trên & khách sạn"
   },
+  "서울대 출신 6인 협진": {
+    "en": "Joint Care by 6 SNU Alumni Doctors",
+    "zh": "6位首尔大学毕业专家联合诊疗",
+    "ja": "ソウル大出身6名による協診",
+    "ru": "Консилиум 6 врачей из Сеульского нацуниверситета",
+    "vi": "Hội chẩn bởi 6 bác sĩ tốt nghiệp ĐH Quốc gia Seoul"
+  },
   "서울대 출신·한미일 특허 12건": {
     "en": "Seoul National Univ Alumni · 12 Patents (KR/US/JP)",
     "zh": "首尔大学出身·韩美日专利12项",
@@ -828,6 +856,13 @@ export const KO_LABELS = {
     "ja": "整形+皮膚統合",
     "ru": "Интегрир. пластика и дерматология",
     "vi": "Tích hợp Phẫu thuật thẩm mỹ + Da liễu"
+  },
+  "성형·피부·치과 원스톱": {
+    "en": "One-Stop Plastic Surgery, Dermatology & Dental",
+    "zh": "整形·皮肤·牙科一站式服务",
+    "ja": "整形・皮膚・歯科ワンストップ",
+    "ru": "Пластика, дерматология и стоматология One-Stop",
+    "vi": "Phẫu thuật thẩm mỹ · Da liễu · Nha khoa One-stop"
   },
   "세계 임플란트 대회 2위 원장": {
     "en": "Director Ranked 2nd in World Implant Competition",
@@ -1018,6 +1053,13 @@ export const KO_LABELS = {
     "ru": "Профиль без выходных",
     "vi": "Chụp ảnh profile quanh năm"
   },
+  "영어 원어민 의료진": {
+    "en": "Native English-Speaking Medical Staff",
+    "zh": "英语母语医疗团队",
+    "ja": "英語ネイティブ医療陣",
+    "ru": "Англоязычный медицинский персонал",
+    "vi": "Đội ngũ y tế nói tiếng Anh bản ngữ"
+  },
   "영어 응대·2개 지점": {
     "en": "English Service·2 Branches",
     "zh": "英语服务·2家分店",
@@ -1116,6 +1158,13 @@ export const KO_LABELS = {
     "ru": "Мекка лайтстиков",
     "vi": "Thánh địa Lightstick"
   },
+  "의료관광 공식 협력기관": {
+    "en": "Official Medical Tourism Partner Institution",
+    "zh": "医疗旅游官方合作机构",
+    "ja": "医療観光 公式協力機関",
+    "ru": "Официальный партнер по медицинскому туризму",
+    "vi": "Cơ sở đối tác chính thức về du lịch y tế"
+  },
   "의료기관 시술": {
     "en": "Medical Clinic Procedure",
     "zh": "医疗机构专业施术",
@@ -1164,6 +1213,13 @@ export const KO_LABELS = {
     "ja": "ナチュラルスマイルデザイン",
     "ru": "Естественный дизайн улыбки",
     "vi": "Thiết kế nụ cười tự nhiên"
+  },
+  "자체기공실 운영": {
+    "en": "On-Site Dental Lab",
+    "zh": "自设牙科技工室",
+    "ja": "院内技工所併設",
+    "ru": "Собственная зуботехническая лаборатория",
+    "vi": "Có phòng lab nha khoa riêng"
   },
   "작가 없는 셀프 촬영": {
     "en": "Photographer-Free Self Shooting",
@@ -1241,6 +1297,13 @@ export const KO_LABELS = {
     "ja": "週末営業",
     "ru": "Работаем по выходным",
     "vi": "Mở cửa cuối tuần"
+  },
+  "주말·야간 진료": {
+    "en": "Weekend & Night Care",
+    "zh": "周末·夜间诊疗",
+    "ja": "週末・夜間診療",
+    "ru": "Прием по выходным и вечерам",
+    "vi": "Khám cuối tuần · Ban đêm"
   },
   "주말·야간진료": {
     "en": "Weekend & Night Care",
@@ -1472,6 +1535,13 @@ export const KO_LABELS = {
     "ja": "パーソナルカラースターター",
     "ru": "Персональный цвет: Старт",
     "vi": "Gói khởi đầu Personal Color"
+  },
+  "평일 21시 야간 진료": {
+    "en": "Weekday Night Care until 21:00",
+    "zh": "工作日夜间诊疗至21:00",
+    "ja": "平日21時まで夜間診療",
+    "ru": "Прием в будни до 21:00",
+    "vi": "Khám đêm ngày thường đến 21:00"
   },
   "포브스 선정": {
     "en": "Forbes Selected",
