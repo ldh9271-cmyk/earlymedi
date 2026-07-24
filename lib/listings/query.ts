@@ -118,7 +118,13 @@ export async function fetchFeaturedListings(opts: {
         .select()
         .from(partnerListings)
         .where(and(...fillParts))
-        .orderBy(asc(partnerListings.sortOrder), desc(partnerListings.updatedAt))
+        // 커버 사진을 직접 올린 상품 우선 (2026-07-24 founder 지시) —
+        // 같은 조건이면 sortOrder → 최신 등록순.
+        .orderBy(
+          sql`(${partnerListings.coverImageUrl} IS NULL)`,
+          asc(partnerListings.sortOrder),
+          desc(partnerListings.updatedAt),
+        )
         .limit(want * 2); // 도시 필터로 걸러질 여유분 포함
       rows = [...rows, ...fill];
     }

@@ -194,12 +194,16 @@ export default async function PublicLandingPage({
   // fall back to the hardcoded PROGRAMS / FOODS / Hotel samples below
   // so the page never looks empty even before /master/listings is
   // populated.
-  const [dbPrograms, dbFoods, dbHotels, dbCourses] = await Promise.all([
-    fetchFeaturedListings({
-      locale,
-      categories: ['personal_color', 'hair', 'makeup', 'nail', 'pmu', 'photo_studio'],
-      limit: 4,
-    }),
+  // 인기 뷰티 프로그램: 카테고리당 대표 1개 — 퍼스널컬러 → 헤어샵 →
+  // 메이크업샵 → 반영구 순서 고정. 각 카테고리 안에서는 featured 우선
+  // (fetchFeaturedListings 정렬) + 커버 사진을 직접 올린 상품 우선.
+  const PROGRAM_CATEGORY_ORDER = ['personal_color', 'hair', 'makeup', 'pmu'] as const;
+  const [programLists, dbFoods, dbHotels, dbCourses] = await Promise.all([
+    Promise.all(
+      PROGRAM_CATEGORY_ORDER.map((c) =>
+        fetchFeaturedListings({ locale, categories: [c], limit: 6 }),
+      ),
+    ),
     fetchFeaturedListings({
       locale,
       categories: ['food', 'restaurant'],
@@ -217,6 +221,11 @@ export default async function PublicLandingPage({
       subType: 'package',
     }),
   ]);
+  // 카테고리별 대표 픽 — 정렬 순서(featured 우선) 안에서 커버 이미지가
+  // 있는 상품을 먼저, 없으면 최상위 상품.
+  const dbPrograms = programLists
+    .map((rows) => rows.find((r) => r.coverImageUrl) ?? rows[0] ?? null)
+    .filter((x): x is ListingCard => x !== null);
   const dbHotel = dbHotels[0] ?? null;
   const dbCourse = dbCourses[0] ?? null;
   return (
