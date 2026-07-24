@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { eq, inArray, sql, and, gte } from 'drizzle-orm';
+import { BrandMark } from '../../_components/brand-mark';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { db } from '@/lib/db/client';
@@ -411,9 +412,64 @@ function ClinicCard({
           aspectRatio: '1', borderRadius: 14, overflow: 'hidden',
           background: hospital.coverImageUrl
             ? `#f2f2f2 url(${hospital.coverImageUrl}) center / cover`
-            : 'linear-gradient(135deg, #f7f7f7 0%, #ebebeb 100%)',
+            : 'linear-gradient(150deg, #fff7f8 0%, #ffeef1 55%, #ffe3e9 100%)',
         }}
       >
+        {/* 브랜드 플레이스홀더 — cover 이미지 미등록 병원용. 중앙에
+            K glow-up 로고 + 병원명을 배치해 빈 회색 박스 대신 통일된
+            브랜드 카드로 노출. 실제 사진 업로드 시 자동으로 대체됨. */}
+        {!hospital.coverImageUrl ? (
+          <div
+            style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              gap: 12, padding: '18%',
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute', inset: 0,
+                background:
+                  'radial-gradient(90% 70% at 50% 18%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 60%)',
+              }}
+            />
+            <div
+              style={{
+                position: 'relative',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              <BrandMark size={30} color="#ff385c" />
+              <span
+                style={{
+                  fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em',
+                  color: '#ff385c',
+                }}
+              >
+                glow-up
+              </span>
+            </div>
+            <div
+              style={{
+                position: 'relative',
+                fontSize: 17, fontWeight: 700, lineHeight: 1.35,
+                letterSpacing: '-0.02em',
+                color: '#222222', textAlign: 'center',
+                wordBreak: 'keep-all',
+              }}
+            >
+              {hospital.name}
+            </div>
+            <div
+              style={{
+                position: 'relative',
+                width: 26, height: 3, borderRadius: 9999,
+                background: 'rgba(255,56,92,0.35)',
+              }}
+            />
+          </div>
+        ) : null}
         {hospital.promoLabel ? (
           <div
             style={{
