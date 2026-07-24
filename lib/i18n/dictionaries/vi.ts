@@ -344,6 +344,28 @@ const vi: Dictionary = {
     whySpecial: 'Vì sao chương trình này đặc biệt',
     whatsIncluded: 'Đã bao gồm',
     firstReviewCta: 'Hãy là người đánh giá đầu tiên — viết đánh giá trong 30 ngày sau trải nghiệm để được giảm 5% cho lần đặt tiếp theo.',
+    defaultHighlights: {
+      hotel: [
+        { title: 'Phòng 4–5 sao', desc: 'Chỉ tuyển chọn khách sạn cao cấp đã xác minh.' },
+        { title: 'Gồm đưa đón concierge', desc: 'Điều phối sân bay & phòng khám.' },
+        { title: 'Hủy miễn phí đến 48h', desc: 'Không thu phí trước xác nhận.' },
+      ],
+      food: [
+        { title: 'Món đặc trưng bản địa', desc: 'Được người địa phương yêu thích.' },
+        { title: 'Đặt chỗ & phiên dịch', desc: 'Xử lý trọn gói cho bạn.' },
+        { title: 'Báo trước dị ứng', desc: 'Chia sẻ hạn chế ăn uống từ trước.' },
+      ],
+      beauty: [
+        { title: 'Chuyên gia tư vấn 1:1', desc: 'Buổi 90 phút, kèm thẻ bảng màu cá nhân.' },
+        { title: 'Gồm concierge', desc: 'Đặt chỗ, phiên dịch (EN/中/日) và lộ trình.' },
+        { title: 'Chưa thu phí trước xác nhận', desc: 'Hủy miễn phí đến 48h.' },
+      ],
+      fallback: [
+        { title: 'Đối tác đã xác minh', desc: 'Đạt chuẩn tuyển chọn GlowUp.' },
+        { title: 'Concierge đồng hành', desc: 'Đặt chỗ, phiên dịch và lộ trình trọn gói.' },
+        { title: 'Hủy miễn phí', desc: 'Không thu phí trước xác nhận, đến 48h.' },
+      ],
+    },
     units: {
       person: 'người', night: 'đêm', session: 'buổi', visit: 'lần',
       halfDay: 'nửa ngày', fullDay: 'cả ngày', consult: 'tư vấn', course: 'khóa',

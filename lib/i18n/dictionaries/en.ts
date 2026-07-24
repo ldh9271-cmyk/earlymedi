@@ -344,6 +344,28 @@ const en: Dictionary = {
     whySpecial: 'Why this is special',
     whatsIncluded: "What's included",
     firstReviewCta: 'Be the first to review — write one within 30 days of your visit and get 5% off your next booking.',
+    defaultHighlights: {
+      hotel: [
+        { title: '4–5 star properties', desc: 'Only verified luxury hotels curated.' },
+        { title: 'Concierge pickup included', desc: 'Airport & clinic transfers coordinated.' },
+        { title: 'Free cancellation up to 48h', desc: 'No charge before confirmation.' },
+      ],
+      food: [
+        { title: 'Local signature course', desc: 'Loved and proven by locals.' },
+        { title: 'Booking & interpreter', desc: 'Reservation and interpretation handled for you.' },
+        { title: 'Allergy briefing', desc: 'Dietary restrictions shared in advance.' },
+      ],
+      beauty: [
+        { title: '1:1 expert consultant', desc: '90-min session with personal palette card.' },
+        { title: 'Concierge included', desc: 'Booking, interpreter (EN/中/日) and route handled.' },
+        { title: 'No charge until confirmed', desc: 'Free cancellation up to 48h.' },
+      ],
+      fallback: [
+        { title: 'Verified partner', desc: 'Passed GlowUp curation standards.' },
+        { title: 'Concierge escort', desc: 'Booking, interpreter and route in one.' },
+        { title: 'Free cancellation', desc: 'No charge before confirmation, up to 48h.' },
+      ],
+    },
     units: {
       person: 'person', night: 'night', session: 'session', visit: 'visit',
       halfDay: 'half day', fullDay: 'full day', consult: 'consultation', course: 'course',

@@ -75,7 +75,7 @@ export default async function ListingDetailPage({
   const reviewsLabel = d.reviewsCount.replace('{n}', String(reviewsCount));
   const subtitleKr = subtitleForCategory(listing.category, d.subtitles);
   const hostName = hostNameForCategory(listing.category);
-  const highlights = pickHighlights(listing, params.locale);
+  const highlights = pickHighlights(listing, params.locale, d.defaultHighlights);
   const priceLabel = listing.priceWon
     ? `₩${listing.priceWon.toLocaleString('ko-KR')}`
     : '문의';
@@ -609,7 +609,13 @@ type Highlight = { icon: 'expert' | 'concierge' | 'check'; title: string; desc: 
  * otherwise fall back to category-tuned defaults so the section
  * never renders empty.
  */
-function pickHighlights(listing: ListingDetail, locale?: string): Highlight[] {
+type DefaultHighlightTrio = ReadonlyArray<{ title: string; desc: string }>;
+
+function pickHighlights(
+  listing: ListingDetail,
+  locale: string,
+  dh: { hotel: DefaultHighlightTrio; food: DefaultHighlightTrio; beauty: DefaultHighlightTrio; fallback: DefaultHighlightTrio },
+): Highlight[] {
   // 로케일별 하이라이트 우선 — details.highlightsI18n = { en: [...], zh: ... }
   // 구조. 없으면 kr 기본 highlights → 카테고리 디폴트 순으로 fallback.
   const i18n = listing.details.highlightsI18n as
@@ -632,37 +638,25 @@ function pickHighlights(listing: ListingDetail, locale?: string): Highlight[] {
     : [];
   if (fromDb.length === 3) return fromDb;
 
-  // Category-tuned default trios.
-  switch (listing.category) {
-    case 'hotel':
-      return [
-        { icon: 'expert', title: '4성·5성 등급 객실', desc: '검증된 럭셔리 호텔만 큐레이션. Premium 4–5★ properties.' },
-        { icon: 'concierge', title: '컨시어지 픽업 포함', desc: '공항·시술 동선 일정 조율. Airport + clinic shuttle handled.' },
-        { icon: 'check', title: '무료 취소 최대 48h', desc: '예약 확정 전 무료 취소. Free cancellation up to 48h.' },
-      ];
-    case 'food':
-    case 'restaurant':
-      return [
-        { icon: 'expert', title: '현지 시그니처 메뉴', desc: '현지인 사이에서 검증된 인기 코스. Locals’ favorite course.' },
-        { icon: 'concierge', title: '통역 예약 동행', desc: '예약·통역 즉시 처리. Booking + interpreter handled.' },
-        { icon: 'check', title: '식이 알러지 사전 안내', desc: '알러지·식이 제한 사전 공유. Allergy briefing pre-visit.' },
-      ];
-    case 'personal_color':
-    case 'makeup':
-    case 'hair':
-    case 'photo_studio':
-      return [
-        { icon: 'expert', title: '1:1 expert consultant', desc: '90-min draping session, personal palette card included. 전문 컨설턴트 1:1 진단.' },
-        { icon: 'concierge', title: 'Concierge included', desc: 'Booking, interpreter (EN/中/日) and route all handled. 예약·통역·동선 안내.' },
-        { icon: 'check', title: 'No charge until confirmed', desc: 'Free cancellation up to 48h. 예약 확정 전 무료 취소.' },
-      ];
-    default:
-      return [
-        { icon: 'expert', title: '검증된 파트너', desc: '글로우업 큐레이션 기준 통과. Curated, verified partner.' },
-        { icon: 'concierge', title: '컨시어지 동행', desc: '예약·통역·동선 한 번에. Booking, interpreter + route handled.' },
-        { icon: 'check', title: '확정 전 무료 취소', desc: 'Free cancellation up to 48h. 예약 확정 전 무료 취소.' },
-      ];
-  }
+  // Category-tuned default trios — dict 기반 (6개 로케일).
+  const trio = (() => {
+    switch (listing.category) {
+      case 'hotel': return dh.hotel;
+      case 'food':
+      case 'restaurant': return dh.food;
+      case 'personal_color':
+      case 'makeup':
+      case 'hair':
+      case 'photo_studio': return dh.beauty;
+      default: return dh.fallback;
+    }
+  })();
+  const icons: Highlight['icon'][] = ['expert', 'concierge', 'check'];
+  return trio.slice(0, 3).map((h, i) => ({
+    icon: icons[i] ?? 'check',
+    title: h.title,
+    desc: h.desc,
+  }));
 }
 
 function HighlightIcon({ kind }: { kind: 'expert' | 'concierge' | 'check' }): JSX.Element {

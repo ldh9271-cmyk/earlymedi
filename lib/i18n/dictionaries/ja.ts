@@ -343,6 +343,28 @@ const ja: Dictionary = {
     whySpecial: 'このプログラムが特別な理由',
     whatsIncluded: '含まれるもの',
     firstReviewCta: '最初のレビューを書いてみませんか — 施術後30日以内のレビュー投稿で次回予約が5%OFF。',
+    defaultHighlights: {
+      hotel: [
+        { title: '4〜5つ星クラスの客室', desc: '検証済みラグジュアリーホテルのみ厳選。' },
+        { title: 'コンシェルジュ送迎付き', desc: '空港・クリニックの移動を調整。' },
+        { title: '最大48時間前まで無料キャンセル', desc: '確定前は請求なし。' },
+      ],
+      food: [
+        { title: '地元シグネチャーメニュー', desc: '地元で人気の実力派コース。' },
+        { title: '予約・通訳代行', desc: '予約と通訳をまとめて対応。' },
+        { title: 'アレルギー事前案内', desc: '食事制限を事前に共有。' },
+      ],
+      beauty: [
+        { title: '1:1専門コンサルタント', desc: '90分セッション、パーソナルパレットカード付き。' },
+        { title: 'コンシェルジュ付き', desc: '予約・通訳（英/中/日）・ルート案内まで。' },
+        { title: '確定前は請求なし', desc: '最大48時間前まで無料キャンセル。' },
+      ],
+      fallback: [
+        { title: '検証済みパートナー', desc: 'GlowUpキュレーション基準を通過。' },
+        { title: 'コンシェルジュ同行', desc: '予約・通訳・ルートを一括対応。' },
+        { title: '確定前の無料キャンセル', desc: '最大48時間前まで無料。' },
+      ],
+    },
     units: {
       person: '1名', night: '1泊', session: '1セッション', visit: '1回',
       halfDay: '半日', fullDay: '終日', consult: '相談', course: 'コース',

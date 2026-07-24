@@ -341,6 +341,28 @@ const zh: Dictionary = {
     whySpecial: '此项目的特别之处',
     whatsIncluded: '包含内容',
     firstReviewCta: '成为第一位评价者 — 体验后30天内撰写评价，下次预订可享5%优惠。',
+    defaultHighlights: {
+      hotel: [
+        { title: '4–5星级客房', desc: '只甄选经过验证的豪华酒店。' },
+        { title: '含礼宾接送', desc: '协调机场与诊所行程。' },
+        { title: '最长48小时免费取消', desc: '确认前不收费。' },
+      ],
+      food: [
+        { title: '本地招牌菜', desc: '深受本地人喜爱的人气菜品。' },
+        { title: '预约·口译代办', desc: '预订与口译一站式处理。' },
+        { title: '过敏事项提前沟通', desc: '饮食限制提前告知。' },
+      ],
+      beauty: [
+        { title: '1:1专业顾问', desc: '90分钟诊断，含个人色彩卡。' },
+        { title: '含礼宾服务', desc: '预约、口译（英/中/日）与路线全程安排。' },
+        { title: '确认前不扣款', desc: '最长48小时免费取消。' },
+      ],
+      fallback: [
+        { title: '认证合作伙伴', desc: '通过GlowUp甄选标准。' },
+        { title: '礼宾陪同', desc: '预约、口译与路线一站式安排。' },
+        { title: '确认前免费取消', desc: '最长48小时免费取消。' },
+      ],
+    },
     units: {
       person: '每人', night: '每晚', session: '每节', visit: '每次',
       halfDay: '半天', fullDay: '全天', consult: '咨询', course: '套餐',
