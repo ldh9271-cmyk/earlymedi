@@ -86,7 +86,8 @@ export type MainCategoryKey =
   | 'all'
   | 'travel'
   | 'hospital'
-  | 'color' | 'skin' | 'hair' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel';
+  | 'color' | 'skin' | 'hair' | 'photo' | 'makeup' | 'nail' | 'pmu'
+  | 'kpop' | 'food' | 'hotel';
 
 // 2026-06-30 — 마스터 카테고리 (관리자 /agency/listings) 와 동기화.
 // 순서: 여행 · 병원 · 호텔 · 맛집 · 퍼스널컬러 · 헤어샵 · 메이크업샵 ·
@@ -94,7 +95,7 @@ export type MainCategoryKey =
 // 타입/route 는 유지 — 과거 딥링크 호환.
 const MAIN_CATEGORY_KEYS: ReadonlyArray<MainCategoryKey> = [
   'travel', 'hospital', 'hotel', 'food',
-  'color', 'hair', 'makeup', 'photo', 'kpop',
+  'color', 'hair', 'makeup', 'nail', 'pmu', 'photo', 'kpop',
 ];
 
 // Narrow to only the `cat*` keys (which are always plain strings).
@@ -103,7 +104,7 @@ const MAIN_CATEGORY_KEYS: ReadonlyArray<MainCategoryKey> = [
 // as ReactNode.
 type CatDictKey =
   | 'catAll' | 'catTravel' | 'catHospital' | 'catColor' | 'catSkin' | 'catHair'
-  | 'catPhoto' | 'catMakeup' | 'catKpop' | 'catFood' | 'catHotel';
+  | 'catPhoto' | 'catMakeup' | 'catNail' | 'catPmu' | 'catKpop' | 'catFood' | 'catHotel';
 
 const MAIN_CATEGORY_DICT_KEY: Record<MainCategoryKey, CatDictKey> = {
   all: 'catAll',
@@ -114,6 +115,8 @@ const MAIN_CATEGORY_DICT_KEY: Record<MainCategoryKey, CatDictKey> = {
   hair: 'catHair',
   photo: 'catPhoto',
   makeup: 'catMakeup',
+  nail: 'catNail',
+  pmu: 'catPmu',
   kpop: 'catKpop',
   food: 'catFood',
   hotel: 'catHotel',
@@ -706,6 +709,22 @@ function MainCategoryIcon({
       return (
         <svg {...common}>
           <path d="M5 19l9-9M11 7l3-3 4 4-3 3M14 10l4 4-3 3-4-4" />
+        </svg>
+      );
+    case 'nail':
+      // Nail polish bottle
+      return (
+        <svg {...common}>
+          <rect x="8" y="11" width="8" height="9" rx="2" />
+          <path d="M10 11V8h4v3M11 8V4h2v4" />
+        </svg>
+      );
+    case 'pmu':
+      // Brow pen drawing an arch
+      return (
+        <svg {...common}>
+          <path d="M17 3l4 4-9.5 9.5L7 18l1.5-4.5L18 4" />
+          <path d="M3 20c2.5-2 6-2.5 9-1.5" />
         </svg>
       );
     case 'kpop':

@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic';
  */
 
 const VALID_KEYS = new Set<Exclude<PcCategoryKey, 'all'>>([
-  'color', 'skin', 'hair', 'photo', 'makeup', 'kpop', 'food', 'hotel',
+  'color', 'skin', 'hair', 'photo', 'makeup', 'nail', 'pmu', 'kpop', 'food', 'hotel',
 ]);
 
 /**
@@ -38,6 +38,8 @@ const KEY_TO_CATEGORIES: Record<Exclude<PcCategoryKey, 'all'>, ListingCategory[]
   hair:   ['hair'],
   photo:  ['photo_studio'],
   makeup: ['makeup'],
+  nail:   ['nail'],
+  pmu:    ['pmu'],
   kpop:   ['kpop_tour'],
   food:   ['food', 'restaurant'],
   hotel:  ['hotel'],

@@ -14,7 +14,8 @@ import { MobileCategoryIcon } from '../../_components/category-icon';
  * pass null on pages that aren't category-scoped (or pass 'all').
  */
 export type PcCategoryKey =
-  | 'all' | 'color' | 'skin' | 'hair' | 'photo' | 'makeup' | 'kpop' | 'food' | 'hotel';
+  | 'all' | 'color' | 'skin' | 'hair' | 'photo' | 'makeup' | 'nail' | 'pmu'
+  | 'kpop' | 'food' | 'hotel';
 
 // 2026-06-30 — 마스터 카테고리와 동기화. skin/피부케어 는 PC 화면 내
 // 호환용으로 남기지만 별도 칩으로 노출하지는 않음.
@@ -25,6 +26,8 @@ export const PC_CATEGORIES: Array<{ key: PcCategoryKey; label: string }> = [
   { key: 'color',  label: '퍼스널 컬러' },
   { key: 'hair',   label: '헤어샵' },
   { key: 'makeup', label: '메이크업샵' },
+  { key: 'nail',   label: '네일' },
+  { key: 'pmu',    label: '반영구(PMU)' },
   { key: 'photo',  label: '사진 스튜디오' },
   { key: 'kpop',   label: 'K-팝 투어' },
 ];

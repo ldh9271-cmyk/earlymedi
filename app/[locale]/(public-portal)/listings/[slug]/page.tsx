@@ -692,6 +692,7 @@ function subtitleForCategory(
   category: string,
   s: {
     personal_color: string; makeup: string; hair: string; photo_studio: string;
+    nail: string; pmu: string;
     hotel: string; food: string; dermatology: string; plastic_surgery: string;
     fallback: string;
   },
@@ -701,6 +702,8 @@ function subtitleForCategory(
     case 'makeup': return s.makeup;
     case 'hair': return s.hair;
     case 'photo_studio': return s.photo_studio;
+    case 'nail': return s.nail;
+    case 'pmu': return s.pmu;
     case 'hotel': return s.hotel;
     case 'food': return s.food;
     case 'restaurant': return s.food;

@@ -196,7 +196,7 @@ export default async function PublicLandingPage({
   const [dbPrograms, dbFoods, dbHotels, dbCourses] = await Promise.all([
     fetchFeaturedListings({
       locale,
-      categories: ['personal_color', 'hair', 'makeup', 'photo_studio'],
+      categories: ['personal_color', 'hair', 'makeup', 'nail', 'pmu', 'photo_studio'],
       limit: 4,
     }),
     fetchFeaturedListings({
@@ -356,6 +356,8 @@ function Programs({
       case 'hair': return subtitles.hair;
       case 'makeup': return subtitles.makeup;
       case 'photo_studio': return subtitles.photo_studio;
+      case 'nail': return subtitles.nail;
+      case 'pmu': return subtitles.pmu;
       default: return subtitles.fallback;
     }
   };

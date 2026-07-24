@@ -25,6 +25,8 @@ export type ListingCategory =
   | 'personal_color'
   | 'hair'
   | 'makeup'
+  | 'nail'
+  | 'pmu'            // 반영구 메이크업 (Permanent Makeup)
   | 'photo_studio'
   | 'kpop_tour'
   | 'travel_package'
@@ -49,6 +51,8 @@ export const LISTING_CATEGORIES: ReadonlyArray<{
   { key: 'personal_color', label: '퍼스널 컬러',    surface: 'programs', defaultPriceUnit: '세션', interestKey: 'dermatology' },
   { key: 'hair',           label: '헤어샵',         surface: 'programs', defaultPriceUnit: '세션', interestKey: 'makeup' },
   { key: 'makeup',         label: '메이크업샵',     surface: 'programs', defaultPriceUnit: '세션', interestKey: 'makeup' },
+  { key: 'nail',           label: '네일',           surface: 'programs', defaultPriceUnit: '세션', interestKey: 'makeup' },
+  { key: 'pmu',            label: '반영구(PMU)',    surface: 'programs', defaultPriceUnit: '세션', interestKey: 'makeup' },
   { key: 'photo_studio',   label: '사진 스튜디오',  surface: 'programs', defaultPriceUnit: '세션', interestKey: 'photo' },
   { key: 'kpop_tour',      label: 'K-팝 투어',      surface: 'kpop',     defaultPriceUnit: '1인',  interestKey: 'kpop' },
   { key: 'travel_package', label: '여행 패키지',    surface: 'travel',   defaultPriceUnit: '1인',  interestKey: 'beauty_tour' },
@@ -156,7 +160,7 @@ export function canCreateCategory(
   if (accountType === 'non_medical') {
     if (partnerSubtype === 'hotel') return category === 'hotel' || category === 'food';
     if (partnerSubtype === 'restaurant') return category === 'food';
-    if (partnerSubtype === 'beauty') return ['personal_color', 'hair', 'makeup'].includes(category);
+    if (partnerSubtype === 'beauty') return ['personal_color', 'hair', 'makeup', 'nail', 'pmu'].includes(category);
     if (partnerSubtype === 'photo')  return category === 'photo_studio';
     if (partnerSubtype === 'tour')   return category === 'kpop_tour' || category === 'travel_package';
     return false;
