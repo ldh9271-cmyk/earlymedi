@@ -49,6 +49,12 @@ const kr = {
       beauty_tour: { label: '뷰티 투어', desc: '시술 + 호텔 + 관광 패키지' },
       makeup: { label: '헤어·메이크업', desc: '시술 전후 스타일링' },
       photo_studio: { label: '사진 스튜디오', desc: '시술 후 인생 사진' },
+      personal_color: { label: '퍼스널 컬러', desc: '1:1 진단·드레이핑' },
+      nail: { label: '네일', desc: '젤·아트·케어' },
+      pmu: { label: '반영구(PMU)', desc: '눈썹·아이라인·입술' },
+      kpop_tour: { label: 'K-팝 투어', desc: '성지순례·굿즈' },
+      hotel: { label: '호텔', desc: '프리미엄 숙박' },
+      food: { label: '맛집', desc: '현지 다이닝 큐레이션' },
     },
     viewAll: '전체 보기',
   },
@@ -432,6 +438,10 @@ const kr = {
     noResults: '검색 결과가 없습니다',
     noResultsBody: '다른 검색어로 다시 시도하거나, 카테고리에서 직접 둘러보세요.',
     browseAll: '전체 상품 보기',
+    tipsTitle: '이렇게 검색해보세요',
+    tipsBody: '샵 이름(유니스텔라·정샘물), 지역(강남·청담·명동), 시술(네일·반영구 눈썹·퍼스널컬러), 카테고리(호텔·맛집·K팝·패키지여행)로 검색할 수 있어요. 여러 단어를 함께 써도 됩니다 — 예: "강남 네일".',
+    popularTitle: '인기 검색어',
+    popular: ['강남', '청담', '패키지여행', '네일', '반영구 눈썹', '퍼스널컬러', '헤어샵', '메이크업', '사진 스튜디오', 'K팝', '호텔', '맛집'],
   },
   // /clinics 병원 마켓플레이스 목록 — 부제·칩·카테고리 라벨
   clinicsPage: {
