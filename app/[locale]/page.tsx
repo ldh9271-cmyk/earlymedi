@@ -7,6 +7,7 @@ import { MainFooter } from './_components/main-footer';
 import CourseBookingCard from './_components/course-booking-card';
 import { LOCALE_TO_BCP47 } from '@/lib/i18n/locales';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
+import { ListingCardPlaceholder, LISTING_PLACEHOLDER_BG } from './_components/listing-card-placeholder';
 import { fetchFeaturedListings, fetchListingsForSurface, type ListingCard } from '@/lib/listings/query';
 
 // force-dynamic because MainHeader (client) uses useSearchParams() for
@@ -417,9 +418,12 @@ function Programs({
               style={{
                 position: 'relative',
                 aspectRatio: '1', borderRadius: 14, overflow: 'hidden',
-                background: `#f2f2f2 url(${p.img}) center / cover`,
+                background: p.img
+                  ? `#f2f2f2 url(${p.img}) center / cover`
+                  : LISTING_PLACEHOLDER_BG,
               }}
             >
+              {!p.img ? <ListingCardPlaceholder name={p.name} /> : null}
               {p.featured ? (
                 <div
                   style={{
@@ -679,9 +683,12 @@ function Foods({
                 style={{
                   position: 'relative',
                   aspectRatio: '4/5', borderRadius: 14, overflow: 'hidden',
-                  background: `#f2f2f2 url(${f.img}) center / cover`,
+                  background: f.img
+                    ? `#f2f2f2 url(${f.img}) center / cover`
+                    : LISTING_PLACEHOLDER_BG,
                 }}
               >
+                {!f.img ? <ListingCardPlaceholder name={f.name} /> : null}
                 {f.booked ? (
                   <div
                     style={{

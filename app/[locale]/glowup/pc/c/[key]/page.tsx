@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { LOCALE_LABELS, type PublicLocale } from '@/lib/i18n/locales';
 import { MainHeader } from '../../../../_components/main-header';
 import { MainFooter } from '../../../../_components/main-footer';
+import { ListingCardPlaceholder, LISTING_PLACEHOLDER_BG } from '../../../../_components/listing-card-placeholder';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { localizePriceUnit } from '@/lib/i18n/price-unit';
@@ -194,9 +195,12 @@ function ListingCardLink({
           aspectRatio: '16/10',
           background: listing.coverImageUrl
             ? `#f2f2f2 url(${listing.coverImageUrl}) center / cover`
-            : 'linear-gradient(135deg, #f7f7f7 0%, #ebebeb 100%)',
+            : LISTING_PLACEHOLDER_BG,
         }}
       >
+        {!listing.coverImageUrl ? (
+          <ListingCardPlaceholder name={listing.title} />
+        ) : null}
         {listing.promoLabel ? (
           <div
             style={{
