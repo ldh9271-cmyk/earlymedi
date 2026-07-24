@@ -407,6 +407,15 @@ const vi: Dictionary = {
     sampleReviewerName: 'Sarah',
     sampleReviewerMeta: 'Hoa Kỳ · Tháng 3 năm 2026',
   },
+  searchPage: {
+    title: 'Tìm kiếm',
+    resultsFor: '{n} kết quả cho "{q}"',
+    listings: 'Sản phẩm & dịch vụ',
+    clinics: 'Bệnh viện',
+    noResults: 'Không có kết quả',
+    noResultsBody: 'Hãy thử từ khóa khác hoặc duyệt trực tiếp theo danh mục.',
+    browseAll: 'Xem tất cả sản phẩm',
+  },
   clinicsPage: {
     countSubtitle: '{n} bệnh viện đã xác minh · đánh giá · chi phí dự kiến',
     all: 'Tất cả',

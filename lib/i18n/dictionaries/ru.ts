@@ -407,6 +407,15 @@ const ru: Dictionary = {
     sampleReviewerName: 'Sarah',
     sampleReviewerMeta: 'США · март 2026',
   },
+  searchPage: {
+    title: 'Поиск',
+    resultsFor: 'Результаты по запросу «{q}»: {n}',
+    listings: 'Товары и услуги',
+    clinics: 'Клиники',
+    noResults: 'Ничего не найдено',
+    noResultsBody: 'Попробуйте другой запрос или просмотрите категории.',
+    browseAll: 'Все товары',
+  },
   clinicsPage: {
     countSubtitle: 'Проверенных клиник: {n} · отзывы · ориентировочные цены',
     all: 'Все',

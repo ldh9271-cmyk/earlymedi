@@ -406,6 +406,15 @@ const ja: Dictionary = {
     sampleReviewerName: 'Sarah',
     sampleReviewerMeta: 'アメリカ · 2026年3月',
   },
+  searchPage: {
+    title: '検索',
+    resultsFor: '「{q}」の検索結果 {n} 件',
+    listings: '商品・サービス',
+    clinics: '病院',
+    noResults: '検索結果がありません',
+    noResultsBody: '別のキーワードでお試しいただくか、カテゴリから直接ご覧ください。',
+    browseAll: 'すべての商品を見る',
+  },
   clinicsPage: {
     countSubtitle: '{n} 件の認証済み病院 · 口コミ · 費用目安',
     all: 'すべて',

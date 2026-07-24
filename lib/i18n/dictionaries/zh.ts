@@ -404,6 +404,15 @@ const zh: Dictionary = {
     sampleReviewerName: 'Sarah',
     sampleReviewerMeta: '美国 · 2026 年 3 月',
   },
+  searchPage: {
+    title: '搜索',
+    resultsFor: '“{q}” 的搜索结果 {n} 条',
+    listings: '商品·服务',
+    clinics: '医院',
+    noResults: '没有搜索结果',
+    noResultsBody: '请尝试其他关键词，或直接浏览分类。',
+    browseAll: '查看全部商品',
+  },
   clinicsPage: {
     countSubtitle: '{n} 家认证医院 · 评价 · 费用指南',
     all: '全部',

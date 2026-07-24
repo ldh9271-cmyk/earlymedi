@@ -423,6 +423,16 @@ const kr = {
     sampleReviewerName: '사라',
     sampleReviewerMeta: '미국 · 2026년 3월',
   },
+  // /search 통합 검색 — 상품·서비스 + 병원
+  searchPage: {
+    title: '검색',
+    resultsFor: '"{q}" 검색 결과 {n}건',
+    listings: '상품·서비스',
+    clinics: '병원',
+    noResults: '검색 결과가 없습니다',
+    noResultsBody: '다른 검색어로 다시 시도하거나, 카테고리에서 직접 둘러보세요.',
+    browseAll: '전체 상품 보기',
+  },
   // /clinics 병원 마켓플레이스 목록 — 부제·칩·카테고리 라벨
   clinicsPage: {
     countSubtitle: '{n}곳의 검증된 병원 · 후기 · 예상 비용 안내',

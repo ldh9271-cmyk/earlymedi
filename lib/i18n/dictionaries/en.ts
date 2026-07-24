@@ -407,6 +407,15 @@ const en: Dictionary = {
     sampleReviewerName: 'Sarah',
     sampleReviewerMeta: 'United States · March 2026',
   },
+  searchPage: {
+    title: 'Search',
+    resultsFor: '{n} results for "{q}"',
+    listings: 'Products & services',
+    clinics: 'Hospitals',
+    noResults: 'No results found',
+    noResultsBody: 'Try a different keyword, or browse categories directly.',
+    browseAll: 'Browse all products',
+  },
   clinicsPage: {
     countSubtitle: '{n} verified hospitals · reviews · price guides',
     all: 'All',

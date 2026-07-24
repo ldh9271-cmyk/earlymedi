@@ -39,6 +39,7 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
 
   + '.m-mh-filter { display: none !important; }'
   + '.m-mh-account-email { display: none !important; }'
+  + '.m-mh-search-desktop { display: none !important; }'
   + '}'
 
   // Desktop default — search pill hidden, only appears on mobile via
@@ -150,6 +151,9 @@ export function MainHeader({
   const [accountOpen, setAccountOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  // 통합 검색어 — 데스크톱 pill·모바일 pill 이 같은 상태를 공유하고
+  // submit 시 /[locale]/search?q= 로 이동한다.
+  const [searchQ, setSearchQ] = useState('');
   const accountRef = useRef<HTMLDivElement | null>(null);
   const filterRef = useRef<HTMLDivElement | null>(null);
   const langRef = useRef<HTMLDivElement | null>(null);
@@ -214,6 +218,13 @@ export function MainHeader({
    * known locale segment (shouldn't happen since this header is only
    * mounted under /[locale], but defensive).
    */
+  function onSearchSubmit(e: React.FormEvent): void {
+    e.preventDefault();
+    const q = searchQ.trim();
+    if (!q) return;
+    router.push(`/${locale}/search?q=${encodeURIComponent(q)}`);
+  }
+
   function switchLocale(nextLocale: PublicLocale): void {
     const segments = pathname.split('/').filter(Boolean);
     const first = segments[0];
@@ -299,6 +310,46 @@ export function MainHeader({
         </nav>
 
         <div className="m-mh-util-gap" style={{ display: 'flex', alignItems: 'center', gap: 6, justifySelf: 'end' }}>
+          {/* Desktop search pill — Airbnb-style compact bar. Mobile
+              hides this (media block) and uses the full-width pill row
+              below instead. */}
+          <form
+            onSubmit={onSearchSubmit}
+            className="m-mh-search-desktop"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              border: '1px solid #dddddd', borderRadius: 9999,
+              padding: '5px 5px 5px 16px', marginRight: 6,
+              boxShadow: 'rgba(0,0,0,0.04) 0 1px 2px',
+              background: '#fff',
+            }}
+          >
+            <input
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              placeholder={t.search.main}
+              aria-label={t.search.main}
+              style={{
+                border: 'none', outline: 'none', background: 'transparent',
+                fontSize: 14, width: 170, fontFamily: 'inherit', color: '#222',
+              }}
+            />
+            <button
+              type="submit"
+              aria-label={t.search.main}
+              style={{
+                width: 32, height: 32, borderRadius: 9999, flexShrink: 0,
+                background: '#ff385c', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          </form>
+
           {/* Logged-out: "로그인" link. Logged-in: nothing here (email
               dropdown takes its place in the pill below). */}
           {userEmail === undefined ? (
@@ -507,16 +558,27 @@ export function MainHeader({
           phones via the @media block. Tap the pill or filter circle
           to go to /clinics where filter chips live. */}
       <div className="m-mh-search-row">
-        <Link href={`/${locale}/clinics`} className="m-mh-search-pill">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
+        <form onSubmit={onSearchSubmit} className="m-mh-search-pill">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2" style={{ flexShrink: 0 }}>
             <circle cx="11" cy="11" r="7" />
             <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
           </svg>
-          <span>
-            <span className="m-mh-search-main">{t.search.main}</span>
+          <span style={{ flex: 1 }}>
+            <input
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              placeholder={t.search.main}
+              aria-label={t.search.main}
+              enterKeyHint="search"
+              style={{
+                border: 'none', outline: 'none', background: 'transparent',
+                fontSize: 14, fontWeight: 600, width: '100%',
+                fontFamily: 'inherit', color: '#222', padding: 0,
+              }}
+            />
             <span className="m-mh-search-sub" style={{ display: 'block' }}>{t.search.subtitle}</span>
           </span>
-        </Link>
+        </form>
         <Link
           href={`/${locale}/clinics`}
           className="m-mh-search-filter"

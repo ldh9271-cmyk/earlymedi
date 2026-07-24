@@ -7,7 +7,12 @@ import { MainFooter } from './_components/main-footer';
 import CourseBookingCard from './_components/course-booking-card';
 import { LOCALE_TO_BCP47 } from '@/lib/i18n/locales';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
+import { localizePriceUnit } from '@/lib/i18n/price-unit';
 import { ListingCardPlaceholder, LISTING_PLACEHOLDER_BG } from './_components/listing-card-placeholder';
+import { and, eq, inArray, sql } from 'drizzle-orm';
+import { db } from '@/lib/db/client';
+import { hospitals } from '@/drizzle/schema/hospitals';
+import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 import { fetchFeaturedListings, fetchListingsForSurface, type ListingCard } from '@/lib/listings/query';
 
 // force-dynamic because MainHeader (client) uses useSearchParams() for
@@ -52,69 +57,9 @@ const HERO_LAYERS = [
   `${IMG_BASE}/dd5e57b8-0e0a-4154-8174-8c3c2593a905.jpg`,
 ];
 
-type Program = {
-  name: string;
-  rating: number;
-  desc: string;
-  place: string;
-  price: string;
-  featured: boolean;
-  img: string;
-  interest: string;
-};
-
-const PROGRAMS: Program[] = [
-  {
-    name: '퍼스널 컬러 진단',
-    rating: 4.9,
-    desc: '전문 컨설턴트 1:1 드레이핑 · 90분',
-    place: '강남 스튜디오',
-    price: '₩180,000',
-    featured: true,
-    img: `${IMG_BASE}/65b2c08d-ad5a-411e-a40e-fcbfec808c02.jpg`,
-    interest: 'makeup',
-  },
-  {
-    name: '피부 진단 케어',
-    rating: 4.8,
-    desc: 'AI 피부 분석 + 맞춤 케어 · 120분',
-    place: '청담 클리닉',
-    price: '₩240,000',
-    featured: false,
-    img: `${IMG_BASE}/0b3ab66a-79d6-49be-b4f6-8a626ee1fc2d.jpg`,
-    interest: 'dermatology',
-  },
-  {
-    name: '프로필 화보 촬영',
-    rating: 5.0,
-    desc: '헤어·메이크업 + 전문 스튜디오 · 150분',
-    place: '성수 스튜디오',
-    price: '₩320,000',
-    featured: true,
-    img: `${IMG_BASE}/10f945b3-775f-4fe8-aab6-7e434cfca9b5.jpg`,
-    interest: 'photo_studio',
-  },
-  {
-    name: 'K-뷰티 메이크업 클래스',
-    rating: 4.9,
-    desc: '아티스트와 1:1 셀프 레슨 · 100분',
-    place: '명동 살롱',
-    price: '₩150,000',
-    featured: false,
-    img: `${IMG_BASE}/96a7e0c2-ea2f-4549-8875-a3be3c38c523.jpg`,
-    interest: 'makeup',
-  },
-];
 
 const COURSE_IMG = `${IMG_BASE}/356620f6-4792-40a8-80a3-337ae86d266f.jpg`;
-const HOTEL_IMG = `${IMG_BASE}/b6d9c1aa-25f5-4abd-bb32-c74099caddc0.jpg`;
 
-const FOODS = [
-  { name: '한우구이',    place: '강남 · ★ 4.9',   booked: true,  img: `${IMG_BASE}/79cf46f3-c412-4e1e-8f72-e15c9e0f609b.jpg` },
-  { name: '전주 비빔밥',  place: '북촌 · ★ 4.8',   booked: false, img: `${IMG_BASE}/ee4b88ae-280f-486f-9555-2e4bd4b68131.jpg` },
-  { name: '신당동 떡볶이', place: '신당동 · ★ 4.7', booked: true,  img: `${IMG_BASE}/1a4c5d2b-938c-4b65-95d2-c87d556b24a8.jpg` },
-  { name: '한정식 반상',  place: '인사동 · ★ 4.9', booked: false, img: `${IMG_BASE}/c9fd4dde-ac1d-49fa-80b3-04139ec41b8c.jpg` },
-];
 
 // Itinerary copy now lives in dict.landing.itinerary (6 locale).
 // We just inject the step number at render time.
@@ -194,40 +139,43 @@ export default async function PublicLandingPage({
   // fall back to the hardcoded PROGRAMS / FOODS / Hotel samples below
   // so the page never looks empty even before /master/listings is
   // populated.
-  // 인기 뷰티 프로그램: 카테고리당 대표 1개 — 퍼스널컬러 → 헤어샵 →
-  // 메이크업샵 → 반영구 순서 고정. 각 카테고리 안에서는 featured 우선
-  // (fetchFeaturedListings 정렬) + 커버 사진을 직접 올린 상품 우선.
-  const PROGRAM_CATEGORY_ORDER = ['personal_color', 'hair', 'makeup', 'pmu'] as const;
-  const [programLists, dbFoods, dbHotels, dbCourses] = await Promise.all([
-    Promise.all(
-      PROGRAM_CATEGORY_ORDER.map((c) =>
-        fetchFeaturedListings({ locale, categories: [c], limit: 6 }),
-      ),
-    ),
-    fetchFeaturedListings({
-      locale,
-      categories: ['food', 'restaurant'],
-      limit: 4,
-    }),
-    fetchFeaturedListings({
-      locale,
-      categories: ['hotel'],
-      limit: 1,
-    }),
-    // 베스트셀러 코스 — 실제 패키지여행 상품 (sortOrder 첫 번째).
-    fetchListingsForSurface({
-      locale,
-      categories: ['travel_package'],
-      subType: 'package',
-    }),
+  // 메인 카테고리 행 구성 (founder 2026-07-24): 카테고리별 대표상품
+  // 4개씩 — 패키지여행 → 병원 → 호텔 → 맛집 → 퍼스널컬러 → 헤어샵 →
+  // 메이크업샵 → 네일 → 반영구 → 사진 스튜디오 → K팝 순서로 노출.
+  // fetchFeaturedListings 는 featured 우선 + 커버 사진 우선 정렬.
+  const [
+    pkgAll, rowHospitals, rowHotel, rowFood, rowColor, rowHair,
+    rowMakeup, rowNail, rowPmu, rowPhoto, rowKpop,
+  ] = await Promise.all([
+    fetchListingsForSurface({ locale, categories: ['travel_package'], subType: 'package' }),
+    fetchLandingHospitals(locale),
+    fetchFeaturedListings({ locale, categories: ['hotel'], limit: 4 }),
+    fetchFeaturedListings({ locale, categories: ['food', 'restaurant'], limit: 4 }),
+    fetchFeaturedListings({ locale, categories: ['personal_color'], limit: 4 }),
+    fetchFeaturedListings({ locale, categories: ['hair'], limit: 4 }),
+    fetchFeaturedListings({ locale, categories: ['makeup'], limit: 4 }),
+    fetchFeaturedListings({ locale, categories: ['nail'], limit: 4 }),
+    fetchFeaturedListings({ locale, categories: ['pmu'], limit: 4 }),
+    fetchFeaturedListings({ locale, categories: ['photo_studio'], limit: 4 }),
+    fetchFeaturedListings({ locale, categories: ['kpop_tour'], limit: 4 }),
   ]);
-  // 카테고리별 대표 픽 — 정렬 순서(featured 우선) 안에서 커버 이미지가
-  // 있는 상품을 먼저, 없으면 최상위 상품.
-  const dbPrograms = programLists
-    .map((rows) => rows.find((r) => r.coverImageUrl) ?? rows[0] ?? null)
-    .filter((x): x is ListingCard => x !== null);
-  const dbHotel = dbHotels[0] ?? null;
-  const dbCourse = dbCourses[0] ?? null;
+  const rowPackage = pkgAll.slice(0, 4);
+  // 베스트셀러 코스(예약 위젯) — 패키지 sortOrder 1순위 상품.
+  const dbCourse = pkgAll[0] ?? null;
+  const d = dict.detail;
+  const rows: Array<{ title: string; href: string; cards: RowCard[] }> = [
+    { title: dict.travel.package.title, href: `/${locale}/travel/package`, cards: rowPackage.map((l) => listingRowCard(locale, l, d)) },
+    { title: dict.header.catHospital, href: `/${locale}/clinics`, cards: rowHospitals.map((h) => hospitalRowCard(locale, h)) },
+    { title: dict.pcCategory.hotel.title, href: `/${locale}/glowup/pc/c/hotel`, cards: rowHotel.map((l) => listingRowCard(locale, l, d)) },
+    { title: dict.pcCategory.food.title, href: `/${locale}/glowup/pc/c/food`, cards: rowFood.map((l) => listingRowCard(locale, l, d)) },
+    { title: dict.pcCategory.color.title, href: `/${locale}/glowup/pc/c/color`, cards: rowColor.map((l) => listingRowCard(locale, l, d)) },
+    { title: dict.pcCategory.hair.title, href: `/${locale}/glowup/pc/c/hair`, cards: rowHair.map((l) => listingRowCard(locale, l, d)) },
+    { title: dict.pcCategory.makeup.title, href: `/${locale}/glowup/pc/c/makeup`, cards: rowMakeup.map((l) => listingRowCard(locale, l, d)) },
+    { title: dict.pcCategory.nail.title, href: `/${locale}/glowup/pc/c/nail`, cards: rowNail.map((l) => listingRowCard(locale, l, d)) },
+    { title: dict.pcCategory.pmu.title, href: `/${locale}/glowup/pc/c/pmu`, cards: rowPmu.map((l) => listingRowCard(locale, l, d)) },
+    { title: dict.pcCategory.photo.title, href: `/${locale}/glowup/pc/c/photo`, cards: rowPhoto.map((l) => listingRowCard(locale, l, d)) },
+    { title: dict.pcCategory.kpop.title, href: `/${locale}/glowup/pc/c/kpop`, cards: rowKpop.map((l) => listingRowCard(locale, l, d)) },
+  ];
   return (
     <div
       style={{
@@ -245,15 +193,241 @@ export default async function PublicLandingPage({
 
       <main className="m-main" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
         <Hero t={dict.landing} />
-        <Programs locale={locale} dbCards={dbPrograms} t={dict.landing} subtitles={dict.detail.subtitles} />
+        {rows.map((row) =>
+          row.cards.length > 0 ? (
+            <CategoryRow
+              key={row.href}
+              title={row.title}
+              href={row.href}
+              viewAllLabel={dict.landing.sectionViewAll}
+              cards={row.cards}
+            />
+          ) : null,
+        )}
         <Course locale={locale} dbCourse={dbCourse} t={dict.landing} />
-        <Foods locale={locale} dbCards={dbFoods} t={dict.landing} />
-        <KpopRow locale={locale} t={dict.landing} />
-        <HotelAndFinalCta locale={locale} dbHotel={dbHotel} t={dict.landing} />
+        <FinalCta locale={locale} t={dict.landing} />
       </main>
 
       <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[locale].native} />
     </div>
+  );
+}
+
+// ─── 카테고리 행 (2026-07-24 메인 재구성) ──────────────────────────
+// 카테고리별 대표상품 4개 카드 행. 상품/병원 공통 카드 셰이프.
+type RowCard = {
+  key: string;
+  href: string;
+  img: string | null;
+  name: string;
+  rating: string | null;
+  sub: string | null;
+  price: string | null;
+  unit: string;
+};
+
+function listingRowCard(locale: PublicLocale, l: ListingCard, d: Dictionary['detail']): RowCard {
+  const freeform = typeof l.details.priceRange === 'string' ? (l.details.priceRange as string) : null;
+  const price = l.priceWon
+    ? `₩${l.priceWon.toLocaleString('ko-KR')}`
+    : freeform
+      ? localizeKoLabel(freeform, locale)
+      : null;
+  const unit = l.priceWon ? localizePriceUnit(l.priceUnit, l.category, d.units, locale) : '';
+  return {
+    key: l.id,
+    href: `/${locale}/listings/${l.slug}`,
+    img: l.coverImageUrl,
+    name: l.title,
+    rating: l.rating ? (l.rating / 10).toFixed(1) : null,
+    sub: l.locationLabel,
+    price,
+    unit,
+  };
+}
+
+type LandingHospital = {
+  id: string;
+  slug: string;
+  name: string;
+  coverImageUrl: string | null;
+  rating: number | null;
+};
+
+function hospitalRowCard(locale: PublicLocale, h: LandingHospital): RowCard {
+  return {
+    key: h.id,
+    href: `/${locale}/clinics/${h.slug}`,
+    img: h.coverImageUrl,
+    name: h.name,
+    rating: h.rating ? (h.rating / 10).toFixed(1) : null,
+    sub: null,
+    price: null,
+    unit: '',
+  };
+}
+
+/** 병원 행 — hospitals 테이블에서 커버 사진 우선 + 노출순서로 4곳. */
+async function fetchLandingHospitals(locale: PublicLocale): Promise<LandingHospital[]> {
+  try {
+    const rows = await db
+      .select({
+        id: hospitals.id,
+        slug: hospitals.slug,
+        name: hospitals.name,
+        coverImageUrl: hospitals.coverImageUrl,
+        rating: hospitals.rating,
+      })
+      .from(hospitals)
+      .where(eq(hospitals.countryCode, 'KR'))
+      .orderBy(sql`(${hospitals.coverImageUrl} IS NULL), ${hospitals.sortOrder} asc, ${hospitals.createdAt} desc`)
+      .limit(4);
+    if (rows.length === 0) return [];
+    const overrides = new Map<string, { name: string | null; coverImageUrl: string | null }>();
+    try {
+      const lc = await db
+        .select({
+          hospitalId: hospitalLocaleContent.hospitalId,
+          name: hospitalLocaleContent.name,
+          coverImageUrl: hospitalLocaleContent.coverImageUrl,
+        })
+        .from(hospitalLocaleContent)
+        .where(
+          and(
+            inArray(hospitalLocaleContent.hospitalId, rows.map((r) => r.id)),
+            eq(hospitalLocaleContent.locale, locale),
+          ),
+        );
+      for (const o of lc) overrides.set(o.hospitalId, o);
+    } catch {
+      /* locale table missing — keep base */
+    }
+    return rows.map((r) => {
+      const o = overrides.get(r.id);
+      return {
+        ...r,
+        name: o?.name?.trim() || r.name,
+        coverImageUrl: o?.coverImageUrl || r.coverImageUrl,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+function CategoryRow({
+  title,
+  viewAllLabel,
+  href,
+  cards,
+}: {
+  title: string;
+  viewAllLabel: string;
+  href: string;
+  cards: RowCard[];
+}): JSX.Element {
+  return (
+    <section className="m-section" style={{ padding: '48px 0 0' }}>
+      <SectionHeader title={title} viewAllLabel={viewAllLabel} href={href} />
+      <div
+        className="m-grid-4"
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, marginTop: 24 }}
+      >
+        {cards.map((c) => (
+          <Link key={c.key} href={c.href} style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
+            <div
+              style={{
+                position: 'relative',
+                aspectRatio: '1', borderRadius: 14, overflow: 'hidden',
+                background: c.img
+                  ? `#f2f2f2 url(${c.img}) center / cover`
+                  : LISTING_PLACEHOLDER_BG,
+              }}
+            >
+              {!c.img ? <ListingCardPlaceholder name={c.name} /> : null}
+              <div style={{ position: 'absolute', top: 12, right: 12 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(0,0,0,0.45)" stroke="#fff" strokeWidth="1.8">
+                  <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
+                </svg>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 12 }}>
+              <span className="m-card-name" style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.3 }}>{c.name}</span>
+              {c.rating ? (
+                <span className="m-card-rating" style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
+                    <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
+                  </svg>
+                  {c.rating}
+                </span>
+              ) : null}
+            </div>
+            {c.sub ? (
+              <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{c.sub}</div>
+            ) : null}
+            {c.price ? (
+              <div className="m-card-price" style={{ fontSize: 15, marginTop: 6 }}>
+                <span style={{ fontWeight: 600 }}>{c.price}</span>
+                {c.unit ? <span style={{ color: '#6a6a6a' }}> / {c.unit}</span> : null}
+              </div>
+            ) : null}
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// 최종 CTA — 기존 HotelAndFinalCta 의 하단 섹션만 분리 (호텔 스포트라이트는
+// 카테고리 행으로 대체).
+function FinalCta({ locale, t }: { locale: PublicLocale; t: Dictionary['landing'] }): JSX.Element {
+  return (
+    <section className="m-final-cta-section" style={{ padding: '64px 0 8px', textAlign: 'center' }}>
+      <h2 className="m-final-cta-h2" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
+        {t.finalCtaTitle}
+      </h2>
+      <p
+        className="m-final-cta-p"
+        style={{
+          fontSize: 16, color: '#6a6a6a',
+          margin: '12px auto 0', maxWidth: 480, lineHeight: 1.5,
+        }}
+      >
+        {t.finalCtaSubtitle}
+      </p>
+      <div
+        className="m-final-cta-actions"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 12, marginTop: 24,
+        }}
+      >
+        <Link
+          href={bookingHref(locale, COURSE_PROGRAM, 'beauty_tour')}
+          style={{
+            background: '#ff385c', color: '#fff',
+            border: 'none', borderRadius: 8,
+            height: 48, lineHeight: '48px', padding: '0 28px',
+            fontWeight: 500, fontSize: 16,
+            cursor: 'pointer', textDecoration: 'none',
+          }}
+        >
+          {t.finalCtaStart}
+        </Link>
+        <Link
+          href={`/${locale}/inquiry`}
+          style={{
+            background: '#fff', color: '#222',
+            border: '1px solid #222', borderRadius: 8,
+            height: 48, lineHeight: '46px', padding: '0 26px',
+            fontWeight: 500, fontSize: 16,
+            cursor: 'pointer', textDecoration: 'none',
+          }}
+        >
+          {t.finalCtaConsult}
+        </Link>
+      </div>
+    </section>
   );
 }
 
@@ -337,143 +511,6 @@ function Hero({ t }: { t: Dictionary['landing'] }): JSX.Element {
             {t.heroCta}
           </Link>
         </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── 3. Programs ───────────────────────────────────────────────────
-// `dbCards` (from partner_listings, status=approved+featured) takes
-// precedence. When empty (migration not yet applied or no curation),
-// falls back to the hardcoded PROGRAMS samples so the page stays
-// populated. Shape mapping:
-//   DB row → { name, rating, desc, place, price, featured, img, interest }
-function Programs({
-  locale,
-  dbCards,
-  t,
-  subtitles,
-}: {
-  locale: PublicLocale;
-  dbCards: ListingCard[];
-  t: Dictionary['landing'];
-  subtitles: Dictionary['detail']['subtitles'];
-}): JSX.Element {
-  // 카드 하단 카테고리 라벨 — detail.subtitles (6개 로케일 기번역) 재사용.
-  const categoryLabel = (category: string): string => {
-    switch (category) {
-      case 'personal_color': return subtitles.personal_color;
-      case 'hair': return subtitles.hair;
-      case 'makeup': return subtitles.makeup;
-      case 'photo_studio': return subtitles.photo_studio;
-      case 'nail': return subtitles.nail;
-      case 'pmu': return subtitles.pmu;
-      default: return subtitles.fallback;
-    }
-  };
-  const cards: Array<{
-    name: string;
-    rating: number;
-    desc: string;
-    place: string;
-    price: string;
-    featured: boolean;
-    img: string;
-    interest: string;
-    slug: string | null;
-    category: string | null;
-  }> = dbCards.length > 0
-    ? dbCards.map((d) => ({
-        name: d.title,
-        rating: d.rating ? d.rating / 10 : 4.9,
-        desc: d.description ?? '',
-        place: d.locationLabel ?? '',
-        price: d.priceWon ? `₩${d.priceWon.toLocaleString('ko-KR')}` : '문의',
-        featured: !!d.promoLabel,
-        img: d.coverImageUrl ?? '',
-        interest: d.interestKey ?? 'makeup',
-        slug: d.slug,
-        category: d.category,
-      }))
-    : PROGRAMS.map((p, i) => ({
-        // i18n fallback: image + featured + interest come from the
-        // local PROGRAMS table (asset + business logic), text fields
-        // override from dict.landing.samplePrograms so /en /zh /ja /ru
-        // /vi see translated copy when no DB row exists yet.
-        ...p,
-        name: t.samplePrograms[i]?.name ?? p.name,
-        desc: t.samplePrograms[i]?.desc ?? p.desc,
-        place: t.samplePrograms[i]?.place ?? p.place,
-        slug: null,
-        category: null,
-      }));
-  return (
-    <section id="programs" className="m-section" style={{ padding: '56px 0 0', scrollMarginTop: 200 }}>
-      <SectionHeader title={t.programsTitle} viewAllLabel={t.sectionViewAll} href={`/${locale}/glowup/pc`} />
-      <div
-        className="m-grid-4"
-        style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
-          marginTop: 24,
-        }}
-      >
-        {cards.map((p) => (
-          <Link
-            key={p.name}
-            href={p.slug ? `/${locale}/listings/${p.slug}` : bookingHref(locale, p.name, p.interest)}
-            style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
-          >
-            <div
-              style={{
-                position: 'relative',
-                aspectRatio: '1', borderRadius: 14, overflow: 'hidden',
-                background: p.img
-                  ? `#f2f2f2 url(${p.img}) center / cover`
-                  : LISTING_PLACEHOLDER_BG,
-              }}
-            >
-              {!p.img ? <ListingCardPlaceholder name={p.name} /> : null}
-              {p.featured ? (
-                <div
-                  style={{
-                    position: 'absolute', top: 12, left: 12,
-                    background: '#fff', color: '#222',
-                    fontSize: 11, fontWeight: 600,
-                    borderRadius: 9999, padding: '5px 11px',
-                    boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
-                  }}
-                >
-                  {t.programsFeaturedBadge}
-                </div>
-              ) : null}
-              <div style={{ position: 'absolute', top: 12, right: 12 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(0,0,0,0.45)" stroke="#fff" strokeWidth="1.8">
-                  <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
-                </svg>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
-              <span className="m-card-name" style={{ fontSize: 16, fontWeight: 600 }}>{p.name}</span>
-              <span className="m-card-rating" style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
-                  <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
-                </svg>
-                {p.rating}
-              </span>
-            </div>
-            {/* 상세 설명은 카드에서 제외 (DB 설명이 길어 레이아웃 무너짐).
-                이름 아래 카테고리 라벨 + 가격만 노출. */}
-            {p.category ? (
-              <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>
-                {categoryLabel(p.category)}
-              </div>
-            ) : null}
-            <div className="m-card-price" style={{ fontSize: 15, marginTop: 6 }}>
-              <span style={{ fontWeight: 600 }}>{p.price}</span>{' '}
-              <span style={{ color: '#6a6a6a' }}>{t.programsPerSession}</span>
-            </div>
-          </Link>
-        ))}
       </div>
     </section>
   );
@@ -638,391 +675,6 @@ function Course({
         />
       </div>
     </section>
-  );
-}
-
-// ─── 5. Foods ──────────────────────────────────────────────────────
-// Same DB-first-with-fallback pattern as Programs. `dbCards` come
-// from partner_listings (category in 'food','restaurant').
-function Foods({
-  locale,
-  dbCards,
-  t,
-}: {
-  locale: PublicLocale;
-  dbCards: ListingCard[];
-  t: Dictionary['landing'];
-}): JSX.Element {
-  const cards: Array<{
-    name: string;
-    place: string;
-    booked: boolean;
-    img: string;
-    slug: string | null;
-  }> = dbCards.length > 0
-    ? dbCards.map((d) => ({
-        name: d.title,
-        place: d.locationLabel
-          ?? (d.rating ? `★ ${(d.rating / 10).toFixed(1)}` : ''),
-        booked: !!d.promoLabel,
-        img: d.coverImageUrl ?? '',
-        slug: d.slug,
-      }))
-    : FOODS.map((f, i) => ({
-        // Same fallback-with-dict-override pattern as Programs above.
-        ...f,
-        name: t.sampleFoods[i]?.name ?? f.name,
-        place: t.sampleFoods[i]?.place ?? f.place,
-        slug: null,
-      }));
-  return (
-    <section className="m-section" style={{ padding: '56px 0 0' }}>
-      <SectionHeader title={t.foodsTitle} viewAllLabel={t.sectionViewAll} href={`/${locale}/glowup/pc/c/food`} />
-      <div
-        className="m-grid-4"
-        style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
-          marginTop: 24,
-        }}
-      >
-        {cards.map((f) => {
-          const cardInner = (
-            <>
-              <div
-                style={{
-                  position: 'relative',
-                  aspectRatio: '4/5', borderRadius: 14, overflow: 'hidden',
-                  background: f.img
-                    ? `#f2f2f2 url(${f.img}) center / cover`
-                    : LISTING_PLACEHOLDER_BG,
-                }}
-              >
-                {!f.img ? <ListingCardPlaceholder name={f.name} /> : null}
-                {f.booked ? (
-                  <div
-                    style={{
-                      position: 'absolute', top: 12, left: 12,
-                      background: '#fff', color: '#222',
-                      fontSize: 8, fontWeight: 700, letterSpacing: '0.32px',
-                      borderRadius: 9999, padding: '4px 8px',
-                      boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
-                    }}
-                  >
-                    {t.foodsBookedBadge}
-                  </div>
-                ) : null}
-                <div style={{ position: 'absolute', top: 12, right: 12 }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(0,0,0,0.45)" stroke="#fff" strokeWidth="1.8">
-                    <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="m-card-name" style={{ fontSize: 16, fontWeight: 600, marginTop: 12 }}>{f.name}</div>
-              <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>{f.place}</div>
-            </>
-          );
-          return f.slug ? (
-            <Link
-              key={f.name}
-              href={`/${locale}/listings/${f.slug}`}
-              style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
-            >
-              {cardInner}
-            </Link>
-          ) : (
-            <div key={f.name} style={{ cursor: 'pointer' }}>{cardInner}</div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-// ─── 6. K-pop ──────────────────────────────────────────────────────
-// 4-사 카드. founder 가 직접 업로드한 실제 BI 로고를 카드 중앙에
-// 배치. HYBE 로고는 흰색 워드마크라 검정 배경, 나머지 3개는 컬러
-// 로고라 흰색 배경. 위치 + 성지명 라벨은 카드 아래에 따로 (Programs
-// /Foods 카드와 동일한 "이미지 + 텍스트 분리" 패턴).
-const KPOP_HOUSES: Array<{
-  brand: string;
-  area: string;
-  spot: string;
-  logo: string;
-  cardBg: string;
-  logoHeightPct: number;
-}> = [
-  {
-    brand: 'HYBE',
-    area: '용산',
-    spot: 'HYBE 인사이트 박물관',
-    logo: '/images/kpop/hybe.png',
-    cardBg: '#0c0c0c',
-    logoHeightPct: 28,
-  },
-  {
-    brand: 'SM',
-    area: '성수',
-    spot: 'KWANGYA@SEOUL',
-    logo: '/images/kpop/sm.png',
-    cardBg: '#ffffff',
-    logoHeightPct: 50,
-  },
-  {
-    brand: 'JYP',
-    area: '강동',
-    spot: 'JYP 사옥 + 굿즈샵',
-    logo: '/images/kpop/jyp.png',
-    cardBg: '#ffffff',
-    logoHeightPct: 65,
-  },
-  {
-    brand: 'YG',
-    area: '합정',
-    spot: 'YG 사옥 + 카페',
-    logo: '/images/kpop/yg.jpg',
-    cardBg: '#ffffff',
-    logoHeightPct: 55,
-  },
-];
-
-function KpopRow({ locale, t }: { locale: PublicLocale; t: Dictionary['landing'] }): JSX.Element {
-  // Brand name + logo + card background stay hardcoded (asset +
-  // proper noun), but area/spot text comes from dict so non-Korean
-  // visitors see "Yongsan / HYBE Insight Museum" instead of "용산".
-  // 카드 클릭 시 K-팝 투어 카테고리 목록으로 이동 (실상품 연결).
-  const houses = KPOP_HOUSES.map((h, i) => ({
-    ...h,
-    area: t.kpopHouses[i]?.area ?? h.area,
-    spot: t.kpopHouses[i]?.spot ?? h.spot,
-  }));
-  const kpopHref = `/${locale}/glowup/pc/c/kpop`;
-  return (
-    <section className="m-section" style={{ padding: '40px 0 0' }}>
-      <SectionHeader title={t.kpopTitle} viewAllLabel={t.sectionViewAll} href={kpopHref} />
-      <div
-        className="m-kpop-grid"
-        style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
-          marginTop: 24,
-        }}
-      >
-        {houses.map((h) => (
-          <Link
-            key={h.brand}
-            href={kpopHref}
-            style={{ textDecoration: 'none', color: 'inherit' }}
-          >
-            <div
-              style={{
-                aspectRatio: '16/10', borderRadius: 14, overflow: 'hidden',
-                background: h.cardBg,
-                border: h.cardBg === '#ffffff' ? '1px solid #ebebeb' : 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={h.logo}
-                alt={`${h.brand} 로고`}
-                style={{
-                  maxWidth: '70%',
-                  maxHeight: `${h.logoHeightPct}%`,
-                  objectFit: 'contain',
-                }}
-              />
-            </div>
-            <div className="m-card-name" style={{ marginTop: 12, fontSize: 16, fontWeight: 600 }}>{h.brand}</div>
-            <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>
-              {h.area} · {h.spot}
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-// ─── 7. Hotel + Final CTA ──────────────────────────────────────────
-// Hotel block reads DB-first (category='hotel', featured=true, first
-// row). Fallback values keep the hardcoded "명동 중심 프리미엄 5성
-// 호텔" copy when no row is approved yet. Amenities list pulls from
-// details.amenities when present (keys: spa/breakfast/rooftop/...),
-// otherwise the original 3-item default.
-const HOTEL_AMENITY_LABEL: Record<string, string> = {
-  spa: '스파 무료 이용',
-  breakfast: '조식 뷔페 포함',
-  rooftop: '루프탑 무료 이용',
-  fitness: '피트니스 무료 이용',
-  pool: '수영장 무료 이용',
-  sauna: '사우나 무료 이용',
-  concierge: '컨시어지 서비스',
-  parking: '주차 무료',
-};
-
-function HotelAndFinalCta({
-  locale,
-  dbHotel,
-  t,
-}: {
-  locale: PublicLocale;
-  dbHotel: ListingCard | null;
-  t: Dictionary['landing'];
-}): JSX.Element {
-  const hotel = {
-    title: dbHotel?.title ?? t.hotelTitle,
-    img: dbHotel?.coverImageUrl ?? HOTEL_IMG,
-    rating: dbHotel?.rating ? (dbHotel.rating / 10).toFixed(1) : '4.9',
-    description: dbHotel?.description ?? t.hotelDescription,
-    amenities: (() => {
-      const fromDb = Array.isArray(dbHotel?.details.amenities)
-        ? (dbHotel?.details.amenities as string[])
-            .map((k) => localizeKoLabel(HOTEL_AMENITY_LABEL[k] ?? k, locale))
-            .slice(0, 3)
-        : [];
-      if (fromDb.length > 0) return fromDb;
-      return [t.hotelAmenity1, t.hotelAmenity2, t.hotelAmenity3];
-    })(),
-    priceWon: dbHotel?.priceWon ?? 320_000,
-    priceUnit: dbHotel?.priceUnit ?? '박',
-    promoLabel: dbHotel?.promoLabel
-      ? localizeKoLabel(dbHotel.promoLabel, locale)
-      : t.hotelPromoLabel,
-  };
-  // 실상품 연결: DB 호텔이 있으면 해당 상세로, 없으면 호텔 카테고리로.
-  const hotelHref = dbHotel?.slug
-    ? `/${locale}/listings/${dbHotel.slug}`
-    : `/${locale}/glowup/pc/c/hotel`;
-  return (
-    <>
-      <section className="m-section" style={{ padding: '56px 0 0' }}>
-        <div
-          className="m-hotel-grid"
-          style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48,
-            alignItems: 'center',
-          }}
-        >
-          <Link
-            href={hotelHref}
-            style={{
-              display: 'block',
-              aspectRatio: '5/4', borderRadius: 20, overflow: 'hidden',
-              background: `#f2f2f2 url(${hotel.img}) center / cover`,
-            }}
-          />
-          <div>
-            <Link
-              href={hotelHref}
-              className="m-hotel-title"
-              style={{
-                fontSize: 21, fontWeight: 600, letterSpacing: '-0.18px',
-                color: 'inherit', textDecoration: 'none',
-              }}
-            >
-              {hotel.title}
-            </Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 24 }}>
-              <svg className="m-hotel-rating-wing" width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
-                <path d="M20 4C10 10 8 26 12 40c1.5 5 3 12 2 20" />
-              </svg>
-              <div style={{ textAlign: 'center' }}>
-                <div className="m-hotel-rating-num" style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1, letterSpacing: '-1px' }}>
-                  {hotel.rating}
-                </div>
-              </div>
-              <svg className="m-hotel-rating-wing" width="26" height="64" viewBox="0 0 26 64" fill="none" stroke="#222" strokeWidth="1.5">
-                <path d="M6 4C16 10 18 26 14 40c-1.5 5-3 12-2 20" />
-              </svg>
-            </div>
-            <div className="m-hotel-promo" style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>{hotel.promoLabel}</div>
-            <p
-              className="m-hotel-desc"
-              style={{
-                fontSize: 16, lineHeight: 1.5, color: '#3f3f3f',
-                margin: '16px 0 0', maxWidth: 440,
-              }}
-            >
-              {hotel.description}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', marginTop: 20 }}>
-              {hotel.amenities.map((amen, idx) => (
-                <div
-                  key={amen}
-                  className="m-hotel-amenity"
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 14,
-                    padding: '12px 0',
-                    borderTop: '1px solid #ebebeb',
-                    borderBottom: idx === hotel.amenities.length - 1 ? '1px solid #ebebeb' : undefined,
-                    fontSize: 16,
-                  }}
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.5">
-                    <circle cx="12" cy="12" r="9" />
-                  </svg>
-                  {amen}
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 22 }}>
-              <span className="m-hotel-price" style={{ fontSize: 21, fontWeight: 700 }}>
-                ₩{hotel.priceWon.toLocaleString('ko-KR')}
-              </span>
-              <span style={{ fontSize: 15, color: '#6a6a6a' }}>
-                {t.hotelPerNight}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="m-final-cta-section" style={{ padding: '64px 0 8px', textAlign: 'center' }}>
-        <h2 className="m-final-cta-h2" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
-          {t.finalCtaTitle}
-        </h2>
-        <p
-          className="m-final-cta-p"
-          style={{
-            fontSize: 16, color: '#6a6a6a',
-            margin: '12px auto 0', maxWidth: 480, lineHeight: 1.5,
-          }}
-        >
-          {t.finalCtaSubtitle}
-        </p>
-        <div
-          className="m-final-cta-actions"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: 12, marginTop: 24,
-          }}
-        >
-          <Link
-            href={bookingHref(locale, COURSE_PROGRAM, 'beauty_tour')}
-            style={{
-              background: '#ff385c', color: '#fff',
-              border: 'none', borderRadius: 8,
-              height: 48, lineHeight: '48px', padding: '0 28px',
-              fontWeight: 500, fontSize: 16,
-              cursor: 'pointer', textDecoration: 'none',
-            }}
-          >
-            {t.finalCtaStart}
-          </Link>
-          <Link
-            href={`/${locale}/inquiry`}
-            style={{
-              background: '#fff', color: '#222',
-              border: '1px solid #222', borderRadius: 8,
-              height: 48, lineHeight: '46px', padding: '0 26px',
-              fontWeight: 500, fontSize: 16,
-              cursor: 'pointer', textDecoration: 'none',
-            }}
-          >
-            {t.finalCtaConsult}
-          </Link>
-        </div>
-      </section>
-    </>
   );
 }
 
