@@ -283,6 +283,13 @@ export const KO_LABELS = {
     "ru": "3 мин пешком от станц. Каннам",
     "vi": "3 phút đi bộ từ Ga Gangnam"
   },
+  "강남역 도보권": {
+    "en": "Walking Distance from Gangnam Station",
+    "zh": "江南站步行可达",
+    "ja": "江南駅徒歩圏内",
+    "ru": "В пешей доступности от ст. Каннам",
+    "vi": "Đi bộ từ Ga Gangnam"
+  },
   "개인맞춤 시술": {
     "en": "Customized Treatment",
     "zh": "私人定制疗程",
@@ -436,6 +443,20 @@ export const KO_LABELS = {
     "ja": "内視鏡+脳健診・透明な費用",
     "ru": "Эндоскопия + обследование мозга · Прозрачные цены",
     "vi": "Nội soi + Tầm soát não · Chi phí minh bạch"
+  },
+  "눈썹 반영구 20년": {
+    "en": "20 Yrs Eyebrow Semi-Permanent Experience",
+    "zh": "眉毛半永久 20年",
+    "ja": "眉毛アートメイク20年",
+    "ru": "20 лет опыта: татуаж бровей",
+    "vi": "20 năm kinh nghiệm phun xăm lông mày"
+  },
+  "눈썹+쁘띠 통합": {
+    "en": "Eyebrow & Petite Combo",
+    "zh": "眉毛+微整形一体",
+    "ja": "眉毛+プチ整形統合",
+    "ru": "Комплекс: брови + петит",
+    "vi": "Tích hợp lông mày & thẩm mỹ nội khoa"
   },
   "다국어 진료": {
     "en": "Multilingual Care",
@@ -829,6 +850,13 @@ export const KO_LABELS = {
     "ru": "Любимое место aespa",
     "vi": "Tiệm quen của aespa"
   },
+  "엠보 자연눈썹": {
+    "en": "Embo Natural Eyebrows",
+    "zh": "Embo线条自然眉",
+    "ja": "エンボ自然眉",
+    "ru": "Волосковый татуаж бровей",
+    "vi": "Điêu khắc lông mày Embo tự nhiên"
+  },
   "여성 전문의 · 37년 무사고": {
     "en": "Female Specialist · 37 Years Accident-Free",
     "zh": "女性专科医生·37年零事故",
@@ -885,6 +913,13 @@ export const KO_LABELS = {
     "ru": "Предварительная запись обязательна",
     "vi": "Yêu cầu đặt lịch trước"
   },
+  "왁싱+반영구 원스톱": {
+    "en": "Waxing & SPMU One-Stop",
+    "zh": "脱毛+半永久一站式",
+    "ja": "脱毛+アートメイク ワンストップ",
+    "ru": "Ваксинг + татуаж в одном месте",
+    "vi": "Tẩy lông & Phun xăm trọn gói"
+  },
   "외국인 가족 소아진료 적합": {
     "en": "Suitable for Foreign Family Pediatric Care",
     "zh": "适合外籍家庭儿童诊疗",
@@ -933,6 +968,13 @@ export const KO_LABELS = {
     "ja": "YouTube 50万ビューティーエイジング",
     "ru": "YouTube 500 тыс. просмотров Beauty Aging",
     "vi": "YouTube 500k lượt xem về Beauty Aging"
+  },
+  "의료기관 시술": {
+    "en": "Medical Clinic Procedure",
+    "zh": "医疗机构专业施术",
+    "ja": "医療機関での施術",
+    "ru": "Процедура в медучреждении",
+    "vi": "Trị liệu tại cơ sở y tế"
   },
   "인": {
     "en": "Person",
@@ -989,6 +1031,13 @@ export const KO_LABELS = {
     "ja": "再手術回復ケア",
     "ru": "Уход после повторных операций",
     "vi": "Chăm sóc hồi phục sau tái phẫu thuật"
+  },
+  "전 부위 시술": {
+    "en": "All-Area Treatment",
+    "zh": "全部位施术",
+    "ja": "全部位施術",
+    "ru": "Процедура для всех зон",
+    "vi": "Điều trị mọi vùng"
   },
   "전국 최대 소아 한의원": {
     "en": "Korea's Largest Pediatric Korean Medicine Clinic",
@@ -1171,6 +1220,13 @@ export const KO_LABELS = {
     "ja": "ヘルニア国内最多・メッシュフリー",
     "ru": "Максимум операций по грыже в Корее · Без сетки",
     "vi": "Phẫu thuật thoát vị nhiều nhất Hàn Quốc · Không dùng lưới"
+  },
+  "터미널 도보권": {
+    "en": "Walking Distance from Terminal",
+    "zh": "客运站步行可达",
+    "ja": "ターミナル徒歩圏内",
+    "ru": "В пешей доступности от терминала",
+    "vi": "Đi bộ từ bến xe/termi"
   },
   "토탈 뷰티 랜드마크": {
     "en": "Total Beauty Landmark",

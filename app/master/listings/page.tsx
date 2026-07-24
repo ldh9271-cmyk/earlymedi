@@ -30,6 +30,7 @@ import {
   seedSeoulPersonalColorAction,
   seedSeoulMakeupAction,
   seedSeoulHairAction,
+  seedSeoulPmuAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -613,6 +614,27 @@ export default async function MasterListingsPage({
           className="rounded-md border border-indigo-400 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-800 hover:bg-indigo-50"
         >
           헤어샵 9종 일괄 등록
+        </button>
+      </form>
+
+      {/* 강남·서초 외국인 FIT 반영구(PMU) 일괄 등록 트리거 */}
+      <form
+        action={seedSeoulPmuAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-fuchsia-300 bg-fuchsia-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">강남·서초 반영구샵 10종 일괄 등록</p>
+          <p className="mt-0.5">
+            비앤미 압구정·미프로·리앤채움의원·강남제이에스·센스·압구정로데오 스튜디오·
+            신사 전문샵·반포샵·서초 메디컬·대치 왁싱 스튜디오. category=pmu, SEO 메타는
+            locale content(kr) 에 저장. 같은 slug 가 이미 있으면 자동 스킵 (멱등).
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-fuchsia-400 bg-white px-3 py-1.5 text-xs font-semibold text-fuchsia-800 hover:bg-fuchsia-50"
+        >
+          반영구샵 10종 일괄 등록
         </button>
       </form>
 
