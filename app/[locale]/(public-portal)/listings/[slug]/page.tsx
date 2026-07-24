@@ -75,7 +75,7 @@ export default async function ListingDetailPage({
   const reviewsLabel = d.reviewsCount.replace('{n}', String(reviewsCount));
   const subtitleKr = subtitleForCategory(listing.category, listing.title);
   const hostName = hostNameForCategory(listing.category);
-  const highlights = pickHighlights(listing);
+  const highlights = pickHighlights(listing, params.locale);
   const priceLabel = listing.priceWon
     ? `₩${listing.priceWon.toLocaleString('ko-KR')}`
     : '문의';
@@ -288,7 +288,15 @@ export default async function ListingDetailPage({
              items: ['공항 픽업 → 명동 호텔', ...] }] 구조를 데이별
           타임라인 카드로 렌더. 2026-07-24 K-뷰티 투어 패키지용 추가. */}
       {(() => {
-        const raw = listing.details.itinerary;
+        // 로케일별 일정 우선 — details.itineraryI18n = { en: [...], ... }.
+        // 없으면 kr 기본 itinerary 로 fallback.
+        const itinI18n = listing.details.itineraryI18n as
+          | Record<string, unknown[]>
+          | undefined;
+        const raw =
+          params.locale !== 'kr' && itinI18n && Array.isArray(itinI18n[params.locale])
+            ? itinI18n[params.locale]
+            : listing.details.itinerary;
         if (!Array.isArray(raw) || raw.length === 0) return null;
         const days = raw
           .map((d) => {
@@ -303,12 +311,16 @@ export default async function ListingDetailPage({
           })
           .filter((d) => d.day && d.items.length > 0);
         if (days.length === 0) return null;
+        const itineraryHeading: Record<string, string> = {
+          kr: '여행 일정', en: 'Itinerary', zh: '行程安排',
+          ja: '旅行日程', ru: 'Программа тура', vi: 'Lịch trình',
+        };
         return (
           <>
             <Divider />
             <section style={{ padding: '0 22px' }}>
               <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 18px', lineHeight: 1.3 }}>
-                여행 일정
+                {itineraryHeading[params.locale] ?? itineraryHeading.kr}
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {days.map((d, i) => (
@@ -597,9 +609,19 @@ type Highlight = { icon: 'expert' | 'concierge' | 'check'; title: string; desc: 
  * otherwise fall back to category-tuned defaults so the section
  * never renders empty.
  */
-function pickHighlights(listing: ListingDetail): Highlight[] {
-  const fromDb = Array.isArray(listing.details.highlights)
-    ? (listing.details.highlights as Array<{ icon?: string; title?: string; desc?: string }>)
+function pickHighlights(listing: ListingDetail, locale?: string): Highlight[] {
+  // 로케일별 하이라이트 우선 — details.highlightsI18n = { en: [...], zh: ... }
+  // 구조. 없으면 kr 기본 highlights → 카테고리 디폴트 순으로 fallback.
+  const i18n = listing.details.highlightsI18n as
+    | Record<string, Array<{ icon?: string; title?: string; desc?: string }>>
+    | undefined;
+  const localized =
+    locale && locale !== 'kr' && i18n && Array.isArray(i18n[locale])
+      ? i18n[locale]
+      : undefined;
+  const source = localized ?? listing.details.highlights;
+  const fromDb = Array.isArray(source)
+    ? (source as Array<{ icon?: string; title?: string; desc?: string }>)
         .map((h) => ({
           icon: (h.icon === 'concierge' || h.icon === 'check' ? h.icon : 'expert') as Highlight['icon'],
           title: typeof h.title === 'string' ? h.title : '',
