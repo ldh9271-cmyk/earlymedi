@@ -369,7 +369,10 @@ const vi: Dictionary = {
     units: {
       person: 'người', night: 'đêm', session: 'buổi', visit: 'lần',
       halfDay: 'nửa ngày', fullDay: 'cả ngày', consult: 'tư vấn', course: 'khóa',
+      caseUnit: 'lượt',
     },
+    badgeNew: 'Mới',
+    inquire: 'Liên hệ',
     taxNote: 'Chưa gồm thuế và phí dịch vụ',
     noChargeYet: 'Chưa thu phí cho đến khi xác nhận đặt chỗ',
     rowConcierge: 'Concierge đồng hành',

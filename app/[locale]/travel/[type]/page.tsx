@@ -4,6 +4,8 @@ import { LOCALE_LABELS, type PublicLocale } from '@/lib/i18n/locales';
 import { MainHeader } from '../../_components/main-header';
 import { MainFooter } from '../../_components/main-footer';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
+import { localizePriceUnit } from '@/lib/i18n/price-unit';
 import { fetchListingsForSurface, type ListingCard } from '@/lib/listings/query';
 
 export const dynamic = 'force-dynamic';
@@ -127,7 +129,7 @@ export default async function TravelTypeListPage({
             }}
           >
             {listings.map((l) => (
-              <ListingCardLink key={l.id} locale={params.locale} listing={l} />
+              <ListingCardLink key={l.id} locale={params.locale} listing={l} d={dict.detail} />
             ))}
           </div>
         )}
@@ -141,15 +143,17 @@ export default async function TravelTypeListPage({
 function ListingCardLink({
   locale,
   listing,
+  d,
 }: {
   locale: PublicLocale;
   listing: ListingCard;
+  d: Dictionary['detail'];
 }): JSX.Element {
   const rating = listing.rating ? (listing.rating / 10).toFixed(2) : null;
   const price = listing.priceWon
     ? `₩${listing.priceWon.toLocaleString('ko-KR')}`
-    : '문의';
-  const unit = listing.priceUnit || '';
+    : d.inquire;
+  const unit = localizePriceUnit(listing.priceUnit, listing.category, d.units, locale);
   return (
     <Link
       href={`/${locale}/listings/${listing.slug}`}
@@ -227,7 +231,9 @@ function ListingCardLink({
           }}
         >
           <span style={{ fontSize: 12, color: '#6a6a6a' }}>
-            {listing.reviewsCount > 0 ? `후기 ${listing.reviewsCount}개` : '신규'}
+            {listing.reviewsCount > 0
+              ? d.reviewsCount.replace('{n}', String(listing.reviewsCount))
+              : d.badgeNew}
           </span>
           <span style={{ fontSize: 14, fontWeight: 700, color: '#222' }}>
             {price}

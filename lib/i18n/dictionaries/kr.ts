@@ -385,7 +385,10 @@ const kr = {
     units: {
       person: '1인', night: '박', session: '세션', visit: '회',
       halfDay: '반일', fullDay: '종일', consult: '상담', course: '코스',
+      caseUnit: '건',
     },
+    badgeNew: '신규',
+    inquire: '문의',
     taxNote: '세금·서비스 수수료 별도',
     noChargeYet: '예약 확정 전에는 요금이 청구되지 않습니다',
     rowConcierge: '컨시어지 동행',

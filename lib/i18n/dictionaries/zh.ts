@@ -366,7 +366,10 @@ const zh: Dictionary = {
     units: {
       person: '每人', night: '每晚', session: '每节', visit: '每次',
       halfDay: '半天', fullDay: '全天', consult: '咨询', course: '套餐',
+      caseUnit: '件',
     },
+    badgeNew: '新',
+    inquire: '咨询报价',
     taxNote: '不含税金及服务费',
     noChargeYet: '预订确认前不会扣款',
     rowConcierge: '礼宾陪同',

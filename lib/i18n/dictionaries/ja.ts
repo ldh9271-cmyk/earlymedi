@@ -368,7 +368,10 @@ const ja: Dictionary = {
     units: {
       person: '1名', night: '1泊', session: '1セッション', visit: '1回',
       halfDay: '半日', fullDay: '終日', consult: '相談', course: 'コース',
+      caseUnit: '件',
     },
+    badgeNew: '新規',
+    inquire: '要問合せ',
     taxNote: '税金・サービス料別途',
     noChargeYet: '予約確定前は請求されません',
     rowConcierge: 'コンシェルジュ同行',

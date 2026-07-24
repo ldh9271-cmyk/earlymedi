@@ -369,7 +369,10 @@ const en: Dictionary = {
     units: {
       person: 'person', night: 'night', session: 'session', visit: 'visit',
       halfDay: 'half day', fullDay: 'full day', consult: 'consultation', course: 'course',
+      caseUnit: 'case',
     },
+    badgeNew: 'New',
+    inquire: 'Inquire',
     taxNote: 'Taxes & service fees not included',
     noChargeYet: "You won't be charged until confirmation",
     rowConcierge: 'Concierge escort',

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { fetchListingBySlug, type ListingDetail } from '@/lib/listings/query';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import { localizePriceUnit } from '@/lib/i18n/price-unit';
 import { DetailInfo } from './_components/detail-info';
 import { HeroMobileCarousel } from './_components/hero-mobile-carousel';
 
@@ -79,7 +80,7 @@ export default async function ListingDetailPage({
   const priceLabel = listing.priceWon
     ? `₩${listing.priceWon.toLocaleString('ko-KR')}`
     : '문의';
-  const priceUnit = priceUnitLabel(listing.priceUnit, listing.category, d.units, params.locale);
+  const priceUnit = localizePriceUnit(listing.priceUnit, listing.category, d.units, params.locale);
   // String concat instead of template literal — SWC's JSX parser
   // mis-counts braces when ${encodeURIComponent(...)} sits before
   // the next <div> and throws "Unexpected token `div`". See memory
@@ -723,29 +724,5 @@ function hostNameForCategory(category: string): string {
   }
 }
 
-function priceUnitLabel(
-  unit: string | null,
-  category: string,
-  u: {
-    person: string; night: string; session: string; visit: string;
-    halfDay: string; fullDay: string; consult: string; course: string;
-  },
-  locale: string,
-): string {
-  // DB priceUnit 은 한국어('1인'·'박'·'세션'…)로 저장됨 — 비한국어
-  // 로케일에선 dict.units 로 매핑해 현지화. 미등록 단위는 원문 유지.
-  const raw = unit?.trim() ?? '';
-  if (raw && locale === 'kr') return raw;
-  const KO_TO_KEY: Record<string, keyof typeof u> = {
-    '1인': 'person', '인': 'person', '박': 'night', '세션': 'session',
-    '회': 'visit', '반일': 'halfDay', '종일': 'fullDay',
-    '상담': 'consult', '코스': 'course',
-  };
-  if (raw) {
-    const key = KO_TO_KEY[raw];
-    return key ? u[key] : raw;
-  }
-  if (category === 'hotel') return u.night;
-  if (category === 'food' || category === 'restaurant') return u.person;
-  return u.session;
-}
+// priceUnit 현지화는 lib/i18n/price-unit.ts 의 localizePriceUnit 로 통합
+// (목록 카드 2곳과 동일 규칙 공유).

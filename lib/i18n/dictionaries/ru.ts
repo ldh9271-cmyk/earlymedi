@@ -369,7 +369,10 @@ const ru: Dictionary = {
     units: {
       person: 'чел.', night: 'ночь', session: 'сеанс', visit: 'визит',
       halfDay: 'полдня', fullDay: 'весь день', consult: 'консультация', course: 'курс',
+      caseUnit: 'заявка',
     },
+    badgeNew: 'Новое',
+    inquire: 'По запросу',
     taxNote: 'Налоги и сервисный сбор не включены',
     noChargeYet: 'Оплата не взимается до подтверждения',
     rowConcierge: 'Сопровождение консьержа',
