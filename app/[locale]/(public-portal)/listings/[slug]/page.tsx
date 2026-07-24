@@ -73,7 +73,7 @@ export default async function ListingDetailPage({
   const rating = listing.rating ? (listing.rating / 10).toFixed(2) : '4.92';
   const reviewsCount = listing.reviewsCount > 0 ? listing.reviewsCount : 0;
   const reviewsLabel = d.reviewsCount.replace('{n}', String(reviewsCount));
-  const subtitleKr = subtitleForCategory(listing.category, listing.title);
+  const subtitleKr = subtitleForCategory(listing.category, d.subtitles);
   const hostName = hostNameForCategory(listing.category);
   const highlights = pickHighlights(listing, params.locale);
   const priceLabel = listing.priceWon
@@ -473,7 +473,7 @@ export default async function ListingDetailPage({
             <span style={{ fontSize: 14, color: '#6a6a6a' }}>/ {priceUnit}</span>
           </div>
           <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 4 }}>
-            세금·서비스 수수료 별도
+            {d.taxNote}
           </div>
           <Link
             href={reserveHref}
@@ -489,13 +489,13 @@ export default async function ListingDetailPage({
             {d.reserve}
           </Link>
           <div style={{ textAlign: 'center', fontSize: 12, color: '#6a6a6a', marginTop: 10 }}>
-            예약 확정 전에는 요금이 청구되지 않습니다
+            {d.noChargeYet}
           </div>
           <div style={{ height: 1, background: '#ebebeb', margin: '18px 0' }} />
           <div style={{ fontSize: 13, color: '#3f3f3f', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Row label="컨시어지 동행" value="포함" />
-            <Row label="예약·통역 대행" value="포함" />
-            <Row label="확정 전 무료 취소" value="48h" />
+            <Row label={d.rowConcierge} value={d.included} />
+            <Row label={d.rowBooking} value={d.included} />
+            <Row label={d.rowFreeCancel} value="48h" />
           </div>
         </div>
       </aside>
@@ -693,18 +693,25 @@ function HighlightIcon({ kind }: { kind: 'expert' | 'concierge' | 'check' }): JS
   }
 }
 
-function subtitleForCategory(category: string, _title: string): string {
+function subtitleForCategory(
+  category: string,
+  s: {
+    personal_color: string; makeup: string; hair: string; photo_studio: string;
+    hotel: string; food: string; dermatology: string; plastic_surgery: string;
+    fallback: string;
+  },
+): string {
   switch (category) {
-    case 'personal_color': return '퍼스널 컬러 진단';
-    case 'makeup': return 'K-뷰티 메이크업';
-    case 'hair': return '헤어 스타일링';
-    case 'photo_studio': return '프로필 화보 촬영';
-    case 'hotel': return '프리미엄 숙박';
-    case 'food': return '서울 맛집';
-    case 'restaurant': return '서울 맛집';
-    case 'dermatology': return '피부과 시술';
-    case 'plastic_surgery': return '성형외과';
-    default: return '글로우업 큐레이션';
+    case 'personal_color': return s.personal_color;
+    case 'makeup': return s.makeup;
+    case 'hair': return s.hair;
+    case 'photo_studio': return s.photo_studio;
+    case 'hotel': return s.hotel;
+    case 'food': return s.food;
+    case 'restaurant': return s.food;
+    case 'dermatology': return s.dermatology;
+    case 'plastic_surgery': return s.plastic_surgery;
+    default: return s.fallback;
   }
 }
 
