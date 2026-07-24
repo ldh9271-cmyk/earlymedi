@@ -39,6 +39,7 @@ import { SEOUL_HAIR_PRODUCTS } from '@/lib/listings/seoul-hair-products';
 import { SEOUL_PMU_PRODUCTS } from '@/lib/listings/seoul-pmu-products';
 import { SEOUL_PHOTO_PRODUCTS } from '@/lib/listings/seoul-photo-products';
 import { SEOUL_KPOP_PRODUCTS } from '@/lib/listings/seoul-kpop-products';
+import { SEOUL_PACKAGE_PRODUCTS } from '@/lib/listings/seoul-package-products';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 
 async function requireMaster(): Promise<true | never> {
@@ -814,6 +815,81 @@ export async function seedSeoulKpopAction(_formData: FormData): Promise<void> {
 
   revalidateListingSurfaces();
   redirect(`/master/listings?seedSeoulKpop=ok&inserted=${inserted}&skipped=${skipped}`);
+}
+
+/**
+ * 테마 패키지여행 4종 (2박3일~5박6일) 일괄 등록.
+ *
+ *   - category='travel_package', details.subType='package',
+ *     status='approved'. 등록된 실제 상품들을 연계한 일자별
+ *     itinerary + highlights 포함.
+ *   - 일정/하이라이트 번역은 translate-listing-details.mjs,
+ *     제목/설명/SEO 는 translate-locale-content.mjs 가 처리.
+ *   - 멱등: 같은 slug 가 이미 있으면 skip.
+ */
+export async function seedThemePackagesAction(_formData: FormData): Promise<void> {
+  await requireMaster();
+  const ownerOrgId = await defaultOwnerOrgId();
+  if (!ownerOrgId) redirect('/master/listings?error=no_owner');
+
+  let inserted = 0;
+  let skipped = 0;
+  // 2박3일 → 5박6일 순서로 기존 패키지(90·91) 뒤에 배치
+  let sortOrder = 92;
+
+  for (const p of SEOUL_PACKAGE_PRODUCTS) {
+    const existing = await db
+      .select({ id: partnerListings.id })
+      .from(partnerListings)
+      .where(eq(partnerListings.slug, p.slug))
+      .limit(1);
+    if (existing.length > 0) {
+      skipped += 1;
+      sortOrder += 1;
+      continue;
+    }
+    const [row] = await db
+      .insert(partnerListings)
+      .values({
+        ownerOrgId: ownerOrgId as string,
+        category: 'travel_package',
+        slug: p.slug,
+        title: p.title,
+        description: p.description,
+        locationLabel: p.locationLabel,
+        addressJson: { city: '서울' },
+        status: 'approved',
+        featured: false,
+        sortOrder,
+        priceWon: p.priceWon,
+        priceUnit: '1인',
+        interestKey: 'beauty_tour',
+        promoLabel: p.promoLabel,
+        details: {
+          subType: 'package',
+          durationDays: p.durationDays,
+          guideIncluded: true,
+          itinerary: p.itinerary.map((d) => ({ ...d, items: [...d.items] })),
+          highlights: p.highlights.map((h) => ({ ...h })),
+          seoTags: [...p.seoTags],
+          og: p.ogDescription,
+        },
+      })
+      .returning({ id: partnerListings.id });
+    if (row) {
+      await db.insert(partnerListingLocaleContent).values({
+        listingId: row.id,
+        locale: 'kr',
+        seoTitle: p.seoTitle,
+        seoDescription: p.seoDescription,
+      });
+    }
+    inserted += 1;
+    sortOrder += 1;
+  }
+
+  revalidateListingSurfaces();
+  redirect(`/master/listings?seedThemePackages=ok&inserted=${inserted}&skipped=${skipped}`);
 }
 
 /**

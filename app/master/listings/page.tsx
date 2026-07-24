@@ -33,6 +33,7 @@ import {
   seedSeoulPmuAction,
   seedSeoulPhotoAction,
   seedSeoulKpopAction,
+  seedThemePackagesAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -679,6 +680,27 @@ export default async function MasterListingsPage({
           className="rounded-md border border-violet-400 bg-white px-3 py-1.5 text-xs font-semibold text-violet-800 hover:bg-violet-50"
         >
           K팝 투어 12종 일괄 등록
+        </button>
+      </form>
+
+      {/* 테마 패키지여행 4종 일괄 등록 트리거 */}
+      <form
+        action={seedThemePackagesAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-emerald-300 bg-emerald-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">테마 패키지여행 4종 일괄 등록 (2박3일~5박6일)</p>
+          <p className="mt-0.5">
+            글로우 스타트 2박3일·K팝 드림 3박4일·청담 풀 메이크오버 4박5일·K뷰티 마스터
+            5박6일. 마켓플레이스 실등록 상품 연계 일정 포함. category=travel_package,
+            subType=package. 같은 slug 는 자동 스킵 (멱등).
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-emerald-400 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-50"
+        >
+          테마 패키지 4종 일괄 등록
         </button>
       </form>
 

@@ -418,6 +418,7 @@ const kr = {
     verifiedPartner: '검증 파트너',
     years: '{n}년차',
     reserve: '예약하기',
+    selectDateNote: '날짜 선택 · 시간 안내',
     sampleReviewBody: '컨설턴트가 정말 꼼꼼하셔서, 저에게 맞는 컬러를 드디어 알게 됐어요. 컨시어지가 다음 예약까지 잡아주셔서 완벽했어요.',
     sampleReviewerName: '사라',
     sampleReviewerMeta: '미국 · 2026년 3월',

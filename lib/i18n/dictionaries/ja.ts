@@ -401,6 +401,7 @@ const ja: Dictionary = {
     verifiedPartner: '認証パートナー',
     years: '{n}年目',
     reserve: '予約する',
+    selectDateNote: '日付選択 · 時間案内',
     sampleReviewBody: 'コンサルタントが本当に丁寧で、自分に合うカラーがやっと分かりました。コンシェルジュが次回の予約まで取ってくれて完璧でした。',
     sampleReviewerName: 'Sarah',
     sampleReviewerMeta: 'アメリカ · 2026年3月',

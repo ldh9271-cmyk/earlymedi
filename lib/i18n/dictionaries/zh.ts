@@ -399,6 +399,7 @@ const zh: Dictionary = {
     verifiedPartner: '认证合作伙伴',
     years: '{n} 年',
     reserve: '立即预订',
+    selectDateNote: '选择日期 · 时间说明',
     sampleReviewBody: '顾问非常专业，我终于知道自己的色彩了。礼宾还帮我预约了下一次。',
     sampleReviewerName: 'Sarah',
     sampleReviewerMeta: '美国 · 2026 年 3 月',

@@ -531,10 +531,12 @@ export default async function ListingDetailPage({
             <span style={{ textDecoration: listing.priceWon ? undefined : 'line-through', fontWeight: 700 }}>
               {priceLabel}
             </span>
-            <span style={{ color: '#6a6a6a', fontWeight: 400 }}> / {priceUnit}</span>
+            {priceUnit ? (
+              <span style={{ color: '#6a6a6a', fontWeight: 400 }}> / {priceUnit}</span>
+            ) : null}
           </div>
           <div style={{ fontSize: 12, color: '#222', textDecoration: 'underline', textUnderlineOffset: 3, marginTop: 2 }}>
-            날짜 선택 · 시간 안내
+            {d.selectDateNote}
           </div>
         </div>
         <Link

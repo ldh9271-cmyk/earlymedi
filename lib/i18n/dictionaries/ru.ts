@@ -402,6 +402,7 @@ const ru: Dictionary = {
     verifiedPartner: 'Проверенный партнёр',
     years: '{n} г.',
     reserve: 'Забронировать',
+    selectDateNote: 'Выбор даты · время',
     sampleReviewBody: 'Консультант был очень внимателен — наконец-то узнала свои цвета. Консьерж даже забронировал мне следующий приём.',
     sampleReviewerName: 'Sarah',
     sampleReviewerMeta: 'США · март 2026',

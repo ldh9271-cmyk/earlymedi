@@ -402,6 +402,7 @@ const en: Dictionary = {
     verifiedPartner: 'Verified partner',
     years: '{n} yrs',
     reserve: 'Reserve',
+    selectDateNote: 'Select dates · time info',
     sampleReviewBody: 'The consultant was so thorough — I finally know my colors. The concierge even booked my next appointment.',
     sampleReviewerName: 'Sarah',
     sampleReviewerMeta: 'United States · March 2026',

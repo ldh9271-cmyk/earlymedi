@@ -402,6 +402,7 @@ const vi: Dictionary = {
     verifiedPartner: 'Đối tác đã xác thực',
     years: '{n} năm',
     reserve: 'Đặt ngay',
+    selectDateNote: 'Chọn ngày · giờ',
     sampleReviewBody: 'Chuyên gia tư vấn rất tỉ mỉ — cuối cùng tôi cũng biết được màu sắc phù hợp. Concierge còn đặt lịch hẹn tiếp theo cho tôi.',
     sampleReviewerName: 'Sarah',
     sampleReviewerMeta: 'Hoa Kỳ · Tháng 3 năm 2026',

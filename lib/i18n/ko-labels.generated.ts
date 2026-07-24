@@ -227,6 +227,13 @@ export const KO_LABELS = {
     "ru": "Партнер K-Medical Tour",
     "vi": "Đối tác K-Medical Tour"
   },
+  "K팝 성지순례": {
+    "en": "K-Pop Pilgrimage",
+    "zh": "K-Pop 圣地巡礼",
+    "ja": "K-POP 聖地巡礼",
+    "ru": "Паломничество K-Pop",
+    "vi": "Tour Thánh địa K-Pop"
+  },
   "K팝 셀럽 네일 성지": {
     "en": "K-pop Celeb Nail Mecca",
     "zh": "K-pop明星美甲圣地",
@@ -751,6 +758,13 @@ export const KO_LABELS = {
     "ja": "複合メディカルセンター",
     "ru": "Многопрофильный медицинский центр",
     "vi": "Trung tâm y tế phức hợp"
+  },
+  "뷰티+클리닉 올인원": {
+    "en": "Beauty + Clinic All-in-One",
+    "zh": "美容+诊所 一站式",
+    "ja": "ビューティー+クリニック オールインワン",
+    "ru": "Красота + Клиника «Все в одном»",
+    "vi": "Làm đẹp + Phòng khám All-in-One"
   },
   "뷰티계의 전설": {
     "en": "Beauty Industry Legend",
@@ -1312,6 +1326,13 @@ export const KO_LABELS = {
     "ru": "Люкс-линия Чхондам",
     "vi": "Dòng dịch vụ cao cấp Cheongdam"
   },
+  "청담 풀 메이크오버": {
+    "en": "Cheongdam Full Makeover",
+    "zh": "清潭洞全方位改造",
+    "ja": "清潭フルメイクオーバー",
+    "ru": "Полное преображение в Чхондаме",
+    "vi": "Lột xác toàn diện Cheongdam"
+  },
   "최소침습 세계 표준": {
     "en": "Global Standard for Minimally Invasive Surgery",
     "zh": "微创手术全球标准",
@@ -1444,6 +1465,13 @@ export const KO_LABELS = {
     "ja": "ファンサイン会応募",
     "ru": "Заявка на фансайн",
     "vi": "Đăng ký fan sign"
+  },
+  "퍼스널컬러 스타터": {
+    "en": "Personal Color Starter",
+    "zh": "个人色彩入门",
+    "ja": "パーソナルカラースターター",
+    "ru": "Персональный цвет: Старт",
+    "vi": "Gói khởi đầu Personal Color"
   },
   "포브스 선정": {
     "en": "Forbes Selected",
