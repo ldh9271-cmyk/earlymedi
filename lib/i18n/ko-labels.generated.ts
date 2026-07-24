@@ -164,6 +164,13 @@ export const KO_LABELS = {
     "ru": "Стиль BTS·TWICE",
     "vi": "Tạo kiểu BTS·TWICE"
   },
+  "CEO 프로필 전문": {
+    "en": "Executive & CEO Profiles",
+    "zh": "专业CEO形象照",
+    "ja": "CEOプロフィール専門",
+    "ru": "Специализация на CEO-профилях",
+    "vi": "Chuyên chụp ảnh CEO"
+  },
   "FIMS 비수술 통증": {
     "en": "FIMS Non-Surgical Pain Care",
     "zh": "FIMS非手术疼痛治疗",
@@ -570,6 +577,13 @@ export const KO_LABELS = {
     "ru": "Бесплатный доступ на крышу",
     "vi": "Miễn phí sử dụng rooftop"
   },
+  "맞춤 조명·보정 특화": {
+    "en": "Custom Lighting · Retouching",
+    "zh": "定制灯光·精修特化",
+    "ja": "オーダーメイド照明・補正特化",
+    "ru": "Персональный свет · Коррекция",
+    "vi": "Chuyên ánh sáng · Chỉnh sửa theo yêu cầu"
+  },
   "맨즈 아이돌 특화": {
     "en": "Male Idol Specialist",
     "zh": "男团偶像特化",
@@ -611,6 +625,13 @@ export const KO_LABELS = {
     "ja": "水光メイクの元祖",
     "ru": "Создатели макияжа Glass Skin",
     "vi": "Tiên phong trang điểm da căng bóng"
+  },
+  "바디프로필 전문": {
+    "en": "Body Profile Specialist",
+    "zh": "专业身材/健美形象照",
+    "ja": "ボディプロフィール専門",
+    "ru": "Специализация на боди-профилях",
+    "vi": "Chuyên chụp ảnh Body Profile"
   },
   "박": {
     "en": "Night(s)",
@@ -759,6 +780,13 @@ export const KO_LABELS = {
     "ru": "Количественная проверка подсчета клеток",
     "vi": "Xác minh định lượng đếm tế bào"
   },
+  "셀프 스튜디오": {
+    "en": "Self-Photo Studio",
+    "zh": "自助摄影工作室",
+    "ja": "セルフスタジオ",
+    "ru": "Селф-студия",
+    "vi": "Studio tự chụp"
+  },
   "소비자평가 3년 연속 1등급": {
     "en": "Grade 1 Consumer Rating for 3 Consecutive Years",
     "zh": "连续3年消费者评价1级",
@@ -892,6 +920,20 @@ export const KO_LABELS = {
     "ru": "Главный филиал: наращивание и дизайн",
     "vi": "Trụ sở chính chuyên nối móng & vẽ nghệ thuật"
   },
+  "연중무휴 9~21시": {
+    "en": "Open Daily 9:00–21:00",
+    "zh": "全年无休 9~21点",
+    "ja": "年中無休 9〜21時",
+    "ru": "Без выходных 9:00–21:00",
+    "vi": "Mở cửa quanh năm 9:00–21:00"
+  },
+  "연중무휴 프로필": {
+    "en": "Year-Round Profile Shooting",
+    "zh": "全年无休形象照",
+    "ja": "年中無休プロフィール",
+    "ru": "Профиль без выходных",
+    "vi": "Chụp ảnh profile quanh năm"
+  },
   "영어 응대·2개 지점": {
     "en": "English Service·2 Branches",
     "zh": "英语服务·2家分店",
@@ -1004,12 +1046,26 @@ export const KO_LABELS = {
     "ru": "Сеть клиник в Японии",
     "vi": "Chuỗi chi nhánh tại Nhật Bản"
   },
+  "일요일 바디프로필": {
+    "en": "Sunday Body Profiles",
+    "zh": "周日身材形象照",
+    "ja": "日曜日ボディプロフィール",
+    "ru": "Воскресный боди-профиль",
+    "vi": "Chụp Body Profile Chủ Nhật"
+  },
   "자연스러운 스마일 디자인": {
     "en": "Natural Smile Design",
     "zh": "自然微笑设计",
     "ja": "ナチュラルスマイルデザイン",
     "ru": "Естественный дизайн улыбки",
     "vi": "Thiết kế nụ cười tự nhiên"
+  },
+  "작가 없는 셀프 촬영": {
+    "en": "Photographer-Free Self Shooting",
+    "zh": "无摄影师自助拍摄",
+    "ja": "カメラマンなしのセルフ撮影",
+    "ru": "Селф-съёмка без фотографа",
+    "vi": "Tự chụp không cần thợ"
   },
   "재생의료 다수 수상·1:1 전담의": {
     "en": "Multiple Regenerative Medicine Awards · 1:1 Dedicated Doctor",
@@ -1186,6 +1242,13 @@ export const KO_LABELS = {
     "ru": "Консьерж-сервис",
     "vi": "Dịch vụ concierge"
   },
+  "컬러 초상 원조": {
+    "en": "Original Color Portrait",
+    "zh": "彩色肖像首创/鼻祖",
+    "ja": "カラー肖像の元祖",
+    "ru": "Оригинальный цветной портрет",
+    "vi": "Tiên phong chân dung màu"
+  },
   "컬러+스피치 종합": {
     "en": "Comprehensive Color + Speech",
     "zh": "色彩+演讲 综合",
@@ -1311,6 +1374,13 @@ export const KO_LABELS = {
     "ja": "リーズナブルな費用 290万ウォン〜",
     "ru": "Разумная цена от 2,9 млн вон",
     "vi": "Chi phí hợp lý từ 2,9 triệu KRW~"
+  },
+  "합리적 컬러 사진": {
+    "en": "Affordable Color Photos",
+    "zh": "高性价比彩色照片",
+    "ja": "リーズナブルなカラー写真",
+    "ru": "Доступная цветная фотография",
+    "vi": "Chụp ảnh màu giá hợp lý"
   },
   "해외환자 특화·다국어 상담": {
     "en": "Int'l Patient Care · Multilingual Consult",

@@ -31,6 +31,7 @@ import {
   seedSeoulMakeupAction,
   seedSeoulHairAction,
   seedSeoulPmuAction,
+  seedSeoulPhotoAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -635,6 +636,27 @@ export default async function MasterListingsPage({
           className="rounded-md border border-fuchsia-400 bg-white px-3 py-1.5 text-xs font-semibold text-fuchsia-800 hover:bg-fuchsia-50"
         >
           반영구샵 10종 일괄 등록
+        </button>
+      </form>
+
+      {/* 강남·서초 외국인 FIT 사진 스튜디오 일괄 등록 트리거 */}
+      <form
+        action={seedSeoulPhotoAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-cyan-300 bg-cyan-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">강남·서초 사진 스튜디오 10종 일괄 등록</p>
+          <p className="mt-0.5">
+            시현하다 강남·시현하다 모먼트·레코디드·지스튜디오·변화·스튜디오애플·
+            강남역에뜬별·로이클라우드·비비드 삼성·신사 셀프. category=photo_studio,
+            SEO 메타는 locale content(kr) 에 저장. 같은 slug 는 자동 스킵 (멱등).
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-cyan-400 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-800 hover:bg-cyan-50"
+        >
+          사진 스튜디오 10종 일괄 등록
         </button>
       </form>
 
