@@ -421,8 +421,8 @@ function Programs({
                 {p.rating}
               </span>
             </div>
-            <div className="m-card-desc" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 3 }}>{p.desc}</div>
-            <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a' }}>{p.place}</div>
+            {/* 상세 설명은 카드에서 제외 — DB 설명이 길어 레이아웃이
+                무너짐. 이름·평점·가격만 노출 (상세는 클릭 후 확인). */}
             <div className="m-card-price" style={{ fontSize: 15, marginTop: 6 }}>
               <span style={{ fontWeight: 600 }}>{p.price}</span>{' '}
               <span style={{ color: '#6a6a6a' }}>{t.programsPerSession}</span>
