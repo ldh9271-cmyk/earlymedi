@@ -4,7 +4,7 @@ import { getDictionary } from '@/lib/i18n/get-dictionary';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { MainHeader } from './_components/main-header';
 import { MainFooter } from './_components/main-footer';
-import { fetchFeaturedListings, type ListingCard } from '@/lib/listings/query';
+import { fetchFeaturedListings, fetchListingsForSurface, type ListingCard } from '@/lib/listings/query';
 
 // force-dynamic because MainHeader (client) uses useSearchParams() for
 // the filter pill — Next.js's static prerender refuses that without a
@@ -190,7 +190,7 @@ export default async function PublicLandingPage({
   // fall back to the hardcoded PROGRAMS / FOODS / Hotel samples below
   // so the page never looks empty even before /master/listings is
   // populated.
-  const [dbPrograms, dbFoods, dbHotels] = await Promise.all([
+  const [dbPrograms, dbFoods, dbHotels, dbCourses] = await Promise.all([
     fetchFeaturedListings({
       locale,
       categories: ['personal_color', 'hair', 'makeup', 'photo_studio'],
@@ -206,8 +206,15 @@ export default async function PublicLandingPage({
       categories: ['hotel'],
       limit: 1,
     }),
+    // 베스트셀러 코스 — 실제 패키지여행 상품 (sortOrder 첫 번째).
+    fetchListingsForSurface({
+      locale,
+      categories: ['travel_package'],
+      subType: 'package',
+    }),
   ]);
   const dbHotel = dbHotels[0] ?? null;
+  const dbCourse = dbCourses[0] ?? null;
   return (
     <div
       style={{
@@ -225,8 +232,8 @@ export default async function PublicLandingPage({
 
       <main className="m-main" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
         <Hero t={dict.landing} />
-        <Programs locale={locale} dbCards={dbPrograms} t={dict.landing} />
-        <Course locale={locale} t={dict.landing} />
+        <Programs locale={locale} dbCards={dbPrograms} t={dict.landing} subtitles={dict.detail.subtitles} />
+        <Course locale={locale} dbCourse={dbCourse} t={dict.landing} />
         <Foods locale={locale} dbCards={dbFoods} t={dict.landing} />
         <KpopRow locale={locale} t={dict.landing} />
         <HotelAndFinalCta locale={locale} dbHotel={dbHotel} t={dict.landing} />
@@ -332,11 +339,23 @@ function Programs({
   locale,
   dbCards,
   t,
+  subtitles,
 }: {
   locale: PublicLocale;
   dbCards: ListingCard[];
   t: Dictionary['landing'];
+  subtitles: Dictionary['detail']['subtitles'];
 }): JSX.Element {
+  // 카드 하단 카테고리 라벨 — detail.subtitles (6개 로케일 기번역) 재사용.
+  const categoryLabel = (category: string): string => {
+    switch (category) {
+      case 'personal_color': return subtitles.personal_color;
+      case 'hair': return subtitles.hair;
+      case 'makeup': return subtitles.makeup;
+      case 'photo_studio': return subtitles.photo_studio;
+      default: return subtitles.fallback;
+    }
+  };
   const cards: Array<{
     name: string;
     rating: number;
@@ -347,6 +366,7 @@ function Programs({
     img: string;
     interest: string;
     slug: string | null;
+    category: string | null;
   }> = dbCards.length > 0
     ? dbCards.map((d) => ({
         name: d.title,
@@ -358,6 +378,7 @@ function Programs({
         img: d.coverImageUrl ?? '',
         interest: d.interestKey ?? 'makeup',
         slug: d.slug,
+        category: d.category,
       }))
     : PROGRAMS.map((p, i) => ({
         // i18n fallback: image + featured + interest come from the
@@ -369,6 +390,7 @@ function Programs({
         desc: t.samplePrograms[i]?.desc ?? p.desc,
         place: t.samplePrograms[i]?.place ?? p.place,
         slug: null,
+        category: null,
       }));
   return (
     <section id="programs" className="m-section" style={{ padding: '56px 0 0', scrollMarginTop: 200 }}>
@@ -421,8 +443,13 @@ function Programs({
                 {p.rating}
               </span>
             </div>
-            {/* 상세 설명은 카드에서 제외 — DB 설명이 길어 레이아웃이
-                무너짐. 이름·평점·가격만 노출 (상세는 클릭 후 확인). */}
+            {/* 상세 설명은 카드에서 제외 (DB 설명이 길어 레이아웃 무너짐).
+                이름 아래 카테고리 라벨 + 가격만 노출. */}
+            {p.category ? (
+              <div className="m-card-place" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 2 }}>
+                {categoryLabel(p.category)}
+              </div>
+            ) : null}
             <div className="m-card-price" style={{ fontSize: 15, marginTop: 6 }}>
               <span style={{ fontWeight: 600 }}>{p.price}</span>{' '}
               <span style={{ color: '#6a6a6a' }}>{t.programsPerSession}</span>
@@ -437,11 +464,52 @@ function Programs({
 // ─── 4. Course (베스트셀러 · 올인원 코스) ────────────────────────────
 function Course({
   locale,
+  dbCourse,
   t,
 }: {
   locale: PublicLocale;
+  dbCourse: ListingCard | null;
   t: Dictionary['landing'];
 }): JSX.Element {
+  // 실상품 우선 — 패키지여행 첫 상품(sortOrder ASC)의 제목·이미지·가격·
+  // 일정으로 렌더. 예약하기는 해당 상품 checkout 으로 직결. 등록된
+  // 패키지가 없으면 기존 가상 코스 콘텐츠로 fallback.
+  const detailHref = dbCourse ? `/${locale}/listings/${dbCourse.slug}` : null;
+  const courseName = dbCourse?.title ?? t.courseName;
+  const courseDesc = dbCourse?.promoLabel ?? t.courseDesc;
+  const courseImg = dbCourse?.coverImageUrl || COURSE_IMG;
+  const priceLabel = dbCourse
+    ? (dbCourse.priceWon ? `₩${dbCourse.priceWon.toLocaleString('ko-KR')}` : '—')
+    : '₩1,890,000';
+  const rating = dbCourse?.rating ? (dbCourse.rating / 10).toFixed(1) : '4.9';
+  const steps: Array<{ title: string; desc: string }> = (() => {
+    if (dbCourse) {
+      const i18n = dbCourse.details.itineraryI18n as Record<string, unknown[]> | undefined;
+      const raw =
+        locale !== 'kr' && i18n && Array.isArray(i18n[locale])
+          ? i18n[locale]
+          : dbCourse.details.itinerary;
+      if (Array.isArray(raw)) {
+        const days = raw
+          .map((d) => {
+            const o = d as { day?: string; title?: string; items?: unknown[] };
+            const items = Array.isArray(o.items)
+              ? o.items.filter((x): x is string => typeof x === 'string')
+              : [];
+            return {
+              title: [o.day, o.title].filter(Boolean).join(' — '),
+              desc: items.slice(0, 2).join(' · '),
+            };
+          })
+          .filter((s) => s.title);
+        if (days.length > 0) return days;
+      }
+    }
+    return t.itinerary;
+  })();
+  const bookHref = dbCourse
+    ? '/' + locale + '/checkout?slug=' + encodeURIComponent(dbCourse.slug)
+    : bookingHref(locale, COURSE_PROGRAM, 'beauty_tour');
   return (
     <section className="m-section" style={{ padding: '56px 0 0' }}>
       <SectionHeader title={t.courseTitle} viewAllLabel={t.sectionViewAll} href={`/${locale}/travel/package`} />
@@ -453,21 +521,46 @@ function Course({
         }}
       >
         <div>
-          <div
-            style={{
-              aspectRatio: '16/10', borderRadius: 20, overflow: 'hidden',
-              background: `#f2f2f2 url(${COURSE_IMG}) center / cover`,
-            }}
-          />
-          <h3 className="m-course-name" style={{ fontSize: 21, fontWeight: 700, margin: '24px 0 0' }}>
-            {t.courseName}
-          </h3>
+          {detailHref ? (
+            <Link
+              href={detailHref}
+              style={{
+                display: 'block',
+                aspectRatio: '16/10', borderRadius: 20, overflow: 'hidden',
+                background: `#f2f2f2 url(${courseImg}) center / cover`,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                aspectRatio: '16/10', borderRadius: 20, overflow: 'hidden',
+                background: `#f2f2f2 url(${courseImg}) center / cover`,
+              }}
+            />
+          )}
+          {detailHref ? (
+            <Link
+              href={detailHref}
+              className="m-course-name"
+              style={{
+                display: 'block',
+                fontSize: 21, fontWeight: 700, margin: '24px 0 0',
+                color: 'inherit', textDecoration: 'none',
+              }}
+            >
+              {courseName}
+            </Link>
+          ) : (
+            <h3 className="m-course-name" style={{ fontSize: 21, fontWeight: 700, margin: '24px 0 0' }}>
+              {courseName}
+            </h3>
+          )}
           <div style={{ fontSize: 14, color: '#6a6a6a', marginTop: 4 }}>
-            {t.courseDesc}
+            {courseDesc}
           </div>
           <div style={{ height: 1, background: '#ebebeb', margin: '24px 0' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {t.itinerary.map((d, i, arr) => (
+            {steps.map((d, i, arr) => (
               <div key={i} style={{ display: 'flex', gap: 18 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <div
@@ -507,14 +600,14 @@ function Course({
         >
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div>
-              <span className="m-course-price" style={{ fontSize: 21, fontWeight: 700 }}>₩1,890,000</span>{' '}
+              <span className="m-course-price" style={{ fontSize: 21, fontWeight: 700 }}>{priceLabel}</span>{' '}
               <span style={{ fontSize: 15, color: '#6a6a6a' }}>{t.coursePerPerson}</span>
             </div>
             <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
                 <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
               </svg>
-              4.9 · {t.courseReviews}
+              {dbCourse ? rating : <>4.9 · {t.courseReviews}</>}
             </span>
           </div>
           <div
@@ -545,7 +638,7 @@ function Course({
             </div>
           </div>
           <Link
-            href={bookingHref(locale, COURSE_PROGRAM, 'beauty_tour')}
+            href={bookHref}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: '100%', marginTop: 16,
@@ -561,13 +654,13 @@ function Course({
             {t.courseNotCharged}
           </div>
           <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
-            <RowBreakdown label={`₩1,890,000 × 1 ${t.coursePersonUnit}`} value="₩1,890,000" />
+            <RowBreakdown label={`${priceLabel} × 1 ${t.coursePersonUnit}`} value={priceLabel} />
             <RowBreakdown label={t.courseInterpreter} value={t.courseIncluded} />
-            <RowBreakdown label={t.courseHotel4} value={t.courseIncluded} />
+            <RowBreakdown label={dbCourse ? courseDesc : t.courseHotel4} value={t.courseIncluded} />
             <div style={{ height: 1, background: '#ebebeb', margin: '6px 0' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: 16 }}>
               <span>{t.courseTotal}</span>
-              <span>₩1,890,000</span>
+              <span>{priceLabel}</span>
             </div>
           </div>
         </div>
