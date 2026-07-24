@@ -28,6 +28,7 @@ import {
   seedPartnerAction,
   seedSeoulNailAction,
   seedSeoulPersonalColorAction,
+  seedSeoulMakeupAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -569,6 +570,27 @@ export default async function MasterListingsPage({
           className="rounded-md border border-purple-400 bg-white px-3 py-1.5 text-xs font-semibold text-purple-800 hover:bg-purple-50"
         >
           퍼스널컬러 9종 일괄 등록
+        </button>
+      </form>
+
+      {/* 청담·강남 외국인 FIT 메이크업샵 일괄 등록 트리거 */}
+      <form
+        action={seedSeoulMakeupAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-rose-300 bg-rose-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">청담·강남 메이크업샵 9종 일괄 등록</p>
+          <p className="mt-0.5">
+            정샘물 인스피레이션·제니하우스·순수 청담·김청경 헤어페이스·본샵·애브뉴준오·
+            정남·꼼나나·모니카뷰티. category=makeup, SEO 메타는 locale content(kr) 에
+            저장. 같은 slug 가 이미 있으면 자동 스킵 (멱등).
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-rose-400 bg-white px-3 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-50"
+        >
+          메이크업샵 9종 일괄 등록
         </button>
       </form>
 

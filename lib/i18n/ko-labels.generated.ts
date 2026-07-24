@@ -199,6 +199,13 @@ export const KO_LABELS = {
     "ru": "Мекка K-pop ногтевого дизайна",
     "vi": "Thánh địa Nail Celeb K-pop"
   },
+  "K팝 아이돌 메이크업": {
+    "en": "K-Pop Idol Makeup",
+    "zh": "K-POP偶像妆容",
+    "ja": "K-POPアイドルメイク",
+    "ru": "Макияж K-pop айдолов",
+    "vi": "Trang điểm idol K-Pop"
+  },
   "VIP 센터 운영": {
     "en": "VIP Center",
     "zh": "运营VIP中心",
@@ -542,6 +549,13 @@ export const KO_LABELS = {
     "ru": "Прямой выход к Duty Free",
     "vi": "Kết nối trực tiếp cửa hàng miễn thuế"
   },
+  "물광 메이크업 원조": {
+    "en": "Original Glass Skin Makeup",
+    "zh": "水光妆容鼻祖",
+    "ja": "水光メイクの元祖",
+    "ru": "Создатели макияжа Glass Skin",
+    "vi": "Tiên phong trang điểm da căng bóng"
+  },
   "박": {
     "en": "Night(s)",
     "zh": "晚",
@@ -611,6 +625,13 @@ export const KO_LABELS = {
     "ja": "複合メディカルセンター",
     "ru": "Многопрофильный медицинский центр",
     "vi": "Trung tâm y tế phức hợp"
+  },
+  "뷰티계의 전설": {
+    "en": "Beauty Industry Legend",
+    "zh": "美妆界传奇",
+    "ja": "美容界のレジェンド",
+    "ru": "Легенда бьюти-индустрии",
+    "vi": "Huyền thoại ngành làm đẹp"
   },
   "비자검사 지정·6개층 대규모": {
     "en": "Visa Medical Exam Center · 6 Floors",
@@ -737,6 +758,13 @@ export const KO_LABELS = {
     "ja": "実費+手数料10%",
     "ru": "Фактическая стоимость + 10% комиссия",
     "vi": "Chi phí thực tế + 10% phí dịch vụ"
+  },
+  "아나운서 스타일": {
+    "en": "News Anchor Style",
+    "zh": "主播风格",
+    "ja": "アナウンサースタイル",
+    "ru": "Стиль диктора",
+    "vi": "Phong cách phát thanh viên"
   },
   "암케어센터·입원 가능": {
     "en": "Cancer Care Center · Inpatient Available",
@@ -1095,6 +1123,13 @@ export const KO_LABELS = {
     "ru": "Комплексная бьюти-студия «все в одном»",
     "vi": "Dịch vụ làm đẹp toàn diện One-Stop"
   },
+  "톱배우 단골 살롱": {
+    "en": "Top Actors' Go-To Salon",
+    "zh": "顶级演员常客沙龙",
+    "ja": "トップ俳優御用達サロン",
+    "ru": "Любимый салон топ-актеров",
+    "vi": "Salon quen thuộc của sao hạng A"
+  },
   "통합의학·코엑스 도보권": {
     "en": "Integrative Medicine · Walking Distance to COEX",
     "zh": "整合医学·步行可达COEX",
@@ -1108,6 +1143,13 @@ export const KO_LABELS = {
     "ja": "TuneFace Key Doctor専門病院",
     "ru": "Клиника экспертов TuneFace (Key Doctor)",
     "vi": "Bệnh viện chuyên khoa TuneFace Key Doctor"
+  },
+  "트렌디+꼼꼼": {
+    "en": "Trendy & Meticulous",
+    "zh": "潮流+细致",
+    "ja": "トレンディ+丁寧",
+    "ru": "Стильно и аккуратно",
+    "vi": "Thời thượng & Tỉ mỉ"
   },
   "특허 셀프테스터": {
     "en": "Patented Self-Tester",
@@ -1158,12 +1200,33 @@ export const KO_LABELS = {
     "ru": "Для иностранных пациентов · Консультации на разных языках",
     "vi": "Chuyên biệt cho bệnh nhân quốc tế · Tư vấn đa ngôn ngữ"
   },
+  "헤어+메이크업 원스톱": {
+    "en": "One-Stop Hair & Makeup",
+    "zh": "美发+妆容一站式",
+    "ja": "ヘア+メイク ワンストップ",
+    "ru": "Комплекс: прическа + макияж",
+    "vi": "Trọn gói Tóc & Trang điểm"
+  },
   "현대백화점 입점": {
     "en": "Located in Hyundai Dept. Store",
     "zh": "入驻现代百货",
     "ja": "現代百貨店入店",
     "ru": "В ТЦ Hyundai Department Store",
     "vi": "Nằm trong TTTM Hyundai"
+  },
+  "호텔 출장 가능": {
+    "en": "Hotel Call-Out Available",
+    "zh": "可提供酒店上门服务",
+    "ja": "ホテル出張可能",
+    "ru": "Возможен выезд в отель",
+    "vi": "Có dịch vụ tại khách sạn"
+  },
+  "화보 아티스트진": {
+    "en": "Editorial Photoshoot Artists",
+    "zh": "画报御用造型团队",
+    "ja": "画報専門アーティスト陣",
+    "ru": "Визажисты для фотосессий",
+    "vi": "Đội ngũ chuyên gia trang điểm chụp ảnh"
   },
   "화상 전문·흉터 재건": {
     "en": "Burn Specialist · Scar Reconstruction",
