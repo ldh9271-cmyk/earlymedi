@@ -243,6 +243,7 @@ const vi: Dictionary = {
     tabGlowup: 'Gói du lịch',
     badgeNew: 'NEW',
     catAll: 'Tất cả',
+    catAi: 'Phân tích AI',
     catTravel: 'Du lịch',
     catHospital: 'Phòng khám',
     catColor: 'Màu cá nhân',

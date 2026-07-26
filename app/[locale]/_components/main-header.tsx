@@ -36,6 +36,9 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   + '.m-mh-cat-item { flex-shrink: 0 !important; padding: 10px 0 12px !important; gap: 4px !important; min-width: 0 !important; }'
   + '.m-mh-cat-icon { width: 24px !important; height: 24px !important; }'
   + '.m-mh-cat-label { font-size: 12px !important; line-height: 1.2 !important; text-align: center; word-break: keep-all; white-space: nowrap; }'
+  // AI 분석 항목 — 모바일에서만 노출 (특이도를 높여 아래의 데스크톱
+  // 기본 display:none 을 이긴다).
+  + '.m-mh-cat-strip .m-mh-cat-ai { display: flex !important; }'
 
   + '.m-mh-filter { display: none !important; }'
   + '.m-mh-account-email { display: none !important; }'
@@ -43,8 +46,10 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   + '}'
 
   // Desktop default — search pill hidden, only appears on mobile via
-  // the @media block above.
-  + '.m-mh-search-row { display: none; }';
+  // the @media block above. AI 분석 스트립 항목도 모바일 전용 (데스크톱은
+  // 상단 AI 상담 탭이 있음).
+  + '.m-mh-search-row { display: none; }'
+  + '.m-mh-cat-ai { display: none !important; }';
 import {
   LOCALE_LABELS,
   PUBLIC_LOCALES,
@@ -601,6 +606,28 @@ export function MainHeader({
             gap: 34,
           }}
         >
+          {/* 모바일 전용 AI 분석 진입점 — 데스크톱은 상단 AI 상담 탭이
+              담당하므로 CSS 로 숨김. 스트립 맨 앞에 브랜드 컬러로 강조. */}
+          <Link
+            href={`/${locale}/ai-consult`}
+            className="m-mh-cat-item m-mh-cat-ai"
+            style={{
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: 8,
+              padding: '14px 0',
+              borderBottom: '2px solid transparent',
+              color: '#ff385c', textDecoration: 'none',
+              flexShrink: 0,
+            }}
+          >
+            <svg className="m-mh-cat-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff385c" strokeWidth="1.6">
+              <path d="M12 3l1.6 3.6 3.6 1.6-3.6 1.6L12 13.4 10.4 9.8 6.8 8.2l3.6-1.6z" />
+              <path d="M5 17l.8 1.8L7.6 19.6 5.8 20.4 5 22.2 4.2 20.4 2.4 19.6l1.8-.8z" />
+            </svg>
+            <span className="m-mh-cat-label" style={{ fontSize: 12, fontWeight: 600 }}>
+              {t.catAi}
+            </span>
+          </Link>
           {MAIN_CATEGORY_KEYS.map((cKey) => {
             const isActive = cKey === activeKey;
             const stroke = isActive ? '#222' : '#6a6a6a';

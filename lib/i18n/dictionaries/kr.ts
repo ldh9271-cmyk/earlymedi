@@ -266,6 +266,7 @@ const kr = {
     tabGlowup: '여행 패키지',
     badgeNew: 'NEW',
     catAll: '전체',
+    catAi: 'AI 분석',
     catTravel: '여행',
     catHospital: '병원',
     catColor: '퍼스널 컬러',

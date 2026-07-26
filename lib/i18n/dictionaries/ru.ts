@@ -243,6 +243,7 @@ const ru: Dictionary = {
     tabGlowup: 'Турпакеты',
     badgeNew: 'NEW',
     catAll: 'Все',
+    catAi: 'AI-анализ',
     catTravel: 'Туры',
     catHospital: 'Клиники',
     catColor: 'Цветотип',

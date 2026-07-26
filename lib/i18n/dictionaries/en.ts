@@ -255,6 +255,7 @@ const en: Dictionary = {
     tabGlowup: 'Trip Package',
     badgeNew: 'NEW',
     catAll: 'All',
+    catAi: 'AI Analysis',
     catTravel: 'Trips',
     catHospital: 'Clinics',
     catColor: 'Personal Color',

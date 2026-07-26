@@ -240,6 +240,7 @@ const zh: Dictionary = {
     tabGlowup: '旅行套餐',
     badgeNew: 'NEW',
     catAll: '全部',
+    catAi: 'AI 分析',
     catTravel: '旅行',
     catHospital: '医院',
     catColor: '个人色彩',

@@ -242,6 +242,7 @@ const ja: Dictionary = {
     tabGlowup: '旅行パッケージ',
     badgeNew: 'NEW',
     catAll: 'すべて',
+    catAi: 'AI 分析',
     catTravel: '旅行',
     catHospital: '病院',
     catColor: 'パーソナルカラー',
