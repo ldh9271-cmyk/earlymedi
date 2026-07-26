@@ -19,6 +19,13 @@ type Analysis = {
   overallNote: string;
 };
 
+const leadInputStyle: React.CSSProperties = {
+  height: 44, borderRadius: 10, border: '1px solid #dddddd',
+  padding: '0 14px', fontSize: 14, fontFamily: 'inherit',
+  outline: 'none', background: '#fff', color: '#222',
+  boxSizing: 'border-box',
+};
+
 const SEASON_COLORS: Record<string, string> = {
   'spring warm': '#f59e0b',
   'summer cool': '#60a5fa',
@@ -43,6 +50,10 @@ export default function FaceAnalyzer({
   const [error, setError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [recs, setRecs] = useState<RecSection[]>([]);
+  // 결과 이메일 발송 리드 폼
+  const [leadPhase, setLeadPhase] = useState<'hidden' | 'form' | 'sending' | 'sent'>('hidden');
+  const [leadMsg, setLeadMsg] = useState<string | null>(null);
+  const [lead, setLead] = useState({ name: '', countryCode: '', contact: '', messenger: '', email: '' });
 
   function onPick(file: File | undefined): void {
     if (!file) return;
@@ -99,7 +110,43 @@ export default function FaceAnalyzer({
     setRecs([]);
     setError(null);
     setPhase('idle');
+    setLeadPhase('hidden');
+    setLeadMsg(null);
     if (fileRef.current) fileRef.current.value = '';
+  }
+
+  async function submitLead(e: React.FormEvent): Promise<void> {
+    e.preventDefault();
+    if (!analysis) return;
+    setLeadPhase('sending');
+    setLeadMsg(null);
+    try {
+      const res = await fetch('/api/ai/glowup-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locale,
+          name: lead.name.trim(),
+          countryCode: lead.countryCode.trim().toUpperCase().slice(0, 2),
+          contact: lead.contact.trim(),
+          messenger: lead.messenger.trim(),
+          email: lead.email.trim(),
+          analysis,
+          recs,
+        }),
+      });
+      if (!res.ok) {
+        setLeadMsg(t.sendError);
+        setLeadPhase('form');
+        return;
+      }
+      const j = await res.json();
+      setLeadMsg(j.emailed ? t.sentOk : t.sentNoEmail);
+      setLeadPhase('sent');
+    } catch {
+      setLeadMsg(t.sendError);
+      setLeadPhase('form');
+    }
   }
 
   const seasonColor = analysis
@@ -298,6 +345,107 @@ export default function FaceAnalyzer({
               ))}
             </>
           ) : null}
+
+          {/* 결과 이메일 발송 — 리드 폼 (국가·이름·연락처·메신저·이메일) */}
+          <div style={{ marginTop: 30, textAlign: 'center' }}>
+            {leadPhase === 'hidden' ? (
+              <button
+                type="button"
+                onClick={() => setLeadPhase('form')}
+                style={{
+                  background: '#ff385c', color: '#fff',
+                  border: 'none', borderRadius: 10, padding: '13px 26px',
+                  fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                {t.emailBtn}
+              </button>
+            ) : null}
+
+            {leadPhase === 'form' || leadPhase === 'sending' ? (
+              <form
+                onSubmit={submitLead}
+                style={{
+                  margin: '0 auto', maxWidth: 480, textAlign: 'left',
+                  background: '#fff', border: '1px solid #ebebeb', borderRadius: 14,
+                  padding: '20px 20px 22px',
+                }}
+              >
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{t.emailTitle}</div>
+                <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 14px', lineHeight: 1.5 }}>
+                  {t.emailBody}
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px', gap: 10 }}>
+                  <input
+                    required
+                    value={lead.name}
+                    onChange={(e) => setLead({ ...lead, name: e.target.value })}
+                    placeholder={t.fieldName}
+                    style={leadInputStyle}
+                  />
+                  <input
+                    required
+                    value={lead.countryCode}
+                    onChange={(e) => setLead({ ...lead, countryCode: e.target.value })}
+                    placeholder={`${t.fieldCountry} (US)`}
+                    maxLength={2}
+                    style={{ ...leadInputStyle, textTransform: 'uppercase' }}
+                  />
+                </div>
+                <input
+                  value={lead.contact}
+                  onChange={(e) => setLead({ ...lead, contact: e.target.value })}
+                  placeholder={t.fieldContact}
+                  style={{ ...leadInputStyle, marginTop: 10, width: '100%' }}
+                />
+                <input
+                  value={lead.messenger}
+                  onChange={(e) => setLead({ ...lead, messenger: e.target.value })}
+                  placeholder={t.fieldMessenger}
+                  style={{ ...leadInputStyle, marginTop: 10, width: '100%' }}
+                />
+                <input
+                  required
+                  type="email"
+                  value={lead.email}
+                  onChange={(e) => setLead({ ...lead, email: e.target.value })}
+                  placeholder={t.fieldEmail}
+                  style={{ ...leadInputStyle, marginTop: 10, width: '100%' }}
+                />
+                {leadMsg ? (
+                  <p style={{ fontSize: 13, color: '#dc2626', margin: '10px 0 0' }}>{leadMsg}</p>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={leadPhase === 'sending'}
+                  style={{
+                    width: '100%', marginTop: 14,
+                    background: '#ff385c', color: '#fff',
+                    border: 'none', borderRadius: 10, padding: '13px 0',
+                    fontWeight: 700, fontSize: 15,
+                    cursor: leadPhase === 'sending' ? 'wait' : 'pointer',
+                    opacity: leadPhase === 'sending' ? 0.7 : 1,
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {leadPhase === 'sending' ? t.sending : t.send}
+                </button>
+              </form>
+            ) : null}
+
+            {leadPhase === 'sent' ? (
+              <div
+                style={{
+                  margin: '0 auto', maxWidth: 480,
+                  background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 14,
+                  padding: '16px 20px', color: '#047857',
+                  fontSize: 14, fontWeight: 600, lineHeight: 1.5,
+                }}
+              >
+                {leadMsg}
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
