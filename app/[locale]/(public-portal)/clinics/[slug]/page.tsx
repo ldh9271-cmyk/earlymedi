@@ -16,13 +16,18 @@ export const dynamic = 'force-dynamic';
 // (plain string concat — SWC 인라인 CSS 파서 함정 회피)
 const CLINIC_DETAIL_CSS =
   '@media (max-width: 768px) {'
-  + '.m-cd-page { padding: 20px 16px 80px !important; }'
+  + '.m-cd-page { padding: 20px 16px 120px !important; }'
   + '.m-cd-title { font-size: 22px !important; margin-top: 10px !important; }'
   + '.m-cd-mosaic { display: block !important; aspect-ratio: 16/10 !important; }'
   + '.m-cd-mosaic .m-cd-tile { display: none !important; }'
   + '.m-cd-strip { grid-template-columns: repeat(2, 1fr) !important; aspect-ratio: 16/9 !important; }'
   + '.m-cd-body { grid-template-columns: 1fr !important; gap: 28px !important; margin-top: 24px !important; }'
   + '.m-cd-card { position: static !important; }'
+  + '}'
+  // 데스크톱(≥1024)에서는 우측 문의 카드가 CTA 를 담당 — 하단 고정
+  // 바 숨김 (패키지 상세 .m-ld-bottom-bar 와 동일한 정책).
+  + '@media (min-width: 1024px) {'
+  + '.m-cd-bottom-bar { display: none !important; }'
   + '}';
 
 /**
@@ -476,6 +481,46 @@ export default async function ClinicDetailPage({
             {dict.detail.noChargeYet}
           </div>
         </div>
+      </div>
+
+      {/* Mobile/tablet 고정 하단 바 — 패키지 상세의 예약하기 바와 동일한
+          문법, CTA 는 문의하기. 데스크톱에서는 우측 카드가 담당. */}
+      <div
+        className="m-cd-bottom-bar"
+        style={{
+          position: 'fixed',
+          left: 0, right: 0, bottom: 0,
+          background: '#fff',
+          borderTop: '1px solid #ebebeb',
+          padding: '12px 16px calc(12px + env(safe-area-inset-bottom))',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 12, zIndex: 40,
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 15, fontWeight: 700,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}
+          >
+            {displayName}
+          </div>
+          <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 2 }}>
+            {dict.inquiryCta.subtitle}
+          </div>
+        </div>
+        <Link
+          href={`/${params.locale}/inquiry?hospital=${row.id}`}
+          style={{
+            background: '#ff385c', color: '#fff',
+            fontSize: 15, fontWeight: 700,
+            padding: '12px 22px', borderRadius: 12,
+            textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+          }}
+        >
+          {dict.clinicsPage.inquireCta}
+        </Link>
       </div>
     </article>
   );

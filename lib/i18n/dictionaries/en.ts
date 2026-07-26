@@ -430,6 +430,7 @@ const en: Dictionary = {
     countSubtitle: '{n} verified hospitals · reviews · price guides',
     all: 'All',
     backToAll: 'All hospitals',
+    inquireCta: 'Inquire',
     introComingSoon: 'Detailed hospital introduction coming soon.',
     reviewsComingSoon: 'Verified patient reviews will be published soon.',
     categories: {

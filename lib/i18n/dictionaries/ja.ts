@@ -429,6 +429,7 @@ const ja: Dictionary = {
     countSubtitle: '{n} 件の認証済み病院 · 口コミ · 費用目安',
     all: 'すべて',
     backToAll: 'すべての病院',
+    inquireCta: '問い合わせ',
     introComingSoon: '病院の詳細紹介は近日追加予定です。',
     reviewsComingSoon: '実際の患者様の口コミは検証を経て近日公開されます。',
     categories: {

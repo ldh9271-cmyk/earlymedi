@@ -448,6 +448,7 @@ const kr = {
     countSubtitle: '{n}곳의 검증된 병원 · 후기 · 예상 비용 안내',
     all: '전체',
     backToAll: '모든 병원',
+    inquireCta: '문의하기',
     introComingSoon: '병원 상세 소개는 곧 추가됩니다.',
     reviewsComingSoon: '실제 환자 후기는 검증 절차를 거쳐 곧 공개됩니다.',
     categories: {

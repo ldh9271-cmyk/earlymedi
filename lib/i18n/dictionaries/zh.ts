@@ -427,6 +427,7 @@ const zh: Dictionary = {
     countSubtitle: '{n} 家认证医院 · 评价 · 费用指南',
     all: '全部',
     backToAll: '全部医院',
+    inquireCta: '咨询',
     introComingSoon: '医院详细介绍即将上线。',
     reviewsComingSoon: '真实患者评价经审核后即将公开。',
     categories: {

@@ -430,6 +430,7 @@ const ru: Dictionary = {
     countSubtitle: 'Проверенных клиник: {n} · отзывы · ориентировочные цены',
     all: 'Все',
     backToAll: 'Все клиники',
+    inquireCta: 'Запрос',
     introComingSoon: 'Подробное описание клиники скоро появится.',
     reviewsComingSoon: 'Проверенные отзывы пациентов скоро будут опубликованы.',
     categories: {

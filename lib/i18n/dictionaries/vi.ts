@@ -430,6 +430,7 @@ const vi: Dictionary = {
     countSubtitle: '{n} bệnh viện đã xác minh · đánh giá · chi phí dự kiến',
     all: 'Tất cả',
     backToAll: 'Tất cả bệnh viện',
+    inquireCta: 'Liên hệ',
     introComingSoon: 'Giới thiệu chi tiết bệnh viện sẽ sớm được bổ sung.',
     reviewsComingSoon: 'Đánh giá thực tế của bệnh nhân sẽ sớm được công khai sau khi xác minh.',
     categories: {
