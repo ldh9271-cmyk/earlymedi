@@ -53,6 +53,9 @@ export const PUBLIC_PREFIXES = [
   // 보호된다. 이 한 줄을 빼먹으면 Kakao 스킬 테스트가 401 UNAUTHORIZED를
   // 반환하면서 봇이 작동하지 않는다.
   '/api/webhooks',
+  // AI Glow-Up 얼굴 분석 — 익명·무료가 제품 약속이라 세션 없이 호출
+  // 가능해야 함. 라우트 자체가 이미지 크기 제한 + JSON 검증으로 방어.
+  '/api/ai/glowup-analysis',
   '/pricing',
   '/about',
   '/legal',

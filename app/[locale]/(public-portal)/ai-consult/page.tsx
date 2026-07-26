@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import FaceAnalyzer from './_components/face-analyzer';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,9 +92,8 @@ export default async function AiConsultPage({
           }
           title={f.analyze.title}
           desc={f.analyze.desc}
-          cta={f.analyze.cta}
-          ctaHref="#"
-          ctaDisabled
+          cta={dict.ai.cta}
+          ctaHref="#ai-analyzer"
         />
         <FeatureCard
           iconBg="#eff6ff"
@@ -124,63 +124,18 @@ export default async function AiConsultPage({
         />
       </div>
 
-      <div
-        className="m-ai-upload"
-        style={{
-          marginTop: 40,
-          border: '1px dashed #dddddd',
-          background: '#fafafa',
-          borderRadius: 18,
-          padding: '56px 32px',
-          textAlign: 'center',
+      <FaceAnalyzer
+        locale={params.locale}
+        t={dict.ai.upload}
+        note={dict.ai.note}
+        catTitles={{
+          clinic: dict.header.catHospital,
+          personal_color: dict.pcCategory.color.title,
+          hair: dict.pcCategory.hair.title,
+          nail: dict.pcCategory.nail.title,
+          pmu: dict.pcCategory.pmu.title,
         }}
-      >
-        <svg
-          width="42" height="42" viewBox="0 0 24 24" fill="none"
-          stroke="#bcbcbc" strokeWidth="1.5"
-          style={{ display: 'inline-block' }}
-        >
-          <path d="M12 3v14M5 10l7-7 7 7" />
-          <path d="M5 21h14" />
-        </svg>
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '12px 0 0' }}>
-          {f.uploadTitle}
-        </h2>
-        <p
-          style={{
-            fontSize: 14, color: '#6a6a6a',
-            margin: '8px auto 0', maxWidth: 440, lineHeight: 1.5,
-          }}
-        >
-          {f.uploadBody}
-        </p>
-        <Link
-          href={`/${params.locale}/inquiry`}
-          style={{
-            display: 'inline-block', marginTop: 20,
-            background: '#ff385c', color: '#fff',
-            border: 'none', borderRadius: 10,
-            padding: '12px 22px',
-            fontWeight: 600, fontSize: 15,
-            textDecoration: 'none',
-          }}
-        >
-          {f.uploadCta}
-        </Link>
-        <p
-          style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            gap: 6, fontSize: 12, color: '#6a6a6a',
-            margin: '18px 0 0',
-          }}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="4" y="11" width="16" height="10" rx="2" />
-            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-          </svg>
-          {dict.ai.note}
-        </p>
-      </div>
+      />
     </section>
   );
 }
