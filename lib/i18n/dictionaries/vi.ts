@@ -63,6 +63,14 @@ const vi: Dictionary = {
       'So sánh báo giá giữa các phòng khám',
     ],
     cta: 'Thử phân tích AI (miễn phí)',
+    features: {
+      analyze: { title: 'Phân tích khuôn mặt → gợi ý dịch vụ', desc: 'Tải ảnh khuôn mặt, AI phân tích dịch vụ cho kết quả tự nhiên cùng chi phí và thời gian hồi phục dự kiến.', cta: 'Bắt đầu (sắp ra mắt)' },
+      chat: { title: 'Tư vấn AI thời gian thực', desc: 'Trò chuyện bằng tiếng Hàn·Anh·Trung·Nhật·Nga. Tự động kết nối concierge khi cần.', cta: 'Bắt đầu tư vấn →' },
+      sim: { title: 'Mô phỏng trước/sau', desc: 'Áp thử kết quả lên ảnh của bạn và xem trực quan trước khi quyết định.', cta: 'Mô phỏng (sắp ra mắt)' },
+      uploadTitle: 'Tải ảnh → phân tích AI (sắp ra mắt)',
+      uploadBody: 'Tính năng tải ảnh sẽ sớm mở. Hiện tại bạn có thể nhận cùng phân tích AI qua tư vấn 1:1.',
+      uploadCta: 'Nhận tư vấn AI ngay →',
+    },
     note: 'Ảnh của bạn được xoá ngay sau khi phân tích. Không bao giờ lưu trữ hoặc chia sẻ khi chưa có sự đồng ý.',
   },
   trust: {

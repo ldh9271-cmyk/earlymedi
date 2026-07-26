@@ -63,6 +63,14 @@ const en: Dictionary = {
       'Quotes compared across clinics',
     ],
     cta: 'Try AI Analysis (Free)',
+    features: {
+      analyze: { title: 'Face analysis → treatment picks', desc: 'Upload a face photo and AI analyzes treatments likely to give natural results, with cost and recovery estimates.', cta: 'Start (coming soon)' },
+      chat: { title: 'Real-time AI chat', desc: 'Chat in Korean, English, Chinese, Japanese or Russian. Hands off to a human concierge when needed.', cta: 'Start chat →' },
+      sim: { title: 'Before/after simulation', desc: 'Preview treatment results on your own photo and check visually before deciding.', cta: 'Simulate (coming soon)' },
+      uploadTitle: 'Photo upload → AI analysis (Coming Soon)',
+      uploadBody: 'Uploads are coming soon. For now, get the same AI analysis through a 1:1 consultation.',
+      uploadCta: 'Get AI consultation now →',
+    },
     note: 'Your photo is deleted immediately after analysis. Never stored or shared without consent.',
   },
   trust: {

@@ -12,19 +12,30 @@ export const dynamic = 'force-dynamic';
  *   2. Real-time multilingual AI chat
  *   3. Pre/post simulation
  *
- * The photo upload zone routes users to /inquiry today (real vision
- * pipeline lands in Phase 2). Same MainHeader chrome as everywhere
- * else on /kr — only the body content differs.
+ * 문구는 dict.ai.features (6개 로케일), 모바일에서는 3컬럼 카드가
+ * 1컬럼으로 접힌다 (AI_CSS plain-string @media 블록).
  */
+
+const AI_CSS =
+  '@media (max-width: 768px) {'
+  + '.m-ai-section { padding: 28px 16px 72px !important; }'
+  + '.m-ai-h1 { font-size: 24px !important; letter-spacing: -0.5px !important; }'
+  + '.m-ai-sub { font-size: 14px !important; }'
+  + '.m-ai-grid { grid-template-columns: 1fr !important; gap: 14px !important; margin-top: 28px !important; }'
+  + '.m-ai-upload { padding: 36px 20px !important; margin-top: 28px !important; }'
+  + '}';
+
 export default async function AiConsultPage({
   params,
 }: {
   params: { locale: PublicLocale };
 }): Promise<JSX.Element> {
   const dict = await getDictionary(params.locale);
+  const f = dict.ai.features;
 
   return (
-    <section style={{ maxWidth: 1080, margin: '0 auto', padding: '48px 40px 80px' }}>
+    <section className="m-ai-section" style={{ maxWidth: 1080, margin: '0 auto', padding: '48px 40px 80px' }}>
+      <style dangerouslySetInnerHTML={{ __html: AI_CSS }} />
       <header style={{ textAlign: 'center' }}>
         <span
           style={{
@@ -41,6 +52,7 @@ export default async function AiConsultPage({
           {dict.ai.title}
         </span>
         <h1
+          className="m-ai-h1"
           style={{
             fontSize: 32, fontWeight: 700, letterSpacing: '-0.8px',
             margin: '16px 0 8px',
@@ -49,6 +61,7 @@ export default async function AiConsultPage({
           {dict.ai.title}
         </h1>
         <p
+          className="m-ai-sub"
           style={{
             fontSize: 16, color: '#6a6a6a',
             margin: 0, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto',
@@ -60,6 +73,7 @@ export default async function AiConsultPage({
       </header>
 
       <div
+        className="m-ai-grid"
         style={{
           display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20,
           marginTop: 40,
@@ -75,9 +89,9 @@ export default async function AiConsultPage({
               <path d="M9 7l1.5-2h3L15 7" />
             </svg>
           }
-          title="얼굴 분석 → 시술 추천"
-          desc="얼굴 사진을 업로드하면 AI 가 자연스러운 결과로 이어질 시술과 예상 비용, 회복 기간을 분석합니다."
-          cta="시작 (곧 공개)"
+          title={f.analyze.title}
+          desc={f.analyze.desc}
+          cta={f.analyze.cta}
           ctaHref="#"
           ctaDisabled
         />
@@ -89,9 +103,9 @@ export default async function AiConsultPage({
               <path d="M21 12a8 8 0 0 1-12 7l-5 1 1-5a8 8 0 1 1 16-3z" />
             </svg>
           }
-          title="실시간 AI 상담"
-          desc="한국어·영어·중국어·일본어·러시아어로 대화. 필요시 인간 컨시어지로 자동 연결됩니다."
-          cta="상담 시작 →"
+          title={f.chat.title}
+          desc={f.chat.desc}
+          cta={f.chat.cta}
           ctaHref={`/${params.locale}/inquiry`}
         />
         <FeatureCard
@@ -102,15 +116,16 @@ export default async function AiConsultPage({
               <path d="M12 2l2.4 6.4 6.6 0.6-5 4.4 1.6 6.6L12 16.8l-5.6 3.2 1.6-6.6L3 9l6.6-0.6z" />
             </svg>
           }
-          title="시술 전후 시뮬레이션"
-          desc="얼굴 사진에 시술 결과를 미리 적용해 봅니다. 결정 전에 시각적으로 확인하세요."
-          cta="시뮬레이션 (곧 공개)"
+          title={f.sim.title}
+          desc={f.sim.desc}
+          cta={f.sim.cta}
           ctaHref="#"
           ctaDisabled
         />
       </div>
 
       <div
+        className="m-ai-upload"
         style={{
           marginTop: 40,
           border: '1px dashed #dddddd',
@@ -129,7 +144,7 @@ export default async function AiConsultPage({
           <path d="M5 21h14" />
         </svg>
         <h2 style={{ fontSize: 20, fontWeight: 700, margin: '12px 0 0' }}>
-          사진 업로드 → AI 분석 (Coming Soon)
+          {f.uploadTitle}
         </h2>
         <p
           style={{
@@ -137,7 +152,7 @@ export default async function AiConsultPage({
             margin: '8px auto 0', maxWidth: 440, lineHeight: 1.5,
           }}
         >
-          업로드 기능은 곧 활성화됩니다. 지금은 1:1 상담으로 동일한 AI 분석을 받으실 수 있어요.
+          {f.uploadBody}
         </p>
         <Link
           href={`/${params.locale}/inquiry`}
@@ -150,7 +165,7 @@ export default async function AiConsultPage({
             textDecoration: 'none',
           }}
         >
-          지금 AI 상담 받기 →
+          {f.uploadCta}
         </Link>
         <p
           style={{
