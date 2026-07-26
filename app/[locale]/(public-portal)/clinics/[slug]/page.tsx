@@ -12,6 +12,19 @@ export const dynamic = 'force-dynamic';
 
 // 카테고리 라벨은 dict.clinicsPage.categories 에서 로케일별로 조회.
 
+// 모바일 반응형 오버라이드 — 패키지 상세와 동일한 1컬럼 정리.
+// (plain string concat — SWC 인라인 CSS 파서 함정 회피)
+const CLINIC_DETAIL_CSS =
+  '@media (max-width: 768px) {'
+  + '.m-cd-page { padding: 20px 16px 80px !important; }'
+  + '.m-cd-title { font-size: 22px !important; margin-top: 10px !important; }'
+  + '.m-cd-mosaic { display: block !important; aspect-ratio: 16/10 !important; }'
+  + '.m-cd-mosaic .m-cd-tile { display: none !important; }'
+  + '.m-cd-strip { grid-template-columns: repeat(2, 1fr) !important; aspect-ratio: 16/9 !important; }'
+  + '.m-cd-body { grid-template-columns: 1fr !important; gap: 28px !important; margin-top: 24px !important; }'
+  + '.m-cd-card { position: static !important; }'
+  + '}';
+
 /**
  * Per-locale SEO metadata — unchanged from the previous version.
  * Pulls seo_title / seo_description from hospital_locale_content for
@@ -235,7 +248,8 @@ export default async function ClinicDetailPage({
   const landingUrl = lc?.landingImageUrl || row.landingImageUrl || null;
 
   return (
-    <article style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
+    <article className="m-cd-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
+      <style dangerouslySetInnerHTML={{ __html: CLINIC_DETAIL_CSS }} />
       <Link
         href={`/${params.locale}/clinics`}
         style={{
@@ -248,10 +262,11 @@ export default async function ClinicDetailPage({
       </Link>
 
       <h1
+        className="m-cd-title"
         style={{
           margin: '14px 0 4px',
           fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px',
-          display: 'inline-flex', alignItems: 'center', gap: 12,
+          display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12,
         }}
       >
         {displayName}
@@ -290,6 +305,7 @@ export default async function ClinicDetailPage({
       <div style={{ marginTop: 20 }}>
         {coverUrl && gallery.length >= 4 ? (
           <div
+            className="m-cd-mosaic"
             style={{
               display: 'grid',
               gridTemplateColumns: '2fr 1fr 1fr',
@@ -313,6 +329,7 @@ export default async function ClinicDetailPage({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={url}
+                className="m-cd-tile"
                 src={url}
                 alt={`${displayName} ${idx + 1}`}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
@@ -333,6 +350,7 @@ export default async function ClinicDetailPage({
           />
         ) : gallery.length > 0 ? (
           <div
+            className="m-cd-strip"
             style={{
               display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8,
               aspectRatio: '16/6',
@@ -360,8 +378,9 @@ export default async function ClinicDetailPage({
         )}
       </div>
 
-      {/* Body — 2-column layout with sticky inquiry card */}
+      {/* Body — 2-column layout with sticky inquiry card (mobile 1-col) */}
       <div
+        className="m-cd-body"
         style={{
           display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 48,
           marginTop: 32, alignItems: 'start',
@@ -407,8 +426,10 @@ export default async function ClinicDetailPage({
           </p>
         </div>
 
-        {/* Sticky inquiry card — same shape as Course 예약 card on /kr */}
+        {/* Sticky inquiry card — same shape as Course 예약 card on /kr.
+            Mobile: static full-width below the content. */}
         <div
+          className="m-cd-card"
           style={{
             position: 'sticky', top: 200,
             border: '1px solid #dddddd', borderRadius: 14, padding: 24,
