@@ -346,6 +346,13 @@ export const KO_LABELS = {
     "ru": "Партнер медтуризма мэрии Gangnam-gu",
     "vi": "Đối tác Du lịch Y tế UBND Gangnam-gu"
   },
+  "강남대로 신사미타워 3층 · 신사역 인근": {
+    "en": "3F Sinsa Mi Tower, Gangnam-daero · Near Sinsa Station",
+    "zh": "江南大道新沙美大厦3楼 · 新沙站附近",
+    "ja": "江南大路新沙美タワー3階 · 新沙駅近く",
+    "ru": "3-й этаж, Sinsa Mi Tower, Gangnam-daero · Около станции Sinsa",
+    "vi": "Tầng 3 Tòa nhà Sinsa Mi, Gangnam-daero · Gần Ga Sinsa"
+  },
   "강남역 도보 3분": {
     "en": "3-Min Walk from Gangnam Station",
     "zh": "江南站步行3分钟",
@@ -563,6 +570,13 @@ export const KO_LABELS = {
     "ru": "Эндоскопия + обследование мозга · Прозрачные цены",
     "vi": "Nội soi + Tầm soát não · Chi phí minh bạch"
   },
+  "눈·코 성형": {
+    "en": "Eye & Nose Plastic Surgery",
+    "zh": "眼·鼻整形",
+    "ja": "目・鼻の整形",
+    "ru": "Пластика глаз и носа",
+    "vi": "Phẫu thuật Mắt & Mũi"
+  },
   "눈매교정": {
     "en": "Ptosis Correction",
     "zh": "眼提肌矫正",
@@ -597,6 +611,13 @@ export const KO_LABELS = {
     "ja": "眉毛+プチ整形統合",
     "ru": "Комплекс: брови + петит",
     "vi": "Tích hợp lông mày & thẩm mỹ nội khoa"
+  },
+  "다국어 안내 페이지 운영 · 외국인 환자 상담 가능": {
+    "en": "Multilingual Page Available · Foreign Patient Consultation",
+    "zh": "多语言指南页面 · 可进行外国患者咨询",
+    "ja": "多言語案内ページ運営 · 外国人患者の相談可能",
+    "ru": "Мультиязычный сайт · Консультации для иностранных пациентов",
+    "vi": "Trang thông tin đa ngôn ngữ · Tư vấn cho bệnh nhân nước ngoài"
   },
   "다국어 진료": {
     "en": "Multilingual Care",
@@ -709,6 +730,13 @@ export const KO_LABELS = {
     "ja": "ドリームフィラー",
     "ru": "Филлер Dream",
     "vi": "Filler Dream"
+  },
+  "라인 중심 맞춤 바디 케어": {
+    "en": "Line-Focused Customized Body Care",
+    "zh": "注重线条的定制化身材护理",
+    "ja": "ライン重視のオーダーメイドボディケア",
+    "ru": "Персональный уход за телом с акцентом на силуэт",
+    "vi": "Chăm sóc cơ thể cá nhân hóa chú trọng đường nét"
   },
   "러시아어": {
     "en": "Russian",
@@ -829,6 +857,13 @@ export const KO_LABELS = {
     "ru": "Прямой выход к Duty Free",
     "vi": "Kết nối trực tiếp cửa hàng miễn thuế"
   },
+  "모발이식": {
+    "en": "Hair Transplantation",
+    "zh": "毛发移植",
+    "ja": "自毛植毛",
+    "ru": "Трансплантация волос",
+    "vi": "Cấy tóc"
+  },
   "무료 도보 코스": {
     "en": "Free Walking Course",
     "zh": "免费徒步路线",
@@ -920,6 +955,13 @@ export const KO_LABELS = {
     "ru": "Вьетнамский",
     "vi": "Tiếng Việt"
   },
+  "보건복지부 지정 첨단재생의료 신청 의료기관": {
+    "en": "Ministry of Health-Designated Advanced Regenerative Medicine Applicant Facility",
+    "zh": "保健福祉部指定先进再生医疗申请医疗机构",
+    "ja": "保健福祉部指定 先端再生医療申請医療機関",
+    "ru": "Медицинское учреждение, подавшее заявку на передовую регенеративную медицину (Минздрав)",
+    "vi": "Cơ sở y tế nộp đơn xin chứng nhận Y học Tái tạo Tiên tiến do Bộ Y tế chỉ định"
+  },
   "보건복지부장관상 수상": {
     "en": "Minister of Health Award Winner",
     "zh": "荣获保健福祉部长官奖",
@@ -961,6 +1003,13 @@ export const KO_LABELS = {
     "ja": "釜山",
     "ru": "Пусан",
     "vi": "Busan"
+  },
+  "분야별 전문의 협진": {
+    "en": "Multi-Specialist Medical Collaboration",
+    "zh": "各领域专业医师会诊",
+    "ja": "分野別専門医の協診",
+    "ru": "Совместный прием специалистов разного профиля",
+    "vi": "Hội chẩn chuyên khoa theo từng lĩnh vực"
   },
   "뷰티+클리닉 올인원": {
     "en": "Beauty + Clinic All-in-One",
@@ -1039,12 +1088,26 @@ export const KO_LABELS = {
     "ru": "Прямое управление SNUH · Соединен со станц. Ёксам",
     "vi": "Trực thuộc BV ĐHQG Seoul · Kết nối trực tiếp Ga Yeoksam"
   },
+  "성형": {
+    "en": "Plastic Surgery",
+    "zh": "整形",
+    "ja": "整形外科",
+    "ru": "Пластическая хирургия",
+    "vi": "Phẫu thuật thẩm mỹ"
+  },
   "성형+피부 통합": {
     "en": "Integrated Plastic Surgery & Dermatology",
     "zh": "整形+皮肤综合",
     "ja": "整形+皮膚統合",
     "ru": "Интегрир. пластика и дерматология",
     "vi": "Tích hợp Phẫu thuật thẩm mỹ + Da liễu"
+  },
+  "성형·피부·체형·모발 각 분야 전문의가 끝까지 책임 진료": {
+    "en": "Responsible Care by Specialists in Plastic Surgery, Skin, Body & Hair",
+    "zh": "整形·皮肤·体型·毛发各领域专家全程负责诊疗",
+    "ja": "整形・皮膚・体型・毛髪の各専門医が最後まで責任診療",
+    "ru": "Ответственное лечение специалистами в области пластики, дерматологии, тела и волос",
+    "vi": "Bác sĩ chuyên khoa thẩm mỹ, da liễu, vóc dáng, cấy tóc chịu trách nhiệm điều trị đến cùng"
   },
   "성형·피부·치과 원스톱": {
     "en": "One-Stop Plastic Surgery, Dermatology & Dental",
@@ -1130,6 +1193,13 @@ export const KO_LABELS = {
     "ru": "Стиль Сон Хе Гё",
     "vi": "Tạo kiểu Song Hye-kyo"
   },
+  "수만 건의 수술·수십만 건의 시술 경험, 무사고 안전 관리": {
+    "en": "Tens of Thousands of Surgeries & Procedures, Accident-Free Safety",
+    "zh": "数万例手术·数十万例治疗经验，无事故安全管理",
+    "ja": "数万件の手術・数十万件の施術実績、事故ゼロの安全管理",
+    "ru": "Десятки тысяч операций и процедур, безопасность без происшествий",
+    "vi": "Hàng chục ngàn ca phẫu thuật, hàng trăm ngàn ca thủ thuật, quản lý an toàn không tai biến"
+  },
   "수술 전후 전담 상담 코디네이터 배정": {
     "en": "Dedicated Pre & Post Surgery Coordinator",
     "zh": "配备术前术后专属咨询协调员",
@@ -1171,6 +1241,13 @@ export const KO_LABELS = {
     "ja": "神経精神科専門医・科学的診療",
     "ru": "Невропатолог-психиатр · Научный подход",
     "vi": "Chuyên khoa Thần kinh - Tâm thần · Điều trị khoa học"
+  },
+  "신사역 인근 (강남대로 616 신사미타워 3층)": {
+    "en": "Near Sinsa Station (3F Sinsa Mi Tower, 616 Gangnam-daero)",
+    "zh": "新沙站附近 (江南大道616新沙美大厦3楼)",
+    "ja": "新沙駅近く (江南大路616新沙美タワー3階)",
+    "ru": "Около станции Sinsa (3-й этаж, Sinsa Mi Tower, Gangnam-daero 616)",
+    "vi": "Gần Ga Sinsa (Tầng 3 Tòa nhà Sinsa Mi, 616 Gangnam-daero)"
   },
   "신세계 본점 도보권": {
     "en": "Walking Distance to Shinsegae Main Store",
@@ -1220,6 +1297,13 @@ export const KO_LABELS = {
     "ja": "IU行きつけ",
     "ru": "Любимое место IU",
     "vi": "Tiệm quen của IU"
+  },
+  "안면 윤곽": {
+    "en": "Facial Contouring",
+    "zh": "面部轮廓",
+    "ja": "輪郭整形",
+    "ru": "Контурирование лица",
+    "vi": "Đường nét khuôn mặt"
   },
   "안면윤곽 재수술": {
     "en": "Facial Contour Revision",
@@ -1417,6 +1501,13 @@ export const KO_LABELS = {
     "ru": "Наибольшее количество случаев кератоконуса в Корее",
     "vi": "Số ca giác mạc chóp nhiều nhất Hàn Quốc"
   },
+  "웰에이징": {
+    "en": "Well-Aging",
+    "zh": "健康抗衰",
+    "ja": "ウェルエイジング",
+    "ru": "Успешное старение (Well-Aging)",
+    "vi": "Chăm sóc lão hóa khỏe mạnh (Well-Aging)"
+  },
   "유료 · 사전 예약제": {
     "en": "Paid · Reservation Only",
     "zh": "收费 · 需提前预约",
@@ -1473,6 +1564,13 @@ export const KO_LABELS = {
     "ru": "чел.",
     "vi": "Người"
   },
+  "인도네시아어": {
+    "en": "Indonesian",
+    "zh": "印尼语",
+    "ja": "インドネシア語",
+    "ru": "Индонезийский язык",
+    "vi": "Tiếng Indonesia"
+  },
   "인스타 4만+ 원장 브랜드": {
     "en": "Director Brand with 40K+ Instagram Followers",
     "zh": "Instagram 4万+粉丝 院长品牌",
@@ -1521,6 +1619,13 @@ export const KO_LABELS = {
     "ja": "ナチュラルスマイルデザイン",
     "ru": "Естественный дизайн улыбки",
     "vi": "Thiết kế nụ cười tự nhiên"
+  },
+  "자연스러운 조화 중심 정밀 성형": {
+    "en": "Precision Plastic Surgery Focused on Natural Harmony",
+    "zh": "以自然和谐为核心的精密整形",
+    "ja": "自然な調和を重視した精密整形",
+    "ru": "Точная пластика с акцентом на естественную гармонию",
+    "vi": "Phẫu thuật thẩm mỹ chính xác chú trọng sự hài hòa tự nhiên"
   },
   "자체기공실 운영": {
     "en": "On-Site Dental Lab",
@@ -1577,6 +1682,13 @@ export const KO_LABELS = {
     "ja": "全国最大の小児韓医院",
     "ru": "Крупнейшая клиника корейской медицины для детей",
     "vi": "Phòng khám Đông y trẻ em lớn nhất toàn quốc"
+  },
+  "정밀 진단 기반 맞춤 치료": {
+    "en": "Customized Treatment Based on Precision Diagnosis",
+    "zh": "基于精密诊断的定制化治疗",
+    "ja": "精密診断に基づくオーダーメイド治療",
+    "ru": "Персонализированное лечение на основе точной диагностики",
+    "vi": "Điều trị cá nhân hóa dựa trên chẩn đoán chính xác"
   },
   "제주": {
     "en": "Jeju",
@@ -1648,12 +1760,40 @@ export const KO_LABELS = {
     "ru": "Бесплатная парковка",
     "vi": "Đỗ xe miễn phí"
   },
+  "줄기세포 기반 재생의학 특화 — 국내 소수 시행 병원": {
+    "en": "Stem Cell Regenerative Medicine Specialist — One of Few Hospitals in Korea",
+    "zh": "干细胞再生医学特色 — 韩国少数开展此类项目的医院",
+    "ja": "幹細胞再生医学特化 — 韓国国内で数少ない実施病院",
+    "ru": "Регенеративная медицина стволовыми клетками — одна из немногих клиник в Корее",
+    "vi": "Chuyên sâu y học tái tạo tế bào gốc — Một trong số ít bệnh viện thực hiện tại Hàn Quốc"
+  },
   "줄기세포 모발이식 특화": {
     "en": "Specialized in Stem Cell Hair Transplant",
     "zh": "干细胞植发专精",
     "ja": "幹細胞自毛植毛特化",
     "ru": "Специализация: трансплантация волос стволовыми клетками",
     "vi": "Chuyên sâu Cấy tóc tế bào gốc"
+  },
+  "줄기세포 재생 특화": {
+    "en": "Stem Cell Regeneration Specialist",
+    "zh": "干细胞再生特色",
+    "ja": "幹細胞再生特化",
+    "ru": "Специализация на регенерации стволовыми клетками",
+    "vi": "Chuyên sâu tái tạo bằng tế bào gốc"
+  },
+  "줄기세포 피부재생": {
+    "en": "Stem Cell Skin Regeneration",
+    "zh": "干细胞皮肤再生",
+    "ja": "幹細胞皮膚再生",
+    "ru": "Регенерация кожи стволовыми клетками",
+    "vi": "Tái tạo da bằng tế bào gốc"
+  },
+  "줄기세포 피부재생 치료": {
+    "en": "Stem Cell Skin Regeneration Therapy",
+    "zh": "干细胞皮肤再生治疗",
+    "ja": "幹細胞皮膚再生治療",
+    "ru": "Терапия регенерации кожи стволовыми клетками",
+    "vi": "Điều trị tái tạo da bằng tế bào gốc"
   },
   "줄기세포+피부클리닉 결합": {
     "en": "Stem Cell + Skin Clinic Combined",
@@ -1668,6 +1808,13 @@ export const KO_LABELS = {
     "ja": "幹細胞・PRP結合移植",
     "ru": "Комбинированная трансплантация стволовых клеток и PRP",
     "vi": "Cấy ghép kết hợp Tế bào gốc · PRP"
+  },
+  "줄기세포·면역세포·조직재생 등 고난이도 치료 수행": {
+    "en": "Advanced Treatments: Stem Cells, Immune Cells & Tissue Regeneration",
+    "zh": "开展干细胞·免疫细胞·组织再生等高难度治疗",
+    "ja": "幹細胞・免疫細胞・組織再生など高難易度治療の実施",
+    "ru": "Сложные процедуры: стволовые и иммунные клетки, регенерация тканей",
+    "vi": "Thực hiện điều trị phức tạp: Tế bào gốc, tế bào miễn dịch, tái tạo mô"
   },
   "중국어": {
     "en": "Chinese",
@@ -1725,6 +1872,13 @@ export const KO_LABELS = {
     "ru": "Специализация: позвоночник · 1500+ иностранцев в год",
     "vi": "Chuyên khoa Cột sống · 1.500+ bệnh nhân quốc tế/năm"
   },
+  "첨단재생 신청 의료기관": {
+    "en": "Advanced Regenerative Medicine Applicant Institution",
+    "zh": "先进再生医疗申请机构",
+    "ja": "先端再生医療申請医療機関",
+    "ru": "Медучреждение, подавшее заявку на передовую регенеративную медицину",
+    "vi": "Cơ sở y tế nộp đơn xin chứng nhận Y học Tái tạo Tiên tiến"
+  },
   "첫 방문 할인": {
     "en": "First Visit Discount",
     "zh": "首次到店优惠",
@@ -1745,6 +1899,20 @@ export const KO_LABELS = {
     "ja": "清潭フルメイクオーバー",
     "ru": "Полное преображение в Чхондаме",
     "vi": "Lột xác toàn diện Cheongdam"
+  },
+  "체형": {
+    "en": "Body Contouring",
+    "zh": "体型",
+    "ja": "体型・ボディ",
+    "ru": "Коррекция фигуры",
+    "vi": "Vóc dáng"
+  },
+  "체형 교정 프로그램": {
+    "en": "Body Contouring Program",
+    "zh": "体型塑形课程",
+    "ja": "体型矯正プログラム",
+    "ru": "Программа коррекции фигуры",
+    "vi": "Chương trình điều chỉnh vóc dáng"
   },
   "최소침습 세계 표준": {
     "en": "Global Standard for Minimally Invasive Surgery",
@@ -1816,6 +1984,27 @@ export const KO_LABELS = {
     "ru": "4 фирменные процедуры Klim",
     "vi": "4 liệu trình đặc trưng Klim"
   },
+  "탄력 재생": {
+    "en": "Elasticity Regeneration",
+    "zh": "弹力再生",
+    "ja": "弾力再生",
+    "ru": "Восстановление эластичности",
+    "vi": "Tái tạo độ đàn hồi"
+  },
+  "탄력 재생 주사": {
+    "en": "Elasticity Regeneration Injection",
+    "zh": "弹力再生注射",
+    "ja": "弾力再生注射",
+    "ru": "Инъекции для восстановления эластичности",
+    "vi": "Tiêm tái tạo độ đàn hồi"
+  },
+  "탈모 재생 치료": {
+    "en": "Hair Loss Regeneration Therapy",
+    "zh": "脱发再生治疗",
+    "ja": "薄毛・脱毛再生治療",
+    "ru": "Лечение выпадения волос и регенерация",
+    "vi": "Điều trị tái tạo mọc tóc"
+  },
   "탈장 국내 최다·무인공막": {
     "en": "Most Hernia Cases in Korea · Non-Mesh",
     "zh": "韩国疝气手术量最多·无人工网膜",
@@ -1857,6 +2046,13 @@ export const KO_LABELS = {
     "ja": "トップ俳優御用達サロン",
     "ru": "Любимый салон топ-актеров",
     "vi": "Salon quen thuộc của sao hạng A"
+  },
+  "통합 웰에이징 케어": {
+    "en": "Integrated Well-Aging Care",
+    "zh": "综合健康抗衰护理",
+    "ja": "トータルウェルエイジングケア",
+    "ru": "Комплексный уход Well-Aging",
+    "vi": "Chăm sóc Well-Aging toàn diện"
   },
   "통합의학·코엑스 도보권": {
     "en": "Integrative Medicine · Walking Distance to COEX",
@@ -1921,6 +2117,13 @@ export const KO_LABELS = {
     "ru": "Будни 09:30~19:00 · Сб 09:30~17:00 (Вс и праздники: вых.)",
     "vi": "Ngày thường 09:30~19:00 · Thứ 7 09:30~17:00 (Nghỉ Chủ nhật & Ngày lễ)"
   },
+  "평일 10:00~19:00 · 토요일 10:00~16:00 · 매월 셋째 주 일요일 10:00~19:00": {
+    "en": "Weekdays 10:00–19:00 · Sat 10:00–16:00 · 3rd Sun of Month 10:00–19:00",
+    "zh": "工作日 10:00~19:00 · 周六 10:00~16:00 · 每月第三个周日 10:00~19:00",
+    "ja": "平日 10:00~19:00 · 土曜日 10:00~16:00 · 毎月第3日曜日 10:00~19:00",
+    "ru": "Пн–Пт 10:00–19:00 · Сб 10:00–16:00 · Каждое 3-е вс месяца 10:00–19:00",
+    "vi": "Thứ 2–6 10:00~19:00 · Thứ 7 10:00~16:00 · Chủ nhật tuần thứ 3 hàng tháng 10:00~19:00"
+  },
   "평일 21시 야간 진료": {
     "en": "Weekday Night Care until 21:00",
     "zh": "工作日夜间诊疗至21:00",
@@ -1935,6 +2138,20 @@ export const KO_LABELS = {
     "ru": "Выбор Forbes",
     "vi": "Được bình chọn bởi Forbes"
   },
+  "프리미엄 항노화 프로그램": {
+    "en": "Premium Anti-Aging Program",
+    "zh": "尊享抗衰老课程",
+    "ja": "プレミアム抗加齢プログラム",
+    "ru": "Премиум-программа антистарения",
+    "vi": "Chương trình chống lão hóa cao cấp"
+  },
+  "피부": {
+    "en": "Dermatology",
+    "zh": "皮肤",
+    "ja": "皮膚科",
+    "ru": "Дерматология",
+    "vi": "Da liễu"
+  },
   "피부과+성형외과 협진 20년": {
     "en": "20-Yr Derm + Plastic Surg Co-op",
     "zh": "皮肤科+整形外科联合诊疗20年",
@@ -1942,12 +2159,26 @@ export const KO_LABELS = {
     "ru": "20 лет сотрудничества дерматологии и пластики",
     "vi": "20 năm kết hợp Da liễu + Phẫu thuật thẩm mỹ"
   },
+  "피부질환 재생 치료": {
+    "en": "Skin Condition Regeneration Treatment",
+    "zh": "皮肤疾病再生治疗",
+    "ja": "皮膚疾患再生治療",
+    "ru": "Регенерирующее лечение кожных заболеваний",
+    "vi": "Điều trị tái tạo bệnh lý da"
+  },
   "피트니스 무료 이용": {
     "en": "Free Gym Access",
     "zh": "免费使用健身房",
     "ja": "フィットネス無料利用",
     "ru": "Бесплатный фитнес",
     "vi": "Miễn phí sử dụng phòng gym"
+  },
+  "하나의 얼굴엔 하나의 해답이 있습니다 — 명인의 철학과 기술력이 깃든 스템케이": {
+    "en": "One Face, One Solution — Stem K with Master Philosophy & Expertise",
+    "zh": "一张脸庞，一个答案 — 蕴含大师哲学与技术的Stem K",
+    "ja": "一つの顔には一つの答えがある — 巨匠の哲学と技術力が宿るStem K",
+    "ru": "Для каждого лица — одно решение: Stem K, воплощающий философию и мастерство",
+    "vi": "Một gương mặt, một giải pháp — Stem K gửi gắm triết lý và kỹ thuật đỉnh cao"
   },
   "한방 다이어트 전문 네트워크": {
     "en": "Korean Herbal Diet Specialty Network",
@@ -2025,5 +2256,19 @@ export const KO_LABELS = {
     "ja": "回復ベースのクリニック",
     "ru": "Клиника, ориентированная на восстановление",
     "vi": "Phòng khám tập trung phục hồi"
+  },
+  "흉터·상처 재생": {
+    "en": "Scar & Wound Regeneration",
+    "zh": "疤痕·伤口再生",
+    "ja": "傷跡・傷口再生",
+    "ru": "Регенерация шрамов и ран",
+    "vi": "Tái tạo sẹo & vết thương"
+  },
+  "흉터·상처 재생 치료": {
+    "en": "Scar & Wound Regeneration Therapy",
+    "zh": "疤痕·伤口再生治疗",
+    "ja": "傷跡・傷口再生治療",
+    "ru": "Лечение и регенерация шрамов и ран",
+    "vi": "Điều trị tái tạo sẹo & vết thương"
   }
 } as const;
