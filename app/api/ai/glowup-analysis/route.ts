@@ -122,8 +122,20 @@ async function pickClinics(cat: string, locale: PublicLocale): Promise<RecItem[]
       })
       .from(categoryListings)
       .innerJoin(hospitals, eq(categoryListings.hospitalId, hospitals.id))
-      .where(eq(categoryListings.categoryKey, cat))
-      .orderBy(sql`(${hospitals.coverImageUrl} IS NULL), ${hospitals.sortOrder} asc`)
+      .where(
+        and(
+          eq(categoryListings.categoryKey, cat),
+          eq(hospitals.isActiveForMatching, true),
+        ),
+      )
+      // 카테고리별 노출 순서(category_listings.sort_order)를 1순위 기준으로
+      // 사용 — 마스터에서 파트너 병원을 코드 수정 없이 상단에 고정할 수
+      // 있다. 동률이면 병원 자체 sortOrder → 이름 순.
+      .orderBy(
+        sql`${categoryListings.sortOrder} asc`,
+        sql`${hospitals.sortOrder} asc`,
+        sql`${hospitals.name} asc`,
+      )
       .limit(2);
     if (rows.length === 0) return [];
     const overrides = new Map<string, { name: string | null; coverImageUrl: string | null }>();
