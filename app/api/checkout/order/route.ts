@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
+import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -51,6 +52,19 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'bad_request' }, { status: 400 });
   }
 
+  // 로그인 상태면 인보이스를 계정에 묶어 마이페이지에서 조회 가능하게 한다.
+  // 클라이언트가 보낸 id 를 믿지 않고 쿠키 세션에서 직접 읽는다.
+  let userId: string | null = null;
+  let userEmail: string | null = null;
+  try {
+    const supabase = createSupabaseServerClient();
+    const { data } = await supabase.auth.getUser();
+    userId = data.user?.id ?? null;
+    userEmail = data.user?.email ?? null;
+  } catch {
+    /* 비로그인 예약도 허용 */
+  }
+
   const subtotal = input.unitPriceWon * input.guests;
   const serviceFee = Math.round((subtotal * 0.1) / 1000) * 1000;
   const total = subtotal + serviceFee;
@@ -74,6 +88,8 @@ export async function POST(req: Request): Promise<NextResponse> {
           subtotalWon: subtotal,
           serviceFeeWon: serviceFee,
           totalWon: total,
+          userId,
+          userEmail,
           meta: { ua: req.headers.get('user-agent') ?? '' },
         })
         .returning({ id: checkoutOrders.id, invoiceNo: checkoutOrders.invoiceNo });
@@ -103,10 +119,24 @@ export async function PATCH(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'bad_request' }, { status: 400 });
   }
   try {
+    const [order] = await db
+      .select({ id: checkoutOrders.id, userId: checkoutOrders.userId })
+      .from(checkoutOrders)
+      .where(eq(checkoutOrders.invoiceNo, input.invoiceNo))
+      .limit(1);
+    if (!order) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+    // 계정에 묶인 인보이스는 본인만 상태를 바꿀 수 있다
+    if (order.userId) {
+      const supabase = createSupabaseServerClient();
+      const { data } = await supabase.auth.getUser();
+      if (data.user?.id !== order.userId) {
+        return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+      }
+    }
     await db
       .update(checkoutOrders)
       .set({ status: 'reported', reportedAt: new Date(), updatedAt: new Date() })
-      .where(eq(checkoutOrders.invoiceNo, input.invoiceNo));
+      .where(eq(checkoutOrders.id, order.id));
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: 'update_failed' }, { status: 502 });

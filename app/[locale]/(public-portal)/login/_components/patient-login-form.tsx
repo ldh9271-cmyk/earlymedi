@@ -64,10 +64,14 @@ const labelStyle: React.CSSProperties = {
 export function PatientLoginForm({
   locale,
   dict,
+  nextPath,
 }: {
   locale: PublicLocale;
   dict: Dictionary['login'];
+  /** 로그인 후 돌아갈 경로. */
+  nextPath?: string;
 }): JSX.Element {
+  const returnTo = nextPath && nextPath.startsWith('/') ? nextPath : `/${locale}`;
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -86,7 +90,7 @@ export function PatientLoginForm({
         return;
       }
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
-      redirectTo.searchParams.set('next', `/${locale}`);
+      redirectTo.searchParams.set('next', returnTo);
       const { error: e } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -119,7 +123,7 @@ export function PatientLoginForm({
         else setError(e.message);
         return;
       }
-      router.replace(`/${locale}`);
+      router.replace(returnTo);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-in failed');
     } finally {

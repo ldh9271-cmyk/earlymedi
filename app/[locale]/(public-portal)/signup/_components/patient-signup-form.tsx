@@ -117,10 +117,14 @@ type Values = z.infer<typeof schema>;
 export function PatientSignupForm({
   locale,
   dict,
+  nextPath,
 }: {
   locale: PublicLocale;
   dict: Dictionary['signup'];
+  /** 가입 완료 후 돌아갈 경로 (예약 도중 가입한 경우 예약 페이지). */
+  nextPath?: string;
 }): JSX.Element {
+  const returnTo = nextPath && nextPath.startsWith('/') ? nextPath : `/${locale}`;
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +154,7 @@ export function PatientSignupForm({
         return;
       }
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
-      redirectTo.searchParams.set('next', `/${locale}`);
+      redirectTo.searchParams.set('next', returnTo);
       const { error: e } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -177,7 +181,7 @@ export function PatientSignupForm({
         return;
       }
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
-      redirectTo.searchParams.set('next', `/${locale}`);
+      redirectTo.searchParams.set('next', returnTo);
       const { data, error: e } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -222,7 +226,7 @@ export function PatientSignupForm({
       // 그 경우 사용자에게 "메일 확인" UI 를 보여주면 영원히 기다리게
       // 되니 바로 홈으로 보낸다.
       if (data.session) {
-        window.location.href = `/${locale}`;
+        window.location.href = returnTo;
         return;
       }
       setSent(values.email);
@@ -246,7 +250,7 @@ export function PatientSignupForm({
         return;
       }
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
-      redirectTo.searchParams.set('next', `/${locale}`);
+      redirectTo.searchParams.set('next', returnTo);
       const { error: e } = await supabase.auth.resend({
         type: 'signup',
         email: sent,

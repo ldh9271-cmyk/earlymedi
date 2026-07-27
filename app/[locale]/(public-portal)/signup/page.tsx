@@ -26,12 +26,20 @@ export async function generateMetadata({
 
 export default async function PatientSignupPage({
   params,
+  searchParams,
 }: {
   params: { locale: string };
+  searchParams: { next?: string };
 }): Promise<JSX.Element> {
   if (!isPublicLocale(params.locale)) notFound();
   const locale = params.locale as PublicLocale;
   const dict = await getDictionary(locale);
+  // 예약 도중 가입한 경우 끝나고 그 페이지로 되돌린다. 오픈 리다이렉트를
+  // 막기 위해 같은 사이트 경로(/로 시작, //로 시작하지 않음)만 허용.
+  const nextPath =
+    searchParams.next && searchParams.next.startsWith('/') && !searchParams.next.startsWith('//')
+      ? searchParams.next
+      : undefined;
 
   return (
     <section
@@ -75,7 +83,7 @@ export default async function PatientSignupPage({
           boxShadow: 'rgba(0,0,0,0.04) 0 2px 8px',
         }}
       >
-        <PatientSignupForm locale={locale} dict={dict.signup} />
+        <PatientSignupForm locale={locale} dict={dict.signup} nextPath={nextPath} />
       </div>
 
       <div
@@ -87,7 +95,7 @@ export default async function PatientSignupPage({
       >
         <p style={{ margin: '0 0 4px' }}>{dict.signup.haveAccount}</p>
         <Link
-          href={`/${locale}/login`}
+          href={nextPath ? `/${locale}/login?next=${encodeURIComponent(nextPath)}` : `/${locale}/login`}
           style={{ color: '#222', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}
         >
           {dict.signup.goLogin}

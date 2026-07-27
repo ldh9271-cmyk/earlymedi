@@ -502,6 +502,19 @@ export function MainHeader({
                   <span style={{ color: '#222', fontWeight: 600 }}>{userEmail}</span>
                 </div>
                 <Link
+                  href={`/${locale}/me`}
+                  onClick={() => setAccountOpen(false)}
+                  style={{
+                    display: 'block', padding: '10px 14px',
+                    fontSize: 14, color: '#222', fontWeight: 600,
+                    borderRadius: 8, textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#f7f7f7'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
+                >
+                  {t.myBookings}
+                </Link>
+                <Link
                   href={`/${locale}/inquiry`}
                   onClick={() => setAccountOpen(false)}
                   style={{

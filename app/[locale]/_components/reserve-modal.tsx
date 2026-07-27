@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
+import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 
 export type ReserveSummary = {
@@ -118,9 +119,42 @@ export default function ReserveButton({
   const [qrFailed, setQrFailed] = useState(false);
   const [invoiceNo, setInvoiceNo] = useState<string | null>(null);
   const [issuing, setIssuing] = useState(false);
+  // null = 확인 전, true/false = 로그인 여부. 헤더와 같은 브라우저 세션을 본다.
+  const [authed, setAuthed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setAuthed(false); return undefined; }
+    let mounted = true;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (mounted) setAuthed(!!data.user);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setAuthed(!!session?.user);
+    });
+    return () => { mounted = false; sub.subscription.unsubscribe(); };
+  }, []);
 
   // 오늘 날짜는 서버/클라 시간대가 어긋날 수 있어 mount 후 설정
   useEffect(() => { setMinDate(todayYmd()); }, []);
+
+  // 가입/로그인을 마치고 ?reserve=1 로 돌아오면 예약을 이어서 진행한다.
+  // 데스크톱만 팝업이므로 좁은 화면에서는 그대로 둔다 (예약 페이지로 간다).
+  useEffect(() => {
+    if (!authed || typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('reserve') !== '1') return;
+    const desktop = typeof window.matchMedia === 'function'
+      ? window.matchMedia(`(min-width: ${DESKTOP_MIN_WIDTH}px)`).matches
+      : window.innerWidth >= DESKTOP_MIN_WIDTH;
+    if (!desktop) return;
+    setStep('trip');
+    setOpen(true);
+    // 새로고침해도 다시 열리지 않도록 쿼리를 정리
+    params.delete('reserve');
+    const qs = params.toString();
+    window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
+  }, [authed]);
   // 트리거 쪽 인원/날짜가 바뀌면 모달 기본값도 따라간다
   useEffect(() => { setGuests(Math.max(1, guestCount)); }, [guestCount]);
   useEffect(() => { if (dateYmd) setYmd(dateYmd); }, [dateYmd]);
@@ -218,6 +252,12 @@ export default function ReserveButton({
     }).catch(() => undefined);
   }
 
+  // 회원이면 마이페이지 결제내역에서 인보이스를 바로 확인하게 하고,
+  // 비회원은 연락처를 남겨야 컨시어지가 이어받을 수 있으므로 문의 폼으로.
+  const doneHref = authed
+    ? `/${locale}/me${invoiceNo ? `?invoice=${encodeURIComponent(invoiceNo)}` : ''}`
+    : (invoiceNo ? `${confirmHref}&invoice=${encodeURIComponent(invoiceNo)}` : confirmHref);
+
   const fieldBox = {
     border: '1px solid #dddddd', borderRadius: 10,
     padding: '8px 12px', display: 'flex', flexDirection: 'column' as const,
@@ -242,6 +282,14 @@ export default function ReserveButton({
           const desktop = typeof window.matchMedia === 'function'
             ? window.matchMedia(`(min-width: ${DESKTOP_MIN_WIDTH}px)`).matches
             : window.innerWidth >= DESKTOP_MIN_WIDTH;
+          // 세션 확인이 아직이면(null) 막지 않고 링크로 넘긴다
+          if (authed === false) {
+            // 회원가입 후 이 페이지로 돌아와 팝업이 다시 열리도록 표시
+            e.preventDefault();
+            const back = `${window.location.pathname}?reserve=1`;
+            window.location.href = `/${locale}/signup?next=${encodeURIComponent(back)}`;
+            return;
+          }
           if (!desktop) return; // 모바일 → 예약 페이지로 이동
           e.preventDefault();
           setStep('trip');
@@ -468,7 +516,7 @@ export default function ReserveButton({
                 </button>
               ) : (
                 <Link
-                  href={invoiceNo ? `${confirmHref}&invoice=${encodeURIComponent(invoiceNo)}` : confirmHref}
+                  href={doneHref}
                   onClick={reportPaid}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',

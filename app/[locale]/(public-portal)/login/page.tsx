@@ -32,12 +32,18 @@ export async function generateMetadata({
 
 export default async function PatientLoginPage({
   params,
+  searchParams,
 }: {
   params: { locale: string };
+  searchParams: { next?: string };
 }): Promise<JSX.Element> {
   if (!isPublicLocale(params.locale)) notFound();
   const locale = params.locale as PublicLocale;
   const dict = await getDictionary(locale);
+  const nextPath =
+    searchParams.next && searchParams.next.startsWith('/') && !searchParams.next.startsWith('//')
+      ? searchParams.next
+      : undefined;
 
   return (
     <section
@@ -81,7 +87,7 @@ export default async function PatientLoginPage({
           boxShadow: 'rgba(0,0,0,0.04) 0 2px 8px',
         }}
       >
-        <PatientLoginForm locale={locale} dict={dict.login} />
+        <PatientLoginForm locale={locale} dict={dict.login} nextPath={nextPath} />
       </div>
 
       <div
@@ -103,7 +109,7 @@ export default async function PatientLoginPage({
           }}
         >
           <Link
-            href={`/${locale}/signup`}
+            href={nextPath ? `/${locale}/signup?next=${encodeURIComponent(nextPath)}` : `/${locale}/signup`}
             style={{ color: '#222', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}
           >
             {dict.signup.submitCta} →

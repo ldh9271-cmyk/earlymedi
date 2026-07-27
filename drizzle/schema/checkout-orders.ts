@@ -64,6 +64,10 @@ export const checkoutOrders = pgTable(
     totalWon: integer('total_won').notNull().default(0),
     paymentMethod: text('payment_method').notNull().default('alipay'),
 
+    /** 로그인 상태로 예약했다면 그 계정 — 마이페이지 조회 키. */
+    userId: uuid('user_id'),
+    userEmail: text('user_email'),
+
     // 게스트 연락처 — 인보이스 발행 시점엔 비어 있고, 문의 폼을 거치면 채워진다
     guestName: text('guest_name'),
     guestContact: text('guest_contact'),
@@ -80,5 +84,6 @@ export const checkoutOrders = pgTable(
   (t) => ({
     statusIdx: index('checkout_orders_status_idx').on(t.status, t.createdAt),
     createdIdx: index('checkout_orders_created_idx').on(t.createdAt),
+    userIdx: index('checkout_orders_user_idx').on(t.userId, t.createdAt),
   }),
 );
