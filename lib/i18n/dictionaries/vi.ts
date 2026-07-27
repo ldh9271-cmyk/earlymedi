@@ -248,7 +248,7 @@ const vi: Dictionary = {
     brand1: 'Giới thiệu',
     brand2: 'Hướng dẫn quán ngon bản xứ',
     brand3: 'Thánh địa K-pop',
-    brand4: 'Trở thành đối tác',
+    brand4: 'Đăng ký doanh nghiệp',
     copy: '© 2026 Korea Glow-up Challenge · Chính sách bảo mật · Điều khoản sử dụng',
   },
   header: {

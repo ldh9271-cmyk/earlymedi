@@ -271,7 +271,7 @@ const kr = {
     brand1: '소개',
     brand2: '찐맛집 가이드',
     brand3: 'K-팝 성지',
-    brand4: '호스트 되기',
+    brand4: '비즈니스 회원가입',
     copy: '© 2026 Korea Glow-up Challenge · 개인정보처리방침 · 이용약관',
   },
   header: {

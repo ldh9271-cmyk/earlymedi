@@ -245,7 +245,7 @@ const zh: Dictionary = {
     brand1: '关于',
     brand2: '本地美食指南',
     brand3: 'K-pop 圣地',
-    brand4: '成为房东',
+    brand4: '商家注册',
     copy: '© 2026 Korea Glow-up Challenge · 隐私政策 · 使用条款',
   },
   header: {

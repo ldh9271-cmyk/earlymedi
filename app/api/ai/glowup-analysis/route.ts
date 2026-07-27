@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { coverByLocale, localesForMedia } from '@/lib/i18n/locale-cover';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
@@ -139,10 +140,12 @@ async function pickClinics(cat: string, locale: PublicLocale): Promise<RecItem[]
       .limit(2);
     if (rows.length === 0) return [];
     const overrides = new Map<string, { name: string | null; coverImageUrl: string | null }>();
+    let covers = new Map<string, string>();
     try {
       const lc = await db
         .select({
           hospitalId: hospitalLocaleContent.hospitalId,
+          locale: hospitalLocaleContent.locale,
           name: hospitalLocaleContent.name,
           coverImageUrl: hospitalLocaleContent.coverImageUrl,
         })
@@ -150,17 +153,24 @@ async function pickClinics(cat: string, locale: PublicLocale): Promise<RecItem[]
         .where(
           and(
             inArray(hospitalLocaleContent.hospitalId, rows.map((r) => r.id)),
-            eq(hospitalLocaleContent.locale, locale),
+            inArray(hospitalLocaleContent.locale, localesForMedia(locale)),
           ),
         );
-      for (const o of lc) overrides.set(o.hospitalId, o);
+      // 이름은 해당 로케일, 사진은 없으면 kr 것을 공용으로 사용
+      for (const o of lc) {
+        if (o.locale === locale) overrides.set(o.hospitalId, o);
+      }
+      covers = coverByLocale(
+        lc.map((o) => ({ id: o.hospitalId, locale: o.locale, coverImageUrl: o.coverImageUrl })),
+        locale,
+      );
     } catch { /* keep base */ }
     return rows.map((r) => {
       const o = overrides.get(r.id);
       return {
         title: o?.name?.trim() || r.name,
         href: `/${locale}/clinics/${r.slug}`,
-        img: o?.coverImageUrl || r.coverImageUrl,
+        img: covers.get(r.id) || o?.coverImageUrl || r.coverImageUrl,
         promo: r.promoLabel ? localizeKoLabel(r.promoLabel, locale) : null,
       };
     });

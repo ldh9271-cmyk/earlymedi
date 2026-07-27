@@ -247,7 +247,7 @@ const ja: Dictionary = {
     brand1: '会社案内',
     brand2: '名店グルメガイド',
     brand3: 'K-POP 聖地',
-    brand4: 'ホストになる',
+    brand4: 'ビジネス会員登録',
     copy: '© 2026 Korea Glow-up Challenge · プライバシーポリシー · 利用規約',
   },
   header: {

@@ -3,6 +3,7 @@ import { eq, inArray, sql, and, gte } from 'drizzle-orm';
 import { BrandMark } from '../../_components/brand-mark';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import { coverByLocale, localesForMedia } from '@/lib/i18n/locale-cover';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { db } from '@/lib/db/client';
@@ -272,6 +273,7 @@ export default async function ClinicsListPage({
       const overrides = await db
         .select({
           hospitalId: hospitalLocaleContent.hospitalId,
+          locale: hospitalLocaleContent.locale,
           name: hospitalLocaleContent.name,
           coverImageUrl: hospitalLocaleContent.coverImageUrl,
         })
@@ -279,18 +281,22 @@ export default async function ClinicsListPage({
         .where(
           and(
             inArray(hospitalLocaleContent.hospitalId, ids),
-            eq(hospitalLocaleContent.locale, params.locale),
+            inArray(hospitalLocaleContent.locale, localesForMedia(params.locale)),
           ),
         );
-      const byId = new Map(overrides.map((o) => [o.hospitalId, o]));
-      filtered = filtered.map((h) => {
-        const o = byId.get(h.id);
-        return {
-          ...h,
-          name: o?.name?.trim() || h.name,
-          coverImageUrl: o?.coverImageUrl || h.coverImageUrl,
-        };
-      });
+      // 이름은 해당 로케일 번역만, 사진은 kr 폴백 허용 (언어 공통 자산)
+      const nameById = new Map(
+        overrides.filter((o) => o.locale === params.locale).map((o) => [o.hospitalId, o.name]),
+      );
+      const coverById = coverByLocale(
+        overrides.map((o) => ({ id: o.hospitalId, locale: o.locale, coverImageUrl: o.coverImageUrl })),
+        params.locale,
+      );
+      filtered = filtered.map((h) => ({
+        ...h,
+        name: nameById.get(h.id)?.trim() || h.name,
+        coverImageUrl: coverById.get(h.id) || h.coverImageUrl,
+      }));
     } catch {
       // hospital_locale_content missing — keep base values.
     }

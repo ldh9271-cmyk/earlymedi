@@ -248,7 +248,7 @@ const ru: Dictionary = {
     brand1: 'О нас',
     brand2: 'Гид по местной еде',
     brand3: 'K-pop места',
-    brand4: 'Стать партнёром',
+    brand4: 'Регистрация для бизнеса',
     copy: '© 2026 Korea Glow-up Challenge · Политика конфиденциальности · Условия использования',
   },
   header: {

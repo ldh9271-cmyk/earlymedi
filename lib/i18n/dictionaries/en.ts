@@ -260,7 +260,7 @@ const en: Dictionary = {
     brand1: 'About',
     brand2: 'Local food guide',
     brand3: 'K-pop landmarks',
-    brand4: 'Become a host',
+    brand4: 'Business sign-up',
     copy: '© 2026 Korea Glow-up Challenge · Privacy policy · Terms of service',
   },
   header: {

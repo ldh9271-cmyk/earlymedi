@@ -8,11 +8,60 @@ import {
 } from '@/drizzle/schema/partner-listings';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { ListingCategory } from './categories';
+import { localesForMedia } from '@/lib/i18n/locale-cover';
 
 /**
  * Card shape used by /kr landing sections. Flattens the base row +
  * locale override into one struct the page can render directly.
  */
+type ListingLocaleRow = {
+  title: string | null;
+  locationLabel: string | null;
+  locale: string;
+  coverImageUrl: string | null;
+  description: string | null;
+};
+
+/**
+ * 사진은 언어 공통 자산 — 텍스트는 해당 로케일 번역만 쓰고, 커버가
+ * 비어 있으면 kr 로케일 이미지를 그대로 재사용한다. (kr 에만 실사진을
+ * 올려도 6개 언어 카드가 동일하게 보이도록)
+ */
+function mergeOneListingLocaleRow<R extends ListingLocaleRow>(
+  rows: R[],
+  locale: PublicLocale,
+): ListingLocaleRow | null {
+  const mine = rows.find((r) => r.locale === locale) ?? null;
+  const kr = rows.find((r) => r.locale === 'kr') ?? null;
+  if (!mine && !kr) return null;
+  return {
+    title: mine?.title ?? null,
+    locationLabel: mine?.locationLabel ?? null,
+    locale,
+    coverImageUrl: mine?.coverImageUrl || kr?.coverImageUrl || null,
+    description: mine?.description ?? null,
+  };
+}
+
+/** 목록용 — listingId 별로 위 규칙을 적용한 맵. */
+function mergeListingLocaleRows<R extends ListingLocaleRow & { listingId: string }>(
+  rows: R[],
+  locale: PublicLocale,
+): Map<string, ListingLocaleRow> {
+  const byId = new Map<string, R[]>();
+  for (const r of rows) {
+    const list = byId.get(r.listingId);
+    if (list) list.push(r);
+    else byId.set(r.listingId, [r]);
+  }
+  const out = new Map<string, ListingLocaleRow>();
+  for (const [id, list] of byId) {
+    const merged = mergeOneListingLocaleRow(list, locale);
+    if (merged) out.set(id, merged);
+  }
+  return out;
+}
+
 export type ListingCard = {
   id: string;
   category: string;
@@ -158,6 +207,7 @@ export async function fetchFeaturedListings(opts: {
         listingId: partnerListingLocaleContent.listingId,
         title: partnerListingLocaleContent.title,
         locationLabel: partnerListingLocaleContent.locationLabel,
+        locale: partnerListingLocaleContent.locale,
         coverImageUrl: partnerListingLocaleContent.coverImageUrl,
         description: partnerListingLocaleContent.description,
       })
@@ -165,10 +215,10 @@ export async function fetchFeaturedListings(opts: {
       .where(
         and(
           inArray(partnerListingLocaleContent.listingId, ids),
-          eq(partnerListingLocaleContent.locale, locale),
+          inArray(partnerListingLocaleContent.locale, localesForMedia(locale)),
         ),
       );
-    overrides = new Map(lcRows.map((r) => [r.listingId, r]));
+    overrides = mergeListingLocaleRows(lcRows, locale);
   } catch {
     /* locale table missing — fall through with no overrides */
   }
@@ -265,6 +315,7 @@ export async function fetchListingsForSurface(opts: {
         listingId: partnerListingLocaleContent.listingId,
         title: partnerListingLocaleContent.title,
         locationLabel: partnerListingLocaleContent.locationLabel,
+        locale: partnerListingLocaleContent.locale,
         coverImageUrl: partnerListingLocaleContent.coverImageUrl,
         description: partnerListingLocaleContent.description,
       })
@@ -272,10 +323,10 @@ export async function fetchListingsForSurface(opts: {
       .where(
         and(
           inArray(partnerListingLocaleContent.listingId, ids),
-          eq(partnerListingLocaleContent.locale, locale),
+          inArray(partnerListingLocaleContent.locale, localesForMedia(locale)),
         ),
       );
-    overrides = new Map(lcRows.map((r) => [r.listingId, r]));
+    overrides = mergeListingLocaleRows(lcRows, locale);
   } catch {
     /* locale table missing — keep base values */
   }
@@ -352,6 +403,7 @@ export async function fetchTravelTypeListing(opts: {
       .select({
         title: partnerListingLocaleContent.title,
         locationLabel: partnerListingLocaleContent.locationLabel,
+        locale: partnerListingLocaleContent.locale,
         coverImageUrl: partnerListingLocaleContent.coverImageUrl,
         description: partnerListingLocaleContent.description,
       })
@@ -359,11 +411,10 @@ export async function fetchTravelTypeListing(opts: {
       .where(
         and(
           eq(partnerListingLocaleContent.listingId, row.id),
-          eq(partnerListingLocaleContent.locale, locale),
+          inArray(partnerListingLocaleContent.locale, localesForMedia(locale)),
         ),
-      )
-      .limit(1);
-    override = lcRows[0] ?? null;
+      );
+    override = mergeOneListingLocaleRow(lcRows, locale);
   } catch {
     /* locale table missing — keep base values */
   }
@@ -431,6 +482,7 @@ export async function fetchListingBySlug(opts: {
       .select({
         title: partnerListingLocaleContent.title,
         locationLabel: partnerListingLocaleContent.locationLabel,
+        locale: partnerListingLocaleContent.locale,
         coverImageUrl: partnerListingLocaleContent.coverImageUrl,
         description: partnerListingLocaleContent.description,
       })
@@ -438,11 +490,10 @@ export async function fetchListingBySlug(opts: {
       .where(
         and(
           eq(partnerListingLocaleContent.listingId, row.id),
-          eq(partnerListingLocaleContent.locale, locale),
+          inArray(partnerListingLocaleContent.locale, localesForMedia(locale)),
         ),
-      )
-      .limit(1);
-    override = lcRows[0] ?? null;
+      );
+    override = mergeOneListingLocaleRow(lcRows, locale);
   } catch {
     /* locale table missing — fall through with no override */
   }

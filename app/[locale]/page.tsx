@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { LOCALE_LABELS, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import { coverByLocale, localesForMedia } from '@/lib/i18n/locale-cover';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { MainHeader } from './_components/main-header';
 import { MainFooter } from './_components/main-footer';
@@ -300,6 +301,7 @@ async function fetchLandingHospitals(locale: PublicLocale, minRating: number | n
       const lc = await db
         .select({
           hospitalId: hospitalLocaleContent.hospitalId,
+          locale: hospitalLocaleContent.locale,
           name: hospitalLocaleContent.name,
           coverImageUrl: hospitalLocaleContent.coverImageUrl,
         })
@@ -307,10 +309,22 @@ async function fetchLandingHospitals(locale: PublicLocale, minRating: number | n
         .where(
           and(
             inArray(hospitalLocaleContent.hospitalId, rows.map((r) => r.id)),
-            eq(hospitalLocaleContent.locale, locale),
+            inArray(hospitalLocaleContent.locale, localesForMedia(locale)),
           ),
         );
-      for (const o of lc) overrides.set(o.hospitalId, o);
+      // 사진은 kr 것을 공용으로 쓰고, 이름만 해당 로케일 번역을 쓴다
+      const covers = coverByLocale(
+        lc.map((o) => ({ id: o.hospitalId, locale: o.locale, coverImageUrl: o.coverImageUrl })),
+        locale,
+      );
+      for (const o of lc) {
+        if (o.locale !== locale) continue;
+        overrides.set(o.hospitalId, { name: o.name, coverImageUrl: null });
+      }
+      for (const [id, url] of covers) {
+        const prev = overrides.get(id);
+        overrides.set(id, { name: prev?.name ?? null, coverImageUrl: url });
+      }
     } catch {
       /* locale table missing — keep base */
     }

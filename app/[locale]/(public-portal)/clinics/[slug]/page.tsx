@@ -4,6 +4,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import { localesForMedia } from '@/lib/i18n/locale-cover';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { db } from '@/lib/db/client';
@@ -222,10 +223,11 @@ export default async function ClinicDetailPage({
     landingImageUrl: string | null;
   } | null = null;
   try {
-    const [r] = await db
+    const rows = await db
       .select({
         name: hospitalLocaleContent.name,
         intro: hospitalLocaleContent.intro,
+        locale: hospitalLocaleContent.locale,
         coverImageUrl: hospitalLocaleContent.coverImageUrl,
         galleryImageUrls: hospitalLocaleContent.galleryImageUrls,
         landingImageUrl: hospitalLocaleContent.landingImageUrl,
@@ -234,11 +236,23 @@ export default async function ClinicDetailPage({
       .where(
         and(
           eq(hospitalLocaleContent.hospitalId, row.id),
-          eq(hospitalLocaleContent.locale, params.locale),
+          inArray(hospitalLocaleContent.locale, localesForMedia(params.locale)),
         ),
-      )
-      .limit(1);
-    if (r) lc = { ...r, galleryImageUrls: (r.galleryImageUrls ?? []) as string[] };
+      );
+    // 텍스트는 해당 로케일 행에서, 사진은 없으면 kr 행에서 (언어 공통 자산)
+    const mine = rows.find((x) => x.locale === params.locale) ?? null;
+    const krRow = rows.find((x) => x.locale === 'kr') ?? null;
+    const krGallery = (krRow?.galleryImageUrls ?? []) as string[];
+    const myGallery = (mine?.galleryImageUrls ?? []) as string[];
+    if (mine || krRow) {
+      lc = {
+        name: mine?.name ?? null,
+        intro: mine?.intro ?? null,
+        coverImageUrl: mine?.coverImageUrl || krRow?.coverImageUrl || null,
+        galleryImageUrls: myGallery.length > 0 ? myGallery : krGallery,
+        landingImageUrl: mine?.landingImageUrl || krRow?.landingImageUrl || null,
+      };
+    }
   } catch {
     /* table missing — fall through to base */
   }
