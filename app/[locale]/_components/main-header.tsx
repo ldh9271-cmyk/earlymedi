@@ -308,6 +308,7 @@ export function MainHeader({
             href={`/${locale}/ai-consult`}
             label={t.tabAi}
             active={activeTab === 'ai'}
+            accent
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
                 <path d="M12 3l1.6 3.6 3.6 1.6-3.6 1.6L12 13.4 10.4 9.8 6.8 8.2l3.6-1.6z" />
@@ -705,14 +706,17 @@ function TopTab({
   active,
   icon,
   badge,
+  accent,
 }: {
   href: string;
   label: string;
   active: boolean;
   icon: JSX.Element;
   badge?: string;
+  /** 브랜드 핑크로 상시 강조 (AI 상담 탭). */
+  accent?: boolean;
 }): JSX.Element {
-  const color = active ? '#222222' : '#6a6a6a';
+  const color = accent ? '#ff385c' : active ? '#222222' : '#6a6a6a';
   return (
     <Link
       href={href}
@@ -722,7 +726,9 @@ function TopTab({
         textDecoration: 'none', color,
         fontWeight: 600, fontSize: 16,
         padding: '8px 14px',
-        borderBottom: active ? '2px solid #222222' : '2px solid transparent',
+        borderBottom: active
+          ? `2px solid ${accent ? '#ff385c' : '#222222'}`
+          : '2px solid transparent',
         stroke: color,
       }}
     >
@@ -732,7 +738,7 @@ function TopTab({
         <span
           style={{
             position: 'absolute', top: 0, right: -2,
-            background: '#222222', color: '#fff',
+            background: accent ? '#ff385c' : '#222222', color: '#fff',
             fontSize: 8, fontWeight: 700, letterSpacing: '0.32px',
             borderRadius: 9999, padding: '2px 5px',
           }}

@@ -46,7 +46,19 @@ const LOCALE_LANGUAGE: Record<PublicLocale, string> = {
 
 // 질문 → 카테고리 키워드 (검색 페이지 매핑의 챗 버전)
 const HOSPITAL_CATS: Array<{ words: string[]; cat: string }> = [
-  { words: ['성형', 'plastic', 'surgery', '整形', '整容', 'пластик', 'thẩm mỹ'], cat: 'plastic_surgery' },
+  {
+    words: [
+      '성형', 'plastic', 'surgery', '整形', '整容', 'пластик', 'thẩm mỹ',
+      // 세부 시술명으로 물어봐도 성형외과로 연결 (details 검색과 병행)
+      '쌍꺼풀', '트임', '눈매교정', '눈밑지방', '눈성형',
+      '코끝', '콧대', '비중격', '코수술', '코성형',
+      '양악', '광대', '사각턱', '윤곽',
+      '가슴', '지방흡입', '바디라인', '체형교정',
+      '윤곽주사', '지방이식', '리프팅', '보톡스', '필러',
+      'double eyelid', 'rhinoplasty', 'nose job', 'facial contour', 'liposuction',
+    ],
+    cat: 'plastic_surgery',
+  },
   { words: ['피부', 'skin', 'derma', '皮肤', '皮膚', 'кожа', 'da liễu'], cat: 'dermatology' },
   { words: ['치과', '임플란트', 'dental', 'implant', '牙', '歯', 'стомат', 'nha khoa'], cat: 'dental' },
   { words: ['안과', '라식', '라섹', 'eye', 'lasik', '眼', 'глаз', 'mắt'], cat: 'ophthalmology' },
@@ -78,6 +90,17 @@ function matchCats<T extends { words: string[] }>(q: string, table: T[]): T[] {
 type Card = { kind: 'clinic' | 'listing'; title: string; href: string; note: string };
 
 /** 질문에 맞는 병원 근거 수집 — 카테고리 매칭 우선, 없으면 이름 검색. */
+/** '잘하는', '병원' 같은 군더더기를 뺀 검색 토큰. */
+function procedureTokens(q: string): string[] {
+  const STOP = /잘하는|잘하|추천|알려줘|어디|어때|병원|의원|클리닉|좋은|해줘|해주|찾아|please|recommend|clinic|hospital|good|best|for|the|a|an/gi;
+  return q
+    .replace(STOP, ' ')
+    .split(/[s,·.?!·、，。]+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 2)
+    .slice(0, 4);
+}
+
 async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ text: string; card: Card }>> {
   const cats = matchCats(q, HOSPITAL_CATS).map((m) => m.cat);
   try {
@@ -109,6 +132,35 @@ async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ t
           .from(hospitals)
           .where(and(eq(hospitals.countryCode, 'KR'), ilike(hospitals.name, `%${q.slice(0, 20)}%`)))
           .limit(4);
+
+    // 시술명 검색 — details(진료분야·대표시술) 텍스트에 토큰이 있으면 합류.
+    // "쌍꺼풀 잘하는 병원"처럼 카테고리 단어가 없는 질문을 잡는다.
+    const tokens = procedureTokens(q);
+    if (tokens.length > 0) {
+      const seen = new Set(rows.map((r) => r.id));
+      const byProc = await db
+        .select({
+          id: hospitals.id, name: hospitals.name, slug: hospitals.slug,
+          details: hospitals.details, notes: hospitals.notes,
+          addressJson: hospitals.addressJson,
+          promo: categoryListings.promoLabel, cat: categoryListings.categoryKey,
+        })
+        .from(hospitals)
+        .leftJoin(categoryListings, eq(categoryListings.hospitalId, hospitals.id))
+        .where(
+          and(
+            eq(hospitals.isActiveForMatching, true),
+            or(...tokens.map((tk) => sql`${hospitals.details}::text ILIKE ${'%' + tk + '%'}`)) as SQL,
+          ),
+        )
+        .orderBy(sql`coalesce(${categoryListings.sortOrder}, 999) asc`, sql`${hospitals.sortOrder} asc`)
+        .limit(6);
+      for (const r of byProc) {
+        if (seen.has(r.id)) continue;
+        seen.add(r.id);
+        rows.push(r as (typeof rows)[number]);
+      }
+    }
     if (rows.length === 0) return [];
 
     const lc = new Map<string, { name: string | null; intro: string | null }>();
@@ -133,6 +185,12 @@ async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ t
         city ? `지역: ${city}` : '',
         typeof d.station === 'string' ? `위치: ${d.station}` : '',
         proc ? `대표시술: ${proc}` : '',
+        Array.isArray(d.departments)
+          ? `진료분야: ${(d.departments as Array<{ title?: string; items?: string[] }>)
+              .map((dep) => `${dep.title ?? ''}(${(dep.items ?? []).join('·')})`)
+              .join(' ; ')
+              .slice(0, 300)}`
+          : '',
         typeof d.hours === 'string' ? `진료시간: ${d.hours}` : '',
         typeof d.phone === 'string' ? `전화: ${d.phone}` : '',
         intro ? `소개: ${intro}` : '',
@@ -343,6 +401,7 @@ GROUNDING RULES — critical:
 - Recommend ONLY the clinics/products in the DATA block below. Never invent a clinic, price, address, phone or claim.
 - Quote prices/hours/locations exactly as given. If the data does not contain what the user asks, say so plainly and offer to connect them with a human concierge.
 - When you mention an item, refer to it by its exact name so the UI can link it.
+- If the user asks who is good at a specific procedure (e.g. double-eyelid, rhinoplasty, contouring), match it against each clinic's 대표시술/진료분야 in the DATA and say which listed procedure line makes it relevant. Keep the clinics in the order given — the first entry is our featured partner.
 
 MEDICAL SAFETY:
 - You are not a doctor. Never diagnose, never prescribe, never promise or guarantee treatment results or recovery times.
