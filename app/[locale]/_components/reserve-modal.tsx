@@ -3,9 +3,13 @@
 // 예약하기 → 데스크톱은 팝업(모달)으로 결제 요약을 띄우고, 모바일은
 // 기존대로 /checkout 페이지로 바로 이동한다. 좁은 화면에서 모달은
 // 스크롤·닫기가 번거로워 전체 페이지가 더 낫다.
-import { useEffect, useState } from 'react';
+//
+// 모달은 2단계다.
+//   1) 예약 정보 — 날짜(달력)·시간·인원을 직접 고르고 요금이 즉시 갱신
+//   2) 결제 — 알리페이 QR 을 띄우고, 결제 후 컨시어지 확인으로 연결
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import type { PublicLocale } from '@/lib/i18n/locales';
+import { LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 
 export type ReserveSummary = {
@@ -21,6 +25,11 @@ export type ReserveSummary = {
 
 /** 팝업으로 띄울 최소 화면 폭 — 이 아래는 페이지 이동. */
 const DESKTOP_MIN_WIDTH = 1024;
+const MAX_GUESTS = 6;
+/** 상담·픽업 가능한 시간대 (24h 기준, 로케일 포맷으로 표시). */
+const HOUR_SLOTS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+/** 알리페이 가맹점 QR — public/payment/ 에 실제 QR 이미지를 넣는다. */
+const ALIPAY_QR_SRC = '/payment/alipay-qr.png';
 
 /** '/ 1인' · '1인' → '인' — 수량은 실제 인원수로 다시 붙인다. */
 function bareUnit(unit: string): string {
@@ -34,6 +43,15 @@ function priceLine(tpl: string, priceWon: number, unit: string, guests: number):
   return tpl
     .replace('{price}', `₩${priceWon.toLocaleString('ko-KR')}`)
     .replace(/1\s*\{unit\}/, `${guests}${tpl.includes('1 {unit}') ? ' ' : ''}${u}`);
+}
+
+function pad2(n: number): string {
+  return n < 10 ? '0' + n : String(n);
+}
+
+function todayYmd(): string {
+  const d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 }
 
 export function buildInquiryHref(opts: {
@@ -68,9 +86,10 @@ export default function ReserveButton({
   summary,
   labels,
   date,
-  time,
-  guests,
+  dateYmd,
   guestCount = 1,
+  /** 코스처럼 종료일이 시작일에서 파생되는 상품 — 날짜 표기를 그대로 쓴다. */
+  fixedDateLabel,
   style,
   className,
 }: {
@@ -81,13 +100,25 @@ export default function ReserveButton({
   summary: ReserveSummary;
   labels: Dictionary['checkout'];
   date?: string;
-  time?: string;
-  guests?: string;
+  dateYmd?: string;
   guestCount?: number;
+  fixedDateLabel?: string;
   style?: React.CSSProperties;
   className?: string;
 }): JSX.Element {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<'trip' | 'pay'>('trip');
+  const [ymd, setYmd] = useState(dateYmd ?? '');
+  const [hour, setHour] = useState(14);
+  const [guests, setGuests] = useState(Math.max(1, guestCount));
+  const [minDate, setMinDate] = useState('');
+  const [qrFailed, setQrFailed] = useState(false);
+
+  // 오늘 날짜는 서버/클라 시간대가 어긋날 수 있어 mount 후 설정
+  useEffect(() => { setMinDate(todayYmd()); }, []);
+  // 트리거 쪽 인원/날짜가 바뀌면 모달 기본값도 따라간다
+  useEffect(() => { setGuests(Math.max(1, guestCount)); }, [guestCount]);
+  useEffect(() => { if (dateYmd) setYmd(dateYmd); }, [dateYmd]);
 
   // 모달 열려 있는 동안 배경 스크롤 잠금 + ESC 닫기
   useEffect(() => {
@@ -102,11 +133,26 @@ export default function ReserveButton({
     };
   }, [open]);
 
-  const shownDate = date || labels.defaultDate;
-  const shownTime = time || labels.defaultTime;
-  const shownGuests = guests || labels.oneGuest;
+  const bcp47 = LOCALE_TO_BCP47[locale];
 
-  const lineAmount = summary.priceWon * Math.max(1, guestCount);
+  const timeOptions = useMemo(
+    () => HOUR_SLOTS.map((h) => ({
+      value: h,
+      label: new Date(2026, 0, 1, h, 0).toLocaleTimeString(bcp47, { hour: 'numeric', minute: '2-digit' }),
+    })),
+    [bcp47],
+  );
+
+  const dateLabel = fixedDateLabel
+    || (ymd
+      ? new Date(ymd + 'T00:00:00').toLocaleDateString(bcp47, {
+        year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
+      })
+      : (date || labels.defaultDate));
+  const timeLabel = timeOptions.find((o) => o.value === hour)?.label ?? labels.defaultTime;
+  const guestsLabel = guests === 1 ? labels.oneGuest : labels.guestN.replace('{n}', String(guests));
+
+  const lineAmount = summary.priceWon * guests;
   const serviceFee = Math.round((lineAmount * 0.1) / 1000) * 1000;
   const total = lineAmount + serviceFee;
 
@@ -114,11 +160,23 @@ export default function ReserveButton({
     locale,
     title: summary.title,
     interest: summary.interest,
-    date: shownDate,
-    time: shownTime,
-    guests: shownGuests,
+    date: dateLabel,
+    time: timeLabel,
+    guests: guestsLabel,
     total,
   });
+
+  const fieldBox = {
+    border: '1px solid #dddddd', borderRadius: 10,
+    padding: '8px 12px', display: 'flex', flexDirection: 'column' as const,
+    minWidth: 0,
+  };
+  const fieldLabel = { fontSize: 10, fontWeight: 700, letterSpacing: '0.3px', color: '#222' };
+  const fieldInput = {
+    border: 'none', outline: 'none', background: 'transparent',
+    fontSize: 14, marginTop: 2, width: '100%', padding: 0,
+    fontFamily: 'inherit', color: '#222', cursor: 'pointer',
+  };
 
   return (
     <>
@@ -134,6 +192,7 @@ export default function ReserveButton({
             : window.innerWidth >= DESKTOP_MIN_WIDTH;
           if (!desktop) return; // 모바일 → 예약 페이지로 이동
           e.preventDefault();
+          setStep('trip');
           setOpen(true);
         }}
       >
@@ -170,16 +229,22 @@ export default function ReserveButton({
             >
               <button
                 type="button"
-                onClick={() => setOpen(false)}
-                aria-label="close"
+                onClick={() => (step === 'pay' ? setStep('trip') : setOpen(false))}
+                aria-label={step === 'pay' ? labels.payBack : 'close'}
                 style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 4, lineHeight: 0 }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
-                  <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-                </svg>
+                {step === 'pay' ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
+                    <path d="M15 5l-7 7 7 7" strokeLinecap="round" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
+                    <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+                  </svg>
+                )}
               </button>
               <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0, letterSpacing: '-0.3px' }}>
-                {labels.title}
+                {step === 'pay' ? labels.payTitle : labels.title}
               </h2>
             </div>
 
@@ -208,43 +273,161 @@ export default function ReserveButton({
 
               <div style={{ height: 1, background: '#ebebeb', margin: '18px 0' }} />
 
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px' }}>{labels.yourTrip}</h3>
-              <InfoRow label={labels.date} value={shownDate} />
-              <InfoRow label={labels.time} value={shownTime} />
-              <InfoRow label={labels.guests} value={shownGuests} />
+              {step === 'trip' ? (
+                <>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px' }}>{labels.yourTrip}</h3>
 
-              <div style={{ height: 1, background: '#ebebeb', margin: '14px 0 18px' }} />
+                  {fixedDateLabel ? (
+                    <InfoRow label={labels.date} value={fixedDateLabel} />
+                  ) : (
+                    <label style={{ ...fieldBox, marginBottom: 10 }}>
+                      <span style={fieldLabel}>{labels.date}</span>
+                      <input
+                        type="date"
+                        value={ymd}
+                        min={minDate}
+                        onChange={(e) => setYmd(e.target.value)}
+                        style={fieldInput}
+                      />
+                    </label>
+                  )}
 
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px' }}>{labels.priceDetails}</h3>
-              <PriceRow
-                label={priceLine(labels.lineSession, summary.priceWon, summary.priceUnitLabel, Math.max(1, guestCount))}
-                value={`₩${lineAmount.toLocaleString('ko-KR')}`}
-              />
-              <PriceRow label={labels.serviceFee} value={`₩${serviceFee.toLocaleString('ko-KR')}`} />
-              <div style={{ height: 1, background: '#ebebeb', margin: '12px 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700 }}>
-                <span>{labels.total} (KRW)</span>
-                <span>₩{total.toLocaleString('ko-KR')}</span>
-              </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <label style={fieldBox}>
+                      <span style={fieldLabel}>{labels.time}</span>
+                      <select
+                        value={hour}
+                        onChange={(e) => setHour(Number(e.target.value))}
+                        style={{ ...fieldInput, appearance: 'none', WebkitAppearance: 'none' }}
+                      >
+                        {timeOptions.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label style={fieldBox}>
+                      <span style={fieldLabel}>{labels.guests}</span>
+                      <select
+                        value={guests}
+                        onChange={(e) => setGuests(Number(e.target.value))}
+                        style={{ ...fieldInput, appearance: 'none', WebkitAppearance: 'none' }}
+                      >
+                        {Array.from({ length: MAX_GUESTS }, (_, i) => i + 1).map((n) => (
+                          <option key={n} value={n}>
+                            {n === 1 ? labels.oneGuest : labels.guestN.replace('{n}', String(n))}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
 
-              <div style={{ fontSize: 12, color: '#9c9c9c', marginTop: 16, lineHeight: 1.5 }}>
-                {labels.paymentNote}
-              </div>
+                  <div style={{ height: 1, background: '#ebebeb', margin: '18px 0' }} />
+
+                  <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px' }}>{labels.priceDetails}</h3>
+                  <PriceRow
+                    label={priceLine(labels.lineSession, summary.priceWon, summary.priceUnitLabel, guests)}
+                    value={`₩${lineAmount.toLocaleString('ko-KR')}`}
+                  />
+                  <PriceRow label={labels.serviceFee} value={`₩${serviceFee.toLocaleString('ko-KR')}`} />
+                  <div style={{ height: 1, background: '#ebebeb', margin: '12px 0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700 }}>
+                    <span>{labels.total} (KRW)</span>
+                    <span>₩{total.toLocaleString('ko-KR')}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* 결제 단계 — 가맹점 알리페이 QR */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 14, color: '#6a6a6a' }}>{labels.payAmount}</span>
+                    <span style={{ fontSize: 20, fontWeight: 700 }}>₩{total.toLocaleString('ko-KR')}</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 4 }}>
+                    {dateLabel} · {timeLabel} · {guestsLabel}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 16, borderRadius: 16, padding: '20px 16px',
+                      background: '#4f9df7',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+                    }}
+                  >
+                    <span
+                      style={{
+                        background: '#fff', color: '#2f7fe0',
+                        borderRadius: 9999, padding: '6px 18px',
+                        fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px',
+                      }}
+                    >
+                      Korea Glow up
+                    </span>
+                    <div
+                      style={{
+                        background: '#fff', borderRadius: 12, padding: 12,
+                        width: 220, height: 220,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >
+                      {qrFailed ? (
+                        <span style={{ fontSize: 12, color: '#6a6a6a', textAlign: 'center', lineHeight: 1.5 }}>
+                          {labels.payQrPending}
+                        </span>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={ALIPAY_QR_SRC}
+                          alt="Alipay QR"
+                          width={196}
+                          height={196}
+                          onError={() => setQrFailed(true)}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        />
+                      )}
+                    </div>
+                    <span style={{ color: '#fff', fontSize: 18, fontWeight: 800 }}>Pay Now</span>
+                  </div>
+
+                  <p style={{ fontSize: 13, color: '#222', margin: '14px 0 4px', lineHeight: 1.55 }}>
+                    {labels.payScan}
+                  </p>
+                  <p style={{ fontSize: 12, color: '#6a6a6a', margin: 0 }}>{labels.paySupported}</p>
+                  <p style={{ fontSize: 12, color: '#9c9c9c', margin: '10px 0 0', lineHeight: 1.55 }}>
+                    {labels.payAfterNote}
+                  </p>
+                </>
+              )}
             </div>
 
             <div style={{ padding: '14px 20px 18px', borderTop: '1px solid #ebebeb' }}>
-              <Link
-                href={confirmHref}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '100%', height: 50,
-                  background: '#ff385c', color: '#fff',
-                  borderRadius: 12, fontSize: 16, fontWeight: 700,
-                  textDecoration: 'none',
-                }}
-              >
-                {labels.confirmCta}
-              </Link>
+              {step === 'trip' ? (
+                <button
+                  type="button"
+                  onClick={() => { setQrFailed(false); setStep('pay'); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '100%', height: 50, border: 'none',
+                    background: '#ff385c', color: '#fff',
+                    borderRadius: 12, fontSize: 16, fontWeight: 700,
+                    fontFamily: 'inherit', cursor: 'pointer',
+                  }}
+                >
+                  {labels.confirmCta}
+                </button>
+              ) : (
+                <Link
+                  href={confirmHref}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '100%', height: 50,
+                    background: '#ff385c', color: '#fff',
+                    borderRadius: 12, fontSize: 16, fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  {labels.payDone}
+                </Link>
+              )}
               <div style={{ textAlign: 'center', fontSize: 12, color: '#6a6a6a', marginTop: 8 }}>
                 {labels.notChargedNote}
               </div>

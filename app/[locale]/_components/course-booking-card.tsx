@@ -155,8 +155,7 @@ export default function CourseBookingCard({
         label={labels.book}
         summary={summary}
         labels={checkout}
-        date={start && endDate ? fmt(new Date(start + 'T00:00:00')) + ' → ' + fmt(endDate) : undefined}
-        guests={guests === 1 ? labels.guest1 : labels.guestN.replace('{n}', String(guests))}
+        fixedDateLabel={start && endDate ? fmt(new Date(start + 'T00:00:00')) + ' → ' + fmt(endDate) : undefined}
         guestCount={guests}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',

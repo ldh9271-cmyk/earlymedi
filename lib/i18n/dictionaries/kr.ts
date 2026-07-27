@@ -561,6 +561,16 @@ const kr = {
     paymentNote: '결제 수단 연동은 준비 중입니다. 확인 시 컨시어지가 카카오/WhatsApp으로 결제 링크를 보내드려요.',
     confirmCta: '결제하기',
     notChargedNote: '예약 확정 전에는 요금이 청구되지 않습니다',
+    guestN: '게스트 {n}명',
+    pickDate: '날짜를 선택하세요',
+    payTitle: '알리페이로 결제',
+    payAmount: '결제 금액',
+    payScan: 'Alipay 앱을 열고 QR 코드를 스캔해 결제해 주세요.',
+    paySupported: 'Alipay · WeChat Pay · UnionPay · PayPay · HanPass 지원',
+    payQrPending: 'QR 코드를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.',
+    payDone: '결제를 완료했어요',
+    payBack: '뒤로',
+    payAfterNote: '결제 후 컨시어지가 카카오/WhatsApp으로 예약 확정을 안내드립니다.',
   },
   // Travel-type chooser surfaced on /glowup/pc and per-type detail
   // pages /travel/free|package|training. Holds the section title +
