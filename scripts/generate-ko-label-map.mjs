@@ -64,6 +64,7 @@ const detailLabels = [];
     (d.trust ?? []).forEach(push);
     (d.foreignSupport?.languages ?? []).forEach(push);
     push(d.foreignSupport?.note);
+    push(d.notice);
   }
 }
 

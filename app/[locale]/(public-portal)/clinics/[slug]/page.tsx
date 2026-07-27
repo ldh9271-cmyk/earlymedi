@@ -550,6 +550,8 @@ type ClinicDetails = {
   facilities?: string[];
   foreignSupport?: { languages?: string[]; note?: string };
   trust?: string[];
+  /** 의료광고 준수용 안내 문구 — 효과 개인차·상담 후 결정 등. */
+  notice?: string;
 };
 
 function ClinicDetailSections({
@@ -702,6 +704,18 @@ function ClinicDetailSections({
             ) : null}
           </div>
         </>
+      ) : null}
+
+      {d.notice ? (
+        <p
+          style={{
+            marginTop: 16, padding: '12px 14px',
+            background: '#fafafa', border: '1px solid #ebebeb', borderRadius: 10,
+            fontSize: 12, color: '#6a6a6a', lineHeight: 1.6,
+          }}
+        >
+          {L(d.notice)}
+        </p>
       ) : null}
     </div>
   );

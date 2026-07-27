@@ -528,6 +528,13 @@ export const KO_LABELS = {
     "ru": "Д-р Ким Ён Джун",
     "vi": "Tiến sĩ Kim Young-jun"
   },
+  "김홍근 원장": {
+    "en": "Chief Director Kim Hong-geun",
+    "zh": "金洪根 院长",
+    "ja": "金洪根 院長",
+    "ru": "Главврач Ким Хон Гын",
+    "vi": "Viện trưởng Kim Hong-geun"
+  },
   "나노지방이식": {
     "en": "Nano Fat Grafting",
     "zh": "纳米脂肪移植",
@@ -689,6 +696,13 @@ export const KO_LABELS = {
     "ru": "В ТЦ The Hyundai Seoul",
     "vi": "Nằm trong The Hyundai Seoul"
   },
+  "도곡역 2번 출구 옆 (대치동 동부센트레빌 상가 1층)": {
+    "en": "Next to Dogok Station Exit 2 (1F Dongbu Centreville Arcade, Daechi-dong)",
+    "zh": "道谷站 2号出口旁 (大峙洞 东浦Centreville商场 1楼)",
+    "ja": "道谷駅 2番出口横 (大峙洞 東部Centreville商店街 1階)",
+    "ru": "Рядом с выходом 2 ст. Догок (1 эт. ТЦ Dongbu Centreville, Тэчхи-дон)",
+    "vi": "Bên cạnh Lối ra 2 Ga Dogok (Tầng 1 TTM Dongbu Centreville, Daechi-dong)"
+  },
   "도수·스포츠 재활 특화": {
     "en": "Manual & Sports Rehab Specialist",
     "zh": "徒手·运动康复特化",
@@ -815,6 +829,13 @@ export const KO_LABELS = {
     "ru": "Система безопасности с 2 анестезиологами",
     "vi": "Hệ thống an toàn với 2 bác sĩ gây mê túc trực"
   },
+  "만성 피로": {
+    "en": "Chronic Fatigue",
+    "zh": "慢性疲劳",
+    "ja": "慢性疲労",
+    "ru": "Хроническая усталость",
+    "vi": "Mệt mỏi mãn tính"
+  },
   "맞춤 조명·보정 특화": {
     "en": "Custom Lighting · Retouching",
     "zh": "定制灯光·精修特化",
@@ -857,6 +878,13 @@ export const KO_LABELS = {
     "ru": "Прямой выход к Duty Free",
     "vi": "Kết nối trực tiếp cửa hàng miễn thuế"
   },
+  "면역 관리 한약": {
+    "en": "Immunity Care Herbal Medicine",
+    "zh": "免疫调理韩药",
+    "ja": "免疫ケア韓薬",
+    "ru": "Травяные отвары для иммунитета",
+    "vi": "Thuốc Đông y tăng cường miễn dịch"
+  },
   "모발이식": {
     "en": "Hair Transplantation",
     "zh": "毛发移植",
@@ -877,6 +905,13 @@ export const KO_LABELS = {
     "ja": "入場無料",
     "ru": "Бесплатный вход",
     "vi": "Vào cửa miễn phí"
+  },
+  "무엿": {
+    "en": "Radish Taffy (Mu-yeot)",
+    "zh": "萝卜麦芽糖",
+    "ja": "大根水飴 (大根ヨッ)",
+    "ru": "Редьковый солод (Му-ёт)",
+    "vi": "Kẹo mạch nha củ cải (Mu-yeot)"
   },
   "물광 메이크업 원조": {
     "en": "Original Glass Skin Makeup",
@@ -1039,6 +1074,13 @@ export const KO_LABELS = {
     "ru": "Осмотр на визу · 6-этажный комплекс",
     "vi": "Chỉ định khám visa · Quy mô 6 tầng"
   },
+  "사리장": {
+    "en": "Sarijang (Fermented Soy Paste)",
+    "zh": "舍利酱",
+    "ja": "舍利醬 (サリジャン)",
+    "ru": "Соевый соус Сариджан",
+    "vi": "Tương lên men Sarijang"
+  },
   "사우나 무료 이용": {
     "en": "Free Sauna Access",
     "zh": "免费使用桑拿",
@@ -1060,12 +1102,33 @@ export const KO_LABELS = {
     "ru": "Рядом с высшей больницей и отелем",
     "vi": "Gần bệnh viện tuyến trên & khách sạn"
   },
+  "생활·식이 상담": {
+    "en": "Lifestyle & Dietary Counseling",
+    "zh": "生活·饮食咨询",
+    "ja": "生活・食事カウンセリング",
+    "ru": "Консультация по образу жизни и диете",
+    "vi": "Tư vấn lối sống & chế độ ăn"
+  },
   "서울": {
     "en": "Seoul",
     "zh": "首尔",
     "ja": "ソウル",
     "ru": "Сеул",
     "vi": "Seoul"
+  },
+  "서울 도곡(강남) · 경남 함양 두 곳 운영": {
+    "en": "Operating in 2 Locations: Seoul Dogok (Gangnam) · Gyeongnam Hamyang",
+    "zh": "首尔道谷(江南)·庆南咸阳 两地运营",
+    "ja": "ソウル道谷(江南)・慶南咸陽の2拠点営業",
+    "ru": "2 филиала: Сеул Догок (Каннам) · Кённам Хамян",
+    "vi": "Hoạt động tại 2 cơ sở: Dogok Seoul (Gangnam) · Hamyang Gyeongnam"
+  },
+  "서울·함양 2개소 운영": {
+    "en": "Operating 2 Locations: Seoul & Hamyang",
+    "zh": "首尔·咸阳 2家院区运营",
+    "ja": "ソウル・咸陽 2拠点営業",
+    "ru": "2 филиала: Сеул и Хамян",
+    "vi": "Hoạt động 2 cơ sở: Seoul & Hamyang"
   },
   "서울대 출신 6인 협진": {
     "en": "Joint Care by 6 SNU Alumni Doctors",
@@ -1186,6 +1249,13 @@ export const KO_LABELS = {
     "ru": "1-я категория в оценке потребителей 3 года подряд",
     "vi": "Hạng 1 Đánh giá người tiêu dùng 3 năm liên tiếp"
   },
+  "소화기 관리": {
+    "en": "Digestive Health Care",
+    "zh": "消化系统护理",
+    "ja": "消化器ケア",
+    "ru": "Забота о пищеварении",
+    "vi": "Chăm sóc hệ tiêu hóa"
+  },
   "송혜교 스타일링": {
     "en": "Song Hye-kyo Styling",
     "zh": "宋慧乔造型",
@@ -1206,6 +1276,13 @@ export const KO_LABELS = {
     "ja": "手術前後専任カウンセリングコーディネーター配置",
     "ru": "Персональный координатор до и после операции",
     "vi": "Điều phối viên tư vấn riêng trước & sau phẫu thuật"
+  },
+  "수술 후 회복 한방 케어": {
+    "en": "Post-Surgery Recovery Korean Medicine Care",
+    "zh": "术后恢复韩方护理",
+    "ja": "術後回復 韓方ケア",
+    "ru": "Корейская медицина: восстановление после операций",
+    "vi": "Chăm sóc Đông y phục hồi sau phẫu thuật"
   },
   "수영장 무료 이용": {
     "en": "Free Pool Access",
@@ -1501,6 +1578,13 @@ export const KO_LABELS = {
     "ru": "Наибольшее количество случаев кератоконуса в Корее",
     "vi": "Số ca giác mạc chóp nhiều nhất Hàn Quốc"
   },
+  "월~금 09:00~18:00 · 주말·공휴일 예약제": {
+    "en": "Mon~Fri 09:00~18:00 · Weekends & Holidays by Appt. Only",
+    "zh": "周一~周五 09:00~18:00 · 周末·公休假 预约制",
+    "ja": "月〜金 09:00〜18:00 ・ 週末・祝日 予約制",
+    "ru": "Пн–Пт 09:00–18:00 · Выходные и праздники по записи",
+    "vi": "T2~T6 09:00~18:00 · Cuối tuần & Ngày lễ theo hẹn"
+  },
   "웰에이징": {
     "en": "Well-Aging",
     "zh": "健康抗衰",
@@ -1528,6 +1612,13 @@ export const KO_LABELS = {
     "ja": "YouTube 50万ビューティーエイジング",
     "ru": "YouTube 500 тыс. просмотров Beauty Aging",
     "vi": "YouTube 500k lượt xem về Beauty Aging"
+  },
+  "유황오리": {
+    "en": "Sulfur-fed Duck",
+    "zh": "硫磺鸭",
+    "ja": "硫黄鴨",
+    "ru": "Утка, вскармливаемая серой",
+    "vi": "Vịt nuôi bằng lưu huỳnh"
   },
   "윤곽·양악": {
     "en": "Facial Contour & Double Jaw",
@@ -1570,6 +1661,48 @@ export const KO_LABELS = {
     "ja": "インドネシア語",
     "ru": "Индонезийский язык",
     "vi": "Tiếng Indonesia"
+  },
+  "인산 김일훈 선생 손자 · 인산 처방 계승": {
+    "en": "Grandson of Insan Kim Il-hoon · Inheritor of Insan Prescriptions",
+    "zh": "仁山金一勋先生之孙·继承仁山处方",
+    "ja": "仁山 金一勲先生の孫・仁山処方を継承",
+    "ru": "Внук мастера Инсан Ким Иль Хуна · Преемник рецептов Инсан",
+    "vi": "Cháu nội của ngài Insan Kim Il-hoon · Kế thừa phương thuốc Insan"
+  },
+  "인산 김일훈 선생 처방 계보 · 죽염 제법 전승": {
+    "en": "Lineage of Insan Kim Il-hoon's Prescriptions · Bamboo Salt Method Successor",
+    "zh": "仁山金一勋先生处方脉络·竹盐制作技艺传承",
+    "ja": "仁山 金一勲先生の処方系譜・竹塩製法を伝承",
+    "ru": "Наследие рецептов Ким Иль Хуна · Передача технологии бамбуковой соли",
+    "vi": "Dòng tộc phương thuốc Insan Kim Il-hoon · Truyền thừa phương pháp làm muối tre"
+  },
+  "인산 김일훈 선생의 처방 계보를 잇는 한방 면역·체질 관리 한의원": {
+    "en": "Korean Medicine Clinic for Immunity & Constitution Care, Continuing Insan Kim Il-hoon's Prescriptions",
+    "zh": "继承仁山金一勋先生处方脉络的韩方免疫·体质管理韩医院",
+    "ja": "仁山 金一勲先生の処方系譜を継ぐ韓方免疫・体質管理韓医院",
+    "ru": "Клиника корейской медицины: иммунитет и конституция по рецептам мастера Ким Иль Хуна",
+    "vi": "Phòng khám Đông y chăm sóc miễn dịch & thể chất tiếp nối phương thuốc Insan Kim Il-hoon"
+  },
+  "인산 전통 처방 연구·제법 계승": {
+    "en": "Insan Traditional Prescription Research & Manufacturing Method Inheritance",
+    "zh": "仁山传统处方研究·炮制方法传承",
+    "ja": "仁山伝統処方の研究・製法継承",
+    "ru": "Исследование традиционных рецептов Инсан и передача технологии",
+    "vi": "Nghiên cứu phương thuốc cổ truyền Insan & kế thừa quy trình sản xuất"
+  },
+  "인산 처방 계승·다국어 상담": {
+    "en": "Inheriting Insan Prescriptions · Multilingual Consultation",
+    "zh": "继承仁山处方·多语种咨询",
+    "ja": "仁山処方の継承・多言語相談",
+    "ru": "Наследие рецептов Инсан · Консультации на разных языках",
+    "vi": "Kế thừa phương thuốc Insan · Tư vấn đa ngôn ngữ"
+  },
+  "인산 처방 기반 한방 요법": {
+    "en": "Insan Prescription-based Korean Medicine Therapy",
+    "zh": "基于仁山处方的韩方疗法",
+    "ja": "仁山処方に基づく韓方療法",
+    "ru": "Терапия корейской медицины на основе рецептов Инсан",
+    "vi": "Liệu pháp Đông y dựa trên phương thuốc Insan"
   },
   "인스타 4만+ 원장 브랜드": {
     "en": "Director Brand with 40K+ Instagram Followers",
@@ -1683,6 +1816,13 @@ export const KO_LABELS = {
     "ru": "Крупнейшая клиника корейской медицины для детей",
     "vi": "Phòng khám Đông y trẻ em lớn nhất toàn quốc"
   },
+  "전통 처방 연구": {
+    "en": "Traditional Prescription Research",
+    "zh": "传统处方研究",
+    "ja": "伝統処方の研究",
+    "ru": "Исследование традиционных рецептов",
+    "vi": "Nghiên cứu phương thuốc cổ truyền"
+  },
   "정밀 진단 기반 맞춤 치료": {
     "en": "Customized Treatment Based on Precision Diagnosis",
     "zh": "基于精密诊断的定制化治疗",
@@ -1739,6 +1879,13 @@ export const KO_LABELS = {
     "ru": "Работаем по выходным",
     "vi": "Mở cửa cuối tuần"
   },
+  "주말·공휴일 예약 진료 가능": {
+    "en": "Weekend & Holiday Appointments Available",
+    "zh": "周末·公休假 可预约诊疗",
+    "ja": "週末・祝日 予約診療可能",
+    "ru": "Возможна приём по записи в выходные и праздники",
+    "vi": "Có thể khám hẹn lịch vào cuối tuần & ngày lễ"
+  },
   "주말·야간 진료": {
     "en": "Weekend & Night Care",
     "zh": "周末·夜间诊疗",
@@ -1759,6 +1906,13 @@ export const KO_LABELS = {
     "ja": "駐車場無料",
     "ru": "Бесплатная парковка",
     "vi": "Đỗ xe miễn phí"
+  },
+  "죽염": {
+    "en": "Bamboo Salt",
+    "zh": "竹盐",
+    "ja": "竹塩",
+    "ru": "Бамбуковая соль",
+    "vi": "Muối tre"
   },
   "줄기세포 기반 재생의학 특화 — 국내 소수 시행 병원": {
     "en": "Stem Cell Regenerative Medicine Specialist — One of Few Hospitals in Korea",
@@ -1900,6 +2054,20 @@ export const KO_LABELS = {
     "ru": "Полное преображение в Чхондаме",
     "vi": "Lột xác toàn diện Cheongdam"
   },
+  "체질 진단": {
+    "en": "Body Constitution Diagnosis",
+    "zh": "体质诊断",
+    "ja": "体質診断",
+    "ru": "Диагностика конституции тела",
+    "vi": "Chẩn đoán thể chất"
+  },
+  "체질 진단·맞춤 한약": {
+    "en": "Constitution Diagnosis & Customized Herbal Medicine",
+    "zh": "体质诊断·定制韩药",
+    "ja": "体質診断・オーダーメイド韓薬",
+    "ru": "Диагностика конституции и индивидуальные фитопрепараты",
+    "vi": "Chẩn đoán thể chất & thuốc Đông y bốc theo yêu cầu"
+  },
   "체형": {
     "en": "Body Contouring",
     "zh": "体型",
@@ -1920,6 +2088,27 @@ export const KO_LABELS = {
     "ja": "低侵襲治療のグローバルスタンダード",
     "ru": "Мировой стандарт малоинвазивной хирургии",
     "vi": "Tiêu chuẩn thế giới về xâm lấn tối thiểu"
+  },
+  "추나 요법": {
+    "en": "Chuna Manual Therapy",
+    "zh": "推拿疗法",
+    "ja": "チュナ(推拿)療法",
+    "ru": "Мануальная терапия Чуна",
+    "vi": "Liệu pháp nắn chỉnh Chuna"
+  },
+  "침구 치료": {
+    "en": "Acupuncture & Moxibustion Therapy",
+    "zh": "针灸治疗",
+    "ja": "鍼灸治療",
+    "ru": "Акупунктура и прижигание (Иглоукалывание)",
+    "vi": "Điều trị châm cứu & cứu ngải"
+  },
+  "침구·수기": {
+    "en": "Acupuncture & Manual Therapy",
+    "zh": "针灸·手法治疗",
+    "ja": "鍼灸・手技",
+    "ru": "Акупунктура и мануальная терапия",
+    "vi": "Châm cứu & trị liệu bằng tay"
   },
   "카지노 보유": {
     "en": "Casino On-site",
@@ -2180,12 +2369,47 @@ export const KO_LABELS = {
     "ru": "Для каждого лица — одно решение: Stem K, воплощающий философию и мастерство",
     "vi": "Một gương mặt, một giải pháp — Stem K gửi gắm triết lý và kỹ thuật đỉnh cao"
   },
+  "한방 내과": {
+    "en": "Korean Medicine Internal Medicine",
+    "zh": "韩方内科",
+    "ja": "韓方内科",
+    "ru": "Терапевтическая корейская медицина",
+    "vi": "Nội khoa Đông y"
+  },
+  "한방 내과 진료": {
+    "en": "Korean Internal Medicine Services",
+    "zh": "韩方内科诊疗",
+    "ja": "韓方内科診療",
+    "ru": "Приём врача корейской терапевтической медицины",
+    "vi": "Khám nội khoa Đông y"
+  },
   "한방 다이어트 전문 네트워크": {
     "en": "Korean Herbal Diet Specialty Network",
     "zh": "韩方减肥专业连锁网络",
     "ja": "韓方ダイエット専門ネットワーク",
     "ru": "Сеть клиник восточной медицины для похудения",
     "vi": "Mạng lưới chuyên khoa giảm cân bằng Đông y"
+  },
+  "한방 면역 관리": {
+    "en": "Korean Medicine Immunity Care",
+    "zh": "韩方免疫调理",
+    "ja": "韓方免疫ケア",
+    "ru": "Корейская медицина: укрепление иммунитета",
+    "vi": "Chăm sóc miễn dịch Đông y"
+  },
+  "한방 면역·체질": {
+    "en": "Korean Medicine Immunity & Constitution",
+    "zh": "韩方免疫·体质",
+    "ja": "韓方免疫・体質",
+    "ru": "Корейская медицина: иммунитет и конституция",
+    "vi": "Đông y miễn dịch & thể chất"
+  },
+  "한방 치료의 효과는 개인의 체질과 상태에 따라 다를 수 있으며, 구체적인 진료 방침은 내원 상담과 진단을 통해 결정됩니다.": {
+    "en": "Effects of Korean medicine treatments may vary depending on individual constitution and condition; specific medical plans are determined through consultation and diagnosis at the clinic.",
+    "zh": "韩方治疗效果因个人体质和状态而异，具体诊疗方案须经到院咨询与诊断后确定。",
+    "ja": "韓方治療の効果は個人の体質や状態により異なる場合があり、具体的な診療方針は来院での相談と診断を通じて決定されます。",
+    "ru": "Эффект от лечения корейской медициной может варьироваться в зависимости от индивидуальной конституции и состояния; конкретный план лечения определяется при очной консультации и диагностике.",
+    "vi": "Hiệu quả điều trị Đông y có thể khác nhau tùy theo thể chất và tình trạng cá nhân; phác đồ cụ thể sẽ được quyết định qua tư vấn và chẩn đoán trực tiếp tại phòng khám."
   },
   "합리적 비용 290만원~": {
     "en": "Affordable Price from ₩2.9M",
@@ -2200,6 +2424,20 @@ export const KO_LABELS = {
     "ja": "リーズナブルなカラー写真",
     "ru": "Доступная цветная фотография",
     "vi": "Chụp ảnh màu giá hợp lý"
+  },
+  "해외 환자 다국어 상담 체계 운영 · 방한 일정에 맞춘 예약 조율": {
+    "en": "Multilingual System for International Patients · Appointment Coordination Tailored to Korea Visit Schedule",
+    "zh": "运营外籍患者多语种咨询体系·结合赴韩行程协调预约",
+    "ja": "外国人患者向け多言語相談体制を運営・訪韓日程に合わせた予約調整",
+    "ru": "Многоязычная консультативная система для иностранных пациентов · Координация записи под график визита в Корею",
+    "vi": "Hệ thống tư vấn đa ngôn ngữ cho bệnh nhân nước ngoài · Điều phối lịch hẹn phù hợp với lịch trình đến Hàn Quốc"
+  },
+  "해외 환자 의료관광 상담 대응": {
+    "en": "Medical Tourism Consultation for International Patients",
+    "zh": "外籍患者医疗旅游咨询服务",
+    "ja": "外国人患者向け医療観光相談対応",
+    "ru": "Консультации по медицинскому туризму для иностранных пациентов",
+    "vi": "Tư vấn du lịch y tế cho bệnh nhân nước ngoài"
   },
   "해외환자 특화·다국어 상담": {
     "en": "Int'l Patient Care · Multilingual Consult",
@@ -2222,12 +2460,26 @@ export const KO_LABELS = {
     "ru": "В ТЦ Hyundai Department Store",
     "vi": "Nằm trong TTTM Hyundai"
   },
+  "호두기름": {
+    "en": "Walnut Oil",
+    "zh": "核桃油",
+    "ja": "くるみ油",
+    "ru": "Ореховое масло",
+    "vi": "Dầu óc chó"
+  },
   "호텔 출장 가능": {
     "en": "Hotel Call-Out Available",
     "zh": "可提供酒店上门服务",
     "ja": "ホテル出張可能",
     "ru": "Возможен выезд в отель",
     "vi": "Có dịch vụ tại khách sạn"
+  },
+  "홍화씨": {
+    "en": "Safflower Seeds",
+    "zh": "红花籽",
+    "ja": "紅花(ベニバナ)の種",
+    "ru": "Семена сафлора",
+    "vi": "Hạt hồng hoa"
   },
   "화보 아티스트진": {
     "en": "Editorial Photoshoot Artists",
