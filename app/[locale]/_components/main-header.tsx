@@ -365,6 +365,7 @@ export function MainHeader({
                 fontSize: 14, fontWeight: 600, color: '#222',
                 padding: '12px 14px', borderRadius: 9999, cursor: 'pointer',
                 textDecoration: 'none',
+                whiteSpace: 'nowrap', flexShrink: 0,
               }}
             >
               {t.account.login}

@@ -6,7 +6,7 @@ import {
 } from './account-types';
 import { createSupabaseMiddlewareClient } from './supabase-middleware';
 import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_HEADER } from './active-org-constants';
-import { PATIENT_DOMAINS, detectLocaleFromAcceptLanguage } from '@/lib/i18n/locales';
+import { PATIENT_DOMAINS, detectLocaleFromAcceptLanguage, isPublicLocale } from '@/lib/i18n/locales';
 
 /**
  * 5-step authorization middleware.
@@ -35,6 +35,26 @@ import { PATIENT_DOMAINS, detectLocaleFromAcceptLanguage } from '@/lib/i18n/loca
  */
 export async function fiveStepAuth(request: NextRequest): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname;
+
+  // ── OAuth code 안전장치 ─────────────────────────────────────────────
+  // Supabase 의 Redirect URL 허용목록에 없는 주소로 로그인하면 Site URL
+  // 루트로 ?code= 가 떨어진다 (예: earlymedi.vercel.app/?code=...).
+  // 루트/로케일 루트에 도착한 code 는 같은 오리진의 콜백으로 넘겨
+  // 세션 교환 후 환자 포털(/kr 또는 해당 로케일)로 보낸다.
+  const authCode = request.nextUrl.searchParams.get('code');
+  if (authCode) {
+    const segs = pathname.split('/').filter(Boolean);
+    const isRoot = pathname === '/';
+    const isLocaleRoot = segs.length === 1 && isPublicLocale(segs[0] ?? '');
+    if (isRoot || isLocaleRoot) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/api/auth/callback';
+      url.search = '';
+      url.searchParams.set('code', authCode);
+      url.searchParams.set('next', isLocaleRoot ? pathname : '/kr');
+      return NextResponse.redirect(url);
+    }
+  }
 
   // ── Patient-domain root redirect ────────────────────────────────────
   // glowuptour.com (and future patient-facing brand domains) treat `/`
