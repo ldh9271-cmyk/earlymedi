@@ -55,6 +55,7 @@ const HOSPITAL_CATS: Array<{ words: string[]; cat: string }> = [
       '양악', '광대', '사각턱', '윤곽',
       '가슴', '지방흡입', '바디라인', '체형교정',
       '윤곽주사', '지방이식', '리프팅', '보톡스', '필러',
+      '울쎄라', '울세라', '써마지', '서마지', '울써마', 'ulthera', 'thermage',
       'double eyelid', 'rhinoplasty', 'nose job', 'facial contour', 'liposuction',
     ],
     cat: 'plastic_surgery',
@@ -90,15 +91,52 @@ function matchCats<T extends { words: string[] }>(q: string, table: T[]): T[] {
 type Card = { kind: 'clinic' | 'listing'; title: string; href: string; note: string };
 
 /** 질문에 맞는 병원 근거 수집 — 카테고리 매칭 우선, 없으면 이름 검색. */
+/**
+ * 시술 동의어 그룹 — 한 단어가 걸리면 같은 그룹 전체로 검색을 넓힌다.
+ * 병원마다 표기가 달라서(울써마 = 울쎄라+써마지 합성어처럼) 사용자가 쓴
+ * 말과 DB 표기가 어긋나는 경우를 잡는다.
+ */
+const PROCEDURE_SYNONYMS: string[][] = [
+  // 리프팅 장비 — '울써마'는 울쎄라+써마지 합성 표기
+  ['울써마', '울쎄라', '울세라', '써마지', '서마지', '울쎄라리프팅', 'ulthera', 'thermage', 'ultherapy'],
+  // 눈성형
+  ['쌍꺼풀', '쌍커풀', '눈성형', 'double eyelid'],
+  ['트임', '앞트임', '뒤트임', '눈매교정'],
+  // 코성형
+  ['코성형', '코수술', '콧대', '코끝', 'rhinoplasty', 'nose'],
+  // 윤곽
+  ['윤곽', '양악', '광대', '사각턱', 'contour', 'facial contour'],
+  // 체형
+  ['지방흡입', '체형', '바디라인', 'liposuction'],
+  // 주사 시술
+  ['보톡스', '필러', '쁘띠', 'botox', 'filler'],
+  ['지방이식', '나노지방이식', 'fat graft'],
+];
+
+/** 토큰을 동의어 그룹으로 확장 (중복 제거, 최대 10개). */
+function expandSynonyms(tokens: string[]): string[] {
+  const out = new Set(tokens);
+  for (const tk of tokens) {
+    const lower = tk.toLowerCase();
+    for (const group of PROCEDURE_SYNONYMS) {
+      if (group.some((w) => lower.includes(w.toLowerCase()) || w.toLowerCase().includes(lower))) {
+        group.forEach((w) => out.add(w));
+      }
+    }
+  }
+  return [...out].slice(0, 10);
+}
+
 /** '잘하는', '병원' 같은 군더더기를 뺀 검색 토큰. */
 function procedureTokens(q: string): string[] {
   const STOP = /잘하는|잘하|추천|알려줘|어디|어때|병원|의원|클리닉|좋은|해줘|해주|찾아|please|recommend|clinic|hospital|good|best|for|the|a|an/gi;
-  return q
+  const raw = q
     .replace(STOP, ' ')
     .split(/[s,·.?!·、，。]+/)
     .map((t) => t.trim())
     .filter((t) => t.length >= 2)
     .slice(0, 4);
+  return expandSynonyms(raw);
 }
 
 async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ text: string; card: Card }>> {
