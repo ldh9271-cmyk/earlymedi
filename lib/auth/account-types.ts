@@ -57,6 +57,7 @@ export const PUBLIC_PREFIXES = [
   // 가능해야 함. 라우트 자체가 이미지 크기 제한 + JSON 검증으로 방어.
   '/api/ai/glowup-analysis',
   '/api/ai/glowup-lead',
+  '/api/ai/chat',
   '/pricing',
   '/about',
   '/legal',

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import FaceAnalyzer from './_components/face-analyzer';
+import AiChat from './_components/ai-chat';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,7 +107,7 @@ export default async function AiConsultPage({
           title={f.chat.title}
           desc={f.chat.desc}
           cta={f.chat.cta}
-          ctaHref={`/${params.locale}/inquiry`}
+          ctaHref="#ai-chat"
         />
         <FeatureCard
           iconBg="#ecfdf5"
@@ -136,6 +137,8 @@ export default async function AiConsultPage({
           pmu: dict.pcCategory.pmu.title,
         }}
       />
+
+      <AiChat locale={params.locale} t={dict.ai.chat} />
     </section>
   );
 }
