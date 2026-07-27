@@ -9,6 +9,7 @@ import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { localizePriceUnit } from '@/lib/i18n/price-unit';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { fetchListingsForSurface, type ListingCard } from '@/lib/listings/query';
+import { parseSurfaceFilters } from '@/lib/listings/filters';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,18 +55,25 @@ export async function generateMetadata({
 
 export default async function TravelTypeListPage({
   params,
+  searchParams,
 }: {
   params: { locale: PublicLocale; type: string };
+  searchParams: { priceMin?: string; priceMax?: string; minRating?: string; loc?: string };
 }): Promise<JSX.Element> {
   if (!VALID_TYPES.has(params.type as TravelType)) {
     notFound();
   }
   const dict = await getDictionary(params.locale);
   const t = dict.travel[params.type as TravelType];
+  const f = parseSurfaceFilters(searchParams);
   const listings = await fetchListingsForSurface({
     locale: params.locale,
     categories: ['travel_package'],
     subType: params.type as TravelType,
+    priceMin: f.priceMin,
+    priceMax: f.priceMax,
+    minRating: f.minRating,
+    cities: f.cities,
   });
 
   return (

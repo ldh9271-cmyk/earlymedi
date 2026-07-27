@@ -9,6 +9,7 @@ import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { localizePriceUnit } from '@/lib/i18n/price-unit';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { fetchListingsForSurface, type ListingCard } from '@/lib/listings/query';
+import { parseSurfaceFilters } from '@/lib/listings/filters';
 import type { ListingCategory } from '@/lib/listings/categories';
 import { type PcCategoryKey } from '../../_components/pc-header';
 
@@ -72,8 +73,10 @@ export async function generateMetadata({
 
 export default async function CategoryListPage({
   params,
+  searchParams,
 }: {
   params: { locale: PublicLocale; key: string };
+  searchParams: { priceMin?: string; priceMax?: string; minRating?: string; loc?: string };
 }): Promise<JSX.Element> {
   if (!VALID_KEYS.has(params.key as Exclude<PcCategoryKey, 'all'>)) {
     notFound();
@@ -81,9 +84,14 @@ export default async function CategoryListPage({
   const key = params.key as Exclude<PcCategoryKey, 'all'>;
   const dict = await getDictionary(params.locale);
   const meta = dict.pcCategory[key];
+  const f = parseSurfaceFilters(searchParams);
   const listings = await fetchListingsForSurface({
     locale: params.locale,
     categories: KEY_TO_CATEGORIES[key],
+    priceMin: f.priceMin,
+    priceMax: f.priceMax,
+    minRating: f.minRating,
+    cities: f.cities,
   });
 
   return (

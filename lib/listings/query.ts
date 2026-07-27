@@ -208,8 +208,13 @@ export async function fetchListingsForSurface(opts: {
   locale: PublicLocale;
   categories: ListingCategory[];
   subType?: string;
+  /** 헤더 필터 pill (?priceMin·priceMax·minRating·loc) 적용값. */
+  priceMin?: number | null;
+  priceMax?: number | null;
+  minRating?: number | null;
+  cities?: ReadonlyArray<string>;
 }): Promise<ListingCard[]> {
-  const { locale, categories, subType } = opts;
+  const { locale, categories, subType, priceMin, priceMax, minRating, cities } = opts;
   if (categories.length === 0) return [];
   let rows: PartnerListing[] = [];
   try {
@@ -220,6 +225,15 @@ export async function fetchListingsForSurface(opts: {
     if (subType) {
       whereParts.push(sql`${partnerListings.details}->>'subType' = ${subType}`);
     }
+    if (typeof priceMin === 'number' && priceMin > 0) {
+      whereParts.push(gte(partnerListings.priceWon, priceMin));
+    }
+    if (typeof priceMax === 'number' && priceMax > 0) {
+      whereParts.push(lte(partnerListings.priceWon, priceMax));
+    }
+    if (typeof minRating === 'number' && minRating > 0) {
+      whereParts.push(gte(partnerListings.rating, minRating));
+    }
     rows = await db
       .select()
       .from(partnerListings)
@@ -227,6 +241,14 @@ export async function fetchListingsForSurface(opts: {
       .orderBy(asc(partnerListings.sortOrder));
   } catch {
     return [];
+  }
+  // 지역 필터 — locationLabel 부분일치 (도시명은 한국어로 저장).
+  if (cities && cities.length > 0) {
+    rows = rows.filter((r) => {
+      const label = (r.locationLabel ?? '').trim();
+      if (!label) return false;
+      return cities.some((c) => label.includes(c));
+    });
   }
   if (rows.length === 0) return [];
 

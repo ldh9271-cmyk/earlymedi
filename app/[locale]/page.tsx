@@ -14,6 +14,7 @@ import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 import { fetchFeaturedListings, fetchListingsForSurface, type ListingCard } from '@/lib/listings/query';
+import { parseSurfaceFilters } from '@/lib/listings/filters';
 
 // force-dynamic because MainHeader (client) uses useSearchParams() for
 // the filter pill — Next.js's static prerender refuses that without a
@@ -130,11 +131,16 @@ const bookingHref = (locale: PublicLocale, program: string, interest: string): s
 
 export default async function PublicLandingPage({
   params,
+  searchParams,
 }: {
   params: { locale: PublicLocale };
+  searchParams: { priceMin?: string; priceMax?: string; minRating?: string; loc?: string };
 }): Promise<JSX.Element> {
   const { locale } = params;
   const dict = await getDictionary(locale);
+  // 헤더 필터 pill 값 — 모든 카테고리 행에 그대로 적용.
+  const flt = parseSurfaceFilters(searchParams);
+  const F = { priceMin: flt.priceMin, priceMax: flt.priceMax, minRating: flt.minRating, cities: flt.cities };
   // DB-backed cards. Empty arrays = no curated listings yet → sections
   // fall back to the hardcoded PROGRAMS / FOODS / Hotel samples below
   // so the page never looks empty even before /master/listings is
@@ -147,17 +153,17 @@ export default async function PublicLandingPage({
     pkgAll, rowHospitals, rowHotel, rowFood, rowColor, rowHair,
     rowMakeup, rowNail, rowPmu, rowPhoto, rowKpop,
   ] = await Promise.all([
-    fetchListingsForSurface({ locale, categories: ['travel_package'], subType: 'package' }),
-    fetchLandingHospitals(locale),
-    fetchFeaturedListings({ locale, categories: ['hotel'], limit: 4 }),
-    fetchFeaturedListings({ locale, categories: ['food', 'restaurant'], limit: 4 }),
-    fetchFeaturedListings({ locale, categories: ['personal_color'], limit: 4 }),
-    fetchFeaturedListings({ locale, categories: ['hair'], limit: 4 }),
-    fetchFeaturedListings({ locale, categories: ['makeup'], limit: 4 }),
-    fetchFeaturedListings({ locale, categories: ['nail'], limit: 4 }),
-    fetchFeaturedListings({ locale, categories: ['pmu'], limit: 4 }),
-    fetchFeaturedListings({ locale, categories: ['photo_studio'], limit: 4 }),
-    fetchFeaturedListings({ locale, categories: ['kpop_tour'], limit: 4 }),
+    fetchListingsForSurface({ locale, categories: ['travel_package'], subType: 'package', ...F }),
+    fetchLandingHospitals(locale, flt.minRating),
+    fetchFeaturedListings({ locale, categories: ['hotel'], limit: 4, ...F }),
+    fetchFeaturedListings({ locale, categories: ['food', 'restaurant'], limit: 4, ...F }),
+    fetchFeaturedListings({ locale, categories: ['personal_color'], limit: 4, ...F }),
+    fetchFeaturedListings({ locale, categories: ['hair'], limit: 4, ...F }),
+    fetchFeaturedListings({ locale, categories: ['makeup'], limit: 4, ...F }),
+    fetchFeaturedListings({ locale, categories: ['nail'], limit: 4, ...F }),
+    fetchFeaturedListings({ locale, categories: ['pmu'], limit: 4, ...F }),
+    fetchFeaturedListings({ locale, categories: ['photo_studio'], limit: 4, ...F }),
+    fetchFeaturedListings({ locale, categories: ['kpop_tour'], limit: 4, ...F }),
   ]);
   const rowPackage = pkgAll.slice(0, 4);
   // 베스트셀러 코스(예약 위젯) — 패키지 sortOrder 1순위 상품.
@@ -268,7 +274,7 @@ function hospitalRowCard(locale: PublicLocale, h: LandingHospital): RowCard {
 }
 
 /** 병원 행 — hospitals 테이블에서 커버 사진 우선 + 노출순서로 4곳. */
-async function fetchLandingHospitals(locale: PublicLocale): Promise<LandingHospital[]> {
+async function fetchLandingHospitals(locale: PublicLocale, minRating: number | null = null): Promise<LandingHospital[]> {
   try {
     const rows = await db
       .select({
@@ -279,7 +285,11 @@ async function fetchLandingHospitals(locale: PublicLocale): Promise<LandingHospi
         rating: hospitals.rating,
       })
       .from(hospitals)
-      .where(eq(hospitals.countryCode, 'KR'))
+      .where(
+        minRating && minRating > 0
+          ? and(eq(hospitals.countryCode, 'KR'), sql`${hospitals.rating} >= ${minRating}`)
+          : eq(hospitals.countryCode, 'KR'),
+      )
       .orderBy(sql`(${hospitals.coverImageUrl} IS NULL), ${hospitals.sortOrder} asc, ${hospitals.createdAt} desc`)
       .limit(4);
     if (rows.length === 0) return [];

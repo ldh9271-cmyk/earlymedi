@@ -57,15 +57,14 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   // 감춰 탭 자리를 확보한다 (모바일 검색 row 가 대신 노출됨).
   + '.m-mh-tabs, .m-mh-tabs a, .m-mh-login { white-space: nowrap; }'
   + '.m-mh-top { column-gap: 8px; }'
+  // 데스크톱 전용 중앙 검색 바 행 — 모바일은 m-mh-search-row 사용.
+  + '.m-mh-search-bar-row { display: block; padding: 10px 40px 12px; }'
   + '@media (min-width: 769px) and (max-width: 1279px) {'
   + '.m-mh-top { padding: 0 20px !important; }'
   + '.m-mh-tabs { gap: 2px !important; }'
-  + '.m-mh-search-desktop input { width: 110px !important; }'
+  + '.m-mh-search-bar-row { padding: 10px 20px 12px; }'
   + '}'
-  + '@media (min-width: 769px) and (max-width: 1023px) {'
-  + '.m-mh-search-desktop { display: none !important; }'
-  + '.m-mh-search-row { display: flex !important; align-items: center; gap: 8px; padding: 8px 16px 6px; }'
-  + '}';
+  + '@media (max-width: 768px) { .m-mh-search-bar-row { display: none; } }';
 import {
   LOCALE_LABELS,
   PUBLIC_LOCALES,
@@ -331,46 +330,6 @@ export function MainHeader({
         </nav>
 
         <div className="m-mh-util-gap" style={{ display: 'flex', alignItems: 'center', gap: 6, justifySelf: 'end' }}>
-          {/* Desktop search pill — Airbnb-style compact bar. Mobile
-              hides this (media block) and uses the full-width pill row
-              below instead. */}
-          <form
-            onSubmit={onSearchSubmit}
-            className="m-mh-search-desktop"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              border: '1px solid #dddddd', borderRadius: 9999,
-              padding: '5px 5px 5px 16px', marginRight: 6,
-              boxShadow: 'rgba(0,0,0,0.04) 0 1px 2px',
-              background: '#fff',
-            }}
-          >
-            <input
-              value={searchQ}
-              onChange={(e) => setSearchQ(e.target.value)}
-              placeholder={t.search.main}
-              aria-label={t.search.main}
-              style={{
-                border: 'none', outline: 'none', background: 'transparent',
-                fontSize: 14, width: 170, fontFamily: 'inherit', color: '#222',
-              }}
-            />
-            <button
-              type="submit"
-              aria-label={t.search.main}
-              style={{
-                width: 32, height: 32, borderRadius: 9999, flexShrink: 0,
-                background: '#ff385c', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
-              </svg>
-            </button>
-          </form>
-
           {/* Logged-out: "로그인" link. Logged-in: nothing here (email
               dropdown takes its place in the pill below). */}
           {userEmail === undefined ? (
@@ -573,6 +532,54 @@ export function MainHeader({
             ) : null}
           </div>
         </div>
+      </div>
+
+      {/* Desktop search bar — 상단 중앙 전용 행 (2026-07-26). 유틸리티
+          영역에 끼워 넣으니 탭·로그인과 자리다툼이 나서 별도 행으로
+          분리했다. 모바일은 아래 m-mh-search-row 가 대신한다. */}
+      <div className="m-mh-search-bar-row" style={{ borderTop: '1px solid #f2f2f2' }}>
+        <form
+          onSubmit={onSearchSubmit}
+          className="m-mh-search-bar"
+          style={{
+            maxWidth: 560, margin: '0 auto',
+            display: 'flex', alignItems: 'center', gap: 10,
+            border: '1px solid #dddddd', borderRadius: 9999,
+            padding: '6px 6px 6px 20px',
+            boxShadow: 'rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.04) 0 1px 2px',
+            background: '#fff',
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6a6a6a" strokeWidth="2" style={{ flexShrink: 0 }}>
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
+          </svg>
+          <input
+            value={searchQ}
+            onChange={(e) => setSearchQ(e.target.value)}
+            placeholder={`${t.search.main} — ${t.search.subtitle}`}
+            aria-label={t.search.main}
+            style={{
+              flex: 1, minWidth: 0,
+              border: 'none', outline: 'none', background: 'transparent',
+              fontSize: 14, fontFamily: 'inherit', color: '#222',
+            }}
+          />
+          <button
+            type="submit"
+            aria-label={t.search.main}
+            style={{
+              width: 36, height: 36, borderRadius: 9999, flexShrink: 0,
+              background: '#ff385c', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </form>
       </div>
 
       {/* Mobile search-pill row — between top utilities and the
