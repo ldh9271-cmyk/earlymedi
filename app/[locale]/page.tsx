@@ -287,8 +287,8 @@ async function fetchLandingHospitals(locale: PublicLocale, minRating: number | n
       .from(hospitals)
       .where(
         minRating && minRating > 0
-          ? and(eq(hospitals.countryCode, 'KR'), sql`${hospitals.rating} >= ${minRating}`)
-          : eq(hospitals.countryCode, 'KR'),
+          ? and(eq(hospitals.countryCode, 'KR'), eq(hospitals.isActiveForMatching, true), sql`${hospitals.rating} >= ${minRating}`)
+          : and(eq(hospitals.countryCode, 'KR'), eq(hospitals.isActiveForMatching, true)),
       )
       .orderBy(sql`(${hospitals.coverImageUrl} IS NULL), ${hospitals.sortOrder} asc, ${hospitals.createdAt} desc`)
       .limit(4);

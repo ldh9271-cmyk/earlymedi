@@ -204,7 +204,11 @@ export default async function ClinicsListPage({
           .sort((a, b) => a._sortOrder - b._sortOrder)
           .map(({ _sortOrder: _, ...rest }) => rest);
       } else {
-        const whereParts = [eq(hospitals.countryCode, 'KR')];
+        const whereParts = [
+          eq(hospitals.countryCode, 'KR'),
+          // 중복·비활성 병원은 공개 목록에서 제외 (2026-07-26).
+          eq(hospitals.isActiveForMatching, true),
+        ];
         if (minRating !== null) whereParts.push(gte(hospitals.rating, minRating));
         const fetched = await db
           .select({
@@ -230,7 +234,11 @@ export default async function ClinicsListPage({
           .filter((h) => cityFilterMatch(h.addressJson, cityWhitelist));
       }
     } else {
-      const whereParts = [eq(hospitals.countryCode, 'KR')];
+      const whereParts = [
+          eq(hospitals.countryCode, 'KR'),
+          // 중복·비활성 병원은 공개 목록에서 제외 (2026-07-26).
+          eq(hospitals.isActiveForMatching, true),
+        ];
       if (minRating !== null) whereParts.push(gte(hospitals.rating, minRating));
       const fetched = await db
         .select({
