@@ -571,6 +571,8 @@ const kr = {
     payDone: '결제를 완료했어요',
     payBack: '뒤로',
     payAfterNote: '결제 후 컨시어지가 카카오/WhatsApp으로 예약 확정을 안내드립니다.',
+    invoiceNo: '인보이스',
+    issuing: '인보이스 발행 중…',
   },
   // Travel-type chooser surfaced on /glowup/pc and per-type detail
   // pages /travel/free|package|training. Holds the section title +

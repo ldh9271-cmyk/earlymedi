@@ -501,6 +501,7 @@ export default async function ListingDetailPage({
             label={d.reserve}
             summary={reserveSummary}
             labels={dict.checkout}
+            listingSlug={listing.slug}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               marginTop: 18, height: 52,

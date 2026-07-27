@@ -693,6 +693,7 @@ function Course({
             interest: dbCourse ? (dbCourse.interestKey ?? dbCourse.category) : 'travel_package',
           }}
           checkout={checkout}
+          listingSlug={dbCourse ? dbCourse.slug : undefined}
           priceLabel={priceLabel}
           priceWon={dbCourse ? dbCourse.priceWon : 1890000}
           durationDays={durationDays}

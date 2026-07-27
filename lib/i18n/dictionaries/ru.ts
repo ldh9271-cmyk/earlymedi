@@ -552,6 +552,8 @@ const ru: Dictionary = {
     payDone: 'Я оплатил(а)',
     payBack: 'Назад',
     payAfterNote: 'После оплаты консьерж подтвердит бронирование в KakaoTalk/WhatsApp.',
+    invoiceNo: 'Счёт',
+    issuing: 'Выставляем счёт…',
   },
   travel: {
     sectionTitle: 'Выберите формат поездки',

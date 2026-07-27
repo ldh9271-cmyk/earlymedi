@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { asc, eq, count } from 'drizzle-orm';
-import { ShieldAlert, Building2, Users, Stethoscope, Briefcase, UserCheck, Plus, Hospital, Globe2 } from 'lucide-react';
+import { ShieldAlert, Building2, Users, Stethoscope, Briefcase, UserCheck, Plus, Hospital, Globe2, Receipt } from 'lucide-react';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
@@ -266,6 +266,21 @@ export default async function MasterPage({
             <div className="text-xs font-semibold">글로우업 상품 관리</div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               호텔·맛집·뷰티·K-팝 등 비의료 카테고리 상품 등록/노출
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/master/orders"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 text-rose-700">
+            <Receipt className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold">예약 인보이스</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              공개 포털 예약 결제 건 · 입금 신고 확인 및 확정
             </p>
           </div>
         </Link>

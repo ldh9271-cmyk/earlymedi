@@ -85,6 +85,7 @@ export default function ReserveButton({
   label,
   summary,
   labels,
+  listingSlug,
   date,
   dateYmd,
   guestCount = 1,
@@ -99,6 +100,8 @@ export default function ReserveButton({
   label: string;
   summary: ReserveSummary;
   labels: Dictionary['checkout'];
+  /** 인보이스에 남길 상품 slug. */
+  listingSlug?: string;
   date?: string;
   dateYmd?: string;
   guestCount?: number;
@@ -113,6 +116,8 @@ export default function ReserveButton({
   const [guests, setGuests] = useState(Math.max(1, guestCount));
   const [minDate, setMinDate] = useState('');
   const [qrFailed, setQrFailed] = useState(false);
+  const [invoiceNo, setInvoiceNo] = useState<string | null>(null);
+  const [issuing, setIssuing] = useState(false);
 
   // 오늘 날짜는 서버/클라 시간대가 어긋날 수 있어 mount 후 설정
   useEffect(() => { setMinDate(todayYmd()); }, []);
@@ -165,6 +170,53 @@ export default function ReserveButton({
     guests: guestsLabel,
     total,
   });
+
+  /**
+   * '결제하기' — 인보이스를 발행하고 결제 단계로 넘어간다.
+   * 발행이 실패해도 결제 화면은 띄운다 (게스트를 막지 않고, 관리자는
+   * 이후 문의 리드로 확인). 금액은 서버에서 다시 계산한다.
+   */
+  async function issueInvoice(): Promise<void> {
+    if (issuing) return;
+    setIssuing(true);
+    setQrFailed(false);
+    try {
+      const res = await fetch('/api/checkout/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locale,
+          listingSlug: listingSlug ?? null,
+          listingTitle: summary.title,
+          interestKey: summary.interest,
+          reserveDate: dateLabel,
+          reserveTime: timeLabel,
+          guests,
+          unitPriceWon: summary.priceWon,
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { invoiceNo?: string };
+        if (data.invoiceNo) setInvoiceNo(data.invoiceNo);
+      }
+    } catch {
+      /* 발행 실패해도 결제 안내는 계속 */
+    } finally {
+      setIssuing(false);
+      setStep('pay');
+    }
+  }
+
+  /** '결제를 완료했어요' — 입금 신고로 표시(관리자가 정산 대조 후 확정). */
+  function reportPaid(): void {
+    if (!invoiceNo) return;
+    void fetch('/api/checkout/order', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invoiceNo }),
+      keepalive: true,
+    }).catch(() => undefined);
+  }
 
   const fieldBox = {
     border: '1px solid #dddddd', borderRadius: 10,
@@ -338,6 +390,19 @@ export default function ReserveButton({
               ) : (
                 <>
                   {/* 결제 단계 — 가맹점 알리페이 QR */}
+                  {invoiceNo ? (
+                    <div
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        background: '#fff5f7', border: '1px solid #fecdd3',
+                        color: '#c81e42', borderRadius: 9999,
+                        padding: '5px 12px', fontSize: 12, fontWeight: 700,
+                        marginBottom: 12,
+                      }}
+                    >
+                      {labels.invoiceNo} {invoiceNo}
+                    </div>
+                  ) : null}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <span style={{ fontSize: 14, color: '#6a6a6a' }}>{labels.payAmount}</span>
                     <span style={{ fontSize: 20, fontWeight: 700 }}>₩{total.toLocaleString('ko-KR')}</span>
@@ -388,20 +453,23 @@ export default function ReserveButton({
               {step === 'trip' ? (
                 <button
                   type="button"
-                  onClick={() => { setQrFailed(false); setStep('pay'); }}
+                  disabled={issuing}
+                  onClick={() => { void issueInvoice(); }}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     width: '100%', height: 50, border: 'none',
                     background: '#ff385c', color: '#fff',
                     borderRadius: 12, fontSize: 16, fontWeight: 700,
-                    fontFamily: 'inherit', cursor: 'pointer',
+                    fontFamily: 'inherit', cursor: issuing ? 'default' : 'pointer',
+                    opacity: issuing ? 0.65 : 1,
                   }}
                 >
-                  {labels.confirmCta}
+                  {issuing ? labels.issuing : labels.confirmCta}
                 </button>
               ) : (
                 <Link
-                  href={confirmHref}
+                  href={invoiceNo ? `${confirmHref}&invoice=${encodeURIComponent(invoiceNo)}` : confirmHref}
+                  onClick={reportPaid}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     width: '100%', height: 50,

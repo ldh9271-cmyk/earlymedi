@@ -552,6 +552,8 @@ const en: Dictionary = {
     payDone: 'I have completed the payment',
     payBack: 'Back',
     payAfterNote: 'After payment, your concierge confirms the booking via KakaoTalk/WhatsApp.',
+    invoiceNo: 'Invoice',
+    issuing: 'Issuing invoice…',
   },
   travel: {
     sectionTitle: 'Pick your trip style',

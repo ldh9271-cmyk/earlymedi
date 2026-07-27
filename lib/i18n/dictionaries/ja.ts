@@ -551,6 +551,8 @@ const ja: Dictionary = {
     payDone: '支払いが完了しました',
     payBack: '戻る',
     payAfterNote: 'お支払い後、コンシェルジュがKakaoTalk/WhatsAppで予約確定をご案内します。',
+    invoiceNo: '請求番号',
+    issuing: '請求書を発行中…',
   },
   travel: {
     sectionTitle: '旅のスタイルを選ぶ',

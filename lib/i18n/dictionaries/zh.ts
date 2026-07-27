@@ -549,6 +549,8 @@ const zh: Dictionary = {
     payDone: '我已完成付款',
     payBack: '返回',
     payAfterNote: '付款后，专属顾问将通过 KakaoTalk/WhatsApp 确认您的预订。',
+    invoiceNo: '账单号',
+    issuing: '正在生成账单…',
   },
   travel: {
     sectionTitle: '选择您的旅行方式',

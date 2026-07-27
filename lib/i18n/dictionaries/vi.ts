@@ -552,6 +552,8 @@ const vi: Dictionary = {
     payDone: 'Tôi đã thanh toán',
     payBack: 'Quay lại',
     payAfterNote: 'Sau khi thanh toán, chuyên viên sẽ xác nhận đặt chỗ qua KakaoTalk/WhatsApp.',
+    invoiceNo: 'Hóa đơn',
+    issuing: 'Đang tạo hóa đơn…',
   },
   travel: {
     sectionTitle: 'Chọn kiểu hành trình',

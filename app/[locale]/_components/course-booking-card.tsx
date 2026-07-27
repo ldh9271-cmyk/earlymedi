@@ -43,6 +43,7 @@ export default function CourseBookingCard({
   labels,
   summary,
   checkout,
+  listingSlug,
 }: {
   bcp47: string;
   locale: PublicLocale;
@@ -53,6 +54,7 @@ export default function CourseBookingCard({
   labels: CourseBookingLabels;
   summary: ReserveSummary;
   checkout: Dictionary['checkout'];
+  listingSlug?: string;
 }): JSX.Element {
   const [start, setStart] = useState('');
   const [guests, setGuests] = useState(1);
@@ -155,6 +157,7 @@ export default function CourseBookingCard({
         label={labels.book}
         summary={summary}
         labels={checkout}
+        listingSlug={listingSlug}
         fixedDateLabel={start && endDate ? fmt(new Date(start + 'T00:00:00')) + ' → ' + fmt(endDate) : undefined}
         guestCount={guests}
         style={{
