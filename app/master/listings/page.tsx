@@ -34,6 +34,7 @@ import {
   seedSeoulPhotoAction,
   seedSeoulKpopAction,
   seedThemePackagesAction,
+  seedTrainingPackagesAction,
   migrateRestaurantToFoodAction,
 } from './_actions/listing-admin';
 import { updateListingSortOrderAction } from './_actions/sort-order';
@@ -701,6 +702,26 @@ export default async function MasterListingsPage({
           className="rounded-md border border-emerald-400 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-50"
         >
           테마 패키지 4종 일괄 등록
+        </button>
+      </form>
+
+      {/* 연수패키지 2종 일괄 등록 트리거 */}
+      <form
+        action={seedTrainingPackagesAction}
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-sky-300 bg-sky-50/50 px-4 py-3"
+      >
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">연수패키지 2종 일괄 등록 (해외 의료인 단체)</p>
+          <p className="mt-0.5">
+            인산한의원 한방 세미나 연수 3박4일 · 심화(함양 견학) 4박5일. 수료증 발급 과정 +
+            K-뷰티 관광 포함. category=travel_package, subType=training. 같은 slug 는 자동 스킵.
+          </p>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-sky-400 bg-white px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-50"
+        >
+          연수패키지 2종 일괄 등록
         </button>
       </form>
 

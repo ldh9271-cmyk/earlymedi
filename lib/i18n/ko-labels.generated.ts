@@ -1095,6 +1095,13 @@ export const KO_LABELS = {
     "ru": "По предварительной записи",
     "vi": "Yêu cầu đặt trước"
   },
+  "산지 견학 · 심화 과정": {
+    "en": "On-site Tour · Advanced Course",
+    "zh": "产地考察 · 进阶课程",
+    "ja": "産地見学 · 深化コース",
+    "ru": "Выездная экскурсия · Углубленный курс",
+    "vi": "Tham quan thực địa · Khóa học nâng cao"
+  },
   "상급종합병원·호텔 인접": {
     "en": "Near Tertiary Hospital & Hotel",
     "zh": "邻近高级综合医院·酒店",
@@ -1262,6 +1269,13 @@ export const KO_LABELS = {
     "ja": "ソン・ヘギョ スタイリング",
     "ru": "Стиль Сон Хе Гё",
     "vi": "Tạo kiểu Song Hye-kyo"
+  },
+  "수료증 발급 · 단체 연수": {
+    "en": "Certificate Issuance · Group Training",
+    "zh": "颁发证书 · 团体研修",
+    "ja": "修了証発行 · 団体研修",
+    "ru": "Выдача сертификата · Групповое обучение",
+    "vi": "Cấp chứng nhận · Đào tạo nhóm"
   },
   "수만 건의 수술·수십만 건의 시술 경험, 무사고 안전 관리": {
     "en": "Tens of Thousands of Surgeries & Procedures, Accident-Free Safety",
