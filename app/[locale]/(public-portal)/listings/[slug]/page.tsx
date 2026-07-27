@@ -7,6 +7,7 @@ import { localizePriceUnit } from '@/lib/i18n/price-unit';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { DetailInfo } from './_components/detail-info';
 import { HeroMobileCarousel } from './_components/hero-mobile-carousel';
+import ReserveButton, { type ReserveSummary } from '@/app/[locale]/_components/reserve-modal';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,6 +96,15 @@ export default async function ListingDetailPage({
   // the next <div> and throws "Unexpected token `div`". See memory
   // feedback_swc_inline_css for the same family of bug.
   const reserveHref = '/' + params.locale + '/checkout?slug=' + encodeURIComponent(listing.slug);
+  const reserveSummary: ReserveSummary = {
+    title: listing.title,
+    coverImageUrl: listing.coverImageUrl,
+    rating,
+    location: listing.locationLabel ?? 'Seoul',
+    priceWon: listing.priceWon ?? 0,
+    priceUnitLabel: priceUnit || d.units.session,
+    interest: listing.interestKey ?? listing.category,
+  };
 
   return (
     <div
@@ -485,8 +495,12 @@ export default async function ListingDetailPage({
           <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 4 }}>
             {d.taxNote}
           </div>
-          <Link
+          <ReserveButton
+            locale={params.locale}
             href={reserveHref}
+            label={d.reserve}
+            summary={reserveSummary}
+            labels={dict.checkout}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               marginTop: 18, height: 52,
@@ -495,9 +509,7 @@ export default async function ListingDetailPage({
               fontSize: 16, fontWeight: 700,
               textDecoration: 'none',
             }}
-          >
-            {d.reserve}
-          </Link>
+          />
           <div style={{ textAlign: 'center', fontSize: 12, color: '#6a6a6a', marginTop: 10 }}>
             {d.noChargeYet}
           </div>

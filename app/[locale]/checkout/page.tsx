@@ -49,10 +49,12 @@ export default async function CheckoutPage({
   const time = stringParam(searchParams.time) || c.defaultTime;
   const guests = stringParam(searchParams.guests) || c.oneGuest;
 
+  const guestCount = Math.max(1, parseInt(stringParam(searchParams.guests)?.replace(/[^0-9]/g, '') || '1', 10) || 1);
+  const bareUnit = priceUnitLabel.replace(/^\s*1\s*/, '').trim() || priceUnitLabel;
   const lineLabel = c.lineSession
     .replace('{price}', `₩${priceWon.toLocaleString('ko-KR')}`)
-    .replace('{unit}', priceUnitLabel);
-  const lineAmount = priceWon;
+    .replace(/1\s*\{unit\}/, `${guestCount}${c.lineSession.includes('1 {unit}') ? ' ' : ''}${bareUnit}`);
+  const lineAmount = priceWon * guestCount;
   const serviceFee = Math.round((priceWon * 0.1) / 1000) * 1000;
   const total = lineAmount + serviceFee;
 

@@ -212,7 +212,7 @@ export default async function PublicLandingPage({
             />
           ) : null,
         )}
-        <Course locale={locale} dbCourse={dbCourse} t={dict.landing} />
+        <Course locale={locale} dbCourse={dbCourse} t={dict.landing} checkout={dict.checkout} />
         <FinalCta locale={locale} t={dict.landing} />
       </main>
 
@@ -547,10 +547,12 @@ function Course({
   locale,
   dbCourse,
   t,
+  checkout,
 }: {
   locale: PublicLocale;
   dbCourse: ListingCard | null;
   t: Dictionary['landing'];
+  checkout: Dictionary['checkout'];
 }): JSX.Element {
   // 실상품 우선 — 패키지여행 첫 상품(sortOrder ASC)의 제목·이미지·가격·
   // 일정으로 렌더. 예약하기는 해당 상품 checkout 으로 직결. 등록된
@@ -680,6 +682,17 @@ function Course({
 
         <CourseBookingCard
           bcp47={LOCALE_TO_BCP47[locale]}
+          locale={locale}
+          summary={{
+            title: courseName,
+            coverImageUrl: dbCourse ? dbCourse.coverImageUrl : null,
+            rating,
+            location: dbCourse ? (dbCourse.locationLabel ?? 'Seoul') : 'Seoul',
+            priceWon: dbCourse ? (dbCourse.priceWon ?? 0) : 1890000,
+            priceUnitLabel: t.coursePerPerson,
+            interest: dbCourse ? (dbCourse.interestKey ?? dbCourse.category) : 'travel_package',
+          }}
+          checkout={checkout}
           priceLabel={priceLabel}
           priceWon={dbCourse ? dbCourse.priceWon : 1890000}
           durationDays={durationDays}

@@ -3,8 +3,10 @@
 // 랜딩 베스트셀러 코스 예약 카드 (클라이언트).
 // 시작일 하나만 고르면 durationDays 기준으로 종료일이 자동 계산되고,
 // 인원(최대 6명)에 따라 요금이 곱해진다.
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import type { PublicLocale } from '@/lib/i18n/locales';
+import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
+import ReserveButton, { type ReserveSummary } from './reserve-modal';
 
 const MAX_GUESTS = 6;
 
@@ -33,18 +35,24 @@ function toYmd(d: Date): string {
 
 export default function CourseBookingCard({
   bcp47,
+  locale,
   priceLabel,
   priceWon,
   durationDays,
   bookHref,
   labels,
+  summary,
+  checkout,
 }: {
   bcp47: string;
+  locale: PublicLocale;
   priceLabel: string;
   priceWon: number | null;
   durationDays: number;
   bookHref: string;
   labels: CourseBookingLabels;
+  summary: ReserveSummary;
+  checkout: Dictionary['checkout'];
 }): JSX.Element {
   const [start, setStart] = useState('');
   const [guests, setGuests] = useState(1);
@@ -141,8 +149,15 @@ export default function CourseBookingCard({
           </select>
         </label>
       </div>
-      <Link
+      <ReserveButton
+        locale={locale}
         href={href}
+        label={labels.book}
+        summary={summary}
+        labels={checkout}
+        date={start && endDate ? fmt(new Date(start + 'T00:00:00')) + ' → ' + fmt(endDate) : undefined}
+        guests={guests === 1 ? labels.guest1 : labels.guestN.replace('{n}', String(guests))}
+        guestCount={guests}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           width: '100%', marginTop: 16,
@@ -151,9 +166,7 @@ export default function CourseBookingCard({
           fontWeight: 500, fontSize: 16,
           cursor: 'pointer', textDecoration: 'none',
         }}
-      >
-        {labels.book}
-      </Link>
+      />
       <div style={{ textAlign: 'center', fontSize: 14, color: '#6a6a6a', marginTop: 12 }}>
         {labels.notCharged}
       </div>
