@@ -346,46 +346,31 @@ export default function ReserveButton({
                     {dateLabel} · {timeLabel} · {guestsLabel}
                   </div>
 
-                  <div
-                    style={{
-                      marginTop: 16, borderRadius: 16, padding: '20px 16px',
-                      background: '#4f9df7',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-                    }}
-                  >
-                    <span
-                      style={{
-                        background: '#fff', color: '#2f7fe0',
-                        borderRadius: 9999, padding: '6px 18px',
-                        fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px',
-                      }}
-                    >
-                      Korea Glow up
-                    </span>
-                    <div
-                      style={{
-                        background: '#fff', borderRadius: 12, padding: 12,
-                        width: 220, height: 220,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}
-                    >
-                      {qrFailed ? (
-                        <span style={{ fontSize: 12, color: '#6a6a6a', textAlign: 'center', lineHeight: 1.5 }}>
+                  {/* 가맹점에서 받은 QR 카드 이미지 자체가 헤더·Pay Now·
+                      결제수단 로고를 모두 담고 있어 그대로 노출한다. */}
+                  <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
+                    {qrFailed ? (
+                      <div
+                        style={{
+                          width: 260, minHeight: 200, borderRadius: 14,
+                          border: '1px dashed #dddddd', background: '#fafafa',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          padding: 20,
+                        }}
+                      >
+                        <span style={{ fontSize: 12, color: '#6a6a6a', textAlign: 'center', lineHeight: 1.6 }}>
                           {labels.payQrPending}
                         </span>
-                      ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={ALIPAY_QR_SRC}
-                          alt="Alipay QR"
-                          width={196}
-                          height={196}
-                          onError={() => setQrFailed(true)}
-                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                        />
-                      )}
-                    </div>
-                    <span style={{ color: '#fff', fontSize: 18, fontWeight: 800 }}>Pay Now</span>
+                      </div>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={ALIPAY_QR_SRC}
+                        alt="Alipay QR — Korea Glow up"
+                        onError={() => setQrFailed(true)}
+                        style={{ width: 260, maxWidth: '100%', height: 'auto', display: 'block' }}
+                      />
+                    )}
                   </div>
 
                   <p style={{ fontSize: 13, color: '#222', margin: '14px 0 4px', lineHeight: 1.55 }}>
