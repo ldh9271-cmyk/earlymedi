@@ -8,21 +8,34 @@ import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 
+const leadInputStyle: React.CSSProperties = {
+  height: 42, borderRadius: 10, border: '1px solid #dddddd',
+  padding: '0 13px', fontSize: 14, fontFamily: 'inherit',
+  outline: 'none', background: '#fff', color: '#222',
+  boxSizing: 'border-box', width: '100%',
+};
+
 type Card = { kind: 'clinic' | 'listing'; title: string; href: string; note: string };
 type Msg = { role: 'user' | 'assistant'; content: string; cards?: Card[] };
 
 export default function AiChat({
   locale,
   t,
+  lead,
 }: {
   locale: PublicLocale;
   t: Dictionary['ai']['chat'];
+  lead: Dictionary['ai']['upload'];
 }): JSX.Element {
   const [msgs, setMsgs] = useState<Msg[]>([{ role: 'assistant', content: t.greeting }]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  // 대화가 일정 길이를 넘으면 연락처 폼을 띄워 리드로 저장한다.
+  const [leadPhase, setLeadPhase] = useState<'hidden' | 'form' | 'sending' | 'sent'>('hidden');
+  const [leadMsg, setLeadMsg] = useState<string | null>(null);
+  const [leadForm, setLeadForm] = useState({ name: '', countryCode: '', contact: '', messenger: '', email: '' });
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -43,22 +56,102 @@ export default function AiChat({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           locale,
+          stream: true,
           // 인사말은 서버로 보내지 않음 (모델이 자기 인사에 답하지 않도록)
           messages: next.slice(1).map((m) => ({ role: m.role, content: m.content })),
         }),
       });
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         setError(t.error);
         return;
       }
-      const j = await res.json();
-      setMsgs((prev) => [...prev, { role: 'assistant', content: j.text, cards: j.cards ?? [] }]);
+      // 빈 assistant 버블을 먼저 만들고 델타를 이어 붙인다 (타이핑 효과)
+      setMsgs((prev) => [...prev, { role: 'assistant', content: '' }]);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      let got = false;
+      let failed = false;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split(String.fromCharCode(10));
+        buf = lines.pop() ?? '';
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          const payload = line.slice(5).trim();
+          if (!payload) continue;
+          try {
+            const ev = JSON.parse(payload) as { delta?: string; done?: boolean; cards?: Card[]; error?: string };
+            if (ev.error) { failed = true; continue; }
+            if (ev.delta) {
+              got = true;
+              setMsgs((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last && last.role === 'assistant') {
+                  copy[copy.length - 1] = { ...last, content: last.content + ev.delta };
+                }
+                return copy;
+              });
+            }
+            if (ev.done) {
+              setMsgs((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last && last.role === 'assistant') {
+                  copy[copy.length - 1] = { ...last, cards: ev.cards ?? [] };
+                }
+                return copy;
+              });
+            }
+          } catch {
+            /* partial JSON — skip */
+          }
+        }
+      }
+      if (failed || !got) {
+        setMsgs((prev) => prev.filter((m, i) => !(i === prev.length - 1 && m.role === 'assistant' && !m.content)));
+        setError(t.error);
+      }
     } catch {
       setError(t.error);
     } finally {
       setBusy(false);
     }
   }
+
+  async function submitLead(e: React.FormEvent): Promise<void> {
+    e.preventDefault();
+    setLeadPhase('sending');
+    setLeadMsg(null);
+    try {
+      const res = await fetch('/api/ai/chat-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locale,
+          name: leadForm.name.trim(),
+          countryCode: leadForm.countryCode.trim().toUpperCase().slice(0, 2),
+          contact: leadForm.contact.trim(),
+          messenger: leadForm.messenger.trim(),
+          email: leadForm.email.trim(),
+          messages: msgs.slice(1).map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+      if (!res.ok) { setLeadMsg(lead.sendError); setLeadPhase('form'); return; }
+      setLeadMsg(lead.sentNoEmail);
+      setLeadPhase('sent');
+    } catch {
+      setLeadMsg(lead.sendError);
+      setLeadPhase('form');
+    }
+  }
+
+  // 사용자가 2번 이상 질문하면 연락처 남기기 유도
+  const userTurns = msgs.filter((m) => m.role === 'user').length;
+  const showLeadPrompt = userTurns >= 2 && leadPhase === 'hidden';
 
   const suggestions = [t.suggest1, t.suggest2, t.suggest3];
 
@@ -158,6 +251,60 @@ export default function AiChat({
               {s}
             </button>
           ))}
+        </div>
+      ) : null}
+
+      {showLeadPrompt ? (
+        <div style={{ padding: '12px 18px 0' }}>
+          <button
+            type="button"
+            onClick={() => setLeadPhase('form')}
+            style={{
+              width: '100%', border: '1px dashed #ff9db1', background: '#fff5f7',
+              borderRadius: 12, padding: '11px 14px', cursor: 'pointer',
+              fontFamily: 'inherit', fontSize: 13, fontWeight: 600, color: '#c81e42',
+            }}
+          >
+            {lead.emailBtn}
+          </button>
+        </div>
+      ) : null}
+
+      {leadPhase === 'form' || leadPhase === 'sending' ? (
+        <form onSubmit={submitLead} style={{ padding: '12px 18px 0' }}>
+          <div style={{ border: '1px solid #ebebeb', borderRadius: 14, padding: '16px 16px 18px', background: '#fafafa' }}>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>{lead.emailTitle}</div>
+            <p style={{ fontSize: 12, color: '#6a6a6a', margin: '6px 0 12px', lineHeight: 1.5 }}>{lead.emailBody}</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 8 }}>
+              <input required value={leadForm.name} onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })} placeholder={lead.fieldName} style={leadInputStyle} />
+              <input required value={leadForm.countryCode} onChange={(e) => setLeadForm({ ...leadForm, countryCode: e.target.value })} placeholder="US" maxLength={2} style={{ ...leadInputStyle, textTransform: 'uppercase' }} />
+            </div>
+            <input value={leadForm.contact} onChange={(e) => setLeadForm({ ...leadForm, contact: e.target.value })} placeholder={lead.fieldContact} style={{ ...leadInputStyle, marginTop: 8 }} />
+            <input value={leadForm.messenger} onChange={(e) => setLeadForm({ ...leadForm, messenger: e.target.value })} placeholder={lead.fieldMessenger} style={{ ...leadInputStyle, marginTop: 8 }} />
+            <input type="email" value={leadForm.email} onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })} placeholder={lead.fieldEmail} style={{ ...leadInputStyle, marginTop: 8 }} />
+            {leadMsg ? <p style={{ fontSize: 12, color: '#dc2626', margin: '8px 0 0' }}>{leadMsg}</p> : null}
+            <button
+              type="submit"
+              disabled={leadPhase === 'sending'}
+              style={{
+                width: '100%', marginTop: 12, height: 44,
+                background: '#ff385c', color: '#fff', border: 'none',
+                borderRadius: 10, fontWeight: 700, fontSize: 14,
+                cursor: leadPhase === 'sending' ? 'wait' : 'pointer',
+                opacity: leadPhase === 'sending' ? 0.7 : 1, fontFamily: 'inherit',
+              }}
+            >
+              {leadPhase === 'sending' ? lead.sending : lead.send}
+            </button>
+          </div>
+        </form>
+      ) : null}
+
+      {leadPhase === 'sent' ? (
+        <div style={{ padding: '12px 18px 0' }}>
+          <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 12, padding: '12px 14px', color: '#047857', fontSize: 13, fontWeight: 600, lineHeight: 1.5 }}>
+            {leadMsg}
+          </div>
         </div>
       ) : null}
 

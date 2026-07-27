@@ -58,6 +58,7 @@ export const PUBLIC_PREFIXES = [
   '/api/ai/glowup-analysis',
   '/api/ai/glowup-lead',
   '/api/ai/chat',
+  '/api/ai/chat-lead',
   '/pricing',
   '/about',
   '/legal',

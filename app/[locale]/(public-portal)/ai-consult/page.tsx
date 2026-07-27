@@ -138,7 +138,7 @@ export default async function AiConsultPage({
         }}
       />
 
-      <AiChat locale={params.locale} t={dict.ai.chat} />
+      <AiChat locale={params.locale} t={dict.ai.chat} lead={dict.ai.upload} />
     </section>
   );
 }

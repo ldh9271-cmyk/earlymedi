@@ -31,6 +31,8 @@ export const maxDuration = 60;
 
 const BodySchema = z.object({
   locale: z.string(),
+  /** true 면 SSE 로 토큰을 흘려보낸다 (타이핑 효과). */
+  stream: z.boolean().optional(),
   messages: z.array(z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string().max(2000),
@@ -260,6 +262,60 @@ async function callGemini(system: string, messages: Array<{ role: string; conten
   return null;
 }
 
+
+/** SSE 스트리밍 — 토큰이 오는 대로 흘려보낸다. thought 파트는 제외. */
+async function* streamGemini(
+  system: string,
+  messages: Array<{ role: string; content: string }>,
+): AsyncGenerator<string> {
+  const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (!key) return;
+  const contents = messages.map((m) => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }));
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:streamGenerateContent?alt=sse&key=${key}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents,
+        generationConfig: {
+          temperature: 0.5,
+          maxOutputTokens: 900,
+          thinkingConfig: { thinkingBudget: 128 },
+        },
+      }),
+    },
+  );
+  if (!res.ok || !res.body) return;
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split(String.fromCharCode(10));
+    buf = lines.pop() ?? '';
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === '[DONE]') continue;
+      try {
+        const j = JSON.parse(payload);
+        const parts = (j.candidates?.[0]?.content?.parts ?? []) as Array<{ text?: string; thought?: boolean }>;
+        const chunk = parts.filter((p) => p.thought !== true).map((p) => p.text ?? '').join('');
+        if (chunk) yield chunk;
+      } catch {
+        /* partial JSON — skip */
+      }
+    }
+  }
+}
+
 export async function POST(req: Request): Promise<NextResponse> {
   let body: z.infer<typeof BodySchema>;
   try {
@@ -298,14 +354,50 @@ If the user wants to book or needs a judgement call, invite them to send an inqu
 DATA (the only facts you may use):
 ${evidence.length ? evidence.map((e) => `- ${e.text}`).join('\n') : '(no matching records found)'}`;
 
+  const pickCards = (text: string): Card[] => {
+    const mentioned = evidence.filter((e) => text.includes(e.card.title));
+    return (mentioned.length ? mentioned : evidence.slice(0, 3)).slice(0, 4).map((e) => e.card);
+  };
+
+  // ── 스트리밍 모드 (SSE) ──────────────────────────────────────────
+  if (body.stream) {
+    const encoder = new TextEncoder();
+    const rs = new ReadableStream({
+      async start(controller) {
+        const send = (obj: unknown) =>
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}
+
+`));
+        let full = '';
+        try {
+          for await (const chunk of streamGemini(system, body.messages)) {
+            full += chunk;
+            send({ delta: chunk });
+          }
+        } catch {
+          /* fall through — 아래에서 빈 응답 처리 */
+        }
+        if (!full) {
+          send({ error: 'ai_unavailable' });
+        } else {
+          send({ done: true, cards: pickCards(full) });
+        }
+        controller.close();
+      },
+    });
+    return new NextResponse(rs, {
+      headers: {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        Connection: 'keep-alive',
+      },
+    });
+  }
+
   const text = await callGemini(system, body.messages);
   if (!text) {
     return NextResponse.json({ error: 'ai_unavailable' }, { status: 502 });
   }
 
-  // 답변에 실제로 언급된 항목만 카드로 (없으면 상위 3개 제안)
-  const mentioned = evidence.filter((e) => text.includes(e.card.title));
-  const cards = (mentioned.length ? mentioned : evidence.slice(0, 3)).slice(0, 4).map((e) => e.card);
-
-  return NextResponse.json({ text, cards });
+  return NextResponse.json({ text, cards: pickCards(text) });
 }

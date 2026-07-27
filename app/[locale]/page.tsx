@@ -9,6 +9,7 @@ import { LOCALE_TO_BCP47 } from '@/lib/i18n/locales';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { localizePriceUnit } from '@/lib/i18n/price-unit';
 import { ListingCardPlaceholder, LISTING_PLACEHOLDER_BG } from './_components/listing-card-placeholder';
+import ChatBubble from './_components/chat-bubble';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
@@ -215,6 +216,7 @@ export default async function PublicLandingPage({
       </main>
 
       <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[locale].native} locale={locale} />
+      <ChatBubble locale={locale} t={dict.ai.chat} />
     </div>
   );
 }
