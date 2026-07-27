@@ -49,7 +49,23 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   // the @media block above. AI 분석 스트립 항목도 모바일 전용 (데스크톱은
   // 상단 AI 상담 탭이 있음).
   + '.m-mh-search-row { display: none; }'
-  + '.m-mh-cat-ai { display: none !important; }';
+  + '.m-mh-cat-ai { display: none !important; }'
+
+  // 태블릿~좁은 데스크톱 (769~1279px) — 상단 탭(여행 패키지·AI 상담·
+  // 병원 찾기)과 로그인이 세로로 꺾이지 않도록 줄바꿈 금지 + 검색
+  // pill 을 단계적으로 축소. 1023px 이하에서는 검색 pill 을 아예
+  // 감춰 탭 자리를 확보한다 (모바일 검색 row 가 대신 노출됨).
+  + '.m-mh-tabs, .m-mh-tabs a, .m-mh-login { white-space: nowrap; }'
+  + '.m-mh-top { column-gap: 8px; }'
+  + '@media (min-width: 769px) and (max-width: 1279px) {'
+  + '.m-mh-top { padding: 0 20px !important; }'
+  + '.m-mh-tabs { gap: 2px !important; }'
+  + '.m-mh-search-desktop input { width: 110px !important; }'
+  + '}'
+  + '@media (min-width: 769px) and (max-width: 1023px) {'
+  + '.m-mh-search-desktop { display: none !important; }'
+  + '.m-mh-search-row { display: flex !important; align-items: center; gap: 8px; padding: 8px 16px 6px; }'
+  + '}';
 import {
   LOCALE_LABELS,
   PUBLIC_LOCALES,

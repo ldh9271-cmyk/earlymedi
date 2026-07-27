@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
+import type { PublicLocale } from '@/lib/i18n/locales';
 
 /** Mobile responsive overrides — keep inline desktop styles intact;
  *  stack 3-col link grid into 1 col, tighten padding, add safe-area
@@ -31,14 +33,44 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
 export function MainFooter({
   t,
   localeNative,
+  locale = 'kr',
 }: {
   t: Dictionary['siteFooter'];
   localeNative: string;
+  /** 링크 목적지에 붙일 로케일 프리픽스. 미지정 시 kr. */
+  locale?: PublicLocale;
 }): JSX.Element {
-  const cols: Array<{ title: string; items: string[] }> = [
-    { title: t.colSupport,  items: [t.support1, t.support2, t.support3, t.support4] },
-    { title: t.colPrograms, items: [t.program1, t.program2, t.program3, t.program4] },
-    { title: t.colBrand,    items: [t.brand1,   t.brand2,   t.brand3,   t.brand4]   },
+  // 각 라벨을 실제 페이지로 연결 (2026-07-26). 아직 전용 페이지가 없는
+  // 항목은 가장 가까운 실제 surface 로 보낸다 — 죽은 링크를 만들지 않기 위함.
+  const L = (p: string): string => `/${locale}${p}`;
+  const cols: Array<{ title: string; items: Array<{ label: string; href: string }> }> = [
+    {
+      title: t.colSupport,
+      items: [
+        { label: t.support1, href: L('/inquiry') },              // 도움말 센터 → 1:1 문의
+        { label: t.support2, href: '/legal/medical-ad' },        // 안전 정보 → 의료광고·안전 고지
+        { label: t.support3, href: '/legal/terms' },             // 취소 옵션 → 이용약관(취소·환불)
+        { label: t.support4, href: L('/inquiry') },              // 예약 문의
+      ],
+    },
+    {
+      title: t.colPrograms,
+      items: [
+        { label: t.program1, href: L('/glowup/pc/c/color') },
+        { label: t.program2, href: L('/clinics?category=dermatology') },
+        { label: t.program3, href: L('/glowup/pc/c/photo') },
+        { label: t.program4, href: L('/travel/package') },
+      ],
+    },
+    {
+      title: t.colBrand,
+      items: [
+        { label: t.brand1, href: '/about' },
+        { label: t.brand2, href: L('/glowup/pc/c/food') },
+        { label: t.brand3, href: L('/glowup/pc/c/kpop') },
+        { label: t.brand4, href: '/signup' },                    // 호스트 되기 → 파트너 가입
+      ],
+    },
   ];
   return (
     <footer
@@ -67,7 +99,13 @@ export function MainFooter({
               }}
             >
               {col.items.map((item) => (
-                <span key={item}>{item}</span>
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  style={{ color: 'inherit', textDecoration: 'none', width: 'fit-content' }}
+                >
+                  {item.label}
+                </Link>
               ))}
             </div>
           </div>
@@ -82,7 +120,38 @@ export function MainFooter({
             fontSize: 13, color: '#6a6a6a', flexWrap: 'wrap', gap: 12,
           }}
         >
-          <span>{t.copy}</span>
+          {/* 저작권 줄 — 개인정보처리방침 / 이용약관을 실제 법적 고지
+              페이지로 연결. dict.copy 는 "… · A · B" 형태라 마지막 두
+              토큰만 링크로 치환한다. */}
+          <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+            {(() => {
+              const parts = t.copy.split('·').map((s) => s.trim());
+              const head = parts.slice(0, Math.max(1, parts.length - 2)).join(' · ');
+              const privacy = parts[parts.length - 2];
+              const terms = parts[parts.length - 1];
+              return (
+                <>
+                  <span>{head}</span>
+                  {privacy ? (
+                    <>
+                      <span>·</span>
+                      <Link href="/legal/privacy" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                        {privacy}
+                      </Link>
+                    </>
+                  ) : null}
+                  {terms ? (
+                    <>
+                      <span>·</span>
+                      <Link href="/legal/terms" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                        {terms}
+                      </Link>
+                    </>
+                  ) : null}
+                </>
+              );
+            })()}
+          </span>
           <div className="m-mf-locale-currency" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#222', fontWeight: 600 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.6">

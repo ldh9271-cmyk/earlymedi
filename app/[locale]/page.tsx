@@ -208,7 +208,7 @@ export default async function PublicLandingPage({
         <FinalCta locale={locale} t={dict.landing} />
       </main>
 
-      <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[locale].native} />
+      <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[locale].native} locale={locale} />
     </div>
   );
 }

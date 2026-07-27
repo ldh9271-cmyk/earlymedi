@@ -137,7 +137,7 @@ export default async function TravelTypeListPage({
         )}
       </section>
 
-      <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[params.locale].native} />
+      <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[params.locale].native} locale={params.locale} />
     </div>
   );
 }
