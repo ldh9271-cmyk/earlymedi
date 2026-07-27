@@ -38,7 +38,7 @@ export const SEOUL_TRAINING_PRODUCTS: ReadonlyArray<TrainingPackageSeed> = [
     description:
       '일본·중국·동아시아·미주 한의사회 및 통합의학 협회 단체를 위한 3박 4일 학술 연수 패키지입니다. 인산 김일훈 선생의 처방 계보를 잇는 인산한의원에서 김홍근 원장이 진행하는 세미나와 실습 참관을 이수하고, 과정 종료 시 주최 기관 명의의 수료증을 받습니다. 연수 일정 사이에 퍼스널컬러 진단과 K-뷰티 체험, 서울 미식 코스를 배치해 학술과 관광을 한 번에 소화합니다. 통역(영·중·일)·차량·호텔 3박 포함, 10인 이상 단체 기준.',
     locationLabel: '강남 도곡 · 청담 · 명동',
-    priceWon: 1_950_000,
+    priceWon: 3_000_000,
     durationDays: 4,
     promoLabel: '수료증 발급 · 단체 연수',
     itinerary: [
@@ -101,7 +101,7 @@ export const SEOUL_TRAINING_PRODUCTS: ReadonlyArray<TrainingPackageSeed> = [
     description:
       '3박 4일 과정에 전통 제법 산지 견학과 심화 워크숍을 더한 4박 5일 연수 패키지입니다. 서울 인산한의원 세미나 이후 경남 함양 지점으로 이동해 죽염 등 전통 제법 현장을 견학하고, 돌아와 심화 케이스 워크숍과 수료식을 진행합니다. 학술 일정 사이에는 K-뷰티 체험과 서울 관광을 배치했습니다. 통역(영·중·일)·전용 차량·호텔 4박·KTX 이동 포함, 10인 이상 단체 기준.',
     locationLabel: '강남 도곡 · 경남 함양 · 청담',
-    priceWon: 2_650_000,
+    priceWon: 3_800_000,
     durationDays: 5,
     promoLabel: '산지 견학 · 심화 과정',
     itinerary: [
