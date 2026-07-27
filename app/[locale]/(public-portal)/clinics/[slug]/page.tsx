@@ -4,6 +4,8 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
+import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
@@ -163,6 +165,7 @@ export default async function ClinicDetailPage({
     galleryImageUrls?: unknown;
     landingImageUrl?: string | null;
     notes: string | null;
+    details?: unknown;
   };
   let row: RowShape | undefined;
   try {
@@ -179,6 +182,7 @@ export default async function ClinicDetailPage({
         galleryImageUrls: hospitals.galleryImageUrls,
         landingImageUrl: hospitals.landingImageUrl,
         notes: hospitals.notes,
+        details: hospitals.details,
       })
       .from(hospitals)
       .where(inArray(hospitals.slug, candidates))
@@ -245,6 +249,7 @@ export default async function ClinicDetailPage({
 
   const displayName = lc?.name?.trim() || row.name;
   const aboutText = lc?.intro?.trim() || row.notes?.trim() || null;
+  const detailData = (row.details ?? {}) as ClinicDetails;
   const coverUrl = lc?.coverImageUrl || row.coverImageUrl;
   const galleryRaw = lc?.galleryImageUrls && lc.galleryImageUrls.length > 0
     ? lc.galleryImageUrls
@@ -295,7 +300,7 @@ export default async function ClinicDetailPage({
         ) : null}
       </h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#6a6a6a' }}>
-        {address.city ? <span>{address.city} · {row.countryCode}</span> : null}
+        {address.city ? <span>{localizeKoLabel(address.city, params.locale)} · {row.countryCode}</span> : null}
         {cats.length > 0 ? (
           <span>
             · {cats.slice(0, 3).map((c) => (dict.clinicsPage.categories as Record<string, string>)[c] || c).join(' · ')}
@@ -402,6 +407,9 @@ export default async function ClinicDetailPage({
               <p style={{ color: '#6a6a6a', margin: 0 }}>{dict.clinicsPage.introComingSoon}</p>
             ) : null}
           </div>
+
+          {/* 구조화 콘텐츠 — hospitals.details (병원 홈페이지 기반). */}
+          <ClinicDetailSections d={detailData} t={dict.clinicsPage} locale={params.locale} />
 
           {landingUrl ? (
             <div
@@ -523,5 +531,187 @@ export default async function ClinicDetailPage({
         </Link>
       </div>
     </article>
+  );
+}
+
+// ─── 구조화 상세 섹션 (2026-07-26) ─────────────────────────────────
+// hospitals.details 에 담긴 병원 홈페이지 기반 정보를 카드형으로 렌더.
+// 값이 없는 블록은 통째로 생략해 빈 제목이 남지 않게 한다.
+type ClinicDetails = {
+  tagline?: string;
+  phone?: string;
+  clinicPhone?: string;
+  hours?: string;
+  website?: string;
+  station?: string;
+  signatureProcedures?: string[];
+  departments?: Array<{ title: string; items: string[] }>;
+  doctors?: Array<{ name: string; role: string }>;
+  facilities?: string[];
+  foreignSupport?: { languages?: string[]; note?: string };
+  trust?: string[];
+};
+
+function ClinicDetailSections({
+  d,
+  t,
+  locale,
+}: {
+  d: ClinicDetails;
+  t: Dictionary['clinicsPage'];
+  locale: PublicLocale;
+}): JSX.Element | null {
+  // details 안의 한국어 라벨은 생성된 번역 맵으로 치환 (kr 은 원문 유지).
+  const L = (v: string): string => localizeKoLabel(v, locale);
+  const hasAny =
+    (d.signatureProcedures?.length ?? 0) > 0 ||
+    (d.departments?.length ?? 0) > 0 ||
+    (d.doctors?.length ?? 0) > 0 ||
+    (d.facilities?.length ?? 0) > 0 ||
+    !!d.foreignSupport ||
+    !!d.phone || !!d.hours || !!d.station || !!d.website;
+  if (!hasAny) return null;
+
+  const h2: React.CSSProperties = { fontSize: 18, fontWeight: 700, margin: '28px 0 12px' };
+  const chip: React.CSSProperties = {
+    display: 'inline-block',
+    border: '1px solid #ffd7de', background: '#fff5f7', color: '#c81e42',
+    borderRadius: 9999, padding: '7px 14px', fontSize: 13, fontWeight: 600,
+  };
+
+  return (
+    <div>
+      {d.tagline ? (
+        <p style={{ fontSize: 15, color: '#ff385c', fontWeight: 600, margin: '18px 0 0', lineHeight: 1.5 }}>
+          {L(d.tagline)}
+        </p>
+      ) : null}
+
+      {d.signatureProcedures?.length ? (
+        <>
+          <h3 style={h2}>{t.detailProcedures}</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {d.signatureProcedures.map((p) => (
+              <span key={p} style={chip}>{L(p)}</span>
+            ))}
+          </div>
+        </>
+      ) : null}
+
+      {d.departments?.length ? (
+        <>
+          <h3 style={h2}>{t.detailDepartments}</h3>
+          <div
+            style={{
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12,
+            }}
+          >
+            {d.departments.map((dep) => (
+              <div
+                key={dep.title}
+                style={{ border: '1px solid #ebebeb', borderRadius: 12, padding: '14px 16px' }}
+              >
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{L(dep.title)}</div>
+                <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 6, lineHeight: 1.6 }}>
+                  {dep.items.map(L).join(' · ')}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
+
+      {d.doctors?.length ? (
+        <>
+          <h3 style={h2}>{t.detailDoctors}</h3>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {d.doctors.map((doc) => (
+              <li key={doc.name} style={{ display: 'flex', gap: 10, alignItems: 'baseline', fontSize: 14 }}>
+                <span style={{ fontWeight: 700, flexShrink: 0 }}>{L(doc.name)}</span>
+                <span style={{ color: '#6a6a6a' }}>{L(doc.role)}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+
+      {d.facilities?.length ? (
+        <>
+          <h3 style={h2}>{t.detailFacilities}</h3>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.7, color: '#3f3f3f' }}>
+            {d.facilities.map((x) => <li key={x}>{L(x)}</li>)}
+          </ul>
+        </>
+      ) : null}
+
+      {d.foreignSupport ? (
+        <>
+          <h3 style={h2}>{t.detailForeign}</h3>
+          {d.foreignSupport.languages?.length ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+              {d.foreignSupport.languages.map((l) => (
+                <span
+                  key={l}
+                  style={{
+                    display: 'inline-block', border: '1px solid #dddddd',
+                    borderRadius: 9999, padding: '6px 13px', fontSize: 13, color: '#222',
+                  }}
+                >
+                  {L(l)}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          {d.foreignSupport.note ? (
+            <p style={{ fontSize: 14, color: '#3f3f3f', margin: 0, lineHeight: 1.6 }}>
+              {L(d.foreignSupport.note)}
+            </p>
+          ) : null}
+        </>
+      ) : null}
+
+      {d.phone || d.hours || d.station || d.website ? (
+        <>
+          <h3 style={h2}>{t.detailInfo}</h3>
+          <div
+            style={{
+              border: '1px solid #ebebeb', borderRadius: 14, padding: '16px 18px',
+              display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14,
+            }}
+          >
+            {d.phone ? (
+              <InfoRow label={t.detailPhone}>
+                <a href={`tel:${d.phone.replace(/[^0-9+]/g, '')}`} style={{ color: '#222', textDecoration: 'none' }}>
+                  {d.phone}{d.clinicPhone ? ` / ${d.clinicPhone}` : ''}
+                </a>
+              </InfoRow>
+            ) : null}
+            {d.hours ? <InfoRow label={t.detailHours}>{L(d.hours)}</InfoRow> : null}
+            {d.station ? <InfoRow label={t.detailStation}>{L(d.station)}</InfoRow> : null}
+            {d.website ? (
+              <InfoRow label={t.detailWebsite}>
+                <a
+                  href={d.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#ff385c', fontWeight: 600, textDecoration: 'none' }}
+                >
+                  {d.website.replace(/^https?:\/\//, '')}
+                </a>
+              </InfoRow>
+            ) : null}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }): JSX.Element {
+  return (
+    <div style={{ display: 'flex', gap: 12 }}>
+      <span style={{ width: 92, flexShrink: 0, color: '#6a6a6a' }}>{label}</span>
+      <span style={{ color: '#222', lineHeight: 1.5 }}>{children}</span>
+    </div>
   );
 }

@@ -109,6 +109,24 @@ export const hospitals = pgTable(
     notes: text('notes'),
 
     /**
+     * 상세 페이지에 노출할 구조화 콘텐츠 (2026-07-26). 병원 홈페이지에서
+     * 수집·정제한 정보를 로케일 무관 형태로 담는다. 문자열 값은 KR 기준이며
+     * 번역이 필요한 항목은 hospital_locale_content 의 intro/seo 와 달리
+     * 짧은 라벨 위주라 lib/i18n/ko-label 맵으로 치환한다.
+     *
+     *   {
+     *     tagline, phone, hours, website, station,
+     *     signatureProcedures: string[],
+     *     departments: [{ title, items: string[] }],
+     *     doctors: [{ name, role }],
+     *     facilities: string[],
+     *     foreignSupport: { languages: string[], note },
+     *     trust: string[]
+     *   }
+     */
+    details: jsonb('details').$type<Record<string, unknown>>().notNull().default({}),
+
+    /**
      * 마스터/에이전시 콘솔의 노출 순서. 낮을수록 먼저. partner_listings
      * 의 sortOrder 와 동일한 컨벤션: 100 을 기본으로 두고 위/아래로
      * 슬라이드. /master/hospitals 페이지에서 inline number input 으로

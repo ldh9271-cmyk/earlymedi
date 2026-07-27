@@ -49,6 +49,24 @@ async function gemini(promptText, retries = 3) {
 }
 
 // ── 라벨 수집 ────────────────────────────────────────────────────
+// hospitals.details 의 구조화 라벨(시술명·진료과·의료진 역할·시설 등)도 수집
+const detailRows = await sql`select details from hospitals where details <> '{}'::jsonb`;
+const detailLabels = [];
+{
+  const push = (v) => { if (typeof v === 'string' && v.trim()) detailLabels.push(v.trim()); };
+  for (const r of detailRows) {
+    const d = r.details ?? {};
+    push(d.tagline); push(d.hours); push(d.station);
+    (d.signatureProcedures ?? []).forEach(push);
+    (d.departments ?? []).forEach((dep) => { push(dep?.title); (dep?.items ?? []).forEach(push); });
+    (d.doctors ?? []).forEach((doc) => { push(doc?.name); push(doc?.role); });
+    (d.facilities ?? []).forEach(push);
+    (d.trust ?? []).forEach(push);
+    (d.foreignSupport?.languages ?? []).forEach(push);
+    push(d.foreignSupport?.note);
+  }
+}
+
 const a = await sql`select distinct promo_label as l from category_listings where promo_label is not null and promo_label <> ''`;
 const b = await sql`select distinct promo_label as l from partner_listings where promo_label is not null and promo_label <> ''`;
 const c = await sql`select distinct price_unit as l from partner_listings where price_unit is not null and price_unit <> ''`;
@@ -60,10 +78,12 @@ const EXTRA_LABELS = [
   '수영장 무료 이용', '사우나 무료 이용', '컨시어지 서비스', '주차 무료',
   // K팝 투어 무료 스팟의 가격 자리 라벨 (details.priceRange)
   '무료 입장', '외부 촬영 무료', '유료 · 사전 예약제',
+  // 병원 주소 도시명
+  '서울', '부산', '인천', '대구', '대전', '광주', '제주',
 ];
 
 const hasKorean = (s) => /[가-힯]/.test(s);
-const labels = [...new Set([...[...a, ...b, ...c].map((r) => r.l.trim()), ...EXTRA_LABELS])]
+const labels = [...new Set([...[...a, ...b, ...c].map((r) => r.l.trim()), ...EXTRA_LABELS, ...detailLabels])]
   .filter((s) => s && hasKorean(s))
   .sort();
 

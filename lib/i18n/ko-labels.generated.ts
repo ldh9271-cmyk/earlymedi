@@ -171,6 +171,13 @@ export const KO_LABELS = {
     "ru": "5 языков · Осмотр и лечение «под ключ»",
     "vi": "Thông dịch 5 ngôn ngữ · Khám-điều trị 1 điểm"
   },
+  "6개 언어 안내 체계 운영 · 강남구청 의료관광 협력기관": {
+    "en": "6 Languages Support · Gangnam-gu Medical Tourism Partner",
+    "zh": "6种语言服务 · 江南区厅医疗观光合作机构",
+    "ja": "6言語案内体系運営 · 江南区庁医療観光協力機関",
+    "ru": "Обслуживание на 6 языках · Партнер медицинского туризма Каннама",
+    "vi": "Hỗ trợ 6 ngôn ngữ · Đối tác du lịch y tế Gangnam-gu"
+  },
   "BTS·트와이스 스타일링": {
     "en": "BTS·TWICE Styling",
     "zh": "BTS·TWICE 造型",
@@ -191,6 +198,13 @@ export const KO_LABELS = {
     "ja": "DDP直結",
     "ru": "Прямой выход к DDP",
     "vi": "Kết nối trực tiếp DDP"
+  },
+  "ENL-윤곽주사": {
+    "en": "ENL Contour Injection",
+    "zh": "ENL轮廓针",
+    "ja": "ENL 輪郭注射",
+    "ru": "Инъекция для контура ENL",
+    "vi": "Tiêm thon gọn ENL"
   },
   "FIMS 비수술 통증": {
     "en": "FIMS Non-Surgical Pain Care",
@@ -289,6 +303,20 @@ export const KO_LABELS = {
     "ja": "Visit Seoul 医療観光公式登録",
     "ru": "Официальный член Visit Seoul Medical Tourism",
     "vi": "Đối tác chính thức Visit Seoul Du lịch Y tế"
+  },
+  "가슴·체형": {
+    "en": "Breast & Body",
+    "zh": "胸部·体型",
+    "ja": "胸・体型",
+    "ru": "Грудь и тело",
+    "vi": "Ngực & Vóc dáng"
+  },
+  "가슴성형": {
+    "en": "Breast Surgery",
+    "zh": "胸部整形",
+    "ja": "豊胸・胸の整形",
+    "ru": "Пластика груди",
+    "vi": "Phẫu thuật nâng ngực"
   },
   "감성 네일": {
     "en": "Aesthetic Nails",
@@ -402,6 +430,20 @@ export const KO_LABELS = {
     "ru": "Эксперт по суставам (3 аккредитации) · 3D-эндопротезирование",
     "vi": "Chuyên khoa khớp chứng nhận 3 lần · Khớp nhân tạo 3D"
   },
+  "광대·사각턱": {
+    "en": "Zygoma & Square Jaw",
+    "zh": "颧骨·方形下巴",
+    "ja": "頬骨・エラ",
+    "ru": "Скулы и квадратная челюсть",
+    "vi": "Gò má & Cằm vuông"
+  },
+  "광주": {
+    "en": "Gwangju",
+    "zh": "光州",
+    "ja": "光州",
+    "ru": "Кванджу",
+    "vi": "Gwangju"
+  },
   "교통사고 입원치료 특화": {
     "en": "Traffic Accident Inpatient Care Specialist",
     "zh": "交通事故住院治疗特化",
@@ -465,6 +507,27 @@ export const KO_LABELS = {
     "ru": "Магазин мерча + кафе",
     "vi": "Cửa hàng phụ kiện + Cà phê"
   },
+  "기능코(비중격)": {
+    "en": "Functional Rhinoplasty (Septum)",
+    "zh": "功能性隆鼻（鼻中隔）",
+    "ja": "機能性鼻整形（鼻中隔）",
+    "ru": "Функциональная ринопластика (перегородка)",
+    "vi": "Nâng mũi chức năng (Vách ngăn)"
+  },
+  "김영준 박사": {
+    "en": "Dr. Kim Young-jun",
+    "zh": "金永俊 博士",
+    "ja": "金永俊 博士",
+    "ru": "Д-р Ким Ён Джун",
+    "vi": "Tiến sĩ Kim Young-jun"
+  },
+  "나노지방이식": {
+    "en": "Nano Fat Grafting",
+    "zh": "纳米脂肪移植",
+    "ja": "ナノ脂肪移植",
+    "ru": "Нано-липофилинг",
+    "vi": "Cấy mỡ Nano"
+  },
   "난치성 피부 한방 특화": {
     "en": "Intractable Skin Oriental Medicine Specialist",
     "zh": "难治性皮肤韩医特化",
@@ -499,6 +562,27 @@ export const KO_LABELS = {
     "ja": "内視鏡+脳健診・透明な費用",
     "ru": "Эндоскопия + обследование мозга · Прозрачные цены",
     "vi": "Nội soi + Tầm soát não · Chi phí minh bạch"
+  },
+  "눈매교정": {
+    "en": "Ptosis Correction",
+    "zh": "眼提肌矫正",
+    "ja": "目元矯正",
+    "ru": "Коррекция опущения века",
+    "vi": "Chỉnh hình sụp mi"
+  },
+  "눈밑지방 재배치": {
+    "en": "Under-Eye Fat Repositioning",
+    "zh": "眼袋脂肪重排",
+    "ja": "目の下脂肪再配置",
+    "ru": "Перераспределение жира под глазами",
+    "vi": "Tái bố trí mỡ bọng mắt"
+  },
+  "눈성형": {
+    "en": "Eye Surgery",
+    "zh": "眼部整形",
+    "ja": "目元整形",
+    "ru": "Пластика глаз",
+    "vi": "Phẫu thuật mắt"
   },
   "눈썹 반영구 20년": {
     "en": "20 Yrs Eyebrow Semi-Permanent Experience",
@@ -542,12 +626,33 @@ export const KO_LABELS = {
     "ru": "Hidden Cut с возвратом к жизни в тот же день",
     "vi": "Hidden Cut phục hồi sinh hoạt ngay trong ngày"
   },
+  "대구": {
+    "en": "Daegu",
+    "zh": "大邱",
+    "ja": "大邱",
+    "ru": "Тэгу",
+    "vi": "Daegu"
+  },
+  "대전": {
+    "en": "Daejeon",
+    "zh": "大田",
+    "ja": "大田",
+    "ru": "Тэджон",
+    "vi": "Daejeon"
+  },
   "대통령자문의 출신 원장": {
     "en": "Head Doctor, Former Presidential Physician",
     "zh": "前总统顾问医生院长",
     "ja": "元・大統領諮問医の院長",
     "ru": "Главврач — экс-консультант президента",
     "vi": "Viện trưởng từng là bác sĩ tư vấn Tổng thống"
+  },
+  "대표원장": {
+    "en": "Chief Director",
+    "zh": "代表院长",
+    "ja": "代表院長",
+    "ru": "Главный врач",
+    "vi": "Viện trưởng"
   },
   "대학병원 출신 원장 직접 집도": {
     "en": "Ex-Univ Hospital Doctor Direct Operation",
@@ -583,6 +688,34 @@ export const KO_LABELS = {
     "ja": "頭痛・めまい精密診断",
     "ru": "Точная диагностика головной боли и головокружения",
     "vi": "Chẩn đoán chính xác đau đầu & chóng mặt"
+  },
+  "드림메디컬그룹 (드림성형외과 · 드림클리닉 · 닥터트웬티프로젝트)": {
+    "en": "Dream Medical Group (Dream Plastic Surgery · Dream Clinic · Dr.20Project)",
+    "zh": "Dream医疗集团（Dream整形外科 · Dream诊所 · Dr.20Project）",
+    "ja": "ドリームメディカルグループ（ドリーム整形外科・ドリームクリニック・Dr.20Project）",
+    "ru": "Dream Medical Group (Dream Plastic Surgery · Dream Clinic · Dr.20Project)",
+    "vi": "Dream Medical Group (Bệnh viện thẩm mỹ Dream · Phòng khám Dream · Dr.20Project)"
+  },
+  "드림메디컬그룹 대표이사": {
+    "en": "CEO of Dream Medical Group",
+    "zh": "Dream医疗集团 代表理事",
+    "ja": "ドリームメディカルグループ 代表取締役",
+    "ru": "Генеральный директор Dream Medical Group",
+    "vi": "CEO Dream Medical Group"
+  },
+  "드림필러": {
+    "en": "Dream Filler",
+    "zh": "Dream玻尿酸",
+    "ja": "ドリームフィラー",
+    "ru": "Филлер Dream",
+    "vi": "Filler Dream"
+  },
+  "러시아어": {
+    "en": "Russian",
+    "zh": "俄语",
+    "ja": "ロシア語",
+    "ru": "Русский",
+    "vi": "Tiếng Nga"
   },
   "러시아어·몽골어 국제진료": {
     "en": "Russian & Mongolian Intl Clinic",
@@ -639,6 +772,20 @@ export const KO_LABELS = {
     "ja": "ルーフトップ無料利用",
     "ru": "Бесплатный доступ на крышу",
     "vi": "Miễn phí sử dụng rooftop"
+  },
+  "마취과 전문의 (수술 중 상주)": {
+    "en": "Anesthesiologist (On-site during surgery)",
+    "zh": "麻醉科专家（手术全程在场）",
+    "ja": "麻酔科専門医（手術中常駐）",
+    "ru": "Анестезиолог (присутствует на операции)",
+    "vi": "Bác sĩ gây mê (Túc trực suốt phẫu thuật)"
+  },
+  "마취과 전문의 2인 상주 안전 시스템": {
+    "en": "Safety System with 2 Resident Anesthesiologists",
+    "zh": "2名麻醉科专家常驻安全系统",
+    "ja": "麻酔科専門医2名常駐の安全システム",
+    "ru": "Система безопасности с 2 анестезиологами",
+    "vi": "Hệ thống an toàn với 2 bác sĩ gây mê túc trực"
   },
   "맞춤 조명·보정 특화": {
     "en": "Custom Lighting · Retouching",
@@ -703,6 +850,13 @@ export const KO_LABELS = {
     "ru": "Создатели макияжа Glass Skin",
     "vi": "Tiên phong trang điểm da căng bóng"
   },
+  "바디 라인 교정": {
+    "en": "Body Line Contouring",
+    "zh": "身体线条塑形",
+    "ja": "ボディライン矯正",
+    "ru": "Коррекция контуров тела",
+    "vi": "Điều chỉnh đường nét cơ thể"
+  },
   "바디프로필 전문": {
     "en": "Body Profile Specialist",
     "zh": "专业身材/健美形象照",
@@ -716,6 +870,13 @@ export const KO_LABELS = {
     "ja": "泊",
     "ru": "Ночь",
     "vi": "Đêm"
+  },
+  "박양수 박사": {
+    "en": "Dr. Park Yang-soo",
+    "zh": "朴良洙 博士",
+    "ja": "朴良洙 博士",
+    "ru": "Д-р Пак Ян Су",
+    "vi": "Tiến sĩ Park Yang-soo"
   },
   "반일": {
     "en": "Half-Day",
@@ -752,12 +913,26 @@ export const KO_LABELS = {
     "ru": "Работает до 21:00",
     "vi": "Mở cửa đến 21:00"
   },
+  "베트남어": {
+    "en": "Vietnamese",
+    "zh": "越南语",
+    "ja": "ベトナム語",
+    "ru": "Вьетнамский",
+    "vi": "Tiếng Việt"
+  },
   "보건복지부장관상 수상": {
     "en": "Minister of Health Award Winner",
     "zh": "荣获保健福祉部长官奖",
     "ja": "保健福祉部長官賞受賞",
     "ru": "Награда Министра здравоохранения",
     "vi": "Giải thưởng Bộ trưởng Bộ Y tế"
+  },
+  "보톡스·필러": {
+    "en": "Botox & Filler",
+    "zh": "肉毒素·玻尿酸",
+    "ja": "ボトックス・フィラー",
+    "ru": "Ботокс и филлеры",
+    "vi": "Botox & Filler"
   },
   "복지부 지정 ENT 전문병원": {
     "en": "MOH-Designated ENT Hospital",
@@ -779,6 +954,13 @@ export const KO_LABELS = {
     "ja": "複合メディカルセンター",
     "ru": "Многопрофильный медицинский центр",
     "vi": "Trung tâm y tế phức hợp"
+  },
+  "부산": {
+    "en": "Busan",
+    "zh": "釜山",
+    "ja": "釜山",
+    "ru": "Пусан",
+    "vi": "Busan"
   },
   "뷰티+클리닉 올인원": {
     "en": "Beauty + Clinic All-in-One",
@@ -829,6 +1011,13 @@ export const KO_LABELS = {
     "ru": "Рядом с высшей больницей и отелем",
     "vi": "Gần bệnh viện tuyến trên & khách sạn"
   },
+  "서울": {
+    "en": "Seoul",
+    "zh": "首尔",
+    "ja": "ソウル",
+    "ru": "Сеул",
+    "vi": "Seoul"
+  },
   "서울대 출신 6인 협진": {
     "en": "Joint Care by 6 SNU Alumni Doctors",
     "zh": "6位首尔大学毕业专家联合诊疗",
@@ -863,6 +1052,34 @@ export const KO_LABELS = {
     "ja": "整形・皮膚・歯科ワンストップ",
     "ru": "Пластика, дерматология и стоматология One-Stop",
     "vi": "Phẫu thuật thẩm mỹ · Da liễu · Nha khoa One-stop"
+  },
+  "성형외과 + 클리닉(피부) + 치과 원스톱 메디컬 빌딩": {
+    "en": "Plastic Surgery + Clinic (Derm) + Dental One-Stop Medical Building",
+    "zh": "整形外科 + 诊所(皮肤) + 牙科 一站式医疗大楼",
+    "ja": "整形外科＋クリニック(皮膚)＋歯科 ワンストップメディカルビル",
+    "ru": "Пластика + Дерматология + Стоматология (Всё в одном)",
+    "vi": "Tòa nhà y tế toàn diện: Thẩm mỹ + Da liễu + Nha khoa"
+  },
+  "성형외과 전문의": {
+    "en": "Board-Certified Plastic Surgeon",
+    "zh": "整形外科专家",
+    "ja": "整形外科専門医",
+    "ru": "Пластический хирург",
+    "vi": "Bác sĩ chuyên khoa thẩm mỹ"
+  },
+  "성형외과 전문의 6인 · 마취과 전문의 2인": {
+    "en": "6 Plastic Surgeons · 2 Anesthesiologists",
+    "zh": "6名整形外科专家 · 2名麻醉科专家",
+    "ja": "整形外科専門医6名・麻酔科専門医2名",
+    "ru": "6 пластических хирургов · 2 анестезиолога",
+    "vi": "6 Bác sĩ thẩm mỹ · 2 Bác sĩ gây mê"
+  },
+  "성형주사·안티에이징": {
+    "en": "Cosmetic Injections & Anti-aging",
+    "zh": "微整形注射·抗衰老",
+    "ja": "美容注射・アンチエイジング",
+    "ru": "Инъекции красоты и омоложение",
+    "vi": "Tiêm thẩm mỹ & Chống lão hóa"
   },
   "세계 임플란트 대회 2위 원장": {
     "en": "Director Ranked 2nd in World Implant Competition",
@@ -913,6 +1130,13 @@ export const KO_LABELS = {
     "ru": "Стиль Сон Хе Гё",
     "vi": "Tạo kiểu Song Hye-kyo"
   },
+  "수술 전후 전담 상담 코디네이터 배정": {
+    "en": "Dedicated Pre & Post Surgery Coordinator",
+    "zh": "配备术前术后专属咨询协调员",
+    "ja": "手術前後専任カウンセリングコーディネーター配置",
+    "ru": "Персональный координатор до и после операции",
+    "vi": "Điều phối viên tư vấn riêng trước & sau phẫu thuật"
+  },
   "수영장 무료 이용": {
     "en": "Free Pool Access",
     "zh": "免费使用游泳池",
@@ -955,12 +1179,26 @@ export const KO_LABELS = {
     "ru": "В пешей доступности от Shinsegae Main Store",
     "vi": "Trong khoảng cách đi bộ đến Shinsegae Trụ sở chính"
   },
+  "신승연 · 박양효": {
+    "en": "Shin Seung-yeon · Park Yang-hyo",
+    "zh": "申承妍 · 朴良孝",
+    "ja": "シン・スンヨン · パク・ヤンヒョ",
+    "ru": "Шин Сын Ён · Пак Ян Хё",
+    "vi": "Shin Seung-yeon · Park Yang-hyo"
+  },
   "실비+수수료 10%": {
     "en": "Actual Cost + 10% Fee",
     "zh": "实际费用+10%手续费",
     "ja": "実費+手数料10%",
     "ru": "Фактическая стоимость + 10% комиссия",
     "vi": "Chi phí thực tế + 10% phí dịch vụ"
+  },
+  "쌍꺼풀": {
+    "en": "Double Eyelid",
+    "zh": "双眼皮",
+    "ja": "二重",
+    "ru": "Двойное веко",
+    "vi": "Cắt/Nhấn mí"
   },
   "아나운서 스타일": {
     "en": "News Anchor Style",
@@ -983,12 +1221,40 @@ export const KO_LABELS = {
     "ru": "Любимое место IU",
     "vi": "Tiệm quen của IU"
   },
+  "안면윤곽 재수술": {
+    "en": "Facial Contour Revision",
+    "zh": "面部轮廓修复术",
+    "ja": "輪郭修正手術",
+    "ru": "Повторная пластика контура лица",
+    "vi": "Tái phẫu thuật gọt hàm/khung mặt"
+  },
   "암케어센터·입원 가능": {
     "en": "Cancer Care Center · Inpatient Available",
     "zh": "癌症护理中心·可住院",
     "ja": "癌ケアセンター・入院可能",
     "ru": "Онкоцентр · Возможна госпитализация",
     "vi": "Trung tâm chăm sóc ung thư · Có thể nhập viện"
+  },
+  "압구정 논현로 본원 · 원스톱 메디컬 케어": {
+    "en": "Apgujeong Nonhyeon-ro Main Clinic · One-Stop Medical Care",
+    "zh": "狎鸥亭论岘路总院 · 一站式医疗护理",
+    "ja": "狎鴎亭論峴路本院・ワンストップメディカルケア",
+    "ru": "Главная клиника на Нонхён-ро (Апкучжон) · Комплексный уход",
+    "vi": "Trụ sở Apgujeong Nonhyeon-ro · Chăm sóc y tế toàn diện"
+  },
+  "압구정역 3번 출구 인근 (신사동 논현로)": {
+    "en": "Near Apgujeong Station Exit 3 (Sinsa-dong, Nonhyeon-ro)",
+    "zh": "狎鸥亭站3号出口附近（新沙洞 论岘路）",
+    "ja": "狎鴎亭駅3番出口近く（新沙洞 論峴路）",
+    "ru": "Около станция Апкучжон, выход 3 (Синса-дон, Нонхён-ро)",
+    "vi": "Gần ga Apgujeong lối ra 3 (Sinsa-dong, Nonhyeon-ro)"
+  },
+  "양악수술": {
+    "en": "Double Jaw Surgery",
+    "zh": "双颚手术",
+    "ja": "両顎手術",
+    "ru": "Двучелюстная операция",
+    "vi": "Phẫu thuật 2 hàm"
   },
   "에스파 단골": {
     "en": "Frequented by aespa",
@@ -1053,6 +1319,13 @@ export const KO_LABELS = {
     "ru": "Профиль без выходных",
     "vi": "Chụp ảnh profile quanh năm"
   },
+  "영어": {
+    "en": "English",
+    "zh": "英语",
+    "ja": "英語",
+    "ru": "Английский",
+    "vi": "Tiếng Anh"
+  },
   "영어 원어민 의료진": {
     "en": "Native English-Speaking Medical Staff",
     "zh": "英语母语医疗团队",
@@ -1116,6 +1389,13 @@ export const KO_LABELS = {
     "ru": "Бесплатная съёмка снаружи",
     "vi": "Chụp ảnh bên ngoài miễn phí"
   },
+  "울써마 리프팅": {
+    "en": "Ulthermage Lifting",
+    "zh": "超声刀+热玛吉提升",
+    "ja": "ウルサーマ リフティング",
+    "ru": "Лифтинг Альтерамаж (Ulthermage)",
+    "vi": "Nâng cơ Ulthermage"
+  },
   "원스톱 메디컬 빌딩": {
     "en": "One-Stop Medical Building",
     "zh": "一站式医疗大楼",
@@ -1144,12 +1424,26 @@ export const KO_LABELS = {
     "ru": "Платно · По предварительной записи",
     "vi": "Trả phí · Yêu cầu đặt trước"
   },
+  "유원재 · 유안나 · 박이현": {
+    "en": "Yoo Won-jae · Yoo Anna · Park Yi-hyun",
+    "zh": "刘元在 · 刘安娜 · 朴怡贤",
+    "ja": "ユ・ウォンジェ · ユ・アンナ · パク・イヒョン",
+    "ru": "Ю Вон Дже · Ю Анна · Пак И Хён",
+    "vi": "Yoo Won-jae · Yoo Anna · Park Yi-hyun"
+  },
   "유튜브 50만 뷰티에이징": {
     "en": "YouTube 500K Beauty Aging",
     "zh": "YouTube 50万 Beauty Aging",
     "ja": "YouTube 50万ビューティーエイジング",
     "ru": "YouTube 500 тыс. просмотров Beauty Aging",
     "vi": "YouTube 500k lượt xem về Beauty Aging"
+  },
+  "윤곽·양악": {
+    "en": "Facial Contour & Double Jaw",
+    "zh": "轮廓·双颚",
+    "ja": "輪郭・両顎",
+    "ru": "Контур лица и две челюсти",
+    "vi": "Gọt hàm & Phẫu thuật 2 hàm"
   },
   "응원봉 성지": {
     "en": "Lightstick Mecca",
@@ -1186,6 +1480,13 @@ export const KO_LABELS = {
     "ru": "Бренд главврача с 40k+ подписчиками в Instagram",
     "vi": "Thương hiệu Viện trưởng với 40k+ trên Instagram"
   },
+  "인천": {
+    "en": "Incheon",
+    "zh": "仁川",
+    "ja": "仁川",
+    "ru": "Инчхон",
+    "vi": "Incheon"
+  },
   "일본 공동 임상·GMP 고순도": {
     "en": "Japan Joint Clinical Trials · High-Purity GMP",
     "zh": "日本联合临床·GMP高纯度",
@@ -1199,6 +1500,13 @@ export const KO_LABELS = {
     "ja": "日本チェーン",
     "ru": "Сеть клиник в Японии",
     "vi": "Chuỗi chi nhánh tại Nhật Bản"
+  },
+  "일본어": {
+    "en": "Japanese",
+    "zh": "日语",
+    "ja": "日本語",
+    "ru": "Японский",
+    "vi": "Tiếng Nhật"
   },
   "일요일 바디프로필": {
     "en": "Sunday Body Profiles",
@@ -1235,6 +1543,13 @@ export const KO_LABELS = {
     "ru": "Множество наград в регенеративной медицине · 1:1 личный врач",
     "vi": "Nhiều giải thưởng Y học Tái tạo · Bác sĩ 1:1 riêng"
   },
+  "재수술": {
+    "en": "Revision Surgery",
+    "zh": "修复手术",
+    "ja": "修正手術",
+    "ru": "Повторная операция",
+    "vi": "Tái phẫu thuật"
+  },
   "재수술 특화": {
     "en": "Specialized in Revision Surgery",
     "zh": "修复/二次手术专精",
@@ -1262,6 +1577,20 @@ export const KO_LABELS = {
     "ja": "全国最大の小児韓医院",
     "ru": "Крупнейшая клиника корейской медицины для детей",
     "vi": "Phòng khám Đông y trẻ em lớn nhất toàn quốc"
+  },
+  "제주": {
+    "en": "Jeju",
+    "zh": "济州",
+    "ja": "済州",
+    "ru": "Чеджу",
+    "vi": "Jeju"
+  },
+  "조승우 · 배한솔 · 강지원": {
+    "en": "Cho Seung-woo · Bae Han-sol · Kang Ji-won",
+    "zh": "曹承佑 · 裴韩率 · 姜智媛",
+    "ja": "チョ・スンウ · ペ・ハンソル · カン・ジウォン",
+    "ru": "Чо Сын У · Пэ Хан Соль · Кан Джи Вон",
+    "vi": "Cho Seung-woo · Bae Han-sol · Kang Ji-won"
   },
   "조식 뷔페 포함": {
     "en": "Breakfast Buffet Included",
@@ -1340,12 +1669,33 @@ export const KO_LABELS = {
     "ru": "Комбинированная трансплантация стволовых клеток и PRP",
     "vi": "Cấy ghép kết hợp Tế bào gốc · PRP"
   },
+  "중국어": {
+    "en": "Chinese",
+    "zh": "中文",
+    "ja": "中国語",
+    "ru": "Китайский",
+    "vi": "Tiếng Trung"
+  },
+  "지방흡입": {
+    "en": "Liposuction",
+    "zh": "吸脂",
+    "ja": "脂肪吸引",
+    "ru": "Липосакция",
+    "vi": "Hút mỡ"
+  },
   "진단+헤어염색 원스톱": {
     "en": "One-Stop Diagnosis + Hair Dye",
     "zh": "诊断+染发 一站式",
     "ja": "診断＋ヘアカラー ワンストップ",
     "ru": "Диагностика + окрашивание «всё в одном»",
     "vi": "Trọn gói Chẩn đoán + Nhuộm tóc"
+  },
+  "진료 철학을 공유하는 전문 의료진이 모인 드림메디컬그룹의 대표 성형외과": {
+    "en": "Flagship plastic surgery clinic of Dream Medical Group with unified medical philosophy",
+    "zh": "秉持共同诊疗理念的Dream医疗集团旗舰整形外科",
+    "ja": "診療哲学を共有する専門医が集うドリームメディカルグループの代表美容外科",
+    "ru": "Флагманская клиника Dream Medical Group с единой философией лечения",
+    "vi": "Bệnh viện thẩm mỹ đại diện của Dream Medical Group với đội ngũ chuyên gia cùng triết lý điều trị"
   },
   "차움 프리미엄·VIP 특화": {
     "en": "Chaum Premium · VIP Specialized",
@@ -1431,6 +1781,13 @@ export const KO_LABELS = {
     "ru": "Комплекс: Цвет + Спич",
     "vi": "Tổng hợp Màu sắc + Diễn thuyết"
   },
+  "코성형": {
+    "en": "Rhinoplasty",
+    "zh": "鼻部整形",
+    "ja": "鼻整形",
+    "ru": "Ринопластика",
+    "vi": "Phẫu thuật nâng mũi"
+  },
   "코질환 특화": {
     "en": "Specialized in Nasal Diseases",
     "zh": "鼻部疾病专科",
@@ -1445,6 +1802,13 @@ export const KO_LABELS = {
     "ru": "Бесплатный пробковый сбор",
     "vi": "Miễn phí mở chai (Corkage Free)"
   },
+  "콧대·코끝 성형": {
+    "en": "Nasal Bridge & Tip Rhinoplasty",
+    "zh": "鼻梁·鼻尖整形",
+    "ja": "鼻筋・鼻尖整形",
+    "ru": "Пластика переносицы и кончика носа",
+    "vi": "Phẫu thuật sống mũi · đầu mũi"
+  },
   "클림 시그니처 4종": {
     "en": "Klim Signature 4 Types",
     "zh": "Klim招牌4项",
@@ -1458,6 +1822,13 @@ export const KO_LABELS = {
     "ja": "ヘルニア国内最多・メッシュフリー",
     "ru": "Максимум операций по грыже в Корее · Без сетки",
     "vi": "Phẫu thuật thoát vị nhiều nhất Hàn Quốc · Không dùng lưới"
+  },
+  "태국어": {
+    "en": "Thai",
+    "zh": "泰语",
+    "ja": "タイ語",
+    "ru": "Тайский",
+    "vi": "Tiếng Thái"
   },
   "터미널 도보권": {
     "en": "Walking Distance from Terminal",
@@ -1508,6 +1879,13 @@ export const KO_LABELS = {
     "ru": "Стильно и аккуратно",
     "vi": "Thời thượng & Tỉ mỉ"
   },
+  "트임 성형": {
+    "en": "Canthoplasty",
+    "zh": "开眼角",
+    "ja": "トゥイム整形 (目頭・目尻切開)",
+    "ru": "Кантопластика",
+    "vi": "Phẫu thuật mở rộng góc mắt"
+  },
   "특전 포토카드": {
     "en": "Special Photocard",
     "zh": "特典小卡",
@@ -1535,6 +1913,13 @@ export const KO_LABELS = {
     "ja": "パーソナルカラースターター",
     "ru": "Персональный цвет: Старт",
     "vi": "Gói khởi đầu Personal Color"
+  },
+  "평일 09:30~19:00 · 토요일 09:30~17:00 (일요일·공휴일 휴진)": {
+    "en": "Weekdays 09:30~19:00 · Sat 09:30~17:00 (Closed Sun & Holidays)",
+    "zh": "平日 09:30~19:00 · 周六 09:30~17:00 (周日·公休日休诊)",
+    "ja": "平日 09:30~19:00・土曜日 09:30~17:00 (日曜日・祝日休診)",
+    "ru": "Будни 09:30~19:00 · Сб 09:30~17:00 (Вс и праздники: вых.)",
+    "vi": "Ngày thường 09:30~19:00 · Thứ 7 09:30~17:00 (Nghỉ Chủ nhật & Ngày lễ)"
   },
   "평일 21시 야간 진료": {
     "en": "Weekday Night Care until 21:00",
