@@ -101,7 +101,7 @@ export const SEOUL_TRAINING_PRODUCTS: ReadonlyArray<TrainingPackageSeed> = [
     description:
       '3박 4일 과정에 전통 제법 산지 견학과 심화 워크숍을 더한 4박 5일 연수 패키지입니다. 서울 인산한의원 세미나 이후 경남 함양 지점으로 이동해 죽염 등 전통 제법 현장을 견학하고, 돌아와 심화 케이스 워크숍과 수료식을 진행합니다. 학술 일정 사이에는 K-뷰티 체험과 서울 관광을 배치했습니다. 통역(영·중·일)·전용 차량·호텔 4박·KTX 이동 포함, 10인 이상 단체 기준.',
     locationLabel: '강남 도곡 · 경남 함양 · 청담',
-    priceWon: 3_800_000,
+    priceWon: 4_500_000,
     durationDays: 5,
     promoLabel: '산지 견학 · 심화 과정',
     itinerary: [
