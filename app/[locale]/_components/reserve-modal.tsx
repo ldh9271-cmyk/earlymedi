@@ -206,12 +206,43 @@ export default function ReserveButton({
   });
 
   /**
+   * 로그인 여부를 확정한다. 마운트 직후 세션 조회가 끝나기 전(authed=null)에
+   * 클릭이 들어올 수 있어, 그때는 조회를 기다렸다 판단한다 — 확인 전이라고
+   * 통과시키면 비회원에게 예약 팝업이 열려버린다.
+   */
+  async function resolveAuthed(): Promise<boolean> {
+    if (authed !== null) return authed;
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setAuthed(false); return false; }
+    try {
+      const { data } = await supabase.auth.getUser();
+      const ok = !!data.user;
+      setAuthed(ok);
+      return ok;
+    } catch {
+      setAuthed(false);
+      return false;
+    }
+  }
+
+  /** 가입 후 이 페이지로 돌아와 예약을 이어가도록 하는 경로. */
+  function signupHref(): string {
+    const back = `${window.location.pathname}?reserve=1`;
+    return `/${locale}/signup?next=${encodeURIComponent(back)}`;
+  }
+
+  /**
    * '결제하기' — 인보이스를 발행하고 결제 단계로 넘어간다.
    * 발행이 실패해도 결제 화면은 띄운다 (게스트를 막지 않고, 관리자는
    * 이후 문의 리드로 확인). 금액은 서버에서 다시 계산한다.
    */
   async function issueInvoice(): Promise<void> {
     if (issuing) return;
+    // 팝업이 열려 있는 동안 세션이 만료됐거나, 확인 전에 열린 경우를 막는다
+    if (!(await resolveAuthed())) {
+      window.location.href = signupHref();
+      return;
+    }
     setIssuing(true);
     setQrFailed(false);
     try {
@@ -282,18 +313,26 @@ export default function ReserveButton({
           const desktop = typeof window.matchMedia === 'function'
             ? window.matchMedia(`(min-width: ${DESKTOP_MIN_WIDTH}px)`).matches
             : window.innerWidth >= DESKTOP_MIN_WIDTH;
-          // 세션 확인이 아직이면(null) 막지 않고 링크로 넘긴다
-          if (authed === false) {
-            // 회원가입 후 이 페이지로 돌아와 팝업이 다시 열리도록 표시
+          if (authed === true) {
+            if (!desktop) return; // 모바일 → 예약 페이지로 이동
             e.preventDefault();
-            const back = `${window.location.pathname}?reserve=1`;
-            window.location.href = `/${locale}/signup?next=${encodeURIComponent(back)}`;
+            setStep('trip');
+            setOpen(true);
             return;
           }
-          if (!desktop) return; // 모바일 → 예약 페이지로 이동
+          // 비로그인이거나 아직 확인 전 — 세션을 확정한 뒤 분기한다.
+          // 확인 전이라고 그냥 열어주면 비회원이 예약 팝업에 들어간다.
           e.preventDefault();
-          setStep('trip');
-          setOpen(true);
+          void (async () => {
+            if (!(await resolveAuthed())) {
+              // 가입을 마치면 이 페이지로 돌아와 팝업이 다시 열린다
+              window.location.href = signupHref();
+              return;
+            }
+            if (!desktop) { window.location.href = href; return; }
+            setStep('trip');
+            setOpen(true);
+          })();
         }}
       >
         {label}
