@@ -119,6 +119,7 @@ export default function ReserveButton({
   const [qrFailed, setQrFailed] = useState(false);
   const [invoiceNo, setInvoiceNo] = useState<string | null>(null);
   const [issuing, setIssuing] = useState(false);
+  const [finishing, setFinishing] = useState(false);
   // null = 확인 전, true/false = 로그인 여부. 헤더와 같은 브라우저 세션을 본다.
   const [authed, setAuthed] = useState<boolean | null>(null);
 
@@ -272,22 +273,44 @@ export default function ReserveButton({
     }
   }
 
-  /** '결제를 완료했어요' — 입금 신고로 표시(관리자가 정산 대조 후 확정). */
-  function reportPaid(): void {
-    if (!invoiceNo) return;
-    void fetch('/api/checkout/order', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invoiceNo }),
-      keepalive: true,
-    }).catch(() => undefined);
-  }
-
   // 회원이면 마이페이지 결제내역에서 인보이스를 바로 확인하게 하고,
   // 비회원은 연락처를 남겨야 컨시어지가 이어받을 수 있으므로 문의 폼으로.
-  const doneHref = authed
-    ? `/${locale}/me${invoiceNo ? `?invoice=${encodeURIComponent(invoiceNo)}` : ''}`
-    : (invoiceNo ? `${confirmHref}&invoice=${encodeURIComponent(invoiceNo)}` : confirmHref);
+  // 렌더 시점의 authed 는 아직 확인 중(null)일 수 있어 링크는 폴백일 뿐,
+  // 실제 목적지는 클릭 때 finishPayment() 가 확정한다.
+  function myPageHref(): string {
+    return `/${locale}/me${invoiceNo ? `?invoice=${encodeURIComponent(invoiceNo)}` : ''}`;
+  }
+  const doneHref = authed === false
+    ? (invoiceNo ? `${confirmHref}&invoice=${encodeURIComponent(invoiceNo)}` : confirmHref)
+    : myPageHref();
+
+  /**
+   * '결제를 완료했어요' — 입금 신고를 먼저 확정하고 이동한다.
+   *
+   * 신고 요청을 띄워만 두고 곧바로 페이지를 옮기면 요청이 중간에 끊겨
+   * 마이페이지에 '입금 대기'로 남는다. 그래서 응답을 기다린 뒤 이동한다
+   * (실패해도 이동은 막지 않는다 — 인보이스는 이미 발행돼 있다).
+   */
+  async function finishPayment(): Promise<void> {
+    if (finishing) return;
+    setFinishing(true);
+    const ok = await resolveAuthed();
+    if (invoiceNo) {
+      try {
+        await fetch('/api/checkout/order', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invoiceNo }),
+        });
+      } catch {
+        /* 신고 실패는 이동을 막지 않는다 */
+      }
+    }
+    // 방금 바뀐 상태가 보이도록 서버에서 새로 받는다
+    window.location.href = ok
+      ? myPageHref()
+      : (invoiceNo ? `${confirmHref}&invoice=${encodeURIComponent(invoiceNo)}` : confirmHref);
+  }
 
   const fieldBox = {
     border: '1px solid #dddddd', borderRadius: 10,
@@ -556,13 +579,15 @@ export default function ReserveButton({
               ) : (
                 <Link
                   href={doneHref}
-                  onClick={reportPaid}
+                  onClick={(e) => { e.preventDefault(); void finishPayment(); }}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     width: '100%', height: 50,
                     background: '#ff385c', color: '#fff',
                     borderRadius: 12, fontSize: 16, fontWeight: 700,
                     textDecoration: 'none',
+                    opacity: finishing ? 0.65 : 1,
+                    pointerEvents: finishing ? 'none' : 'auto',
                   }}
                 >
                   {labels.payDone}
