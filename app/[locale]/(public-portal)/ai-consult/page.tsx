@@ -19,18 +19,20 @@ export const dynamic = 'force-dynamic';
  */
 
 const AI_CSS =
-  // 업로더가 그리드 셀 안으로 들어왔으므로 자체 상단 여백은 끄고
-  // 그리드 gap 이 간격을 담당한다.
+  // 업로더·상담창이 그리드 셀 안으로 들어왔으므로 자체 상단 여백은
+  // 끄고 그리드 gap 이 간격을 담당한다.
   '.m-ai-analyzer-slot .m-ai-upload { margin-top: 0 !important; }'
+  + '.m-ai-chat-slot #ai-chat { margin-top: 0 !important; }'
   + '@media (max-width: 768px) {'
   + '.m-ai-section { padding: 28px 16px 72px !important; }'
   + '.m-ai-h1 { font-size: 24px !important; letter-spacing: -0.5px !important; }'
   + '.m-ai-sub { font-size: 14px !important; }'
   + '.m-ai-grid { grid-template-columns: 1fr !important; gap: 14px !important; margin-top: 28px !important; }'
   + '.m-ai-upload { padding: 36px 20px !important; }'
-  // 모바일(1열)에서는 소스 순서(카드1 → 업로더 → 카드2 → 카드3)를
-  // 그대로 써서 사진 업로드가 '얼굴 분석 → 시술 추천' 바로 아래에 온다.
-  + '.m-ai-analyzer-slot { order: 0 !important; }'
+  // 모바일(1열)에서는 소스 순서(카드1 → 업로더 → 카드2 → 상담창 →
+  // 카드3)를 그대로 써서 업로더는 '얼굴 분석' 카드, 상담창은 '실시간
+  // AI 상담' 카드 바로 아래에 온다.
+  + '.m-ai-analyzer-slot, .m-ai-chat-slot { order: 0 !important; }'
   + '}';
 
 export default async function AiConsultPage({
@@ -132,6 +134,11 @@ export default async function AiConsultPage({
           cta={f.chat.cta}
           ctaHref="#ai-chat"
         />
+        {/* 상담창도 업로더와 같은 방식의 전폭 행 — 데스크톱은 order:5 로
+            업로더 아래, 모바일은 '실시간 AI 상담' 카드 바로 아래. */}
+        <div className="m-ai-chat-slot" style={{ gridColumn: '1 / -1', order: 5 }}>
+          <AiChat locale={params.locale} t={dict.ai.chat} lead={dict.ai.upload} />
+        </div>
         <FeatureCard
           iconBg="#ecfdf5"
           iconColor="#047857"
@@ -147,8 +154,6 @@ export default async function AiConsultPage({
           ctaDisabled
         />
       </div>
-
-      <AiChat locale={params.locale} t={dict.ai.chat} lead={dict.ai.upload} />
     </section>
   );
 }
