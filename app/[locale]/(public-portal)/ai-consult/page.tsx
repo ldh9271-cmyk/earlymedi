@@ -19,12 +19,18 @@ export const dynamic = 'force-dynamic';
  */
 
 const AI_CSS =
-  '@media (max-width: 768px) {'
+  // 업로더가 그리드 셀 안으로 들어왔으므로 자체 상단 여백은 끄고
+  // 그리드 gap 이 간격을 담당한다.
+  '.m-ai-analyzer-slot .m-ai-upload { margin-top: 0 !important; }'
+  + '@media (max-width: 768px) {'
   + '.m-ai-section { padding: 28px 16px 72px !important; }'
   + '.m-ai-h1 { font-size: 24px !important; letter-spacing: -0.5px !important; }'
   + '.m-ai-sub { font-size: 14px !important; }'
   + '.m-ai-grid { grid-template-columns: 1fr !important; gap: 14px !important; margin-top: 28px !important; }'
-  + '.m-ai-upload { padding: 36px 20px !important; margin-top: 28px !important; }'
+  + '.m-ai-upload { padding: 36px 20px !important; }'
+  // 모바일(1열)에서는 소스 순서(카드1 → 업로더 → 카드2 → 카드3)를
+  // 그대로 써서 사진 업로드가 '얼굴 분석 → 시술 추천' 바로 아래에 온다.
+  + '.m-ai-analyzer-slot { order: 0 !important; }'
   + '}';
 
 export default async function AiConsultPage({
@@ -96,6 +102,23 @@ export default async function AiConsultPage({
           cta={dict.ai.cta}
           ctaHref="#ai-analyzer"
         />
+        {/* 업로더는 그리드의 전폭 행 — 데스크톱은 order:4 로 카드 3장
+            아래, 모바일은 위 CSS 가 order 를 풀어 소스 순서(카드1 바로
+            아래)로 노출된다. */}
+        <div className="m-ai-analyzer-slot" style={{ gridColumn: '1 / -1', order: 4 }}>
+          <FaceAnalyzer
+            locale={params.locale}
+            t={dict.ai.upload}
+            note={dict.ai.note}
+            catTitles={{
+              clinic: dict.header.catHospital,
+              personal_color: dict.pcCategory.color.title,
+              hair: dict.pcCategory.hair.title,
+              nail: dict.pcCategory.nail.title,
+              pmu: dict.pcCategory.pmu.title,
+            }}
+          />
+        </div>
         <FeatureCard
           iconBg="#eff6ff"
           iconColor="#2563eb"
@@ -124,19 +147,6 @@ export default async function AiConsultPage({
           ctaDisabled
         />
       </div>
-
-      <FaceAnalyzer
-        locale={params.locale}
-        t={dict.ai.upload}
-        note={dict.ai.note}
-        catTitles={{
-          clinic: dict.header.catHospital,
-          personal_color: dict.pcCategory.color.title,
-          hair: dict.pcCategory.hair.title,
-          nail: dict.pcCategory.nail.title,
-          pmu: dict.pcCategory.pmu.title,
-        }}
-      />
 
       <AiChat locale={params.locale} t={dict.ai.chat} lead={dict.ai.upload} />
     </section>
