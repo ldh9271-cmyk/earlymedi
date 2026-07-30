@@ -15,6 +15,15 @@ const PANEL_CSS =
   '@media (max-width: 768px) {'
   + '.m-cb-panel { width: calc(100vw - 24px) !important; right: 12px !important; bottom: 76px !important; height: 68vh !important; }'
   + '.m-cb-fab { right: 16px !important; bottom: 16px !important; }'
+  + '}'
+  // 하단 고정 예약 바가 있는 상세 페이지(리스팅 .m-ld-bottom-bar,
+  // 클리닉 .m-cd-bottom-bar)에서는 <1024 구간에서 바가 노출되므로
+  // FAB·패널을 바 높이만큼 위로 올려 예약 CTA와 겹치지 않게 한다.
+  + '@media (max-width: 1023px) {'
+  + 'body:has(.m-ld-bottom-bar) .m-cb-fab, body:has(.m-cd-bottom-bar) .m-cb-fab'
+  + ' { bottom: calc(84px + env(safe-area-inset-bottom)) !important; }'
+  + 'body:has(.m-ld-bottom-bar) .m-cb-panel, body:has(.m-cd-bottom-bar) .m-cb-panel'
+  + ' { bottom: calc(150px + env(safe-area-inset-bottom)) !important; }'
   + '}';
 
 export default function ChatBubble({
