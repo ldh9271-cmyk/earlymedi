@@ -1,12 +1,12 @@
 'use client';
 
-// 예약하기 → 데스크톱은 팝업(모달)으로 결제 요약을 띄우고, 모바일은
-// 기존대로 /checkout 페이지로 바로 이동한다. 좁은 화면에서 모달은
-// 스크롤·닫기가 번거로워 전체 페이지가 더 낫다.
+// 예약하기 → 데스크톱·모바일 모두 같은 팝업(모달) 흐름이다 (2026-07-28
+// 부터 통일). 모바일에서는 전면 시트로 펼쳐진다. href(/checkout)는 JS 가
+// 실행되기 전 클릭에 대한 폴백으로만 남아 있다.
 //
 // 모달은 2단계다.
 //   1) 예약 정보 — 날짜(달력)·시간·인원을 직접 고르고 요금이 즉시 갱신
-//   2) 결제 — 알리페이 QR 을 띄우고, 결제 후 컨시어지 확인으로 연결
+//   2) 결제 — 인보이스 발행 + 알리페이 QR → 완료 시 마이페이지/문의로 연결
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
@@ -24,8 +24,6 @@ export type ReserveSummary = {
   interest: string;
 };
 
-/** 팝업으로 띄울 최소 화면 폭 — 이 아래는 페이지 이동. */
-const DESKTOP_MIN_WIDTH = 1024;
 const MAX_GUESTS = 6;
 /** 상담·픽업 가능한 시간대 (24h 기준, 로케일 포맷으로 표시). */
 const HOUR_SLOTS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
@@ -140,15 +138,10 @@ export default function ReserveButton({
   useEffect(() => { setMinDate(todayYmd()); }, []);
 
   // 가입/로그인을 마치고 ?reserve=1 로 돌아오면 예약을 이어서 진행한다.
-  // 데스크톱만 팝업이므로 좁은 화면에서는 그대로 둔다 (예약 페이지로 간다).
   useEffect(() => {
     if (!authed || typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     if (params.get('reserve') !== '1') return;
-    const desktop = typeof window.matchMedia === 'function'
-      ? window.matchMedia(`(min-width: ${DESKTOP_MIN_WIDTH}px)`).matches
-      : window.innerWidth >= DESKTOP_MIN_WIDTH;
-    if (!desktop) return;
     setStep('trip');
     setOpen(true);
     // 새로고침해도 다시 열리지 않도록 쿼리를 정리
@@ -332,27 +325,20 @@ export default function ReserveButton({
         style={style}
         onClick={(e) => {
           if (typeof window === 'undefined') return;
-          // CSS 브레이크포인트와 같은 기준으로 판단 — 모바일은 링크 그대로
-          const desktop = typeof window.matchMedia === 'function'
-            ? window.matchMedia(`(min-width: ${DESKTOP_MIN_WIDTH}px)`).matches
-            : window.innerWidth >= DESKTOP_MIN_WIDTH;
+          e.preventDefault();
           if (authed === true) {
-            if (!desktop) return; // 모바일 → 예약 페이지로 이동
-            e.preventDefault();
             setStep('trip');
             setOpen(true);
             return;
           }
           // 비로그인이거나 아직 확인 전 — 세션을 확정한 뒤 분기한다.
           // 확인 전이라고 그냥 열어주면 비회원이 예약 팝업에 들어간다.
-          e.preventDefault();
           void (async () => {
             if (!(await resolveAuthed())) {
               // 가입을 마치면 이 페이지로 돌아와 팝업이 다시 열린다
               window.location.href = signupHref();
               return;
             }
-            if (!desktop) { window.location.href = href; return; }
             setStep('trip');
             setOpen(true);
           })();
@@ -366,6 +352,7 @@ export default function ReserveButton({
           role="dialog"
           aria-modal="true"
           onClick={() => setOpen(false)}
+          className="m-rsv-overlay"
           style={{
             position: 'fixed', inset: 0, zIndex: 100,
             background: 'rgba(0,0,0,0.45)',
@@ -373,8 +360,20 @@ export default function ReserveButton({
             padding: 20,
           }}
         >
+          {/* 모바일: 데스크톱과 같은 흐름을 전면 시트로 펼친다 */}
+          <style
+            dangerouslySetInnerHTML={{
+              __html:
+                '@media (max-width: 767px) {'
+                + '.m-rsv-overlay { padding: 0 !important; align-items: stretch !important; }'
+                + '.m-rsv-dialog { max-width: none !important; max-height: none !important;'
+                + ' height: 100dvh !important; border-radius: 0 !important; }'
+                + '}',
+            }}
+          />
           <div
             onClick={(e) => e.stopPropagation()}
+            className="m-rsv-dialog"
             style={{
               width: '100%', maxWidth: 520, maxHeight: '88vh',
               background: '#fff', borderRadius: 16,

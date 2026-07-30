@@ -552,17 +552,22 @@ export default async function ListingDetailPage({
             {d.selectDateNote}
           </div>
         </div>
-        <Link
+        {/* PC 우측 카드와 같은 예약 팝업(날짜·시간·인원 → 결제) 흐름.
+            href 는 JS 실행 전 클릭에 대한 /checkout 폴백. */}
+        <ReserveButton
+          locale={params.locale}
           href={reserveHref}
+          label={d.reserve}
+          summary={reserveSummary}
+          labels={dict.checkout}
+          listingSlug={listing.slug}
           style={{
             background: '#ff385c', color: '#fff',
             fontSize: 15, fontWeight: 700,
             padding: '12px 22px', borderRadius: 12,
-            textDecoration: 'none', whiteSpace: 'nowrap',
+            textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
           }}
-        >
-          {d.reserve}
-        </Link>
+        />
       </div>
     </div>
   );
