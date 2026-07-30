@@ -61,6 +61,10 @@ export const PUBLIC_PREFIXES = [
   '/api/ai/chat-lead',
   // 공개 예약 팝업의 인보이스 발행 — 로그인 없이 결제 단계로 넘어간다
   '/api/checkout/order',
+  // 토스페이먼츠 — confirm 은 successUrl 랜딩(게스트 세션, 조직 없음)이
+  // 호출하고 webhook 은 토스 서버가 호출한다. 둘 다 Supabase 세션에
+  // 기대지 않고, 인보이스 대조 + 토스 API 재조회로 스스로 방어한다.
+  '/api/payments/toss',
   '/pricing',
   '/about',
   '/legal',

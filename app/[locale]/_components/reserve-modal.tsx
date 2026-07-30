@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
+import { openTossPayment, tossClientKey } from '@/lib/payments/toss-client';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 
 export type ReserveSummary = {
@@ -240,6 +241,7 @@ export default function ReserveButton({
     }
     setIssuing(true);
     setQrFailed(false);
+    let issuedNo: string | null = null;
     try {
       const res = await fetch('/api/checkout/order', {
         method: 'POST',
@@ -257,14 +259,35 @@ export default function ReserveButton({
       });
       if (res.ok) {
         const data = (await res.json()) as { invoiceNo?: string };
-        if (data.invoiceNo) setInvoiceNo(data.invoiceNo);
+        if (data.invoiceNo) {
+          issuedNo = data.invoiceNo;
+          setInvoiceNo(data.invoiceNo);
+        }
       }
     } catch {
       /* 발행 실패해도 결제 안내는 계속 */
-    } finally {
-      setIssuing(false);
-      setStep('pay');
     }
+
+    // 토스페이먼츠가 구성돼 있으면 QR 대신 토스 결제창을 연다. 인증이
+    // 진행되면 successUrl 로 떠나고, 사용자가 창을 닫으면 예약 정보
+    // 단계에 그대로 남는다 (같은 인보이스로 재시도 가능). 결제창 열기
+    // 자체가 실패하면 기존 알리페이 QR 단계로 폴백한다.
+    if (issuedNo && tossClientKey()) {
+      const outcome = await openTossPayment({
+        amount: total,
+        orderId: issuedNo,
+        orderName: summary.title,
+        successUrl: `${window.location.origin}/${locale}/checkout/toss/success`,
+        failUrl: `${window.location.origin}/${locale}/checkout/toss/fail`,
+      });
+      setIssuing(false);
+      if (outcome === 'redirected' || outcome === 'cancelled') return;
+      setStep('pay');
+      return;
+    }
+
+    setIssuing(false);
+    setStep('pay');
   }
 
   // 회원이면 마이페이지 결제내역에서 인보이스를 바로 확인하게 하고,
