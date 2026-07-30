@@ -8,6 +8,7 @@
 //   1) 예약 정보 — 날짜(달력)·시간·인원을 직접 고르고 요금이 즉시 갱신
 //   2) 결제 — 인보이스 발행 + 알리페이 QR → 완료 시 마이페이지/문의로 연결
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
@@ -347,14 +348,18 @@ export default function ReserveButton({
         {label}
       </Link>
 
-      {open ? (
+      {/* 트리거가 하단 고정 바(fixed z-40) 안에 있으면 그 스태킹
+          컨텍스트에 갇혀 z-100 이어도 헤더(z-50)·챗 버블(z-60) 아래에
+          깔린다 — 팝업이 헤더에 잘리고 스크롤이 막힌 것처럼 보인다.
+          portal 로 body 직속에 렌더해 어디서 열어도 최상단에 띄운다. */}
+      {open && typeof document !== 'undefined' ? createPortal(
         <div
           role="dialog"
           aria-modal="true"
           onClick={() => setOpen(false)}
           className="m-rsv-overlay"
           style={{
-            position: 'fixed', inset: 0, zIndex: 100,
+            position: 'fixed', inset: 0, zIndex: 200,
             background: 'rgba(0,0,0,0.45)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: 20,
@@ -597,7 +602,8 @@ export default function ReserveButton({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );
