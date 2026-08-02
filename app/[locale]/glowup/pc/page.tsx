@@ -5,7 +5,7 @@ import { MainFooter } from '../../_components/main-footer';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 
 export const metadata = {
-  title: '여행 종류 · glow-up',
+  title: '여행 종류 · 글로우업투어',
   description:
     '자유여행 · 패키지여행 · 연수패키지 — 3가지 K-뷰티 여행 스타일 중 하나를 골라 시작하세요.',
 };

@@ -4,7 +4,7 @@ import { BottomTabBar } from '../_components/bottom-tab-bar';
 import { HeartIcon } from '../_components/heart-icon';
 import { EXPLORE_FOODS } from '../_components/program-data';
 
-export const metadata = { title: '맛집 · K-팝 — glow-up' };
+export const metadata = { title: '맛집 · K-팝 · 글로우업투어' };
 
 /**
  * Screen 3 — Explore (food & K-pop).

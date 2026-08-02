@@ -8,6 +8,7 @@ import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { DetailInfo } from './_components/detail-info';
 import { HeroMobileCarousel } from './_components/hero-mobile-carousel';
 import ReserveButton, { type ReserveSummary } from '@/app/[locale]/_components/reserve-modal';
+import { BRAND_NAME } from '@/lib/seo/brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,9 @@ export async function generateMetadata({
     locale: params.locale,
     slug: decodedSlug(params.slug),
   });
-  return { title: listing ? `${listing.title} · KoreaGlowUp` : 'Listing · KoreaGlowUp' };
+  return {
+    title: listing ? `${listing.title} · ${BRAND_NAME}` : `Listing · ${BRAND_NAME}`,
+  };
 }
 
 /**

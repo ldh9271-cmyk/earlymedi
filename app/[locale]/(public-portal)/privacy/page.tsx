@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
 
-export const metadata = { title: '개인정보처리방침 · KoreaGlowUp' };
+export const metadata = { title: '개인정보처리방침 · 글로우업투어' };
 export const dynamic = 'force-dynamic';
 
 /**

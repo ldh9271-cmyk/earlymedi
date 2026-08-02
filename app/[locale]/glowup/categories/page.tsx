@@ -4,7 +4,7 @@ import { PhoneFrame, StatusBar } from '../_components/phone';
 import { BottomTabBar } from '../_components/bottom-tab-bar';
 import { CATEGORIES_FEED } from '../_components/program-data';
 
-export const metadata = { title: '전체 카테고리 — glow-up' };
+export const metadata = { title: '전체 카테고리 · 글로우업투어' };
 
 /**
  * Screen 4 — All categories feed.

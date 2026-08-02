@@ -7,7 +7,7 @@ import type { PcCategoryKey } from '../glowup/pc/_components/pc-header';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'KoreaGlowUp' };
+export const metadata = { title: '결제 · 글로우업투어' };
 
 /**
  * Confirm-and-pay screen — Airbnb-style listing checkout based on the
