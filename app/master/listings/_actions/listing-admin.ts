@@ -576,6 +576,10 @@ export async function seedSeoulHairAction(_formData: FormData): Promise<void> {
           priceRange: p.priceRange,
           foreignerSupport: p.foreignerSupport,
           hours: p.hours ?? null,
+          priceTable: p.priceTable
+            ? p.priceTable.map((g) => ({ group: g.group, items: g.items.map((i) => ({ ...i })) }))
+            : null,
+          priceNote: p.priceNote ?? null,
           subType: 'free',
           seoTags: [...p.seoTags],
           og: p.ogDescription,

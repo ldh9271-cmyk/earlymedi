@@ -447,6 +447,77 @@ export default async function ListingDetailPage({
         );
       })()}
 
+      {/* 가격표 — 매장 공식 메뉴판(details.priceTable). 그룹별로 묶어
+          시술명과 금액을 나열한다. 없는 상품은 섹션 자체가 숨는다. */}
+      {(() => {
+        const raw = listing.details.priceTable;
+        if (!Array.isArray(raw)) return null;
+        const groups = (raw as Array<{ group?: unknown; items?: unknown }>)
+          .map((g) => ({
+            group: typeof g.group === 'string' ? g.group : '',
+            items: Array.isArray(g.items)
+              ? (g.items as Array<{ name?: unknown; won?: unknown }>)
+                  .map((i) => ({
+                    name: typeof i.name === 'string' ? i.name : '',
+                    won: typeof i.won === 'number' ? i.won : 0,
+                  }))
+                  .filter((i) => i.name && i.won > 0)
+              : [],
+          }))
+          .filter((g) => g.group && g.items.length > 0);
+        if (groups.length === 0) return null;
+        const note = typeof listing.details.priceNote === 'string' ? listing.details.priceNote : '';
+        const heading: Record<string, string> = {
+          kr: '가격표', en: 'Price list', zh: '价目表',
+          ja: '料金表', ru: 'Прайс-лист', vi: 'Bảng giá',
+        };
+        return (
+          <>
+            <Divider />
+            <section style={{ padding: '0 22px' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px', lineHeight: 1.3 }}>
+                {heading[params.locale] ?? heading.kr}
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {groups.map((g, gi) => (
+                  <div key={gi} style={{ border: '1px solid #ebebeb', borderRadius: 14, padding: '14px 18px' }}>
+                    <div
+                      style={{
+                        fontSize: 13, fontWeight: 700, color: '#ff385c',
+                        letterSpacing: '0.2px', marginBottom: 4,
+                      }}
+                    >
+                      {g.group}
+                    </div>
+                    {g.items.map((it, ii) => (
+                      <div
+                        key={ii}
+                        style={{
+                          display: 'flex', justifyContent: 'space-between',
+                          alignItems: 'baseline', gap: 14,
+                          padding: '9px 0',
+                          borderTop: ii === 0 ? undefined : '1px solid #f5f5f5',
+                        }}
+                      >
+                        <span style={{ fontSize: 14, color: '#222', lineHeight: 1.5 }}>{it.name}</span>
+                        <span style={{ flexShrink: 0, fontSize: 14, fontWeight: 600, color: '#222' }}>
+                          ₩{it.won.toLocaleString('ko-KR')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              {note ? (
+                <p style={{ fontSize: 12, color: '#6a6a6a', margin: '12px 0 0', lineHeight: 1.6 }}>
+                  {note}
+                </p>
+              ) : null}
+            </section>
+          </>
+        );
+      })()}
+
       {/* 상세 정보 — detail landing image + Google map. Renders only
           when at least one of (detailLandingImageUrl, address) is set
           in details JSONB. Image starts truncated to 600px with an
