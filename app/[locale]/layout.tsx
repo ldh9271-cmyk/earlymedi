@@ -26,8 +26,13 @@ export async function generateMetadata({
   return {
     // absolute — 루트 레이아웃의 '· KoreaGlowUp AI Concierge' 템플릿은
     // B2B SaaS 이름이라 소비자 포털 제목에 붙으면 브랜드가 흐려진다.
-    // 대신 대표 브랜드명을 접미로 달아 브랜드 검색에 잡히게 한다.
-    title: { absolute: `${dict.meta.siteTitle} · ${BRAND_NAME}` },
+    // 대신 대표 브랜드명을 접미로 단다. 단 사전 제목이 이미 브랜드로
+    // 시작하는 로케일(kr)에서는 붙이지 않는다 — 중복 노출 방지.
+    title: {
+      absolute: dict.meta.siteTitle.includes(BRAND_NAME)
+        ? dict.meta.siteTitle
+        : `${dict.meta.siteTitle} · ${BRAND_NAME}`,
+    },
     description: dict.meta.siteDescription,
     // 한글·영문 표기가 갈리는 브랜드라 별칭을 키워드로도 넣어 둔다.
     keywords: [BRAND_NAME, ...BRAND_ALIASES],
