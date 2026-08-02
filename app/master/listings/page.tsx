@@ -606,18 +606,19 @@ export default async function MasterListingsPage({
         className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/50 px-4 py-3"
       >
         <div className="text-xs text-muted-foreground">
-          <p className="font-semibold text-foreground">청담·압구정 헤어샵 9종 일괄 등록</p>
+          <p className="font-semibold text-foreground">청담·압구정·강남역 헤어샵 10종 일괄 등록</p>
           <p className="mt-0.5">
             차홍아르더 도산·청담 본샵·제니하우스 청담힐·조이187·멥시·드엔·스틸앤스톤·
-            준오헤어 사옥점·인트라다. category=hair, SEO 메타는 locale content(kr) 에
-            저장. 같은 slug 가 이미 있으면 자동 스킵 (멱등).
+            준오헤어 사옥점·인트라다·리안헤어 강남역점. category=hair, SEO 메타는
+            locale content(kr) 에 저장. 같은 slug 가 이미 있으면 자동 스킵 (멱등) —
+            이미 9종이 등록돼 있으면 리안헤어만 새로 들어간다.
           </p>
         </div>
         <button
           type="submit"
           className="rounded-md border border-indigo-400 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-800 hover:bg-indigo-50"
         >
-          헤어샵 9종 일괄 등록
+          헤어샵 10종 일괄 등록
         </button>
       </form>
 

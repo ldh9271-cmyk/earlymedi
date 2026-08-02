@@ -1,7 +1,8 @@
 /**
- * 청담·압구정 외국인 FIT 추천 헤어샵 9곳 — founder 2026-07-24 큐레이션.
+ * 청담·압구정·강남역 외국인 FIT 추천 헤어샵 10곳 — founder 2026-07-24
+ * 큐레이션 (2026-08-02 리안헤어 강남역점 추가).
  *
- * 마스터 콘솔의 "헤어샵 9종 일괄 등록" 버튼이 이 배열을 읽어
+ * 마스터 콘솔의 "헤어샵 일괄 등록" 버튼이 이 배열을 읽어
  * partner_listings 테이블에 category='hair', status='approved' 로
  * 한 번에 insert. 같은 slug 는 skip — 멱등.
  *
@@ -22,6 +23,8 @@ export type HairShopSeed = {
   station: string;
   services: string;
   priceRange: string;
+  /** 영업시간 — 확인된 곳만. details.hours 로 저장. */
+  hours?: string;
   /** ₩ 표시용 가격 (하한값 — 컷 기준). */
   priceWon: number;
   foreignerSupport: string;
@@ -206,5 +209,26 @@ export const SEOUL_HAIR_PRODUCTS: ReadonlyArray<HairShopSeed> = [
       '압구정 신사동. 한국식 단발·레이어드컷·무빙펌 트렌드 특화. K헤어 스타일 체험. GlowUpTour에서 예약.',
     seoTags: ['압구정헤어샵', '한국단발', '레이어드컷', '무빙펌', '트렌드헤어', 'Korean bob haircut', 'K-layered cut Seoul', 'Korean perm', '외국인헤어샵'],
     ogDescription: '압구정 헤어 | 인트라다·K단발·레이어드컷 트렌드 맛집 — GlowUpTour',
+  },
+  {
+    title: '리안헤어 강남역점 (Riahn Hair Gangnam Station)',
+    slug: 'riahn-hair-gangnam-station',
+    description:
+      '강남역 3번 출구 도보 1분, 전국 단위 미용 프랜차이즈 리안헤어의 강남역 지점. 카카오헤어샵 평점 4.7 / 리뷰 598건으로 강남권 헤어샵 중 검증된 후기 규모를 갖췄다. 여성 컷 ₩20,000 · 남성 컷 ₩18,000 으로, 강남 주요 프랜차이즈 10곳 평균(₩25,500) 대비 저렴해 "강남 한복판 가성비"가 강점 — 청담 셀럽 살롱이 부담스러운 첫 방문 외국인에게 적합하다. 1:1 디자이너 맞춤 상담으로 컷·펌·염색·볼륨매직·클리닉을 진행하며, 프랜차이즈 표준 교육을 거친 디자이너가 응대한다. 카카오헤어샵 앱으로 사전 예약 가능.',
+    locationLabel: '역삼동 (강남역)',
+    address: '서울 강남구 강남대로84길 6 2층 리안헤어 강남역점',
+    phone: '02-3453-7910',
+    station: '강남역 3번 출구 도보 1분',
+    services: '컷 · 펌 · 염색 · 볼륨매직 · 클리닉 · 1:1 디자이너 맞춤 시술',
+    priceRange: '여성 컷 ₩20,000 / 남성 컷 ₩18,000 · 펌·염색 문의',
+    hours: '10:30~21:30 (시술별 예약 마감 상이 · 주말·공휴일 조기 마감)',
+    priceWon: 18_000,
+    foreignerSupport: '카카오헤어샵 예약 가능 (영어 응대 사전 문의)',
+    promoLabel: '강남역 가성비 · 평점 4.7',
+    seoTitle: '리안헤어 강남역점 | 강남역 가성비 헤어샵 | GlowUpTour',
+    seoDescription:
+      '강남역 3번 출구 도보 1분. 컷 ₩18,000~ 강남 평균 대비 저렴. 카카오헤어샵 평점 4.7·리뷰 598건. 1:1 디자이너 맞춤 시술. GlowUpTour에서 예약.',
+    seoTags: ['강남역헤어샵', '리안헤어', '가성비미용실', '강남컷', '프랜차이즈미용실', 'Gangnam hair salon', 'affordable haircut Seoul', 'Korean haircut Gangnam', '외국인헤어샵'],
+    ogDescription: '강남역 헤어 | 리안헤어·역 도보 1분·컷 ₩18,000~ 가성비 — GlowUpTour',
   },
 ];

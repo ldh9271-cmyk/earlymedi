@@ -524,11 +524,11 @@ export async function seedSeoulMakeupAction(_formData: FormData): Promise<void> 
 }
 
 /**
- * 청담·압구정 외국인 FIT 추천 헤어샵 9곳 일괄 등록.
+ * 청담·압구정·강남역 외국인 FIT 추천 헤어샵 10곳 일괄 등록.
  *
  *   - category='hair', status='approved', details 에 address(구글
  *     지도) + phone/station/services/priceRange/foreignerSupport
- *     + subType='free' + seoTags + og 저장.
+ *     + hours + subType='free' + seoTags + og 저장.
  *   - SEO 메타는 partner_listing_locale_content 의 kr 행에 저장 —
  *     translate-locale-content.mjs 가 이후 5개 로케일 생성.
  *   - 멱등: 같은 slug 가 이미 있으면 skip.
@@ -575,6 +575,7 @@ export async function seedSeoulHairAction(_formData: FormData): Promise<void> {
           services: p.services,
           priceRange: p.priceRange,
           foreignerSupport: p.foreignerSupport,
+          hours: p.hours ?? null,
           subType: 'free',
           seoTags: [...p.seoTags],
           og: p.ogDescription,

@@ -392,6 +392,61 @@ export default async function ListingDetailPage({
         );
       })()}
 
+      {/* 매장 정보 — 시드가 details JSONB 에 넣어 둔 전화·영업시간·
+          오시는 길·시술·가격대·외국인 응대. 헤어/메이크업/PMU 같은
+          샵형 상품에만 값이 있고, 없는 상품은 섹션 자체가 숨는다.
+          라벨은 itinerary 헤딩과 같은 방식으로 인라인 로케일 맵 —
+          사전 6종을 건드리지 않기 위함. */}
+      {(() => {
+        const s = (k: string): string =>
+          typeof listing.details[k] === 'string' ? (listing.details[k] as string).trim() : '';
+        const rows: Array<{ label: Record<string, string>; value: string }> = [
+          { label: { kr: '전화', en: 'Phone', zh: '电话', ja: '電話', ru: 'Телефон', vi: 'Điện thoại' }, value: s('phone') },
+          { label: { kr: '영업시간', en: 'Hours', zh: '营业时间', ja: '営業時間', ru: 'Часы работы', vi: 'Giờ mở cửa' }, value: s('hours') },
+          { label: { kr: '오시는 길', en: 'Getting there', zh: '交通', ja: 'アクセス', ru: 'Как добраться', vi: 'Đường đi' }, value: s('station') },
+          { label: { kr: '시술', en: 'Services', zh: '服务项目', ja: 'サービス', ru: 'Услуги', vi: 'Dịch vụ' }, value: s('services') },
+          { label: { kr: '가격대', en: 'Price range', zh: '价格区间', ja: '料金目安', ru: 'Цены', vi: 'Khoảng giá' }, value: s('priceRange') },
+          { label: { kr: '외국인 응대', en: 'Language support', zh: '外语支持', ja: '外国語対応', ru: 'Языки', vi: 'Hỗ trợ ngoại ngữ' }, value: s('foreignerSupport') },
+        ].filter((r) => r.value);
+        if (rows.length === 0) return null;
+        const heading: Record<string, string> = {
+          kr: '매장 정보', en: 'Shop information', zh: '店铺信息',
+          ja: '店舗情報', ru: 'О салоне', vi: 'Thông tin cửa hàng',
+        };
+        return (
+          <>
+            <Divider />
+            <section style={{ padding: '0 22px' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px', lineHeight: 1.3 }}>
+                {heading[params.locale] ?? heading.kr}
+              </h2>
+              <div
+                style={{
+                  border: '1px solid #ebebeb', borderRadius: 14,
+                  padding: '6px 20px',
+                }}
+              >
+                {rows.map((r, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex', gap: 16, alignItems: 'flex-start',
+                      padding: '13px 0',
+                      borderTop: i === 0 ? undefined : '1px solid #f2f2f2',
+                    }}
+                  >
+                    <span style={{ flexShrink: 0, width: 96, fontSize: 13, color: '#6a6a6a' }}>
+                      {r.label[params.locale] ?? r.label.kr}
+                    </span>
+                    <span style={{ fontSize: 14, color: '#222', lineHeight: 1.55 }}>{r.value}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        );
+      })()}
+
       {/* 상세 정보 — detail landing image + Google map. Renders only
           when at least one of (detailLandingImageUrl, address) is set
           in details JSONB. Image starts truncated to 600px with an
