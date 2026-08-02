@@ -7,6 +7,7 @@ import {
   type PublicLocale,
 } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import { BRAND_ALIASES, BRAND_NAME, brandJsonLd } from '@/lib/seo/brand';
 
 /**
  * Per-locale metadata (title / description / openGraph). Overrides the
@@ -23,8 +24,13 @@ export async function generateMetadata({
   const dict = await getDictionary(params.locale as PublicLocale);
   const url = `/${params.locale}`;
   return {
-    title: dict.meta.siteTitle,
+    // absolute — 루트 레이아웃의 '· KoreaGlowUp AI Concierge' 템플릿은
+    // B2B SaaS 이름이라 소비자 포털 제목에 붙으면 브랜드가 흐려진다.
+    // 대신 대표 브랜드명을 접미로 달아 브랜드 검색에 잡히게 한다.
+    title: { absolute: `${dict.meta.siteTitle} · ${BRAND_NAME}` },
     description: dict.meta.siteDescription,
+    // 한글·영문 표기가 갈리는 브랜드라 별칭을 키워드로도 넣어 둔다.
+    keywords: [BRAND_NAME, ...BRAND_ALIASES],
     alternates: {
       canonical: url,
       languages: Object.fromEntries(
@@ -34,7 +40,7 @@ export async function generateMetadata({
     openGraph: {
       type: 'website',
       url,
-      siteName: 'glow-up',
+      siteName: BRAND_NAME,
       locale: LOCALE_TO_BCP47[params.locale as PublicLocale].replace('-', '_'),
       title: dict.meta.ogTitle,
       description: dict.meta.ogDescription,
@@ -76,7 +82,18 @@ export default function PublicLocaleRootLayout({
   if (!isPublicLocale(params.locale)) {
     notFound();
   }
-  return <>{children}</>;
+  return (
+    <>
+      {/* 브랜드 엔티티(Organization + WebSite) — 검색엔진이 '코리아
+          글로우업 / 글로우업투어' 같은 표기 변형을 한 브랜드로 묶도록
+          alternateName 을 명시한다. 공개 포털 전 페이지에 실린다. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: brandJsonLd(params.locale) }}
+      />
+      {children}
+    </>
+  );
 }
 
 // Pre-generate every locale segment so /kr, /en, /zh, /ja, /ru, /vi

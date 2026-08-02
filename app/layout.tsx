@@ -64,9 +64,20 @@ export const metadata: Metadata = {
   // 기본이다. apex(glowuptour.com)가 www 로 307 리다이렉트되기 때문에
   // 속성을 non-www 로 등록하면 파일 방식이 실패하는데, 그때는 콘솔에서
   // 'HTML 태그' 방식의 content 값을 이 env 에 넣으면 된다.
-  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
-    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
-    : undefined,
+  // 네이버·빙은 콘솔에서 발급한 값을 env 로 넣으면 메타태그가 생긴다.
+  // (네이버 서치어드바이저 = naver-site-verification,
+  //  Bing Webmaster Tools = msvalidate.01)
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: {
+      ...(process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION
+        ? { 'naver-site-verification': process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION }
+        : {}),
+      ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+        ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+        : {}),
+    },
+  },
 };
 
 export const viewport: Viewport = {
