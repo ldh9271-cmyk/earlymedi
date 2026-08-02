@@ -240,7 +240,7 @@ const en: Dictionary = {
     noClinicsInCategory: 'No clinics listed in this category yet.',
   },
   meta: {
-    siteTitle: 'glow-up — Play in Seoul, glow up in 4 nights 5 days',
+    siteTitle: 'GlowUpTour-Play in Korea, glow up',
     siteDescription: 'From personal-color analysis to K-pop landmarks and authentic local restaurants — an all-in-one K-beauty trip.',
     ogTitle: 'glow-up · AI concierge for Korean medical tourism',
     ogDescription: 'Compare clinics, treatments, and trips in one place. AI concierge guides you 24/7 in 6 languages.',

@@ -227,7 +227,7 @@ const ja: Dictionary = {
     privacy: 'ログイン時、プライバシーポリシーに同意したものとみなされます。',
   },
   meta: {
-    siteTitle: 'glow-up — ソウルで遊びながら綺麗になる 4 泊 5 日',
+    siteTitle: 'GlowUpTour-韓国で遊びながら、キレイになろう',
     siteDescription: 'パーソナルカラー診断から K-POP 聖地、現地グルメまで。遊びながら綺麗になるオールインワン K-ビューティー旅。',
     ogTitle: 'glow-up · 韓国医療ツーリズム AI コンシェルジュ',
     ogDescription: '病院・施術・旅行を一画面で比較。AI コンシェルジュが 6 言語で 24/7 ご案内。',

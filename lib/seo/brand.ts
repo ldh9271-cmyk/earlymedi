@@ -26,6 +26,21 @@ export const BRAND_ALIASES = [
 ];
 
 /**
+ * 페이지 제목에 브랜드 접미(· 글로우업투어)를 붙인다.
+ *
+ * 제목이 이미 브랜드로 시작하는 로케일(사이트 제목 전체)에서는 붙이지
+ * 않는다 — 한글이든 로마자든 표기가 달라도 중복은 중복이라, 별칭까지
+ * 훑어서 판단한다.
+ */
+export function withBrandSuffix(title: string): string {
+  const lower = title.toLowerCase();
+  const hasBrand = [BRAND_NAME, ...BRAND_ALIASES].some((b) =>
+    lower.includes(b.toLowerCase()),
+  );
+  return hasBrand ? title : `${title} · ${BRAND_NAME}`;
+}
+
+/**
  * Organization + WebSite JSON-LD.
  *
  * WebSite 를 함께 넣는 이유: 브랜드명 질의에 대해 검색엔진이 사이트
