@@ -509,7 +509,12 @@ export default async function ListingDetailPage({
                 ))}
               </div>
               {note ? (
-                <p style={{ fontSize: 12, color: '#6a6a6a', margin: '12px 0 0', lineHeight: 1.6 }}>
+                <p
+                  style={{
+                    fontSize: 12, color: '#6a6a6a', margin: '12px 0 0',
+                    lineHeight: 1.7, whiteSpace: 'pre-line',
+                  }}
+                >
                   {note}
                 </p>
               ) : null}
