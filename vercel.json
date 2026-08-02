@@ -4,7 +4,6 @@
   "regions": ["icn1"],
   "headers": [
     {
-      "//": "베타 때는 '/(.*)' 에 noindex 를 걸어 사이트 전체를 색인에서 뺐다. 그 헤더는 robots.txt 보다 강해서 공개 상품 페이지는 물론 Search Console 소유권 확인 파일까지 덮었다. 이제 로그인·운영 콘솔·결제 경로에만 건다 — 공개 포털(/kr /en /zh /ja /ru /vi)은 색인 대상.",
       "source": "/api/:path*",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
@@ -41,16 +40,47 @@
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {
-      "source": "/(login|signup|select-org|verify-email|invite)",
+      "source": "/login",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {
-      "//": "로케일 프리픽스가 붙는 개인 화면 — /kr/me, /en/checkout 등.",
-      "source": "/:locale(kr|en|zh|ja|ru|vi)/(me|checkout|login|signup)/:path*",
+      "source": "/signup",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {
-      "source": "/:locale(kr|en|zh|ja|ru|vi)/(me|checkout|login|signup)",
+      "source": "/select-org",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/verify-email",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/invite/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/:locale/me",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/:locale/me/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/:locale/checkout",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/:locale/checkout/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/:locale/login",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/:locale/signup",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     }
   ]
