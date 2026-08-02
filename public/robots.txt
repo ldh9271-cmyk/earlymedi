@@ -1,13 +1,29 @@
-# glowuptour.com — 공개 포털은 색인 허용, 로그인·운영 콘솔은 차단.
-# (2026-08-02: 베타 전면 차단 "Disallow: /" 에서 전환 — Google Search
-#  Console 등록에 맞춰 공개 상품 페이지가 검색에 노출되도록 함.
-#  다시 비공개로 돌리려면 이 파일을 Disallow: / 한 줄로 되돌린다.)
-
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /master/
+Disallow: /agency/
+Disallow: /partner/
+Disallow: /medical/
+Disallow: /freelancer/
+Disallow: /account/
+Disallow: /select-org
+Disallow: /login
+Disallow: /signup
+Disallow: /verify-email
+Disallow: /invite
+Disallow: /showroom
+Disallow: /design-preview/
+Disallow: /*/me
+Disallow: /*/checkout
+Disallow: /*/login
+Disallow: /*/signup
+Disallow: /*/search?
+Disallow: /*?reserve=
+Disallow: /*?invoice=
 
-# 로케일 공개 포털(/kr /en /zh /ja /ru /vi)과 마케팅 페이지는 색인 대상.
-# 아래는 로그인이 필요하거나 색인 가치가 없는 경로.
+User-agent: Yeti
+Allow: /
 Disallow: /api/
 Disallow: /master/
 Disallow: /agency/
@@ -23,15 +39,10 @@ Disallow: /invite
 Disallow: /showroom
 Disallow: /design-preview/
 
-# 개인 화면·결제 흐름 — 로케일 프리픽스가 붙는다.
-Disallow: /*/me
-Disallow: /*/checkout
-Disallow: /*/login
-Disallow: /*/signup
-
-# 쿼리 조합이 무한해 크롤 예산만 소모하는 경로.
-Disallow: /*/search?
-Disallow: /*?reserve=
-Disallow: /*?invoice=
-
 Sitemap: https://www.glowuptour.com/sitemap.xml
+
+# Public portal (/kr /en /zh /ja /ru /vi) is indexable; operator
+# consoles, auth and checkout are not. Switched from a blanket
+# "Disallow: /" on 2026-08-02. Keep this file ASCII-only: Naver's
+# Search Advisor checker reported "robots.txt not found" while the
+# leading comments were in Korean, even though the file served 200.
