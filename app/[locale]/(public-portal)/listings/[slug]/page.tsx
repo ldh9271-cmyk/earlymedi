@@ -398,8 +398,17 @@ export default async function ListingDetailPage({
           라벨은 itinerary 헤딩과 같은 방식으로 인라인 로케일 맵 —
           사전 6종을 건드리지 않기 위함. */}
       {(() => {
-        const s = (k: string): string =>
-          typeof listing.details[k] === 'string' ? (listing.details[k] as string).trim() : '';
+        // 값도 로케일을 탄다 — details.shopInfoI18n[locale] 에 번역이
+        // 있으면 그걸 쓰고, 없으면 kr 원본으로 폴백.
+        const i18n = listing.details.shopInfoI18n as
+          | Record<string, Record<string, string>>
+          | undefined;
+        const tr = params.locale !== 'kr' && i18n ? i18n[params.locale] : undefined;
+        const s = (k: string): string => {
+          const localized = tr && typeof tr[k] === 'string' ? tr[k].trim() : '';
+          if (localized) return localized;
+          return typeof listing.details[k] === 'string' ? (listing.details[k] as string).trim() : '';
+        };
         const rows: Array<{ label: Record<string, string>; value: string }> = [
           { label: { kr: '전화', en: 'Phone', zh: '电话', ja: '電話', ru: 'Телефон', vi: 'Điện thoại' }, value: s('phone') },
           { label: { kr: '영업시간', en: 'Hours', zh: '营业时间', ja: '営業時間', ru: 'Часы работы', vi: 'Giờ mở cửa' }, value: s('hours') },
@@ -452,21 +461,41 @@ export default async function ListingDetailPage({
       {(() => {
         const raw = listing.details.priceTable;
         if (!Array.isArray(raw)) return null;
+        // 라벨만 로케일별로 갈아끼운다 — 금액은 kr 표가 유일한 출처라
+        // 번역본이 낡아도 가격이 어긋날 수 없다. 순서로 매칭하므로
+        // 번역 배열이 짧으면 그 항목만 한국어로 남는다.
+        const labels = (listing.details.priceTableI18n as
+          | Record<string, { groups?: unknown; items?: unknown }>
+          | undefined)?.[params.locale];
+        const trGroups = Array.isArray(labels?.groups) ? (labels?.groups as unknown[]) : [];
+        const trItems = Array.isArray(labels?.items) ? (labels?.items as unknown[]) : [];
+        const pick = (arr: unknown[], i: number, fallback: string): string => {
+          const v = arr[i];
+          return typeof v === 'string' && v.trim() ? v.trim() : fallback;
+        };
         const groups = (raw as Array<{ group?: unknown; items?: unknown }>)
-          .map((g) => ({
-            group: typeof g.group === 'string' ? g.group : '',
-            items: Array.isArray(g.items)
-              ? (g.items as Array<{ name?: unknown; won?: unknown }>)
-                  .map((i) => ({
-                    name: typeof i.name === 'string' ? i.name : '',
-                    won: typeof i.won === 'number' ? i.won : 0,
-                  }))
-                  .filter((i) => i.name && i.won > 0)
-              : [],
-          }))
+          .map((g, gi) => {
+            const groupItemLabels = Array.isArray(trItems[gi]) ? (trItems[gi] as unknown[]) : [];
+            return {
+              group: pick(trGroups, gi, typeof g.group === 'string' ? g.group : ''),
+              items: Array.isArray(g.items)
+                ? (g.items as Array<{ name?: unknown; won?: unknown }>)
+                    .map((i, ii) => ({
+                      name: pick(groupItemLabels, ii, typeof i.name === 'string' ? i.name : ''),
+                      won: typeof i.won === 'number' ? i.won : 0,
+                    }))
+                    .filter((i) => i.name && i.won > 0)
+                : [],
+            };
+          })
           .filter((g) => g.group && g.items.length > 0);
         if (groups.length === 0) return null;
-        const note = typeof listing.details.priceNote === 'string' ? listing.details.priceNote : '';
+        const trNote = (listing.details.shopInfoI18n as
+          | Record<string, Record<string, string>>
+          | undefined)?.[params.locale]?.priceNote;
+        const note = (typeof trNote === 'string' && trNote.trim())
+          ? trNote
+          : (typeof listing.details.priceNote === 'string' ? listing.details.priceNote : '');
         const heading: Record<string, string> = {
           kr: '가격표', en: 'Price list', zh: '价目表',
           ja: '料金表', ru: 'Прайс-лист', vi: 'Bảng giá',
@@ -535,12 +564,16 @@ export default async function ListingDetailPage({
           ? listing.details.address
           : '';
         if (!landingUrl && !address) return null;
+        const heading: Record<string, string> = {
+          kr: '상세 정보', en: 'Details', zh: '详细信息',
+          ja: '詳細情報', ru: 'Подробности', vi: 'Thông tin chi tiết',
+        };
         return (
           <>
             <Divider />
             <section style={{ padding: '0 22px' }}>
               <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px', lineHeight: 1.3 }}>
-                상세 정보
+                {heading[params.locale] ?? heading.kr}
               </h2>
               <DetailInfo
                 imageUrl={landingUrl || undefined}

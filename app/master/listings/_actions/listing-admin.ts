@@ -36,6 +36,7 @@ import { SEOUL_NAIL_PRODUCTS } from '@/lib/listings/seoul-nail-products';
 import { SEOUL_PERSONAL_COLOR_PRODUCTS } from '@/lib/listings/seoul-personal-color-products';
 import { SEOUL_MAKEUP_PRODUCTS } from '@/lib/listings/seoul-makeup-products';
 import { SEOUL_HAIR_PRODUCTS } from '@/lib/listings/seoul-hair-products';
+import { HAIR_SHOP_I18N } from '@/lib/listings/seoul-hair-i18n';
 import { SEOUL_PMU_PRODUCTS } from '@/lib/listings/seoul-pmu-products';
 import { SEOUL_PHOTO_PRODUCTS } from '@/lib/listings/seoul-photo-products';
 import { SEOUL_KPOP_PRODUCTS } from '@/lib/listings/seoul-kpop-products';
@@ -524,6 +525,53 @@ export async function seedSeoulMakeupAction(_formData: FormData): Promise<void> 
 }
 
 /**
+ * 헤어샵 로케일 번역 — HAIR_SHOP_I18N 에 있는 slug 만 채운다.
+ * details 쪽(매장 정보·가격표 라벨)과 locale content 행을 각각 만든다.
+ */
+function hairShopI18nDetails(slug: string): Record<string, unknown> {
+  const byLocale = HAIR_SHOP_I18N[slug];
+  if (!byLocale) return {};
+  const shopInfoI18n: Record<string, unknown> = {};
+  const priceTableI18n: Record<string, unknown> = {};
+  for (const [locale, c] of Object.entries(byLocale)) {
+    if (!c) continue;
+    shopInfoI18n[locale] = { ...c.shopInfo };
+    priceTableI18n[locale] = {
+      groups: [...c.priceTable.groups],
+      items: c.priceTable.items.map((g) => [...g]),
+    };
+  }
+  return { shopInfoI18n, priceTableI18n };
+}
+
+function hairShopLocaleRows(
+  listingId: string,
+  slug: string,
+): Array<{
+  listingId: string;
+  locale: string;
+  title: string;
+  description: string;
+  locationLabel: string;
+  seoTitle: string;
+  seoDescription: string;
+}> {
+  const byLocale = HAIR_SHOP_I18N[slug];
+  if (!byLocale) return [];
+  return Object.entries(byLocale)
+    .filter((e): e is [string, NonNullable<(typeof e)[1]>] => !!e[1])
+    .map(([locale, c]) => ({
+      listingId,
+      locale,
+      title: c.title,
+      description: c.description,
+      locationLabel: c.locationLabel,
+      seoTitle: c.seoTitle,
+      seoDescription: c.seoDescription,
+    }));
+}
+
+/**
  * 청담·압구정·강남역 외국인 FIT 추천 헤어샵 10곳 일괄 등록.
  *
  *   - category='hair', status='approved', details 에 address(구글
@@ -580,6 +628,7 @@ export async function seedSeoulHairAction(_formData: FormData): Promise<void> {
             ? p.priceTable.map((g) => ({ group: g.group, items: g.items.map((i) => ({ ...i })) }))
             : null,
           priceNote: p.priceNote ?? null,
+          ...hairShopI18nDetails(p.slug),
           subType: 'free',
           seoTags: [...p.seoTags],
           og: p.ogDescription,
@@ -587,12 +636,15 @@ export async function seedSeoulHairAction(_formData: FormData): Promise<void> {
       })
       .returning({ id: partnerListings.id });
     if (row) {
-      await db.insert(partnerListingLocaleContent).values({
-        listingId: row.id,
-        locale: 'kr',
-        seoTitle: p.seoTitle,
-        seoDescription: p.seoDescription,
-      });
+      await db.insert(partnerListingLocaleContent).values([
+        {
+          listingId: row.id,
+          locale: 'kr',
+          seoTitle: p.seoTitle,
+          seoDescription: p.seoDescription,
+        },
+        ...hairShopLocaleRows(row.id, p.slug),
+      ]);
     }
     inserted += 1;
   }

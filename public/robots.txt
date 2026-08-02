@@ -1,9 +1,37 @@
-# 데모 배포 — 검색엔진 인덱싱 차단 (베타 단계)
-# Production 정식 출시 시 이 파일을 다시 작성하세요.
-User-agent: *
-Disallow: /
+# glowuptour.com — 공개 포털은 색인 허용, 로그인·운영 콘솔은 차단.
+# (2026-08-02: 베타 전면 차단 "Disallow: /" 에서 전환 — Google Search
+#  Console 등록에 맞춰 공개 상품 페이지가 검색에 노출되도록 함.
+#  다시 비공개로 돌리려면 이 파일을 Disallow: / 한 줄로 되돌린다.)
 
-# Allow only public marketing surfaces if you later open partial indexing:
-# Allow: /
-# Allow: /pricing
-# Allow: /legal
+User-agent: *
+Allow: /
+
+# 로케일 공개 포털(/kr /en /zh /ja /ru /vi)과 마케팅 페이지는 색인 대상.
+# 아래는 로그인이 필요하거나 색인 가치가 없는 경로.
+Disallow: /api/
+Disallow: /master/
+Disallow: /agency/
+Disallow: /partner/
+Disallow: /medical/
+Disallow: /freelancer/
+Disallow: /account/
+Disallow: /select-org
+Disallow: /login
+Disallow: /signup
+Disallow: /verify-email
+Disallow: /invite
+Disallow: /showroom
+Disallow: /design-preview/
+
+# 개인 화면·결제 흐름 — 로케일 프리픽스가 붙는다.
+Disallow: /*/me
+Disallow: /*/checkout
+Disallow: /*/login
+Disallow: /*/signup
+
+# 쿼리 조합이 무한해 크롤 예산만 소모하는 경로.
+Disallow: /*/search?
+Disallow: /*?reserve=
+Disallow: /*?invoice=
+
+Sitemap: https://www.glowuptour.com/sitemap.xml
