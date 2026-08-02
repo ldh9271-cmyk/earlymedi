@@ -60,6 +60,13 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  // Search Console 소유권 확인 — HTML 파일 방식(public/google….html)이
+  // 기본이다. apex(glowuptour.com)가 www 로 307 리다이렉트되기 때문에
+  // 속성을 non-www 로 등록하면 파일 방식이 실패하는데, 그때는 콘솔에서
+  // 'HTML 태그' 방식의 content 값을 이 env 에 넣으면 된다.
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 export const viewport: Viewport = {

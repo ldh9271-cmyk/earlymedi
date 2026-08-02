@@ -4,13 +4,54 @@
   "regions": ["icn1"],
   "headers": [
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
+      "//": "베타 때는 '/(.*)' 에 noindex 를 걸어 사이트 전체를 색인에서 뺐다. 그 헤더는 robots.txt 보다 강해서 공개 상품 페이지는 물론 Search Console 소유권 확인 파일까지 덮었다. 이제 로그인·운영 콘솔·결제 경로에만 건다 — 공개 포털(/kr /en /zh /ja /ru /vi)은 색인 대상.",
+      "source": "/api/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/master/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/agency/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/partner/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/medical/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/freelancer/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/account/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/showroom/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/design-preview/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/(login|signup|select-org|verify-email|invite)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "//": "로케일 프리픽스가 붙는 개인 화면 — /kr/me, /en/checkout 등.",
+      "source": "/:locale(kr|en|zh|ja|ru|vi)/(me|checkout|login|signup)/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/:locale(kr|en|zh|ja|ru|vi)/(me|checkout|login|signup)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     }
   ]
 }
