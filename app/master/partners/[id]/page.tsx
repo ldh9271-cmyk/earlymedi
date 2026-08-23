@@ -244,7 +244,7 @@ export default async function DistributorDetailPage({
         <input type="hidden" name="distributorId" value={d.id} />
         <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>수당 설정 (계약 조건)</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
-          시술비 대비 %. 운영비 + 환자 포인트 + 1단계 + 2단계를 뺀 나머지가 총판 몫입니다 (2단계가 비면 그 몫도 총판). 총판 직접 유치는 운영비와 "직접 유치 환자 포인트"만 빼고 전부 총판입니다.
+          시술비 대비 %. 운영비 + 환자 포인트 + 1단계 + 2단계를 뺀 나머지가 총판 몫입니다 (2단계가 비면 그 몫도 총판). 총판 직접 유치는 운영비와 &lsquo;직접 유치 환자 포인트&rsquo;만 빼고 전부 총판입니다.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10 }}>
           <div><span style={label}>플랫폼 운영비 %</span><input name="platformPct" defaultValue={cfg.platformPct} style={input} /></div>

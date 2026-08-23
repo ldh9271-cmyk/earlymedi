@@ -64,7 +64,7 @@ export default async function MasterPartnersPage({
             {distributors.length === 0 ? (
               <tr><td colSpan={9} style={{ padding: 28, textAlign: 'center', color: '#6a6a6a' }}>아직 등록된 총판이 없습니다. 아래에서 첫 총판을 만드세요.</td></tr>
             ) : distributors.map((d, i) => {
-              const s = stats[i]!;
+              const s = stats[i] ?? { referrers: 0, pending: 0, confirmed: 0, paid: 0 };
               return (
                 <tr key={d.id} style={{ borderTop: '1px solid #ebebeb' }}>
                   <td style={{ padding: 12 }}>

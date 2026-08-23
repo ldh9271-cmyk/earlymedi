@@ -109,9 +109,9 @@ export default async function ReferralPage({
   if (isDistributor) {
     referrers = await listReferrers(me.id);
     const byId = new Map(referrers.map((r) => [r.id, r]));
-    const [y, m] = period.split('-').map(Number);
-    const from = new Date(Date.UTC(y!, m! - 1, 1));
-    const to = new Date(Date.UTC(y!, m!, 1));
+    const [y = 2026, m = 1] = period.split('-').map(Number);
+    const from = new Date(Date.UTC(y, m - 1, 1));
+    const to = new Date(Date.UTC(y, m, 1));
     const rows = await db.select().from(commissionLedger)
       .where(and(
         eq(commissionLedger.distributorId, me.id),
