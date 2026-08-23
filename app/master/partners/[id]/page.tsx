@@ -69,6 +69,20 @@ export default async function DistributorDetailPage({
       </div>
 
       {searchParams.created ? <p style={{ color: '#047857', fontSize: 13, margin: 0 }}>총판이 생성됐습니다. QR 을 총판에 전달하고, 대시보드 계정 이메일을 연결하세요.</p> : null}
+
+      {/* ── 총판 본인 계정 연결 — 연결돼야 /me/referral 대시보드가 열린다 ── */}
+      {!d.userId ? (
+        <form action={linkPartnerUserAction} style={{ ...card, borderColor: '#1d4ed8', display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <input type="hidden" name="distributorId" value={d.id} />
+          <input type="hidden" name="partnerId" value={d.id} />
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px' }}>총판 대시보드 계정 연결</h3>
+            <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 8px' }}>총판 담당자가 사이트에 가입한 이메일을 입력하세요. 연결되면 그 계정으로 로그인해 QR·수당·정산서를 봅니다.</p>
+            <input name="email" type="email" required defaultValue={d.userEmail ?? ''} placeholder="partner@example.jp" style={{ ...input, maxWidth: 360 }} />
+          </div>
+          <button type="submit" style={btn('#1d4ed8')}>계정 연결</button>
+        </form>
+      ) : null}
       {searchParams.error ? <p style={{ color: '#dc2626', fontSize: 13, margin: 0 }}>{searchParams.error}</p> : null}
       {searchParams.ok ? <p style={{ color: '#047857', fontSize: 13, margin: 0 }}>{searchParams.ok}</p> : null}
 
