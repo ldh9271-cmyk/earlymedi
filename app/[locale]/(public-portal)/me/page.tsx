@@ -6,6 +6,8 @@ import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
+import { cookies } from 'next/headers';
+import { attributeUser, patientPointsBalance, REF_COOKIE } from '@/lib/referral/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +56,11 @@ export default async function MyPage({
     redirect(`/${locale}/login?next=${encodeURIComponent(`/${locale}/me`)}`);
   }
 
+  // 추천 QR 로 들어온 계정이면 여기서 귀속을 기록한다 (최초 접촉 우선)
+  const refCode = cookies().get(REF_COOKIE)?.value;
+  if (refCode) await attributeUser(auth.user.id, refCode, 'me').catch(() => null);
+  const points = await patientPointsBalance(auth.user.id).catch(() => 0);
+
   let rows: Array<typeof checkoutOrders.$inferSelect> = [];
   let dbError = false;
   try {
@@ -90,7 +97,12 @@ export default async function MyPage({
       <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
         <SummaryCard label={t.countLabel} value={t.countValue.replace('{n}', String(rows.length))} />
         <SummaryCard label={t.paidTotalLabel} value={`₩${paidTotal.toLocaleString('ko-KR')}`} accent="#047857" />
+        <SummaryCard label={dict.referral.points} value={`₩${points.toLocaleString('ko-KR')}`} accent="#c81e42" />
       </div>
+      <p style={{ fontSize: 13, marginTop: 14 }}>
+        <Link href={`/${locale}/me/referral`} style={{ color: '#c81e42', fontWeight: 600 }}>{dict.referral.menu} →</Link>
+        <span style={{ color: '#9c9c9c', marginLeft: 8 }}>{dict.referral.pointsHint}</span>
+      </p>
 
       {dbError ? (
         <p style={{ fontSize: 14, color: '#dc2626', marginTop: 24 }}>{t.loadError}</p>

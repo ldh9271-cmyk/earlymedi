@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
+import { cookies } from 'next/headers';
+import { attributeUser, getAttribution, REF_COOKIE } from '@/lib/referral/service';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -65,6 +67,22 @@ export async function POST(req: Request): Promise<NextResponse> {
     /* 비로그인 예약도 허용 */
   }
 
+  // 추천 QR 로 들어온 계정이면 귀속을 기록하고 주문에 파트너를 남긴다.
+  // 수당 원장은 여기서 만들지 않는다 — 운영자가 시술·투어 완료를 확인한
+  // 뒤 /master/partners 에서 실적으로 확정한다.
+  let partnerId: string | null = null;
+  let distributorId: string | null = null;
+  if (userId) {
+    try {
+      const refCode = cookies().get(REF_COOKIE)?.value;
+      if (refCode) await attributeUser(userId, refCode, 'checkout');
+      const att = await getAttribution(userId);
+      if (att) { partnerId = att.partnerId; distributorId = att.distributorId; }
+    } catch {
+      /* 귀속 실패가 인보이스 발행을 막지 않는다 */
+    }
+  }
+
   const subtotal = input.unitPriceWon * input.guests;
   const serviceFee = Math.round((subtotal * 0.1) / 1000) * 1000;
   const total = subtotal + serviceFee;
@@ -90,6 +108,8 @@ export async function POST(req: Request): Promise<NextResponse> {
           totalWon: total,
           userId,
           userEmail,
+          partnerId,
+          distributorId,
           meta: { ua: req.headers.get('user-agent') ?? '' },
         })
         .returning({ id: checkoutOrders.id, invoiceNo: checkoutOrders.invoiceNo });

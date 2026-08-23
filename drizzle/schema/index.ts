@@ -50,6 +50,7 @@ export * from './partner-services';
 // Partner bookings (reservations referencing facilities + services)
 export * from './partner-bookings';
 export * from './checkout-orders';
+export * from './referral-program';
 
 // Freelancer referral codes (송객·인플루언서 추적 코드)
 export * from './freelancer-referral-codes';

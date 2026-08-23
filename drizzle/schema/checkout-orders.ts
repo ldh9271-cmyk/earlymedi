@@ -68,6 +68,25 @@ export const checkoutOrders = pgTable(
     userId: uuid('user_id'),
     userEmail: text('user_email'),
 
+    // ── 총판·추천인 프로그램 (2026-07-28) ──────────────────────────
+    /** listing = 사이트 상품 인보이스(기본) · procedure = 운영자가 등록한
+     *  시술 실적 · travel = 총판이 판매한 여행상품 (10% 마진 + 포함 시술). */
+    kind: text('kind').notNull().default('listing'),
+    /** 환자를 소개한 추천인(또는 총판 직접이면 총판) / 소속 총판. */
+    partnerId: uuid('partner_id'),
+    distributorId: uuid('distributor_id'),
+    /** 시술 분류 — 병원 수수료율을 정한다 (plastic_surgery / dermatology / …). */
+    procedureCategory: text('procedure_category'),
+    /** 수수료 계산 기준 시술비. travel 은 패키지에 포함된 시술 금액. */
+    procedureAmountWon: integer('procedure_amount_won'),
+    /** 적용한 병원 수수료율 (bp, 3000 = 30%). 등록 시점 스냅샷. */
+    hospitalFeeBp: integer('hospital_fee_bp'),
+    hospitalName: text('hospital_name'),
+    /** 계정 없는 환자를 운영자가 등록할 때의 표시 이름. */
+    patientLabel: text('patient_label'),
+    /** 시술 완료(또는 투어 출발) 확인 시각 — 수당 holdDays 의 기준. */
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+
     // 게스트 연락처 — 인보이스 발행 시점엔 비어 있고, 문의 폼을 거치면 채워진다
     guestName: text('guest_name'),
     guestContact: text('guest_contact'),
