@@ -60,8 +60,12 @@ export default function CourseBookingCard({
   const [guests, setGuests] = useState(1);
   // min 날짜는 서버/클라이언트 시간대가 달라 hydration 이 어긋날 수 있어 mount 후 설정
   const [minDate, setMinDate] = useState('');
+  const [maxDate, setMaxDate] = useState('');
   useEffect(() => {
     setMinDate(toYmd(new Date()));
+    const limit = new Date();
+    limit.setMonth(limit.getMonth() + 3); // 예약 상한 — 오늘 + 3개월
+    setMaxDate(toYmd(limit));
   }, []);
 
   const nights = Math.max(1, durationDays - 1);
@@ -127,7 +131,13 @@ export default function CourseBookingCard({
             type="date"
             value={start}
             min={minDate}
-            onChange={(e) => setStart(e.target.value)}
+            max={maxDate}
+            onChange={(e) => {
+              let v = e.target.value;
+              if (v && minDate && v < minDate) v = minDate;
+              if (v && maxDate && v > maxDate) v = maxDate;
+              setStart(v);
+            }}
             style={fieldValueStyle}
           />
           {start && endDate ? (

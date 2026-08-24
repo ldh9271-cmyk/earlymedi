@@ -55,6 +55,15 @@ function todayYmd(): string {
   return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 }
 
+/** 예약 가능 상한 — 오늘 + 3개월 (컨시어지·병원 일정 확정 가능 범위). */
+const MAX_ADVANCE_MONTHS = 3;
+
+function maxYmd(): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + MAX_ADVANCE_MONTHS);
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+
 export function buildInquiryHref(opts: {
   locale: PublicLocale;
   title: string;
@@ -116,6 +125,7 @@ export default function ReserveButton({
   const [hour, setHour] = useState(14);
   const [guests, setGuests] = useState(Math.max(1, guestCount));
   const [minDate, setMinDate] = useState('');
+  const [maxDate, setMaxDate] = useState('');
   const [qrFailed, setQrFailed] = useState(false);
   const [invoiceNo, setInvoiceNo] = useState<string | null>(null);
   const [issuing, setIssuing] = useState(false);
@@ -137,7 +147,7 @@ export default function ReserveButton({
   }, []);
 
   // 오늘 날짜는 서버/클라 시간대가 어긋날 수 있어 mount 후 설정
-  useEffect(() => { setMinDate(todayYmd()); }, []);
+  useEffect(() => { setMinDate(todayYmd()); setMaxDate(maxYmd()); }, []);
 
   // 가입/로그인을 마치고 ?reserve=1 로 돌아오면 예약을 이어서 진행한다.
   useEffect(() => {
@@ -475,7 +485,14 @@ export default function ReserveButton({
                         type="date"
                         value={ymd}
                         min={minDate}
-                        onChange={(e) => setYmd(e.target.value)}
+                        max={maxDate}
+                        onChange={(e) => {
+                          // 달력은 min/max 로 막히지만 직접 입력은 통과하므로 보정
+                          let v = e.target.value;
+                          if (v && minDate && v < minDate) v = minDate;
+                          if (v && maxDate && v > maxDate) v = maxDate;
+                          setYmd(v);
+                        }}
                         style={fieldInput}
                       />
                     </label>
