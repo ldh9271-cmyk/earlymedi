@@ -5,7 +5,8 @@ import { useState } from 'react';
 /**
  * 정산 비율 입력 — 배당 이익(병원 유치 수수료)을 100%로 보고 총판/회사로
  * 나눈다. 총판 % 를 입력하면 회사 몫(100 − 총판)이 실시간으로 계산돼
- * 보인다. 퍼센트는 자유롭게 바꿀 수 있다.
+ * 보인다. 퍼센트는 자유롭게 바꿀 수 있다. 지역(일본) 마스터가 국가 단위로
+ * 이 값을 설정한다 — 개별 총판 화면에서는 읽기 전용으로만 보인다.
  */
 export function FeeShareField({ defaultPct }: { defaultPct: number }): JSX.Element {
   const [raw, setRaw] = useState(String(defaultPct ?? 70));
@@ -53,7 +54,7 @@ export function FeeShareField({ defaultPct }: { defaultPct: number }): JSX.Eleme
       <div style={{ fontSize: 11, color: '#9c9c9c', marginTop: 8 }}>
         예: 성형 300만원 시술(수수료 30%) → 배당 이익 90만원 → 총판 ₩{Math.round((900000 * n) / 100).toLocaleString('ko-KR')}
         {' · '}회사 ₩{Math.round((900000 * company) / 100).toLocaleString('ko-KR')}.
-        추천인 단계·환자 포인트 배분은 하지 않으며, 하위 보상은 총판이 자체 운영합니다.
+        이 나라 총판 전체에 적용됩니다.
       </div>
     </div>
   );

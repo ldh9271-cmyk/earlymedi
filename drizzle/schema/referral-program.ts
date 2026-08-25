@@ -141,6 +141,23 @@ export const regionAdmins = pgTable(
   },
 );
 
+/**
+ * 국가(지역) 단위 정산 비율 — 지역 마스터(예: 일본 마스터)가 자기 나라
+ * 총판 전체에 적용할 "배당 이익 → 총판 %" 를 한 곳에서 설정한다.
+ * 개별 총판 상세 화면에서는 바꿀 수 없고(읽기 전용), 이 값이 있으면
+ * getDistributorConfig 가 총판 config 의 feeShare 를 이 값으로 덮어쓴다.
+ * 값이 없으면 총판별 config(또는 기본 70%)를 따른다.
+ */
+export const regionSettings = pgTable(
+  'region_settings',
+  {
+    countryCode: text('country_code').primaryKey(),
+    /** 배당 이익(=100%) 중 총판 몫 %. 회사 몫은 100 − 이 값. */
+    feeSharePct: integer('fee_share_pct').notNull().default(70),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+);
+
 export const ledgerBeneficiaryEnum = pgEnum('ledger_beneficiary', [
   'platform',
   'patient_points',

@@ -12,7 +12,7 @@ process.loadEnvFile?.('.env.local');
 
 const { db } = await import('@/lib/db/client');
 const { checkoutOrders } = await import('@/drizzle/schema/checkout-orders');
-const { commissionLedger, referralAttributions, referralPartners, DEFAULT_DISTRIBUTOR_CONFIG } = await import('@/drizzle/schema/referral-program');
+const { commissionLedger, referralAttributions, referralPartners, regionSettings, DEFAULT_DISTRIBUTOR_CONFIG } = await import('@/drizzle/schema/referral-program');
 const svc = await import('@/lib/referral/service');
 
 const FAKE_USER = '11111111-2222-4333-8444-555555555555';
@@ -24,7 +24,10 @@ let tieredOrderId = '';
 
 beforeAll(async () => {
   const [d] = await db.insert(referralPartners).values({
-    role: 'distributor', code: svc.generateCode('JP'), name: 'TEST-총판', countryCode: 'JP', landingLocale: 'ja',
+    // countryCode 'ZZ' — 지역(JP) 정산 비율 설정에 영향받지 않는 테스트 전용
+    // 국가. getDistributorConfig 오버레이는 region_settings 행이 없는 국가에서
+    // 건너뛰므로 여기서 정한 per-distributor config(배분표/단순정산)가 그대로 검증된다.
+    role: 'distributor', code: svc.generateCode('ZZ'), name: 'TEST-총판', countryCode: 'ZZ', landingLocale: 'ja',
     config: { ...DEFAULT_DISTRIBUTOR_CONFIG, feeShare: null }, // 배분표 모드 검증용
   }).returning({ id: referralPartners.id, code: referralPartners.code });
   dist = d!; ids.partners.push(d!.id);
@@ -45,12 +48,15 @@ afterAll(async () => {
   }
   await db.delete(referralAttributions).where(eq(referralAttributions.userId, FAKE_USER));
   if (ids.partners.length) await db.delete(referralPartners).where(inArray(referralPartners.id, ids.partners));
+  // 테스트 전용 지역 정산 비율 행 정리 (혹시 남아 있으면)
+  await db.delete(regionSettings).where(inArray(regionSettings.countryCode, ['ZZ', 'ZY']));
 });
 
 describe('referral service (real DB)', () => {
   it('단순 정산 모드 총판: 성형 300만 → 총판 63만 / 플랫폼 27만 (2행)', async () => {
     const [d70] = await db.insert(referralPartners).values({
-      role: 'distributor', code: svc.generateCode('JP'), name: 'TEST-70총판', countryCode: 'JP', landingLocale: 'ja',
+      // 'ZZ' — 지역 정산 비율 설정과 무관하게 per-distributor feeShare(70)를 검증
+      role: 'distributor', code: svc.generateCode('ZZ'), name: 'TEST-70총판', countryCode: 'ZZ', landingLocale: 'ja',
       config: DEFAULT_DISTRIBUTOR_CONFIG,
     }).returning({ id: referralPartners.id });
     ids.partners.push(d70!.id);
@@ -65,6 +71,30 @@ describe('referral service (real DB)', () => {
     const rows = await db.select().from(commissionLedger).where(eq(commissionLedger.orderId, r.orderId));
     expect(rows.find((x) => x.beneficiary === 'distributor')?.amountWon).toBe(630_000);
     expect(rows.find((x) => x.beneficiary === 'platform')?.amountWon).toBe(270_000);
+  });
+
+  it('지역 정산 비율이 총판 config 를 덮어쓴다 (오버레이) — ZY 60% → 성형 300만 총판 54만', async () => {
+    const [dov] = await db.insert(referralPartners).values({
+      role: 'distributor', code: svc.generateCode('ZY'), name: 'TEST-오버레이', countryCode: 'ZY', landingLocale: 'ja',
+      config: { ...DEFAULT_DISTRIBUTOR_CONFIG, feeShare: null }, // 총판 자체는 배분표 모드
+    }).returning({ id: referralPartners.id });
+    ids.partners.push(dov!.id);
+    // 지역(ZY) 정산 비율 60% → 총판 config 의 feeShare(null)를 덮어써 단순 정산 모드가 돼야 한다
+    await svc.setRegionFeeSharePct('ZY', 60);
+    const cfg = await svc.getDistributorConfig(dov!.id);
+    expect(cfg.feeShare?.distributorPct).toBe(60);
+    const r = await svc.createResultOrderWithLedger({
+      distributorId: dov!.id, partnerId: dov!.id, kind: 'procedure', category: 'plastic_surgery',
+      procedureAmountWon: 3_000_000, saleAmountWon: 0, hospitalFeeBp: null, hospitalName: 'TEST병원',
+      listingTitle: 'TEST 오버레이', patientUserId: null, patientLabel: 'TEST',
+      completedAt: new Date(), reserveDate: '2026-08-24', locale: 'ja',
+    });
+    ids.orders.push(r.orderId);
+    expect(r.rows).toBe(2); // 배분표 5행이 아니라 단순 정산 2행
+    const rows = await db.select().from(commissionLedger).where(eq(commissionLedger.orderId, r.orderId));
+    expect(rows.find((x) => x.beneficiary === 'distributor')?.amountWon).toBe(540_000); // 90만 × 60%
+    expect(rows.find((x) => x.beneficiary === 'platform')?.amountWon).toBe(360_000); // 90만 × 40%
+    await db.delete(regionSettings).where(eq(regionSettings.countryCode, 'ZY'));
   });
 
   it('체인 해석: B → l1=B, l2=A / A → l1=A, l2=없음 / 총판 → 직접', async () => {
