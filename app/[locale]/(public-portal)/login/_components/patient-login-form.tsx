@@ -123,6 +123,7 @@ export function PatientLoginForm({
         else setError(e.message);
         return;
       }
+      void fetch('/api/ref/attribute', { method: 'POST', keepalive: true }).catch(() => undefined);
       router.replace(returnTo);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-in failed');

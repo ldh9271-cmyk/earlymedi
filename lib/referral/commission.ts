@@ -78,8 +78,29 @@ export function computeLedger(input: CommissionInput): LedgerDraft[] {
   if (base <= 0) return rows;
 
   const feeBp = input.hospitalFeeBp ?? resolveFeeBp(input.category, config);
-  const platformBp = pctToBp(config.platformPct);
   const feeWon = won(base, feeBp);
+
+  // ── 단순 정산 모드: 수수료를 총판 N% / 플랫폼 (100−N)% 로만 나눈다 ──
+  const sharePct = config.feeShare?.distributorPct ?? 0;
+  if (sharePct > 0) {
+    const distWon = Math.round((feeWon * sharePct) / 100);
+    const platWon = feeWon - distWon;
+    if (platWon > 0) {
+      rows.push({
+        beneficiary: 'platform', beneficiaryPartnerId: null, beneficiaryUserId: null,
+        basis: 'hospital_fee', rateBp: Math.round(((100 - sharePct) * feeBp) / 100),
+        baseAmountWon: base, amountWon: platWon,
+      });
+    }
+    rows.push({
+      beneficiary: 'distributor', beneficiaryPartnerId: input.distributorId, beneficiaryUserId: null,
+      basis: 'hospital_fee', rateBp: Math.round((sharePct * feeBp) / 100),
+      baseAmountWon: base, amountWon: distWon,
+    });
+    return rows;
+  }
+
+  const platformBp = pctToBp(config.platformPct);
   let remaining = feeWon;
 
   const push = (

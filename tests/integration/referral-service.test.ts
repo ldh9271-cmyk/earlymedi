@@ -20,11 +20,12 @@ const ids: { partners: string[]; orders: string[] } = { partners: [], orders: []
 let dist: { id: string; code: string };
 let a: { id: string; code: string };
 let b: { id: string; code: string };
+let tieredOrderId = '';
 
 beforeAll(async () => {
   const [d] = await db.insert(referralPartners).values({
     role: 'distributor', code: svc.generateCode('JP'), name: 'TEST-총판', countryCode: 'JP', landingLocale: 'ja',
-    config: DEFAULT_DISTRIBUTOR_CONFIG,
+    config: { ...DEFAULT_DISTRIBUTOR_CONFIG, feeShare: null }, // 배분표 모드 검증용
   }).returning({ id: referralPartners.id, code: referralPartners.code });
   dist = d!; ids.partners.push(d!.id);
   const [ra] = await db.insert(referralPartners).values({
@@ -47,6 +48,25 @@ afterAll(async () => {
 });
 
 describe('referral service (real DB)', () => {
+  it('단순 정산 모드 총판: 성형 300만 → 총판 63만 / 플랫폼 27만 (2행)', async () => {
+    const [d70] = await db.insert(referralPartners).values({
+      role: 'distributor', code: svc.generateCode('JP'), name: 'TEST-70총판', countryCode: 'JP', landingLocale: 'ja',
+      config: DEFAULT_DISTRIBUTOR_CONFIG,
+    }).returning({ id: referralPartners.id });
+    ids.partners.push(d70!.id);
+    const r = await svc.createResultOrderWithLedger({
+      distributorId: d70!.id, partnerId: d70!.id, kind: 'procedure', category: 'plastic_surgery',
+      procedureAmountWon: 3_000_000, saleAmountWon: 0, hospitalFeeBp: null, hospitalName: 'TEST병원',
+      listingTitle: 'TEST 70모드', patientUserId: null, patientLabel: 'TEST',
+      completedAt: new Date(), reserveDate: '2026-08-24', locale: 'ja',
+    });
+    ids.orders.push(r.orderId);
+    expect(r.rows).toBe(2);
+    const rows = await db.select().from(commissionLedger).where(eq(commissionLedger.orderId, r.orderId));
+    expect(rows.find((x) => x.beneficiary === 'distributor')?.amountWon).toBe(630_000);
+    expect(rows.find((x) => x.beneficiary === 'platform')?.amountWon).toBe(270_000);
+  });
+
   it('체인 해석: B → l1=B, l2=A / A → l1=A, l2=없음 / 총판 → 직접', async () => {
     expect(await svc.resolveChain(b.id)).toEqual({ distributorId: dist.id, l1PartnerId: b.id, l2PartnerId: a.id });
     expect(await svc.resolveChain(a.id)).toEqual({ distributorId: dist.id, l1PartnerId: a.id, l2PartnerId: null });
@@ -73,6 +93,7 @@ describe('referral service (real DB)', () => {
       reserveDate: '2026-07-01', locale: 'ja',
     });
     ids.orders.push(r.orderId);
+    tieredOrderId = r.orderId;
     expect(r.rows).toBe(5);
     expect(r.total).toBe(900_000);
     const rows = await db.select().from(commissionLedger).where(eq(commissionLedger.orderId, r.orderId));
@@ -109,9 +130,9 @@ describe('referral service (real DB)', () => {
     expect((await svc.partnerTotals(b.id)).paid).toBe(420_000);
     expect((await svc.patientPointsBalance(FAKE_USER))).toBe(150_000);
 
-    const reversed = await svc.reverseOrder(ids.orders[0]!, 'TEST 환불');
+    const reversed = await svc.reverseOrder(tieredOrderId, 'TEST 환불');
     expect(reversed).toBe(5);
-    const rows = await db.select().from(commissionLedger).where(eq(commissionLedger.orderId, ids.orders[0]!));
+    const rows = await db.select().from(commissionLedger).where(eq(commissionLedger.orderId, tieredOrderId));
     // 지급된 3행은 음수 환수 행이 추가되고, 미지급 2행(운영비·포인트)은 reversed
     expect(rows.filter((x) => x.amountWon < 0)).toHaveLength(3);
     expect(rows.filter((x) => x.status === 'reversed')).toHaveLength(2);

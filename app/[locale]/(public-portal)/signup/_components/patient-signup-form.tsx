@@ -226,6 +226,7 @@ export function PatientSignupForm({
       // 그 경우 사용자에게 "메일 확인" UI 를 보여주면 영원히 기다리게
       // 되니 바로 홈으로 보낸다.
       if (data.session) {
+        void fetch('/api/ref/attribute', { method: 'POST', keepalive: true }).catch(() => undefined);
         window.location.href = returnTo;
         return;
       }

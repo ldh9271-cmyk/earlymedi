@@ -32,6 +32,13 @@ export const referralPartnerRoleEnum = pgEnum('referral_partner_role', ['distrib
  * (총판 = 잔여 청구자). 빈 2단계 몫도 같은 원리로 총판에게 간다.
  */
 export type DistributorConfig = {
+  /**
+   * 단순 정산 모드 (2026-08-24 일본 총판 계약 개정).
+   * 설정되면 병원 유치 수수료(=100%)를 총판 distributorPct% / 플랫폼
+   * 나머지%로만 나누고, 추천인 단계·환자 포인트 배분은 하지 않는다 —
+   * 하위 조직 보상은 총판이 자체적으로 운영한다. null 이면 기존 배분표.
+   */
+  feeShare?: { distributorPct: number } | null;
   platformPct: number;
   feePctByCategory: Record<string, number>; // plastic_surgery: 30, dermatology: 20, default: 20
   direct: { patientPointsPct: number };
@@ -41,6 +48,7 @@ export type DistributorConfig = {
 };
 
 export const DEFAULT_DISTRIBUTOR_CONFIG: DistributorConfig = {
+  feeShare: { distributorPct: 70 },
   platformPct: 3,
   feePctByCategory: { plastic_surgery: 30, dermatology: 20, default: 20 },
   direct: { patientPointsPct: 0 },
@@ -112,6 +120,25 @@ export const referralAttributions = pgTable(
   (t) => ({
     partnerIdx: index('referral_attributions_partner_idx').on(t.partnerId),
   }),
+);
+
+/**
+ * 지역 관리자 — 총괄 마스터(astoriakr) 아래의 국가별 마스터 계층.
+ *
+ *   총괄 마스터 → 지역 마스터(JP 등) → 그 나라의 총판들 → 회원
+ *
+ * 지역 마스터는 /master/partners 에서 자기 국가의 총판만 보고 만들 수
+ * 있다. 등록은 총괄 마스터가 이메일로 한다 (해당 이메일이 사이트에
+ * 가입돼 있어야 로그인 가능).
+ */
+export const regionAdmins = pgTable(
+  'region_admins',
+  {
+    email: text('email').primaryKey(),
+    countryCode: text('country_code').notNull(),
+    note: text('note'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
 );
 
 export const ledgerBeneficiaryEnum = pgEnum('ledger_beneficiary', [

@@ -6,6 +6,7 @@ import {
   commissionLedger,
   referralAttributions,
   referralPartners,
+  regionAdmins,
   DEFAULT_DISTRIBUTOR_CONFIG,
   type DistributorConfig,
 } from '@/drizzle/schema/referral-program';
@@ -304,8 +305,30 @@ export async function markSettled(distributorId: string, period: string): Promis
   return { rows: updated.length, amount: updated.reduce((a, r) => a + r.amountWon, 0) };
 }
 
-export async function listDistributors(): Promise<Partner[]> {
-  return db.select().from(referralPartners).where(eq(referralPartners.role, 'distributor')).orderBy(desc(referralPartners.createdAt));
+export async function listDistributors(countryCode?: string): Promise<Partner[]> {
+  const where = countryCode
+    ? and(eq(referralPartners.role, 'distributor'), eq(referralPartners.countryCode, countryCode))
+    : eq(referralPartners.role, 'distributor');
+  return db.select().from(referralPartners).where(where).orderBy(desc(referralPartners.createdAt));
+}
+
+export type AdminScope = { isMaster: true; region: null } | { isMaster: false; region: string };
+
+/**
+ * 관리 권한 계층: 총괄 마스터(전체) > 지역 마스터(자기 국가의 총판만).
+ * 지역 마스터가 아니면 null.
+ */
+export async function getRegionAdmin(email: string): Promise<string | null> {
+  const [row] = await db
+    .select({ countryCode: regionAdmins.countryCode })
+    .from(regionAdmins)
+    .where(eq(regionAdmins.email, email.toLowerCase()))
+    .limit(1);
+  return row?.countryCode ?? null;
+}
+
+export async function listRegionAdmins(): Promise<Array<{ email: string; countryCode: string; note: string | null }>> {
+  return db.select({ email: regionAdmins.email, countryCode: regionAdmins.countryCode, note: regionAdmins.note }).from(regionAdmins);
 }
 
 export async function listReferrers(distributorId: string): Promise<Partner[]> {

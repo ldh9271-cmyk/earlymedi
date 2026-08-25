@@ -7,7 +7,7 @@ import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { commissionLedger, DEFAULT_DISTRIBUTOR_CONFIG } from '@/drizzle/schema/referral-program';
-import { getPartnerById, listReferrers } from '@/lib/referral/service';
+import { getPartnerById, getRegionAdmin, listReferrers } from '@/lib/referral/service';
 import {
   confirmDueAction, createReferrerAction, createResultAction, linkPartnerUserAction,
   reverseOrderAction, saveConfigAction, settleAction, togglePartnerAction,
@@ -33,7 +33,14 @@ export default async function DistributorDetailPage({
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
-  if (!isMasterEmail(auth.user.email ?? '')) redirect('/select-org');
+  const email = (auth.user.email ?? '').toLowerCase();
+  if (!isMasterEmail(email)) {
+    // 지역 마스터는 자기 국가 총판만 열 수 있다
+    const region = await getRegionAdmin(email);
+    if (!region) redirect('/select-org');
+    const scoped = await getPartnerById(params.id);
+    if (!scoped || scoped.countryCode !== region) redirect('/master/partners?error=scope');
+  }
 
   const d = await getPartnerById(params.id);
   if (!d || d.role !== 'distributor') notFound();
@@ -91,7 +98,7 @@ export default async function DistributorDetailPage({
         <input type="hidden" name="distributorId" value={d.id} />
         <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>실적 등록 — 시술 완료 · 투어 출발</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
-          병원이 시술 완료를 알려오면 여기에 입력합니다. 배분표대로 수당 원장이 자동 생성되고, 완료일 + {cfg.holdDays}일 뒤 확정됩니다. 추천인 코드를 비우면 총판 직접 유치(운영비 제외 전액 총판)입니다.
+          병원이 시술 완료를 알려오면 여기에 입력합니다. 수당 원장이 자동 생성되고, 완료일 + {cfg.holdDays}일 뒤 확정됩니다. 단순 정산 모드에서는 수수료의 {cfg.feeShare?.distributorPct ?? 0}%가 총판 몫입니다.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           <div><span style={label}>종류</span>
