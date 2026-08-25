@@ -146,17 +146,17 @@ export async function saveConfigAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const distributorId = str(fd, 'distributorId');
   await assertDistributorInScope(distributorId, scope.region);
-  const feeSharePct = Math.max(0, Math.min(100, num(fd, 'feeSharePct')));
+  // 단순 정산 모드: 배당 이익을 100%로 보고 총판 N% / 회사 (100−N)%.
+  // 추천인 단계·환자 포인트는 쓰지 않으므로 폼에서 뺐다. 그 값들은 기존
+  // config(또는 기본값)를 그대로 유지해 나중에 배분표 모드로 되돌려도
+  // 안전하게 한다.
+  const existing = await getPartnerById(distributorId);
+  const prev = { ...DEFAULT_DISTRIBUTOR_CONFIG, ...(existing?.config ?? {}) };
+  const feeSharePct = Math.max(0, Math.min(100, num(fd, 'feeSharePct') || 70));
   const cfg = {
-    feeShare: feeSharePct > 0 ? { distributorPct: feeSharePct } : null,
-    platformPct: num(fd, 'platformPct'),
+    ...prev,
+    feeShare: { distributorPct: feeSharePct },
     feePctByCategory: { plastic_surgery: num(fd, 'fee_ps'), dermatology: num(fd, 'fee_derm'), default: num(fd, 'fee_default') },
-    direct: { patientPointsPct: num(fd, 'direct_patient') },
-    network: {
-      plastic_surgery: { patient: num(fd, 'ps_patient'), l1: num(fd, 'ps_l1'), l2: num(fd, 'ps_l2') },
-      dermatology: { patient: num(fd, 'derm_patient'), l1: num(fd, 'derm_l1'), l2: num(fd, 'derm_l2') },
-      default: { patient: num(fd, 'def_patient'), l1: num(fd, 'def_l1'), l2: num(fd, 'def_l2') },
-    },
     travelMarginPct: num(fd, 'travelMarginPct'),
     holdDays: Math.max(0, Math.round(num(fd, 'holdDays'))),
   };

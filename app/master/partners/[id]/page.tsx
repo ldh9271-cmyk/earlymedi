@@ -12,6 +12,7 @@ import {
   confirmDueAction, createReferrerAction, createResultAction, linkPartnerUserAction,
   reverseOrderAction, saveConfigAction, settleAction, togglePartnerAction,
 } from '../_actions';
+import { FeeShareField } from './fee-share-field';
 
 export const dynamic = 'force-dynamic';
 
@@ -268,28 +269,25 @@ export default async function DistributorDetailPage({
         <input type="hidden" name="distributorId" value={d.id} />
         <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>수당 설정 (계약 조건)</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
-          시술비 대비 %. 운영비 + 환자 포인트 + 1단계 + 2단계를 뺀 나머지가 총판 몫입니다 (2단계가 비면 그 몫도 총판). 총판 직접 유치는 운영비와 &lsquo;직접 유치 환자 포인트&rsquo;만 빼고 전부 총판입니다.
+          병원 유치 수수료로 정산되어 들어온 <b>배당 이익을 100%로</b> 보고 총판/회사로 나눕니다. 아래 비율은 자유롭게 바꿀 수 있습니다.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10 }}>
-          <div><span style={label}>플랫폼 운영비 %</span><input name="platformPct" defaultValue={cfg.platformPct} style={input} /></div>
-          <div><span style={label}>병원 수수료 성형 %</span><input name="fee_ps" defaultValue={cfg.feePctByCategory.plastic_surgery} style={input} /></div>
-          <div><span style={label}>병원 수수료 피부 %</span><input name="fee_derm" defaultValue={cfg.feePctByCategory.dermatology} style={input} /></div>
-          <div><span style={label}>병원 수수료 기타 %</span><input name="fee_default" defaultValue={cfg.feePctByCategory.default} style={input} /></div>
-          <div><span style={label}>직접 유치 환자 포인트 %</span><input name="direct_patient" defaultValue={cfg.direct.patientPointsPct} style={input} /></div>
+
+        <FeeShareField defaultPct={cfg.feeShare?.distributorPct ?? 70} />
+
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#222', margin: '4px 0 8px' }}>병원 유치 수수료율 (배당 이익이 얼마나 들어오는지)</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          <div><span style={label}>성형외과 %</span><input name="fee_ps" defaultValue={cfg.feePctByCategory.plastic_surgery} style={input} /></div>
+          <div><span style={label}>피부과 %</span><input name="fee_derm" defaultValue={cfg.feePctByCategory.dermatology} style={input} /></div>
+          <div><span style={label}>기타 %</span><input name="fee_default" defaultValue={cfg.feePctByCategory.default} style={input} /></div>
+        </div>
+
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#222', margin: '16px 0 8px' }}>여행상품 · 지급 확정</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
           <div><span style={label}>여행상품 마진 %</span><input name="travelMarginPct" defaultValue={cfg.travelMarginPct} style={input} /></div>
-          {(['plastic_surgery', 'dermatology', 'default'] as const).map((k) => {
-            const p = k === 'plastic_surgery' ? 'ps' : k === 'dermatology' ? 'derm' : 'def';
-            const n = cfg.network[k] ?? { patient: 0, l1: 0, l2: 0 };
-            const name = k === 'plastic_surgery' ? '성형' : k === 'dermatology' ? '피부' : '기타';
-            return [
-              <div key={`${p}p`}><span style={label}>{name} · 환자 포인트 %</span><input name={`${p}_patient`} defaultValue={n.patient} style={input} /></div>,
-              <div key={`${p}1`}><span style={label}>{name} · 1단계 %</span><input name={`${p}_l1`} defaultValue={n.l1} style={input} /></div>,
-              <div key={`${p}2`}><span style={label}>{name} · 2단계 %</span><input name={`${p}_l2`} defaultValue={n.l2} style={input} /></div>,
-            ];
-          })}
           <div><span style={label}>확정 보류일 (시술 완료 후)</span><input name="holdDays" defaultValue={cfg.holdDays} style={input} /></div>
         </div>
-        <button type="submit" style={{ ...btn('#222'), marginTop: 14 }}>설정 저장</button>
+
+        <button type="submit" style={{ ...btn('#222'), marginTop: 16 }}>설정 저장</button>
       </form>
     </div>
   );
