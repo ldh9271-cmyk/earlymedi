@@ -10,7 +10,7 @@ import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { commissionLedger } from '@/drizzle/schema/referral-program';
 import {
-  attributeUser, getPartnerByCode, getPartnerByUserId, listReferrers, partnerTotals,
+  attributeUser, confirmDueLedger, getPartnerByCode, getPartnerByUserId, listReferrers, partnerTotals,
   REF_COOKIE, REF_JOIN_COOKIE,
 } from '@/lib/referral/service';
 import { joinReferrerAction } from './_actions';
@@ -84,6 +84,9 @@ export default async function ReferralPage({
 
   // ── 추천인 / 총판 화면 ──────────────────────────────────────────
   const isDistributor = me.role === 'distributor';
+  // 여행 시작일이 지난 예비 적립은 대시보드를 볼 때 확정 적립으로 올린다
+  // (운영자 조작 없이 "여행이 시작되면 확정"을 자동으로 반영).
+  if (isDistributor) await confirmDueLedger(me.id).catch(() => 0);
   const customerLink = `${SITE}/r/${me.code}`;
   const inviteLink = `${SITE}/r/${me.code}?join=1`;
   const qr = await QRCode.toString(customerLink, { type: 'svg', margin: 1, width: 180 });
@@ -98,8 +101,17 @@ export default async function ReferralPage({
     .limit(50);
 
   const roleLabel = (b: string): string => (b === 'referrer_l1' ? t.roleL1 : b === 'referrer_l2' ? t.roleL2 : t.roleDistributor);
-  const statusLabel = (s: string): { text: string; color: string } =>
-    s === 'paid' ? { text: t.paid, color: '#047857' } : s === 'confirmed' ? { text: t.confirmed, color: '#1d4ed8' } : s === 'reversed' ? { text: '×', color: '#6a6a6a' } : { text: t.pending, color: '#b45309' };
+  const statusLabel = (s: string, basis?: string): { text: string; color: string } => {
+    // 여행 마진은 여행 시작 전 '예비 적립', 시작 후 '확정 적립'으로 표시
+    if (basis === 'travel_margin') {
+      if (s === 'pending') return { text: t.provisional, color: '#b45309' };
+      if (s === 'confirmed') return { text: t.confirmedAccrual, color: '#1d4ed8' };
+    }
+    return s === 'paid' ? { text: t.paid, color: '#047857' }
+      : s === 'confirmed' ? { text: t.confirmed, color: '#1d4ed8' }
+        : s === 'reversed' ? { text: '×', color: '#6a6a6a' }
+          : { text: t.pending, color: '#b45309' };
+  };
   const fmt = (n: number): string => `₩${n.toLocaleString('ko-KR')}`;
 
   // 총판: 추천인 목록 + 월 정산서
@@ -174,7 +186,7 @@ export default async function ReferralPage({
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontVariantNumeric: 'tabular-nums', minWidth: 560 }}>
               <tbody>
                 {myRows.map(({ l, o }) => {
-                  const s = statusLabel(l.status);
+                  const s = statusLabel(l.status, l.basis);
                   return (
                     <tr key={l.id} style={{ borderTop: '1px solid #f0f0f0' }}>
                       <td style={{ padding: '10px 12px' }}><b>{o.invoiceNo}</b><div style={{ fontSize: 11, color: '#9c9c9c' }}>{o.title}</div></td>

@@ -54,6 +54,8 @@ export const checkoutOrders = pgTable(
 
     // 예약 조건 (표시용 문자열 그대로 — 로케일 포맷을 유지)
     reserveDate: text('reserve_date').notNull(),
+    /** 여행 시작일 (YYYY-MM-DD). 여행 마진 확정 기준 — 이 날짜가 지나면 예비→확정. */
+    reserveYmd: text('reserve_ymd'),
     reserveTime: text('reserve_time').notNull(),
     guests: integer('guests').notNull().default(1),
 

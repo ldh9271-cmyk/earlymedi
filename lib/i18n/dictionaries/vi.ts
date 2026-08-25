@@ -560,6 +560,8 @@ const vi: Dictionary = {
     clicks: "Lượt nhấp",
     signups: "Đăng ký",
     pending: "Chờ",
+    provisional: "Tạm tính",
+    confirmedAccrual: "Đã xác nhận",
     confirmed: "Đã xác nhận",
     paid: "Đã thanh toán",
     recent: "Hoa hồng gần đây",

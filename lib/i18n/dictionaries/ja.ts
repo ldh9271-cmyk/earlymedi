@@ -559,6 +559,8 @@ const ja: Dictionary = {
     clicks: "クリック",
     signups: "登録",
     pending: "保留中",
+    provisional: "予備積立",
+    confirmedAccrual: "確定積立",
     confirmed: "確定",
     paid: "支払済",
     recent: "最近の報酬",

@@ -560,6 +560,8 @@ const en: Dictionary = {
     clicks: "Clicks",
     signups: "Sign-ups",
     pending: "Pending",
+    provisional: "Provisional",
+    confirmedAccrual: "Confirmed accrual",
     confirmed: "Confirmed",
     paid: "Paid",
     recent: "Recent rewards",

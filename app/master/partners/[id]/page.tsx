@@ -205,7 +205,10 @@ export default async function DistributorDetailPage({
               {ledger.length === 0 ? <tr><td colSpan={10} style={{ padding: 18, color: '#6a6a6a', textAlign: 'center' }}>실적을 등록하면 여기에 배분 행이 생깁니다.</td></tr>
                 : ledger.map((l) => {
                   const o = orderById.get(l.orderId);
-                  const s = STATUS_KO[l.status] ?? { t: l.status, c: '#6a6a6a' };
+                  // 여행 마진은 '예비/확정 적립'으로 표기 (여행 시작 전/후)
+                  const s = l.basis === 'travel_margin' && (l.status === 'pending' || l.status === 'confirmed')
+                    ? (l.status === 'pending' ? { t: '예비 적립', c: '#b45309' } : { t: '확정 적립', c: '#1d4ed8' })
+                    : (STATUS_KO[l.status] ?? { t: l.status, c: '#6a6a6a' });
                   return (
                     <tr key={l.id} style={{ borderTop: '1px solid #f0f0f0' }}>
                       <td style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}><b>{o?.invoiceNo ?? '—'}</b><div style={{ color: '#9c9c9c' }}>{o?.listingTitle}</div></td>

@@ -560,6 +560,8 @@ const ru: Dictionary = {
     clicks: "Переходы",
     signups: "Регистрации",
     pending: "Ожидает",
+    provisional: "Предварительно",
+    confirmedAccrual: "Подтверждено",
     confirmed: "Подтверждено",
     paid: "Выплачено",
     recent: "Последние начисления",

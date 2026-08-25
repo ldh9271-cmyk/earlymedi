@@ -42,10 +42,10 @@ afterAll(async () => {
   if (ids.partners.length) await db.delete(referralPartners).where(inArray(referralPartners.id, ids.partners));
 });
 
-async function makeOrder(slug: string, subtotal: number): Promise<string> {
+async function makeOrder(slug: string, subtotal: number, reserveYmd = '2026-12-01'): Promise<string> {
   const [o] = await db.insert(checkoutOrders).values({
     invoiceNo: 'TEST-' + Math.floor(Math.random() * 1e8), status: 'reported', locale: 'ja',
-    listingSlug: slug, listingTitle: 'TEST 상품', reserveDate: '2026-09-01', reserveTime: '오후 2:00',
+    listingSlug: slug, listingTitle: 'TEST 상품', reserveDate: '2026-09-01', reserveYmd, reserveTime: '오후 2:00',
     guests: 1, unitPriceWon: subtotal, subtotalWon: subtotal, serviceFeeWon: Math.round(subtotal * 0.1),
     totalWon: subtotal + Math.round(subtotal * 0.1), paymentMethod: 'alipay',
     partnerId: dist.id, distributorId: dist.id, paidAt: new Date(),
@@ -65,7 +65,22 @@ describe('travel margin accrual (real DB)', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]!.beneficiary).toBe('distributor');
     expect(rows[0]!.amountWon).toBe(300_000);
-    expect(rows[0]!.status).toBe('pending');
+    expect(rows[0]!.status).toBe('pending'); // 여행 시작 전 = 예비 적립
+    // 확정 시점이 여행 시작일(2026-12-01)로 잡혀야 한다
+    expect(rows[0]!.confirmAt.getTime()).toBe(new Date('2026-12-01T00:00:00').getTime());
+  });
+
+  it('여행 시작일이 지나면 확정 적립으로 올라간다', async () => {
+    if (!pkgSlug) return;
+    const orderId = await makeOrder(pkgSlug, 3_000_000, '2020-01-01'); // 이미 지난 날짜
+    await svc.accrueOrderTravelMargin(orderId);
+    const [d] = await db.select({ id: referralPartners.id }).from(referralPartners).where(eq(referralPartners.id, dist.id));
+    void d;
+    const n = await svc.confirmDueLedger(dist.id);
+    expect(n).toBeGreaterThanOrEqual(1);
+    const rows = await db.select().from(commissionLedger)
+      .where(and(eq(commissionLedger.orderId, orderId), eq(commissionLedger.basis, 'travel_margin')));
+    expect(rows[0]!.status).toBe('confirmed'); // 확정 적립
   });
 
   it('중복 호출은 재적립하지 않는다 (멱등)', async () => {

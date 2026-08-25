@@ -314,7 +314,14 @@ export async function accrueOrderTravelMargin(orderId: string): Promise<number> 
   const amountWon = Math.round((saleBase * marginPct) / 100);
   if (amountWon <= 0) return 0;
 
-  const confirmAt = new Date((order.paidAt ?? new Date()).getTime() + config.holdDays * 86_400_000);
+  // 확정 시점 = 여행 시작일. 그날이 오기 전에는 '예비 적립'(pending),
+  // 시작일이 지나면 confirmDueLedger 가 '확정 적립'(confirmed)으로 올린다.
+  // 여행 취소·환불이 시작 전에 나면 예비 적립이 그대로 환수된다.
+  // 시작일을 모르면(구주문) 결제 확인 + holdDays 로 폴백.
+  const tripStart = order.reserveYmd && /^\d{4}-\d{2}-\d{2}$/.test(order.reserveYmd)
+    ? new Date(order.reserveYmd + 'T00:00:00')
+    : null;
+  const confirmAt = tripStart ?? new Date((order.paidAt ?? new Date()).getTime() + config.holdDays * 86_400_000);
   await db.insert(commissionLedger).values({
     orderId: order.id,
     distributorId: order.distributorId,

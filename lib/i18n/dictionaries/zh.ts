@@ -557,6 +557,8 @@ const zh: Dictionary = {
     clicks: "点击",
     signups: "注册",
     pending: "待确认",
+    provisional: "预备累计",
+    confirmedAccrual: "确认累计",
     confirmed: "已确认",
     paid: "已支付",
     recent: "最近奖励",

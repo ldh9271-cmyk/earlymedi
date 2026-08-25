@@ -579,6 +579,8 @@ const kr = {
     clicks: "클릭",
     signups: "가입",
     pending: "대기",
+    provisional: "예비 적립",
+    confirmedAccrual: "확정 적립",
     confirmed: "확정",
     paid: "지급 완료",
     recent: "최근 수당 내역",

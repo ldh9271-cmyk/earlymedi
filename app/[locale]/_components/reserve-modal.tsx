@@ -262,6 +262,7 @@ export default function ReserveButton({
           listingTitle: summary.title,
           interestKey: summary.interest,
           reserveDate: dateLabel,
+          reserveYmd: ymd || null,
           reserveTime: timeLabel,
           guests,
           unitPriceWon: summary.priceWon,
