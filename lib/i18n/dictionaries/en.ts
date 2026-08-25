@@ -272,6 +272,7 @@ const en: Dictionary = {
     catAi: 'AI Analysis',
     myBookings: 'My bookings',
     referralMenu: "Referral program",
+    adminPage: "Admin console",
     catTravel: 'Trips',
     catHospital: 'Clinics',
     catColor: 'Personal Color',

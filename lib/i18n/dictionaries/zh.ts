@@ -257,6 +257,7 @@ const zh: Dictionary = {
     catAi: 'AI 分析',
     myBookings: '我的预订',
     referralMenu: "推荐计划",
+    adminPage: "管理后台",
     catTravel: '旅行',
     catHospital: '医院',
     catColor: '个人色彩',

@@ -283,6 +283,7 @@ const kr = {
     catAi: 'AI 분석',
     myBookings: '내 예약',
     referralMenu: "추천 프로그램",
+    adminPage: "관리자 페이지",
     catTravel: '여행',
     catHospital: '병원',
     catColor: '퍼스널 컬러',

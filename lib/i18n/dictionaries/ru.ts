@@ -260,6 +260,7 @@ const ru: Dictionary = {
     catAi: 'AI-анализ',
     myBookings: 'Мои бронирования',
     referralMenu: "Реферальная программа",
+    adminPage: "Админ-панель",
     catTravel: 'Туры',
     catHospital: 'Клиники',
     catColor: 'Цветотип',

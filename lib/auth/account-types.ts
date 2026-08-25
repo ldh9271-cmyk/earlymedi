@@ -64,6 +64,8 @@ export const PUBLIC_PREFIXES = [
   // 총판·추천인 QR 랜딩 (쿠키 귀속) + 귀속 기록 API
   '/r',
   '/api/ref',
+  // 로그인 계정의 관리 권한 조회 — 라우트가 자체 세션 검사
+  '/api/me',
   // 토스페이먼츠 — confirm 은 successUrl 랜딩(게스트 세션, 조직 없음)이
   // 호출하고 webhook 은 토스 서버가 호출한다. 둘 다 Supabase 세션에
   // 기대지 않고, 인보이스 대조 + 토스 API 재조회로 스스로 방어한다.

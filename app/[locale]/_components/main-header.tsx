@@ -182,6 +182,8 @@ export function MainHeader({
   // string = signed in (email). Subscribed via Supabase auth listener so
   // the header updates immediately on login/logout without a refresh.
   const [userEmail, setUserEmail] = useState<string | null | undefined>(null);
+  // 마스터·지역 마스터면 관리자 페이지 링크. 서버(세션)만 판별 가능하므로 API 로 조회.
+  const [adminHref, setAdminHref] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -190,11 +192,23 @@ export function MainHeader({
       return;
     }
     let mounted = true;
+    const refreshAdmin = (signedIn: boolean): void => {
+      if (!signedIn) { setAdminHref(null); return; }
+      void fetch('/api/me/admin-scope')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j: { admin?: boolean; href?: string } | null) => {
+          if (mounted) setAdminHref(j?.admin && j.href ? j.href : null);
+        })
+        .catch(() => undefined);
+    };
     void supabase.auth.getUser().then(({ data }) => {
-      if (mounted) setUserEmail(data.user?.email ?? undefined);
+      if (!mounted) return;
+      setUserEmail(data.user?.email ?? undefined);
+      refreshAdmin(!!data.user);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserEmail(session?.user?.email ?? undefined);
+      refreshAdmin(!!session?.user);
     });
     return () => {
       mounted = false;
@@ -501,6 +515,25 @@ export function MainHeader({
                   {t.account.signedIn}<br />
                   <span style={{ color: '#222', fontWeight: 600 }}>{userEmail}</span>
                 </div>
+                {adminHref ? (
+                  <Link
+                    href={adminHref}
+                    onClick={() => setAccountOpen(false)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '10px 14px', margin: '0 0 4px',
+                      fontSize: 14, color: '#c81e42', fontWeight: 700,
+                      background: '#fff5f7', borderRadius: 8, textDecoration: 'none',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#ffe3e9'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#fff5f7'; }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c81e42" strokeWidth="2">
+                      <path d="M12 2l8 4v6c0 5-3.4 8-8 10-4.6-2-8-5-8-10V6z" strokeLinejoin="round" />
+                    </svg>
+                    {t.adminPage}
+                  </Link>
+                ) : null}
                 <Link
                   href={`/${locale}/me`}
                   onClick={() => setAccountOpen(false)}

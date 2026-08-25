@@ -260,6 +260,7 @@ const vi: Dictionary = {
     catAi: 'Phân tích AI',
     myBookings: 'Đặt chỗ của tôi',
     referralMenu: "Chương trình giới thiệu",
+    adminPage: "Trang quản trị",
     catTravel: 'Du lịch',
     catHospital: 'Phòng khám',
     catColor: 'Màu cá nhân',

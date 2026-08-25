@@ -259,6 +259,7 @@ const ja: Dictionary = {
     catAi: 'AI 分析',
     myBookings: '予約履歴',
     referralMenu: "紹介プログラム",
+    adminPage: "管理者ページ",
     catTravel: '旅行',
     catHospital: '病院',
     catColor: 'パーソナルカラー',
