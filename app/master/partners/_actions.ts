@@ -10,7 +10,7 @@ import { db } from '@/lib/db/client';
 import { referralPartners, DEFAULT_DISTRIBUTOR_CONFIG } from '@/drizzle/schema/referral-program';
 import {
   confirmDueLedger, createResultOrderWithLedger, findAuthUserIdByEmail, generateCode, getPartnerById,
-  getRegionAdmin, markSettled, nextDistributorCode, reverseOrder, setRegionFeeSharePct,
+  getRegionAdmin, markSettled, nextDistributorCode, reverseOrder,
 } from '@/lib/referral/service';
 import { regionAdmins } from '@/drizzle/schema/referral-program';
 
@@ -142,10 +142,9 @@ export async function linkPartnerUserAction(fd: FormData): Promise<void> {
 }
 
 /**
- * 총판 수당 설정 저장 — 병원 유치 수수료율 · 여행 마진 · 확정 보류일만.
- * 정산 비율(총판/회사 배분)은 여기서 다루지 않는다. 그것은 지역(일본)
- * 마스터가 목록 화면에서 국가 단위로 일괄 설정하고(regionSettings),
- * getDistributorConfig 가 자동으로 덮어쓴다. feeShare 등 폼에 없는 값은
+ * 총판 수당 설정 저장 — 정산 비율(총판/회사 배분) · 병원 유치 수수료율 ·
+ * 여행 마진 · 확정 보류일. 정산 비율은 총판마다 다를 수 있어 총판별 config
+ * 에 저장한다(일본 마스터가 이 화면에서 총판별로 정한다). 폼에 없는 값은
  * 기존 config(또는 기본값)를 그대로 유지한다.
  */
 export async function saveConfigAction(fd: FormData): Promise<void> {
@@ -154,8 +153,10 @@ export async function saveConfigAction(fd: FormData): Promise<void> {
   await assertDistributorInScope(distributorId, scope.region);
   const existing = await getPartnerById(distributorId);
   const prev = { ...DEFAULT_DISTRIBUTOR_CONFIG, ...(existing?.config ?? {}) };
+  const feeSharePct = Math.max(0, Math.min(100, num(fd, 'feeSharePct') || (prev.feeShare?.distributorPct ?? 70)));
   const cfg = {
     ...prev,
+    feeShare: { distributorPct: feeSharePct },
     feePctByCategory: { plastic_surgery: num(fd, 'fee_ps'), dermatology: num(fd, 'fee_derm'), default: num(fd, 'fee_default') },
     travelMarginPct: num(fd, 'travelMarginPct'),
     holdDays: Math.max(0, Math.round(num(fd, 'holdDays'))),
@@ -163,20 +164,6 @@ export async function saveConfigAction(fd: FormData): Promise<void> {
   await db.update(referralPartners).set({ config: cfg, updatedAt: new Date() }).where(eq(referralPartners.id, distributorId));
   revalidatePath(`/master/partners/${distributorId}`);
   back(`/master/partners/${distributorId}`, { ok: '설정 저장' });
-}
-
-/**
- * 지역(국가) 정산 비율 저장 — 지역 마스터·총괄 마스터 전용.
- * 배당 이익을 100%로 보고 총판 N% / 회사 (100−N)%. 이 나라 총판 전체에
- * 적용된다. 지역 마스터는 자기 국가로 강제된다.
- */
-export async function saveRegionFeeShareAction(fd: FormData): Promise<void> {
-  const scope = await assertScope();
-  const countryCode = (scope.region ?? (str(fd, 'countryCode') || 'JP')).toUpperCase().slice(0, 2);
-  const pct = Math.max(0, Math.min(100, num(fd, 'feeSharePct') || 70));
-  await setRegionFeeSharePct(countryCode, pct);
-  revalidatePath('/master/partners');
-  back('/master/partners', { ok: `${countryCode} 총판 정산 비율 → 총판 ${pct}% / 회사 ${100 - pct}%` });
 }
 
 /** 실적 등록 — 시술 완료 / 투어 출발을 확인하고 주문 + 원장 생성. */

@@ -8,7 +8,6 @@ import {
   referralAttributions,
   referralPartners,
   regionAdmins,
-  regionSettings,
   DEFAULT_DISTRIBUTOR_CONFIG,
   type DistributorConfig,
 } from '@/drizzle/schema/referral-program';
@@ -81,46 +80,9 @@ export async function getPartnerByUserId(userId: string): Promise<Partner | null
 
 export async function getDistributorConfig(distributorId: string): Promise<DistributorConfig> {
   const d = await getPartnerById(distributorId);
-  const base = { ...DEFAULT_DISTRIBUTOR_CONFIG, ...(d?.config ?? {}) };
-  // 정산 비율(총판/회사 배분)은 지역(국가) 단위 설정이 우선한다. 지역 마스터가
-  // 값을 정해두면 그 나라 총판 전체에 적용되고, 개별 총판 config 의 feeShare 는
-  // 무시된다. 지역 설정이 없으면 총판 config(또는 기본 70%)를 그대로 쓴다.
-  if (d) {
-    const regionPct = await getRegionFeeSharePct(d.countryCode);
-    if (regionPct != null) base.feeShare = { distributorPct: regionPct };
-  }
-  return base;
-}
-
-/**
- * 지역(국가) 단위 정산 비율 — 총판 몫 %. 설정이 없으면 null.
- * getDistributorConfig 가 이 값으로 feeShare 를 덮어쓴다.
- */
-export async function getRegionFeeSharePct(countryCode: string): Promise<number | null> {
-  const cc = countryCode.toUpperCase().slice(0, 2);
-  const [row] = await db
-    .select({ pct: regionSettings.feeSharePct })
-    .from(regionSettings)
-    .where(eq(regionSettings.countryCode, cc))
-    .limit(1);
-  return row ? row.pct : null;
-}
-
-/** 지역 정산 비율 저장(upsert). 0~100 으로 자른다. */
-export async function setRegionFeeSharePct(countryCode: string, pct: number): Promise<void> {
-  const cc = countryCode.toUpperCase().slice(0, 2);
-  const clamped = Math.max(0, Math.min(100, Math.round(pct)));
-  await db
-    .insert(regionSettings)
-    .values({ countryCode: cc, feeSharePct: clamped })
-    .onConflictDoUpdate({ target: regionSettings.countryCode, set: { feeSharePct: clamped, updatedAt: new Date() } });
-}
-
-/** 설정된 지역 정산 비율 전체 (국가 → %). */
-export async function listRegionSettings(): Promise<Array<{ countryCode: string; feeSharePct: number }>> {
-  return db
-    .select({ countryCode: regionSettings.countryCode, feeSharePct: regionSettings.feeSharePct })
-    .from(regionSettings);
+  // 정산 비율(feeShare)을 포함한 모든 설정은 총판별 config 를 그대로 쓴다.
+  // 일본 마스터가 각 총판 상세 화면에서 총판마다 개별로 정한다.
+  return { ...DEFAULT_DISTRIBUTOR_CONFIG, ...(d?.config ?? {}) };
 }
 
 /**

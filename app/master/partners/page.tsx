@@ -5,11 +5,8 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { commissionLedger, referralPartners } from '@/drizzle/schema/referral-program';
-import { getRegionAdmin, listDistributors, listRegionAdmins, listRegionSettings } from '@/lib/referral/service';
-import {
-  addRegionAdminAction, createDistributorAction, removeRegionAdminAction, saveRegionFeeShareAction,
-} from './_actions';
-import { FeeShareField } from './fee-share-field';
+import { getRegionAdmin, listDistributors, listRegionAdmins } from '@/lib/referral/service';
+import { addRegionAdminAction, createDistributorAction, removeRegionAdminAction } from './_actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '총판·추천인 프로그램 — 마스터 관리자' };
@@ -33,20 +30,6 @@ export default async function MasterPartnersPage({
 
   const distributors = await listDistributors(region ?? undefined);
   const admins = isMaster ? await listRegionAdmins() : [];
-
-  // 정산 비율(총판/회사 배분) — 국가 단위. 지역 마스터는 자기 국가만,
-  // 총괄 마스터는 총판·지역 마스터·기존 설정이 있는 모든 국가를 관리한다.
-  const regionSettingRows = await listRegionSettings();
-  const pctByCountry = new Map(regionSettingRows.map((r) => [r.countryCode, r.feeSharePct]));
-  const feeShareCountries = region
-    ? [region]
-    : Array.from(new Set([
-      ...distributors.map((d) => d.countryCode),
-      ...admins.map((a) => a.countryCode),
-      ...regionSettingRows.map((r) => r.countryCode),
-    ])).sort();
-  const feeShareList = (feeShareCountries.length ? feeShareCountries : ['JP'])
-    .map((cc) => ({ cc, pct: pctByCountry.get(cc) ?? 70 }));
   const stats = await Promise.all(distributors.map(async (d) => {
     const [ref] = await db.select({ n: sql<number>`count(*)::int` }).from(referralPartners)
       .where(eq(referralPartners.distributorId, d.id));
@@ -73,24 +56,6 @@ export default async function MasterPartnersPage({
 
       {searchParams.error ? <p style={{ color: '#dc2626', fontSize: 13, marginTop: 14 }}>{searchParams.error}</p> : null}
       {searchParams.ok ? <p style={{ color: '#047857', fontSize: 13, marginTop: 14 }}>{searchParams.ok}</p> : null}
-
-      {/* ── 정산 비율 (총판 공통 · 국가 단위) ─────────────────────── */}
-      <div className="m-mp-card" style={{ marginTop: 20, border: '1px solid #ff385c', borderRadius: 12, padding: 20, maxWidth: 760, background: '#fff5f7' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>정산 비율 (총판 공통){region ? ` — ${region}` : ''}</h2>
-        <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
-          배당 이익(병원 유치 수수료)을 100%로 보고 총판/회사로 나눕니다. 여기서 정한 비율이 해당 국가 <b>총판 전체에 일괄 적용</b>되고, 개별 총판 상세 화면에서는 바꿀 수 없습니다.
-        </p>
-        {feeShareList.map(({ cc, pct }) => (
-          <form key={cc} action={saveRegionFeeShareAction} style={{ marginBottom: 4 }}>
-            <input type="hidden" name="countryCode" value={cc} />
-            {!region ? <div style={{ fontSize: 12, fontWeight: 700, color: '#222', marginBottom: 6 }}>{cc}</div> : null}
-            <FeeShareField defaultPct={pct} />
-            <button type="submit" style={{ background: '#ff385c', color: '#fff', border: 'none', borderRadius: 10, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16 }}>
-              {cc} 정산 비율 저장
-            </button>
-          </form>
-        ))}
-      </div>
 
       <div style={{ marginTop: 20, border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
         <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 13 }}>
@@ -132,7 +97,7 @@ export default async function MasterPartnersPage({
       <form action={createDistributorAction} className="m-mp-card" style={{ marginTop: 28, border: '1px solid #ebebeb', borderRadius: 12, padding: 20, maxWidth: 760 }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>새 총판 등록</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 16px' }}>
-          코드는 자동 생성됩니다. 정산 비율은 위 국가 설정을 그대로 따르고, 병원 유치 수수료율·여행 마진은 상세 화면에서 조정합니다.
+          코드는 자동 생성됩니다. 정산 비율(기본 총판 70 / 회사 30)·병원 유치 수수료율·여행 마진은 총판별로 상세 화면에서 조정합니다.
         </p>
         <div className="m-mp-grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div><span style={label}>총판 이름 (법인명) *</span><input name="name" required style={input} placeholder="예: 株式会社○○ / Tokyo Beauty Partners" /></div>

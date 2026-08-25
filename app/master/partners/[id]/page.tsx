@@ -7,11 +7,12 @@ import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { commissionLedger, DEFAULT_DISTRIBUTOR_CONFIG } from '@/drizzle/schema/referral-program';
-import { getPartnerById, getRegionAdmin, getRegionFeeSharePct, listReferrers } from '@/lib/referral/service';
+import { getPartnerById, getRegionAdmin, listReferrers } from '@/lib/referral/service';
 import {
   confirmDueAction, createReferrerAction, createResultAction, linkPartnerUserAction,
   reverseOrderAction, saveConfigAction, settleAction, togglePartnerAction,
 } from '../_actions';
+import { FeeShareField } from '../fee-share-field';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,10 +46,7 @@ export default async function DistributorDetailPage({
   const d = await getPartnerById(params.id);
   if (!d || d.role !== 'distributor') notFound();
   const cfg = { ...DEFAULT_DISTRIBUTOR_CONFIG, ...(d.config ?? {}) };
-  // 정산 비율은 지역(국가) 단위 설정이 우선. 지역 설정이 있으면 그 값이,
-  // 없으면 총판 config(또는 기본 70)를 실제로 쓴다. 여기선 읽기 전용으로만 보여준다.
-  const regionFeeSharePct = await getRegionFeeSharePct(d.countryCode);
-  const effectiveFeeSharePct = regionFeeSharePct ?? cfg.feeShare?.distributorPct ?? 70;
+  const feeSharePct = cfg.feeShare?.distributorPct ?? 70;
   const referrers = await listReferrers(d.id);
   const byId = new Map(referrers.map((r) => [r.id, r]));
   const orders = await db.select().from(checkoutOrders)
@@ -102,7 +100,7 @@ export default async function DistributorDetailPage({
         <input type="hidden" name="distributorId" value={d.id} />
         <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>실적 등록 — 시술 완료 · 투어 출발</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
-          병원이 시술 완료를 알려오면 여기에 입력합니다. 수당 원장이 자동 생성되고, 완료일 + {cfg.holdDays}일 뒤 확정됩니다. 정산 비율에 따라 수수료의 {effectiveFeeSharePct}%가 총판 몫입니다.
+          병원이 시술 완료를 알려오면 여기에 입력합니다. 수당 원장이 자동 생성되고, 완료일 + {cfg.holdDays}일 뒤 확정됩니다. 정산 비율에 따라 수수료의 {feeSharePct}%가 총판 몫입니다.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           <div><span style={label}>종류</span>
@@ -267,36 +265,15 @@ export default async function DistributorDetailPage({
         </div>
       </div>
 
-      {/* ── 정산 비율 (읽기 전용 · 지역 마스터가 국가 단위로 설정) ────── */}
-      <div style={{ ...card, marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>정산 비율</h2>
-          <span style={{ fontSize: 11, color: '#9c9c9c' }}>
-            {regionFeeSharePct != null ? `${d.countryCode} 지역 설정 적용` : '기본값'} · 여기서는 변경 불가
-          </span>
-        </div>
-        <p style={{ fontSize: 12, color: '#6a6a6a', margin: '6px 0 12px' }}>
-          배당 이익을 100%로 보고 나눕니다. 이 값은 <b>{d.countryCode} 마스터가 총판 목록 화면에서 국가 단위로 일괄 설정</b>합니다.
-        </p>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
-          <div style={{ flex: effectiveFeeSharePct, minWidth: 60, background: '#ff385c', color: '#fff', borderRadius: 8, padding: '10px 14px' }}>
-            <div style={{ fontSize: 11, opacity: 0.9 }}>총판</div>
-            <div style={{ fontSize: 22, fontWeight: 800 }}>{effectiveFeeSharePct}%</div>
-          </div>
-          <div style={{ flex: 100 - effectiveFeeSharePct, minWidth: 60, background: '#222', color: '#fff', borderRadius: 8, padding: '10px 14px' }}>
-            <div style={{ fontSize: 11, opacity: 0.8 }}>회사(플랫폼)</div>
-            <div style={{ fontSize: 22, fontWeight: 800 }}>{100 - effectiveFeeSharePct}%</div>
-          </div>
-        </div>
-      </div>
-
       {/* ── 수당 설정 ─────────────────────────────────────────── */}
       <form action={saveConfigAction} style={card}>
         <input type="hidden" name="distributorId" value={d.id} />
         <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>수당 설정 (계약 조건)</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
-          병원 유치 수수료율과 여행상품 마진·확정 보류일을 정합니다. (정산 비율은 위에서 국가 단위로 설정됩니다.)
+          이 총판의 <b>정산 비율</b>을 정합니다 — 배당 이익(병원 유치 수수료)을 100%로 보고 총판/회사로 나눕니다. 총판마다 다르게 설정할 수 있습니다.
         </p>
+
+        <FeeShareField defaultPct={feeSharePct} />
 
         <div style={{ fontSize: 12, fontWeight: 700, color: '#222', margin: '4px 0 8px' }}>병원 유치 수수료율 (배당 이익이 얼마나 들어오는지)</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
