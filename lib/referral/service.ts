@@ -2,6 +2,7 @@ import 'server-only';
 import { and, desc, eq, inArray, like, lte, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
+import { partnerListings } from '@/drizzle/schema/partner-listings';
 import {
   commissionLedger,
   referralAttributions,
@@ -272,6 +273,63 @@ export async function createResultOrderWithLedger(input: CreateResultOrderInput)
       total: drafts.reduce((a, d) => a + d.amountWon, 0),
     };
   });
+}
+
+/**
+ * 사이트 결제 주문 → 총판 여행상품 마진 자동 적립.
+ *
+ * 총판에 귀속된 회원이 여행 패키지(partner_listings.category =
+ * 'travel_package')를 구매하면, 입금 확인(paid) 시점에 판매금액(패키지
+ * 소계)의 travelMarginPct%(기본 10%)를 총판 마진으로 적립한다. 확정은
+ * 결제 확인 + holdDays 후. 같은 주문에 중복 적립하지 않는다(멱등).
+ *
+ * 반환: 적립된 마진 원화 (해당 없으면 0).
+ */
+export async function accrueOrderTravelMargin(orderId: string): Promise<number> {
+  const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, orderId)).limit(1);
+  if (!order || !order.distributorId || !order.listingSlug) return 0;
+
+  // 여행 패키지 여부는 상품 카테고리로 판단한다
+  const [listing] = await db
+    .select({ category: partnerListings.category })
+    .from(partnerListings)
+    .where(eq(partnerListings.slug, order.listingSlug))
+    .limit(1);
+  if (!listing || listing.category !== 'travel_package') return 0;
+
+  // 이미 이 주문에 마진 행이 있으면 중복 적립하지 않는다
+  const existing = await db
+    .select({ id: commissionLedger.id })
+    .from(commissionLedger)
+    .where(and(eq(commissionLedger.orderId, orderId), eq(commissionLedger.basis, 'travel_margin')))
+    .limit(1);
+  if (existing.length > 0) return 0;
+
+  const config = await getDistributorConfig(order.distributorId);
+  const marginPct = config.travelMarginPct ?? 0;
+  if (marginPct <= 0) return 0;
+
+  // 판매금액 = 패키지 소계(플랫폼 서비스 수수료 제외). 값이 없으면 총액.
+  const saleBase = order.subtotalWon || order.totalWon;
+  const amountWon = Math.round((saleBase * marginPct) / 100);
+  if (amountWon <= 0) return 0;
+
+  const confirmAt = new Date((order.paidAt ?? new Date()).getTime() + config.holdDays * 86_400_000);
+  await db.insert(commissionLedger).values({
+    orderId: order.id,
+    distributorId: order.distributorId,
+    beneficiary: 'distributor',
+    beneficiaryPartnerId: order.partnerId ?? order.distributorId,
+    beneficiaryUserId: null,
+    basis: 'travel_margin',
+    rateBp: Math.round(marginPct * 100),
+    baseAmountWon: saleBase,
+    amountWon,
+    status: 'pending',
+    confirmAt,
+    note: `여행상품 마진 ${marginPct}% · ${order.invoiceNo}`,
+  });
+  return amountWon;
 }
 
 /** 취소·환불 — 아직 지급 전이면 reversed, 이미 지급됐으면 음수 행을 추가해 다음 정산에서 환수. */
