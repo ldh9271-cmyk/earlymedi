@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, desc, eq, inArray, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, like, lte, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import {
@@ -19,7 +19,27 @@ export const REF_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export type Partner = typeof referralPartners.$inferSelect;
 
-/** 혼동되는 글자(0/O, 1/I)를 뺀 8자리 코드. 앞 두 글자는 국가. */
+/**
+ * 총판 코드 — 국가별 일련번호. 예: JP_0001, JP_0002 …
+ * 같은 국가에서 이미 발급된 최댓값 + 1. 동시 생성으로 충돌하면 unique
+ * 인덱스가 잡고, 호출부가 재조회해 다음 번호로 재시도한다.
+ */
+export async function nextDistributorCode(countryCode: string): Promise<string> {
+  const cc = countryCode.toUpperCase().slice(0, 2);
+  const rows = await db
+    .select({ code: referralPartners.code })
+    .from(referralPartners)
+    .where(and(eq(referralPartners.role, 'distributor'), like(referralPartners.code, `${cc}_%`)));
+  const re = new RegExp(`^${cc}_(\d+)$`);
+  let max = 0;
+  for (const r of rows) {
+    const m = re.exec(r.code);
+    if (m?.[1]) max = Math.max(max, parseInt(m[1], 10));
+  }
+  return `${cc}_${String(max + 1).padStart(4, '0')}`;
+}
+
+/** 추천인 코드 — 혼동되는 글자(0/O, 1/I)를 뺀 8자리 랜덤. 앞 두 글자는 국가. */
 export function generateCode(countryCode: string): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let s = '';

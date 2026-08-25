@@ -10,7 +10,7 @@ import { db } from '@/lib/db/client';
 import { referralPartners, DEFAULT_DISTRIBUTOR_CONFIG } from '@/drizzle/schema/referral-program';
 import {
   confirmDueLedger, createResultOrderWithLedger, findAuthUserIdByEmail, generateCode, getPartnerById,
-  getRegionAdmin, markSettled, reverseOrder,
+  getRegionAdmin, markSettled, nextDistributorCode, reverseOrder,
 } from '@/lib/referral/service';
 import { regionAdmins } from '@/drizzle/schema/referral-program';
 
@@ -68,7 +68,7 @@ export async function createDistributorAction(fd: FormData): Promise<void> {
     try {
       const [row] = await db.insert(referralPartners).values({
         role: 'distributor',
-        code: generateCode(countryCode),
+        code: await nextDistributorCode(countryCode),
         name,
         contact: str(fd, 'contact') || null,
         countryCode,
