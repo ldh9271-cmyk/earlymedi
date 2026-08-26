@@ -411,7 +411,7 @@ function PricingBand(): JSX.Element {
           lead="유치업체는 3-tier 구독 · 의료기관은 충전식 · 비의료는 마켓플레이스 수수료 · 프리랜서는 무료."
         />
         <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <PriceCard color="brand" name="유치업체" sub="Starter / Growth / Pro" price="₩99K~699K / 월" extra="14일 무료 체험" />
+          <PriceCard color="brand" name="유치업체" sub="Starter / Growth / Pro" price="₩30K~200K / 월" extra="14일 무료 체험" />
           <PriceCard color="care" name="의료기관" sub="Pay-as-you-go / Committed" price="₩500K부터 충전" extra="등록비 ₩300K" />
           <PriceCard color="slate" name="파트너업체" sub="Listing / Active" price="₩50K + GMV 3% / 1.5%" extra="가입비 ₩50K" />
           <PriceCard color="hospitality" name="프리랜서" sub="Free" price="무료" extra="Agency 좌석에 포함" />
