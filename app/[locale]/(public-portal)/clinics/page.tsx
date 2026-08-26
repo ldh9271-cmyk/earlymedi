@@ -14,23 +14,17 @@ import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content'
 export const dynamic = 'force-dynamic';
 
 /**
- * Patient-facing clinic catalog — Airbnb design language.
+ * 상품 카탈로그 (구 병원 찾기) — 2026-08-27 리드 수집 모델로 개편.
  *
- * Pulls from the existing `hospitals` table (the same rows agencies
- * curate) and renders an Airbnb-style 4-column photo card grid. The
- * data layer is unchanged from the previous version: master-curated
- * `category_listings` take precedence, with a legacy
- * `hospitals.primary_categories` tag-match fallback when nothing is
- * curated yet, and `hospital_locale_content` overrides name + cover
- * per locale.
+ * 병원 시술을 "상품"으로 묶어 메인 화면처럼 카테고리 섹션(성형외과
+ * 상품 · 피부과 상품 · …)으로 보여주고, 결제 대신 [문의하기]로 환자
+ * DB(리드)를 수집한다. 문의는 /inquiry?hospital=&interest= 프리필로
+ * 이어지고, 병원은 리드 마켓(/medical/leads)에서 충전금으로 열람한다.
  *
- * RLS note: public page → no `app.current_org_id` setting. The
- * hospitals table's RLS policy lets the postgres role read all rows;
- * a restrictive `is_public` gate can be added later.
- *
- * Visual: inline styles matching /[locale] page.tsx + MainHeader's
- * 1280px / 40px padding rhythm, #ff385c accent, 14px card radius,
- * label outside the photo (not overlaid) for legibility.
+ * 데이터: master 큐레이션 category_listings 우선, 비어 있으면 legacy
+ * hospitals.primary_categories 매칭. hospital_locale_content 가 이름·
+ * 커버를 로케일별로 덮어쓴다. '전체' 칩은 제거 — 무필터 진입 시
+ * 카테고리 섹션 전체가 곧 전체 보기다.
  */
 type ClinicRow = {
   id: string;
@@ -42,12 +36,6 @@ type ClinicRow = {
   coverImageUrl: string | null;
 };
 
-/**
- * City whitelist matcher — case-insensitive partial-match against
- * addressJson.city. Empty whitelist = no filter (pass all). Used to
- * apply MainHeader's location chips (강남 / 명동 / ...) post-fetch,
- * since the SELECT only pulls 50 most-recent rows.
- */
 function cityFilterMatch(
   addressJson: { city?: string } | null,
   cityWhitelist: ReadonlyArray<string>,
@@ -58,11 +46,7 @@ function cityFilterMatch(
   return cityWhitelist.some((w) => city.includes(w));
 }
 
-/**
- * Sub-category chips shown at the top of /clinics — what used to live
- * in the header dropdown. Order matches the founder-curated nav.
- * Labels come from dict.clinicsPage.categories per locale.
- */
+/** 상품 카테고리 — 사용자 지정 9종 (전체 칩 없음). */
 const SUB_CHIP_KEYS: ReadonlyArray<CategoryLabelKey> = [
   'plastic_surgery', 'dermatology', 'dental', 'ophthalmology', 'hair',
   'health_checkup', 'stem_cell', 'oriental', 'partner',
@@ -77,10 +61,9 @@ function categoryLabel(
   return (labels as Record<string, string>)[key] || key;
 }
 
-// Inline mobile CSS — stored as plain string to dodge the SWC parser
-// quirk (see feedback_swc_inline_css memory).
 const CLINICS_MOBILE_CSS =
-  '@media (max-width: 768px) {'
+  '.m-cl-hscroll::-webkit-scrollbar { display: none; }'
+  + '@media (max-width: 768px) {'
   + '.m-cl-page { padding: 20px 16px 80px !important; }'
   + '.m-cl-title { font-size: 22px !important; }'
   + '.m-cl-subtitle { font-size: 13px !important; }'
@@ -88,7 +71,48 @@ const CLINICS_MOBILE_CSS =
   + '.m-cl-card-name { font-size: 14px !important; }'
   + '.m-cl-card-tags { font-size: 12px !important; }'
   + '.m-cl-chips-row { padding: 0 16px !important; gap: 8px !important; }'
+  + '.m-cl-hcard { width: 168px !important; }'
+  + '.m-cl-sec-title { font-size: 18px !important; }'
   + '}';
+
+/** 로케일 오버라이드(이름·커버) 일괄 적용. */
+async function applyLocaleOverrides(
+  rows: ClinicRow[],
+  locale: PublicLocale,
+): Promise<ClinicRow[]> {
+  if (rows.length === 0) return rows;
+  try {
+    const ids = rows.map((h) => h.id);
+    const overrides = await db
+      .select({
+        hospitalId: hospitalLocaleContent.hospitalId,
+        locale: hospitalLocaleContent.locale,
+        name: hospitalLocaleContent.name,
+        coverImageUrl: hospitalLocaleContent.coverImageUrl,
+      })
+      .from(hospitalLocaleContent)
+      .where(
+        and(
+          inArray(hospitalLocaleContent.hospitalId, ids),
+          inArray(hospitalLocaleContent.locale, localesForMedia(locale)),
+        ),
+      );
+    const nameById = new Map(
+      overrides.filter((o) => o.locale === locale).map((o) => [o.hospitalId, o.name]),
+    );
+    const coverById = coverByLocale(
+      overrides.map((o) => ({ id: o.hospitalId, locale: o.locale, coverImageUrl: o.coverImageUrl })),
+      locale,
+    );
+    return rows.map((h) => ({
+      ...h,
+      name: nameById.get(h.id)?.trim() || h.name,
+      coverImageUrl: coverById.get(h.id) || h.coverImageUrl,
+    }));
+  } catch {
+    return rows;
+  }
+}
 
 export default async function ClinicsListPage({
   params,
@@ -98,7 +122,6 @@ export default async function ClinicsListPage({
   searchParams: {
     category?: string;
     procedure?: string;
-    /** filter pill query params */
     priceMin?: string;
     priceMax?: string;
     minRating?: string;
@@ -110,13 +133,6 @@ export default async function ClinicsListPage({
   const categoryFilter = searchParams.category;
   const procedureFilter = searchParams.procedure;
 
-  // ── MainHeader filter pill query parsing ────────────────────────────
-  // hospitals has rating (0..50 integer) and addressJson.city — those
-  // are filterable. priceMin/priceMax is ignored on this page because
-  // the hospitals row has no price column (procedure prices live
-  // elsewhere). filtering them silently would surprise users; better
-  // to keep the rows visible and let the filter chip just indicate
-  // intent. Once we surface price_won (post Phase A.5), wire it in.
   const minRating = (() => {
     const n = Number(searchParams.minRating);
     return Number.isFinite(n) && n > 0 ? n : null;
@@ -125,9 +141,6 @@ export default async function ClinicsListPage({
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  // map of filter-key → display city name (must match what we store
-  // in hospitals.addressJson.city). hospitals data uses Korean city
-  // names regardless of the visitor's locale.
   const LOC_TO_CITY: Record<string, string> = {
     gangnam: '강남',
     myeongdong: '명동',
@@ -140,21 +153,17 @@ export default async function ClinicsListPage({
     .map((k) => LOC_TO_CITY[k])
     .filter((v): v is string => typeof v === 'string');
 
-  let filtered: ClinicRow[] = [];
   let dbError: string | null = null;
 
-  try {
-    if (categoryFilter) {
-      let listingRows: Array<{
-        hospitalId: string;
-        sortOrder: number;
-        promoLabel: string | null;
-      }> = [];
+  // ── 카테고리 지정 뷰: 해당 상품 카테고리의 병원 그리드 ─────────────
+  if (categoryFilter) {
+    let filtered: ClinicRow[] = [];
+    try {
+      let listingRows: Array<{ hospitalId: string; promoLabel: string | null }> = [];
       try {
         listingRows = await db
           .select({
             hospitalId: categoryListings.hospitalId,
-            sortOrder: categoryListings.sortOrder,
             promoLabel: categoryListings.promoLabel,
           })
           .from(categoryListings)
@@ -166,7 +175,7 @@ export default async function ClinicsListPage({
           )
           .orderBy(categoryListings.sortOrder);
       } catch {
-        // Table missing or other DB issue — fall through to legacy filter.
+        // curated 테이블 없음 — legacy 로 폴백
       }
 
       if (listingRows.length > 0) {
@@ -200,14 +209,11 @@ export default async function ClinicsListPage({
             };
           })
           .filter((r): r is ClinicRow & { _sortOrder: number } => r !== null)
-          // hospitals.sortOrder 우선 — master 페이지의 노출 순서를 단일 진실원으로 사용.
-          // category_listings.sortOrder 는 사용하지 않음 (이중 관리 회피).
           .sort((a, b) => a._sortOrder - b._sortOrder)
           .map(({ _sortOrder: _, ...rest }) => rest);
       } else {
         const whereParts = [
           eq(hospitals.countryCode, 'KR'),
-          // 중복·비활성 병원은 공개 목록에서 제외 (2026-07-26).
           eq(hospitals.isActiveForMatching, true),
         ];
         if (minRating !== null) whereParts.push(gte(hospitals.rating, minRating));
@@ -234,317 +240,331 @@ export default async function ClinicsListPage({
           .filter((h) => h.primaryCategories.includes(categoryFilter))
           .filter((h) => cityFilterMatch(h.addressJson, cityWhitelist));
       }
-    } else {
-      const whereParts = [
-          eq(hospitals.countryCode, 'KR'),
-          // 중복·비활성 병원은 공개 목록에서 제외 (2026-07-26).
-          eq(hospitals.isActiveForMatching, true),
-        ];
-      if (minRating !== null) whereParts.push(gte(hospitals.rating, minRating));
-      const fetched = await db
-        .select({
-          id: hospitals.id,
-          name: hospitals.name,
-          slug: hospitals.slug,
-          countryCode: hospitals.countryCode,
-          primaryCategories: hospitals.primaryCategories,
-          coverImageUrl: hospitals.coverImageUrl,
-          addressJson: hospitals.addressJson,
-        })
-        .from(hospitals)
-        .where(and(...whereParts))
-        .orderBy(sql`${hospitals.sortOrder} asc, ${hospitals.createdAt} desc`)
-        .limit(50);
-      filtered = fetched
-        .map((r) => ({
-          ...r,
-          primaryCategories: (r.primaryCategories ?? []) as string[],
-          promoLabel: null,
-        }))
-        .filter((h) => cityFilterMatch(h.addressJson, cityWhitelist));
+    } catch (err) {
+      dbError = err instanceof Error ? err.message : 'db_error';
     }
+
+    const localized = await applyLocaleOverrides(filtered, params.locale);
+    const title = `${categoryLabel(categoryFilter, dict.clinicsPage.categories)} ${dict.clinicsPage.productsWord}`;
+
+    return (
+      <section className="m-cl-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
+        <style dangerouslySetInnerHTML={{ __html: CLINICS_MOBILE_CSS }} />
+        <h1 className="m-cl-title" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
+          {title}
+        </h1>
+        <p className="m-cl-subtitle" style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
+          {dict.clinicsPage.productsSubtitle}
+        </p>
+
+        <Chips locale={params.locale} dict={dict} active={categoryFilter} />
+
+        {dbError ? <ErrorBox message={dbError} /> : null}
+
+        {localized.length === 0 ? (
+          <EmptyClinics dict={dict} locale={params.locale} categoryFilter={categoryFilter} />
+        ) : (
+          <div
+            className="m-cl-grid"
+            style={{ marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}
+          >
+            {localized.map((h) => (
+              <ClinicCard
+                key={h.id}
+                hospital={h}
+                locale={params.locale}
+                categoryKey={categoryFilter}
+                dict={dict}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  // ── 기본 뷰: 메인화면처럼 카테고리별 상품 섹션 ─────────────────────
+  let sections: Array<{ key: CategoryLabelKey; rows: ClinicRow[] }> = [];
+  try {
+    let curated: Array<{ categoryKey: string; hospitalId: string; promoLabel: string | null; sortOrder: number }> = [];
+    try {
+      curated = await db
+        .select({
+          categoryKey: categoryListings.categoryKey,
+          hospitalId: categoryListings.hospitalId,
+          promoLabel: categoryListings.promoLabel,
+          sortOrder: categoryListings.sortOrder,
+        })
+        .from(categoryListings)
+        .where(eq(categoryListings.procedureSlug, ''));
+    } catch {
+      curated = [];
+    }
+
+    const allIds = Array.from(new Set(curated.map((c) => c.hospitalId)));
+    const hospitalRows = allIds.length
+      ? await db
+          .select({
+            id: hospitals.id,
+            name: hospitals.name,
+            slug: hospitals.slug,
+            countryCode: hospitals.countryCode,
+            primaryCategories: hospitals.primaryCategories,
+            coverImageUrl: hospitals.coverImageUrl,
+            sortOrder: hospitals.sortOrder,
+            isActiveForMatching: hospitals.isActiveForMatching,
+          })
+          .from(hospitals)
+          .where(inArray(hospitals.id, allIds))
+      : [];
+    const hospitalsById = new Map(hospitalRows.map((h) => [h.id, h]));
+
+    const base: ClinicRow[] = [];
+    const seen = new Set<string>();
+    for (const c of curated) {
+      const h = hospitalsById.get(c.hospitalId);
+      if (!h || h.isActiveForMatching === false || seen.has(h.id)) continue;
+      seen.add(h.id);
+      base.push({
+        id: h.id,
+        name: h.name,
+        slug: h.slug,
+        countryCode: h.countryCode,
+        primaryCategories: (h.primaryCategories ?? []) as string[],
+        promoLabel: null,
+        coverImageUrl: h.coverImageUrl,
+      });
+    }
+    const localized = await applyLocaleOverrides(base, params.locale);
+    const localizedById = new Map(localized.map((h) => [h.id, h]));
+
+    sections = SUB_CHIP_KEYS.map((key) => {
+      const rows = curated
+        .filter((c) => c.categoryKey === key)
+        .sort((a, b) => {
+          const ha = hospitalsById.get(a.hospitalId);
+          const hb = hospitalsById.get(b.hospitalId);
+          return (ha?.sortOrder ?? 999) - (hb?.sortOrder ?? 999);
+        })
+        .map((c) => {
+          const h = localizedById.get(c.hospitalId);
+          if (!h) return null;
+          return { ...h, promoLabel: c.promoLabel };
+        })
+        .filter((r): r is ClinicRow => r !== null)
+        .slice(0, 12);
+      return { key, rows };
+    }).filter((s) => s.rows.length > 0);
   } catch (err) {
     dbError = err instanceof Error ? err.message : 'db_error';
   }
 
-  if (filtered.length > 0) {
-    try {
-      const ids = filtered.map((h) => h.id);
-      const overrides = await db
-        .select({
-          hospitalId: hospitalLocaleContent.hospitalId,
-          locale: hospitalLocaleContent.locale,
-          name: hospitalLocaleContent.name,
-          coverImageUrl: hospitalLocaleContent.coverImageUrl,
-        })
-        .from(hospitalLocaleContent)
-        .where(
-          and(
-            inArray(hospitalLocaleContent.hospitalId, ids),
-            inArray(hospitalLocaleContent.locale, localesForMedia(params.locale)),
-          ),
-        );
-      // 이름은 해당 로케일 번역만, 사진은 kr 폴백 허용 (언어 공통 자산)
-      const nameById = new Map(
-        overrides.filter((o) => o.locale === params.locale).map((o) => [o.hospitalId, o.name]),
-      );
-      const coverById = coverByLocale(
-        overrides.map((o) => ({ id: o.hospitalId, locale: o.locale, coverImageUrl: o.coverImageUrl })),
-        params.locale,
-      );
-      filtered = filtered.map((h) => ({
-        ...h,
-        name: nameById.get(h.id)?.trim() || h.name,
-        coverImageUrl: coverById.get(h.id) || h.coverImageUrl,
-      }));
-    } catch {
-      // hospital_locale_content missing — keep base values.
-    }
-  }
-
-  const headerLabel = categoryFilter
-    ? categoryLabel(categoryFilter, dict.clinicsPage.categories) || dict.nav.clinics
-    : dict.nav.clinics;
-
   return (
     <section className="m-cl-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
       <style dangerouslySetInnerHTML={{ __html: CLINICS_MOBILE_CSS }} />
-
-      <h1
-        className="m-cl-title"
-        style={{
-          fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px',
-          margin: 0,
-        }}
-      >
-        {headerLabel}
+      <h1 className="m-cl-title" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
+        {dict.clinicsPage.productsWord}
       </h1>
       <p className="m-cl-subtitle" style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
-        {filtered.length > 0
-          ? dict.clinicsPage.countSubtitle.replace('{n}', String(filtered.length))
-          : dict.featured.subtitle}
+        {dict.clinicsPage.productsSubtitle}
       </p>
 
-      {/* Sub-category chips — drill into 성형외과 / 피부과 / 치과
-          /… without going back to the header. Horizontal scroll on
-          mobile, wrap on desktop. */}
-      <div
-        className="m-cl-chips-row"
-        style={{
-          display: 'flex', flexWrap: 'wrap', gap: 8,
-          marginTop: 18, padding: 0,
-          overflowX: 'auto',
-        }}
-      >
-        <ChipLink
-          locale={params.locale}
-          href={`/${params.locale}/clinics`}
-          label={dict.clinicsPage.all}
-          active={!categoryFilter}
-        />
-        {SUB_CHIP_KEYS.map((key) => (
-          <ChipLink
-            key={key}
-            locale={params.locale}
-            href={`/${params.locale}/clinics?category=${key}`}
-            label={dict.clinicsPage.categories[key]}
-            active={categoryFilter === key}
-          />
-        ))}
-      </div>
+      <Chips locale={params.locale} dict={dict} active={null} />
 
-      {dbError ? (
-        <div
-          style={{
-            marginTop: 24,
-            border: '1px solid #fecaca',
-            background: '#fef2f2',
-            color: '#b91c1c',
-            borderRadius: 12,
-            padding: '12px 16px',
-            fontSize: 14,
-          }}
-        >
-          {dbError}
-        </div>
-      ) : null}
+      {dbError ? <ErrorBox message={dbError} /> : null}
 
-      {filtered.length === 0 ? (
-        <EmptyClinics
-          dict={dict}
-          locale={params.locale}
-          categoryFilter={categoryFilter}
-        />
+      {sections.length === 0 ? (
+        <EmptyClinics dict={dict} locale={params.locale} />
       ) : (
-        <div
-          className="m-cl-grid"
-          style={{
-            marginTop: 28,
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 24,
-          }}
-        >
-          {filtered.map((h) => (
-            <ClinicCard
-              key={h.id}
-              hospital={h}
-              locale={params.locale}
-              categoryLabels={dict.clinicsPage.categories}
-            />
-          ))}
-        </div>
+        sections.map((s) => (
+          <div key={s.key} style={{ marginTop: 36 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
+              <h2 className="m-cl-sec-title" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.3px', margin: 0 }}>
+                {categoryLabel(s.key, dict.clinicsPage.categories)} {dict.clinicsPage.productsWord}
+              </h2>
+              <Link
+                href={`/${params.locale}/clinics?category=${s.key}`}
+                style={{ fontSize: 13, fontWeight: 600, color: '#222', textDecoration: 'underline', whiteSpace: 'nowrap' }}
+              >
+                {dict.categories.viewAll} →
+              </Link>
+            </div>
+            <div
+              className="m-cl-hscroll"
+              style={{
+                display: 'flex', gap: 16, marginTop: 14,
+                overflowX: 'auto', paddingBottom: 6,
+                scrollbarWidth: 'none',
+              }}
+            >
+              {s.rows.map((h) => (
+                <div key={h.id} className="m-cl-hcard" style={{ width: 220, flexShrink: 0 }}>
+                  <ClinicCard hospital={h} locale={params.locale} categoryKey={s.key} dict={dict} compact />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
       )}
     </section>
+  );
+}
+
+function Chips({
+  locale,
+  dict,
+  active,
+}: {
+  locale: PublicLocale;
+  dict: Dictionary;
+  active: string | null;
+}): JSX.Element {
+  return (
+    <div
+      className="m-cl-chips-row"
+      style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18, padding: 0, overflowX: 'auto' }}
+    >
+      {SUB_CHIP_KEYS.map((key) => (
+        <Link
+          key={key}
+          href={active === key ? `/${locale}/clinics` : `/${locale}/clinics?category=${key}`}
+          style={{
+            flexShrink: 0,
+            display: 'inline-flex', alignItems: 'center',
+            padding: '8px 14px', borderRadius: 9999,
+            border: `1px solid ${active === key ? '#222' : '#dddddd'}`,
+            background: active === key ? '#222' : '#fff',
+            color: active === key ? '#fff' : '#222',
+            fontSize: 13, fontWeight: 500,
+            textDecoration: 'none', whiteSpace: 'nowrap',
+          }}
+        >
+          {dict.clinicsPage.categories[key]} {dict.clinicsPage.productsWord}
+        </Link>
+      ))}
+    </div>
   );
 }
 
 function ClinicCard({
   hospital,
   locale,
-  categoryLabels,
+  categoryKey,
+  dict,
+  compact,
 }: {
   hospital: ClinicRow;
   locale: PublicLocale;
-  categoryLabels: Dictionary['clinicsPage']['categories'];
+  categoryKey: string;
+  dict: Dictionary;
+  compact?: boolean;
 }): JSX.Element {
+  const inquiryHref = `/${locale}/inquiry?hospital=${hospital.id}&interest=${categoryKey}`;
   return (
-    <Link
-      href={`/${locale}/clinics/${hospital.slug}`}
-      style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
-    >
-      <div
-        style={{
-          position: 'relative',
-          aspectRatio: '1', borderRadius: 14, overflow: 'hidden',
-          background: hospital.coverImageUrl
-            ? `#f2f2f2 url(${hospital.coverImageUrl}) center / cover`
-            : 'linear-gradient(150deg, #fff7f8 0%, #ffeef1 55%, #ffe3e9 100%)',
-        }}
+    <div>
+      <Link
+        href={`/${locale}/clinics/${hospital.slug}`}
+        style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit', display: 'block' }}
       >
-        {/* 브랜드 플레이스홀더 — cover 이미지 미등록 병원용. 중앙에
-            K glow-up 로고 + 병원명을 배치해 빈 회색 박스 대신 통일된
-            브랜드 카드로 노출. 실제 사진 업로드 시 자동으로 대체됨. */}
-        {!hospital.coverImageUrl ? (
-          <div
-            style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              gap: 12, padding: '18%',
-            }}
-          >
+        <div
+          style={{
+            position: 'relative',
+            aspectRatio: '1', borderRadius: 14, overflow: 'hidden',
+            background: hospital.coverImageUrl
+              ? `#f2f2f2 url(${hospital.coverImageUrl}) center / cover`
+              : 'linear-gradient(150deg, #fff7f8 0%, #ffeef1 55%, #ffe3e9 100%)',
+          }}
+        >
+          {!hospital.coverImageUrl ? (
             <div
               style={{
                 position: 'absolute', inset: 0,
-                background:
-                  'radial-gradient(90% 70% at 50% 18%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 60%)',
-              }}
-            />
-            <div
-              style={{
-                position: 'relative',
-                display: 'flex', alignItems: 'center', gap: 6,
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: compact ? 8 : 12, padding: '16%',
               }}
             >
-              <BrandMark size={30} color="#ff385c" />
-              <span
+              <div
                 style={{
-                  fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em',
-                  color: '#ff385c',
+                  position: 'absolute', inset: 0,
+                  background:
+                    'radial-gradient(90% 70% at 50% 18%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 60%)',
+                }}
+              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <BrandMark size={compact ? 22 : 30} color="#ff385c" />
+                <span style={{ fontSize: compact ? 12 : 15, fontWeight: 700, letterSpacing: '-0.02em', color: '#ff385c' }}>
+                  glow-up
+                </span>
+              </div>
+              <div
+                style={{
+                  position: 'relative',
+                  fontSize: compact ? 14 : 17, fontWeight: 700, lineHeight: 1.35,
+                  letterSpacing: '-0.02em',
+                  color: '#222222', textAlign: 'center',
+                  wordBreak: 'keep-all',
                 }}
               >
-                glow-up
-              </span>
+                {hospital.name}
+              </div>
+              <div style={{ position: 'relative', width: 26, height: 3, borderRadius: 9999, background: 'rgba(255,56,92,0.35)' }} />
             </div>
+          ) : null}
+          {hospital.promoLabel ? (
             <div
               style={{
-                position: 'relative',
-                fontSize: 17, fontWeight: 700, lineHeight: 1.35,
-                letterSpacing: '-0.02em',
-                color: '#222222', textAlign: 'center',
-                wordBreak: 'keep-all',
+                position: 'absolute', top: 12, left: 12,
+                background: '#fff', color: '#222',
+                fontSize: 11, fontWeight: 600,
+                borderRadius: 9999, padding: '5px 11px',
+                boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
               }}
             >
-              {hospital.name}
+              {localizeKoLabel(hospital.promoLabel, locale)}
             </div>
-            <div
-              style={{
-                position: 'relative',
-                width: 26, height: 3, borderRadius: 9999,
-                background: 'rgba(255,56,92,0.35)',
-              }}
-            />
-          </div>
-        ) : null}
-        {hospital.promoLabel ? (
-          <div
-            style={{
-              position: 'absolute', top: 12, left: 12,
-              background: '#fff', color: '#222',
-              fontSize: 11, fontWeight: 600,
-              borderRadius: 9999, padding: '5px 11px',
-              boxShadow: 'rgba(0,0,0,0.1) 0 2px 6px',
-            }}
-          >
-            {localizeKoLabel(hospital.promoLabel, locale)}
-          </div>
-        ) : null}
-        <div style={{ position: 'absolute', top: 12, right: 12 }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(0,0,0,0.45)" stroke="#fff" strokeWidth="1.8">
-            <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
-          </svg>
+          ) : null}
         </div>
-      </div>
-      <div
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
+          <span className="m-cl-card-name" style={{ fontSize: compact ? 14 : 16, fontWeight: 600, lineHeight: 1.3 }}>
+            {hospital.name}
+          </span>
+        </div>
+        <div className="m-cl-card-tags" style={{ fontSize: compact ? 12 : 14, color: '#6a6a6a', marginTop: 2 }}>
+          {hospital.primaryCategories
+            .slice(0, 2)
+            .map((c) => categoryLabel(c, dict.clinicsPage.categories))
+            .join(' · ')}
+        </div>
+      </Link>
+      <Link
+        href={inquiryHref}
         style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginTop: 12,
+          display: 'block', textAlign: 'center',
+          marginTop: 8,
+          background: '#ff385c', color: '#fff',
+          borderRadius: 10, padding: compact ? '8px 0' : '9px 0',
+          fontSize: compact ? 13 : 14, fontWeight: 600,
+          textDecoration: 'none',
         }}
       >
-        <span className="m-cl-card-name" style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.3 }}>
-          {hospital.name}
-        </span>
-      </div>
-      <div className="m-cl-card-tags" style={{ fontSize: 14, color: '#6a6a6a', marginTop: 3 }}>
-        {hospital.primaryCategories
-          .slice(0, 3)
-          .map((c) => categoryLabel(c, categoryLabels))
-          .join(' · ')}
-      </div>
-    </Link>
+        {dict.clinicsPage.inquireCta}
+      </Link>
+    </div>
   );
 }
 
-function ChipLink({
-  locale: _locale,
-  href,
-  label,
-  active,
-}: {
-  locale: PublicLocale;
-  href: string;
-  label: string;
-  active: boolean;
-}): JSX.Element {
+function ErrorBox({ message }: { message: string }): JSX.Element {
   return (
-    <Link
-      href={href}
+    <div
       style={{
-        flexShrink: 0,
-        display: 'inline-flex', alignItems: 'center',
-        padding: '8px 14px',
-        borderRadius: 9999,
-        border: `1px solid ${active ? '#222' : '#dddddd'}`,
-        background: active ? '#222' : '#fff',
-        color: active ? '#fff' : '#222',
-        fontSize: 13, fontWeight: 500,
-        textDecoration: 'none',
-        whiteSpace: 'nowrap',
+        marginTop: 24,
+        border: '1px solid #fecaca', background: '#fef2f2', color: '#b91c1c',
+        borderRadius: 12, padding: '12px 16px', fontSize: 14,
       }}
     >
-      {label}
-    </Link>
+      {message}
+    </div>
   );
 }
 
@@ -563,11 +583,8 @@ function EmptyClinics({
     <div
       style={{
         marginTop: 40,
-        border: '1px dashed #dddddd',
-        background: '#fafafa',
-        borderRadius: 16,
-        padding: '56px 24px',
-        textAlign: 'center',
+        border: '1px dashed #dddddd', background: '#fafafa',
+        borderRadius: 16, padding: '56px 24px', textAlign: 'center',
       }}
     >
       <svg
@@ -580,18 +597,12 @@ function EmptyClinics({
       </svg>
       <h3 style={{ fontSize: 18, fontWeight: 600, margin: '12px 0 0' }}>{title}</h3>
       <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>{body}</p>
-      <div
-        style={{
-          display: 'flex', justifyContent: 'center', flexWrap: 'wrap',
-          gap: 10, marginTop: 20,
-        }}
-      >
+      <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 10, marginTop: 20 }}>
         {categoryFilter ? (
           <Link
             href={`/${locale}/clinics`}
             style={{
-              border: '1px solid #222', borderRadius: 8,
-              padding: '10px 18px',
+              border: '1px solid #222', borderRadius: 8, padding: '10px 18px',
               fontWeight: 500, fontSize: 14, color: '#222',
               textDecoration: 'none', background: '#fff',
             }}
@@ -603,10 +614,8 @@ function EmptyClinics({
           href={`/${locale}/inquiry`}
           style={{
             background: '#ff385c', color: '#fff',
-            border: 'none', borderRadius: 8,
-            padding: '10px 18px',
-            fontWeight: 500, fontSize: 14,
-            textDecoration: 'none',
+            border: 'none', borderRadius: 8, padding: '10px 18px',
+            fontWeight: 500, fontSize: 14, textDecoration: 'none',
           }}
         >
           {dict.inquiryCta.submit}

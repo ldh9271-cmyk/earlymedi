@@ -501,6 +501,8 @@ const kr = {
   // /clinics 병원 마켓플레이스 목록 — 부제·칩·카테고리 라벨
   clinicsPage: {
     countSubtitle: '{n}곳의 검증된 병원 · 후기 · 예상 비용 안내',
+    productsWord: '상품',
+    productsSubtitle: '원하는 상품을 골라 문의를 남기면 병원이 직접 연락드립니다 — 결제 없이 상담부터 시작하세요.',
     all: '전체',
     backToAll: '모든 병원',
     inquireCta: '문의하기',

@@ -37,6 +37,9 @@ export * from './case-enums';
 export * from './cases';
 export * from './case-quotes';
 
+// 리드 마켓 (환자 DB 판매)
+export * from './lead-market';
+
 // Phase 7 — visa
 export * from './visa';
 

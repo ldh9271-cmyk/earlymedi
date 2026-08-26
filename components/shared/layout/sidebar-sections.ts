@@ -113,6 +113,7 @@ export const medicalSections: SidebarSection[] = [
       // API 라우트는 /api/agency/inbox/* 그대로 공유하지만 권한 가드를
       // ['agency','medical']로 풀어 둠.
       { href: '/medical/inbox', label: '통합 인박스', icon: Inbox },
+      { href: '/medical/leads', label: '리드 마켓', icon: Sparkles },
       { href: '/medical/channels', label: '채널 연결', icon: Plug },
       { href: '/medical/rfqs', label: 'RFQ 인박스', icon: Inbox },
       { href: '/medical/patients', label: '환자', icon: UserCircle },

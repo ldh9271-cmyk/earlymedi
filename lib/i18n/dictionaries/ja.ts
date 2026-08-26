@@ -482,6 +482,8 @@ const ja: Dictionary = {
   },
   clinicsPage: {
     countSubtitle: '{n} 件の認証済み病院 · 口コミ · 費用目安',
+    productsWord: '商品',
+    productsSubtitle: '気になる商品を選んでお問い合わせいただくと、病院から直接ご連絡します — 決済不要、まずは相談から。',
     all: 'すべて',
     backToAll: 'すべての病院',
     inquireCta: '問い合わせ',

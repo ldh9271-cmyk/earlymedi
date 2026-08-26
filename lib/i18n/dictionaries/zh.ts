@@ -480,6 +480,8 @@ const zh: Dictionary = {
   },
   clinicsPage: {
     countSubtitle: '{n} 家认证医院 · 评价 · 费用指南',
+    productsWord: '项目',
+    productsSubtitle: '选择心仪的项目并留下咨询，医院将直接与您联系 — 无需付款，先从咨询开始。',
     all: '全部',
     backToAll: '全部医院',
     inquireCta: '咨询',
