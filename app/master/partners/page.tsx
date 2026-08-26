@@ -97,7 +97,8 @@ export default async function MasterPartnersPage({
       <form action={createDistributorAction} className="m-mp-card" style={{ marginTop: 28, border: '1px solid #ebebeb', borderRadius: 12, padding: 20, maxWidth: 760 }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>새 총판 등록</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 16px' }}>
-          코드는 자동 생성됩니다. 정산 비율(기본 총판 70 / 회사 30)·병원 유치 수수료율·여행 마진은 총판별로 상세 화면에서 조정합니다.
+          코드는 자동 생성되며(JP_0001, JP_0002 …) <strong>총판 수에는 제한이 없습니다</strong> — 필요한 만큼 계속 만들 수 있습니다.
+          정산 비율(기본 총판 70 / 회사 30)·병원 유치 수수료율·여행 마진은 총판별로 상세 화면에서 조정합니다.
         </p>
         <div className="m-mp-grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div><span style={label}>총판 이름 (법인명) *</span><input name="name" required style={input} placeholder="예: 株式会社○○ / Tokyo Beauty Partners" /></div>
