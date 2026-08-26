@@ -65,8 +65,11 @@ function extractLead(bodies: string[]): LeadInfo {
   if (email) out.email = email[0];
 
   // "연락처: 01037312061" 같은 라벨 있는 줄을 우선, 없으면 일반 전화 패턴.
+  // 일반 패턴은 날짜 토큰(생년월일: 1990-05-15 등)을 지운 텍스트에서만 찾는다
+  // — 연락처가 이메일뿐인 리드에서 생년월일이 전화번호로 오탐되는 것을 막는다.
+  const textForPhone = text.replace(/\d{4}[.\-/년\s]+\d{1,2}[.\-/월\s]+\d{1,2}일?/g, ' ');
   const labeled = /(?:연락처|전화|휴대폰|Phone|Tel|電話|电话)\s*[:：]?\s*(\+?[0-9][0-9\s\-().]{6,19}[0-9])/i.exec(text);
-  const generic = /(\+?[0-9][0-9\s\-().]{7,19}[0-9])/.exec(text);
+  const generic = /(\+?[0-9][0-9\s\-().]{7,19}[0-9])/.exec(textForPhone);
   const raw = labeled?.[1] ?? generic?.[1];
   if (raw) {
     const digits = raw.replace(/[^\d+]/g, '');
