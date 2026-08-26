@@ -35,6 +35,7 @@ export * from './treatment-charts';
 // Phase 5 — case lifecycle
 export * from './case-enums';
 export * from './cases';
+export * from './case-quotes';
 
 // Phase 7 — visa
 export * from './visa';
