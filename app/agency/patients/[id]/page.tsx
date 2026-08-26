@@ -66,6 +66,19 @@ export default async function PatientDetailPage({
             <Field label="언어">
               <div>{patient.locale ?? '—'}</div>
             </Field>
+            <Field label="생년월일">
+              <div>{patient.dateOfBirth ?? '—'}</div>
+            </Field>
+            <Field label="관심 분야 · 병원">
+              <div>
+                {[
+                  (patient.metadata as Record<string, unknown>).interest,
+                  (patient.metadata as Record<string, unknown>).interestHospital,
+                ]
+                  .filter(Boolean)
+                  .join(' · ') || '—'}
+              </div>
+            </Field>
             <Field label="여권번호">
               {patient.passportHash ? <RevealPiiButton patientId={patient.id} field="passport" /> : <span className="text-muted-foreground">미등록</span>}
             </Field>

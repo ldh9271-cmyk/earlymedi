@@ -60,6 +60,7 @@ export function InquiryForm({
     name: string;
     country: string;
     contact: string;
+    dob: string;
     interest: string;
     memo: string;
     submit: string;
@@ -70,6 +71,7 @@ export function InquiryForm({
   const [name, setName] = useState('');
   const [country, setCountry] = useState('US');
   const [contact, setContact] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [interests, setInterests] = useState<string[]>(
     prefillInterest ? [prefillInterest] : [],
   );
@@ -105,6 +107,7 @@ export function InquiryForm({
         name: name.trim(),
         countryCode: country,
         contact: contact.trim(),
+        birthDate: birthDate || null,
         interests,
         memo: memo.trim(),
       });
@@ -199,6 +202,18 @@ export function InquiryForm({
           value={contact}
           onChange={(e) => setContact(e.target.value)}
           required
+          style={inputStyle}
+        />
+      </div>
+
+      <div>
+        <label htmlFor="inq-dob" style={labelStyle}>{labels.dob}</label>
+        <input
+          id="inq-dob"
+          type="date"
+          value={birthDate}
+          onChange={(e) => setBirthDate(e.target.value)}
+          max={new Date().toISOString().slice(0, 10)}
           style={inputStyle}
         />
       </div>

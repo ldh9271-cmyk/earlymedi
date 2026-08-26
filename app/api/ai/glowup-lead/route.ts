@@ -27,6 +27,7 @@ const InputSchema = z.object({
   countryCode: z.string().min(2).max(2),
   contact: z.string().max(200).optional().default(''),
   messenger: z.string().max(200).optional().default(''),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   email: z.string().email().max(200),
   analysis: z.object({
     personalColorSeason: z.string().max(40),
@@ -158,6 +159,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     name: parsed.name,
     countryCode: parsed.countryCode.toUpperCase(),
     contact: parsed.contact || parsed.email,
+    birthDate: parsed.birthDate ?? null,
     interests: ['ai_face_analysis'],
     memo,
   });

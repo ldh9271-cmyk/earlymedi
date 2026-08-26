@@ -73,6 +73,7 @@ export default async function InquiryPage({
           name: dict.inquiryCta.nameLabel,
           country: dict.inquiryCta.countryLabel,
           contact: dict.inquiryCta.contactLabel,
+          dob: dict.inquiryCta.dobLabel,
           interest: dict.inquiryCta.interestLabel,
           memo: dict.inquiryCta.memoLabel,
           submit: dict.inquiryCta.submit,

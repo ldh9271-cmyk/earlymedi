@@ -35,6 +35,8 @@ const InputSchema = z.object({
   name: z.string().min(1).max(120),
   countryCode: z.string().length(2),
   contact: z.string().min(1).max(200),
+  // 환자 CRM 등록 시 생년월일까지 자동 이관되도록 리드에 실어 보낸다.
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   interests: z.array(z.string()).max(20),
   memo: z.string().max(4000),
 });
@@ -124,10 +126,11 @@ export async function submitPublicInquiryAction(
     : input.hospitalId
       ? `\n관심 병원 ID: ${input.hospitalId}`
       : `\n관심 병원: (선택 안 함)`;
+  const dobLine = input.birthDate ? `\n생년월일: ${input.birthDate}` : '';
   const composedBody =
     `[환자 포털 문의 · ${input.locale.toUpperCase()}]\n` +
     `이름: ${input.name} (${input.countryCode})\n` +
-    `연락처: ${input.contact}${interestsLine}${hospitalLine}\n\n` +
+    `연락처: ${input.contact}${dobLine}${interestsLine}${hospitalLine}\n\n` +
     `${input.memo || '(별도 메모 없음)'}`;
 
   // 3.5 Resolve patient language BEFORE inserting the conversation. The
@@ -195,6 +198,7 @@ export async function submitPublicInquiryAction(
       portalLocale: input.locale,
       countryCode: input.countryCode,
       contact: input.contact,
+      birthDate: input.birthDate ?? undefined,
       interests: input.interests,
       hospitalId: input.hospitalId ?? undefined,
       hospitalName: input.hospitalName ?? undefined,

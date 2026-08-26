@@ -52,7 +52,7 @@ function splitKoreanName(name: string): { surname?: string; givenNames?: string 
 
 type LeadInfo = {
   phone?: string; email?: string; name?: string; countryLabel?: string;
-  interest?: string; interestHospital?: string;
+  interest?: string; interestHospital?: string; birthDate?: string;
 };
 
 /** 초기 인바운드 메시지에서 리드 폼 정보를 최대한 회수한다.
@@ -86,6 +86,18 @@ function extractLead(bodies: string[]): LeadInfo {
 
   const hospital = /관심\s*병원\s*[:：]\s*([^\n]+)/.exec(text);
   if (hospital?.[1] && !/미입력|선택 안 함/.test(hospital[1])) out.interestHospital = hospital[1].trim();
+
+  // 생년월일: 1990-01-05 · 1990.1.5 · 1990년 1월 5일 모두 YYYY-MM-DD 로 정규화
+  const dob = /생년월일\s*[:：]\s*(\d{4})[.\-/년\s]+(\d{1,2})[.\-/월\s]+(\d{1,2})/.exec(text);
+  if (dob) {
+    const [, y, m, d] = dob;
+    const mm = m!.padStart(2, '0');
+    const dd = d!.padStart(2, '0');
+    const year = Number(y);
+    if (year >= 1900 && year <= new Date().getFullYear()) {
+      out.birthDate = `${y}-${mm}-${dd}`;
+    }
+  }
 
   return out;
 }
@@ -171,6 +183,7 @@ export async function POST(
         countryCode: country.cc,
         nationality: country.nat,
         locale: conv.contactLocale ?? undefined,
+        dateOfBirth: lead.birthDate,
         phone: lead.phone,
         email: lead.email,
         sourceConversationId: conversationId,

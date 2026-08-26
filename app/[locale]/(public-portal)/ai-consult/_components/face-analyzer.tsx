@@ -53,7 +53,7 @@ export default function FaceAnalyzer({
   // 결과 이메일 발송 리드 폼
   const [leadPhase, setLeadPhase] = useState<'hidden' | 'form' | 'sending' | 'sent'>('hidden');
   const [leadMsg, setLeadMsg] = useState<string | null>(null);
-  const [lead, setLead] = useState({ name: '', countryCode: '', contact: '', messenger: '', email: '' });
+  const [lead, setLead] = useState({ name: '', countryCode: '', contact: '', messenger: '', email: '', birthDate: '' });
 
   function onPick(file: File | undefined): void {
     if (!file) return;
@@ -131,6 +131,7 @@ export default function FaceAnalyzer({
           contact: lead.contact.trim(),
           messenger: lead.messenger.trim(),
           email: lead.email.trim(),
+          birthDate: lead.birthDate || undefined,
           analysis,
           recs,
         }),
@@ -412,6 +413,18 @@ export default function FaceAnalyzer({
                   placeholder={t.fieldEmail}
                   style={{ ...leadInputStyle, marginTop: 10, width: '100%' }}
                 />
+                <label style={{ display: 'block', marginTop: 10 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#6a6a6a', display: 'block', marginBottom: 4 }}>
+                    {t.fieldDob}
+                  </span>
+                  <input
+                    type="date"
+                    value={lead.birthDate}
+                    onChange={(e) => setLead({ ...lead, birthDate: e.target.value })}
+                    max={new Date().toISOString().slice(0, 10)}
+                    style={{ ...leadInputStyle, width: '100%' }}
+                  />
+                </label>
                 {leadMsg ? (
                   <p style={{ fontSize: 13, color: '#dc2626', margin: '10px 0 0' }}>{leadMsg}</p>
                 ) : null}
