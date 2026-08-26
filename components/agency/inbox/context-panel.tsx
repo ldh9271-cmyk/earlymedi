@@ -1,7 +1,9 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { Globe2, Languages, Sparkles, Tag, User2 } from 'lucide-react';
+import { useState } from 'react';
+import Link from 'next/link';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Globe2, Languages, Loader2, Sparkles, Tag, User2, UserCheck } from 'lucide-react';
 import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { useInboxStore } from '@/lib/stores/inbox-store';
 import type { ChannelKind } from '@/lib/channels/types';
@@ -19,6 +21,7 @@ type Detail = {
     summary: string | null;
     aiIntentClass: string | null;
     tags: string[];
+    patientId?: string | null;
   };
 };
 
@@ -37,6 +40,8 @@ const COUNTRY_GUIDE: Record<string, string> = {
 
 export function ContextPanel(): JSX.Element {
   const { selectedConversationId } = useInboxStore();
+  const queryClient = useQueryClient();
+  const [registerError, setRegisterError] = useState<{ message: string; upgradeUrl?: string } | null>(null);
   const { data } = useQuery({
     queryKey: ['conversation', selectedConversationId],
     enabled: !!selectedConversationId,
@@ -45,6 +50,34 @@ export function ContextPanel(): JSX.Element {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json()) as { data: Detail };
       return json.data;
+    },
+  });
+
+  // [+ 환자 CRM에 등록] — 대화 컨택트로 환자를 만들고 대화에 연결한다.
+  const register = useMutation({
+    mutationFn: async () => {
+      setRegisterError(null);
+      const res = await fetch(`/api/agency/inbox/${selectedConversationId}/register-patient`, {
+        method: 'POST',
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        data?: { patientId: string };
+        message?: string;
+        upgradeUrl?: string;
+      };
+      if (!res.ok) {
+        throw Object.assign(new Error(json.message ?? `HTTP ${res.status}`), {
+          upgradeUrl: json.upgradeUrl,
+        });
+      }
+      return json.data!;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['conversation', selectedConversationId] });
+      void queryClient.invalidateQueries({ queryKey: ['patients'] });
+    },
+    onError: (err: Error & { upgradeUrl?: string }) => {
+      setRegisterError({ message: err.message, upgradeUrl: err.upgradeUrl });
     },
   });
 
@@ -75,14 +108,43 @@ export function ContextPanel(): JSX.Element {
               <span>·</span>
               <span>{c.channelKind}</span>
             </div>
-            <button
-              type="button"
-              className="mt-2 w-full rounded-md border border-dashed py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
-              disabled
-              title="Phase 4에서 환자 CRM 자동 매칭"
-            >
-              + 환자 CRM에 등록 (Phase 4)
-            </button>
+            {c.patientId ? (
+              <Link
+                href={`/agency/patients/${c.patientId}`}
+                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border border-care-600/30 bg-care-50 py-1.5 text-xs font-semibold text-care-700 hover:bg-care-100"
+              >
+                <UserCheck className="h-3.5 w-3.5" /> 환자 CRM 연결됨 · 보기 →
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border border-brand-600/40 bg-brand-50 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100 disabled:opacity-60"
+                disabled={register.isPending}
+                onClick={() => register.mutate()}
+                title="대화의 이름·국가·연락처로 환자 CRM에 등록합니다"
+              >
+                {register.isPending ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> 등록 중…
+                  </>
+                ) : (
+                  '+ 환자 CRM에 등록'
+                )}
+              </button>
+            )}
+            {registerError ? (
+              <p className="mt-1.5 text-[11px] leading-relaxed text-red-600">
+                {registerError.message}
+                {registerError.upgradeUrl ? (
+                  <>
+                    {' '}
+                    <Link href={registerError.upgradeUrl} className="font-semibold underline">
+                      유료 전환 →
+                    </Link>
+                  </>
+                ) : null}
+              </p>
+            ) : null}
           </div>
         </section>
 

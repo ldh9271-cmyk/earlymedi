@@ -35,6 +35,8 @@ export type InboxConversation = {
   tags: string[];
   lastMessagePreview: string | null;
   lastMessageTranslationKo: string | null;
+  /** 이 대화가 환자 CRM에 등록됐으면 그 환자 id (상세 조회에서만 채워진다). */
+  patientId?: string | null;
 };
 
 export async function listInboxConversations(
@@ -251,6 +253,17 @@ export async function loadConversationDetail(
       and(eq(messages.organizationId, organizationId), eq(messages.conversationId, conversationId)),
     )
     .orderBy(messages.sentAt);
+
+  // 환자 CRM 연결 상태 — 컨텍스트 패널의 [환자 CRM에 등록] 버튼이
+  // 등록/보기 중 무엇을 보여줄지 결정한다.
+  const [link] = await db
+    .select({ patientId: conversations.patientId })
+    .from(conversations)
+    .where(
+      and(eq(conversations.organizationId, organizationId), eq(conversations.id, conversationId)),
+    )
+    .limit(1);
+  resolved.patientId = link?.patientId ?? null;
 
   return {
     conversation: resolved,
