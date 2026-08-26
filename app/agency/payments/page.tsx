@@ -101,15 +101,23 @@ export default async function AgencyPaymentsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <Badge variant="brand" className="mb-2">💳 결제</Badge>
-        <h1 className="text-2xl font-bold tracking-tight">결제 · 인보이스</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          사이트 예약에서 발행된 인보이스입니다. 토스 결제는 자동으로 [결제 확인]되며,
-          알리페이 입금 확인과 취소 처리는{' '}
-          <a href="/master/orders" className="font-medium underline">마스터 → 주문 관리</a>
-          에서 합니다.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Badge variant="brand" className="mb-2">💳 결제</Badge>
+          <h1 className="text-2xl font-bold tracking-tight">결제 · 인보이스</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            사이트 예약에서 발행된 인보이스입니다. 토스 결제는 자동으로 [결제 확인]되며,
+            알리페이 입금 확인과 취소 처리는{' '}
+            <a href="/master/orders" className="font-medium underline">마스터 → 주문 관리</a>
+            에서 합니다.
+          </p>
+        </div>
+        <Link
+          href="/agency/payments/settlements"
+          className="rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-muted/50"
+        >
+          🏦 토스 정산 내역 →
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

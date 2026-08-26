@@ -84,6 +84,90 @@ export async function confirmTossPayment(opts: {
   }
 }
 
+export type TossSettlement = {
+  /** 거래(매출) 일자 YYYY-MM-DD. */
+  soldDate: string;
+  /** 은행 계좌 지급 일자 YYYY-MM-DD. */
+  paidOutDate: string;
+  orderId: string;
+  paymentKey: string;
+  method: string;
+  /** 결제(거래) 금액. */
+  amount: number;
+  /** 정산 수수료 합계 (공급가+VAT). */
+  fee: number;
+  /** 실제 지급되는 금액 = amount - fee. */
+  payOutAmount: number;
+  approvedAt: string | null;
+};
+
+export type TossSettlementsResult =
+  | { ok: true; settlements: TossSettlement[] }
+  | { ok: false; errorCode: string; errorMessage: string };
+
+/**
+ * 정산 내역 조회 — GET /v1/settlements. 토스가 카드사에서 받아 우리
+ * 계좌로 지급하는 정산 레코드(거래일·지급일·수수료·지급액)를 기간으로
+ * 가져온다. 페이지당 최대 100건씩 최대 10페이지(1,000건)까지 순회 —
+ * 그 이상은 기간을 좁혀서 조회한다.
+ *
+ * 주의: 테스트 키(sandbox)는 정산 데이터가 없어 보통 빈 배열이 온다.
+ * 심사 승인 후 라이브 키로 바꾸면 실제 정산이 나온다.
+ */
+export async function fetchTossSettlements(opts: {
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  dateType?: 'soldDate' | 'paidOutDate';
+}): Promise<TossSettlementsResult> {
+  if (!tossConfigured()) {
+    return { ok: false, errorCode: 'not_configured', errorMessage: 'TOSS_SECRET_KEY 미설정' };
+  }
+  const out: TossSettlement[] = [];
+  try {
+    for (let page = 1; page <= 10; page++) {
+      const qs = new URLSearchParams({
+        startDate: opts.startDate,
+        endDate: opts.endDate,
+        dateType: opts.dateType ?? 'soldDate',
+        page: String(page),
+        size: '100',
+      });
+      const res = await fetch(`${TOSS_API_BASE}/settlements?${qs.toString()}`, {
+        headers: { Authorization: authHeader() },
+        cache: 'no-store',
+      });
+      const body = (await res.json()) as unknown;
+      if (!res.ok) {
+        const err = (body ?? {}) as Record<string, unknown>;
+        return {
+          ok: false,
+          errorCode: typeof err.code === 'string' ? err.code : `http_${res.status}`,
+          errorMessage: typeof err.message === 'string' ? err.message : '',
+        };
+      }
+      const rows = Array.isArray(body) ? body : [];
+      for (const raw of rows) {
+        const r = (raw ?? {}) as Record<string, unknown>;
+        out.push({
+          soldDate: typeof r.soldDate === 'string' ? r.soldDate : '',
+          paidOutDate: typeof r.paidOutDate === 'string' ? r.paidOutDate : '',
+          orderId: typeof r.orderId === 'string' ? r.orderId : '',
+          paymentKey: typeof r.paymentKey === 'string' ? r.paymentKey : '',
+          method: typeof r.method === 'string' ? r.method : '',
+          amount: typeof r.amount === 'number' ? r.amount : 0,
+          fee: typeof r.fee === 'number' ? r.fee : 0,
+          payOutAmount: typeof r.payOutAmount === 'number' ? r.payOutAmount : 0,
+          approvedAt: typeof r.approvedAt === 'string' ? r.approvedAt : null,
+        });
+      }
+      if (rows.length < 100) break;
+    }
+    return { ok: true, settlements: out };
+  } catch {
+    return { ok: false, errorCode: 'network', errorMessage: '토스 API 연결 실패' };
+  }
+}
+
 /** 결제 단건 조회 — 웹훅 검증용. 페이로드 대신 이 결과를 믿는다. */
 export async function fetchTossPayment(paymentKey: string): Promise<TossPaymentResult> {
   if (!tossConfigured()) return { ok: false, errorCode: 'not_configured', errorMessage: '' };
