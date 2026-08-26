@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { confirmTossPayment, tossConfigured } from '@/lib/payments/toss';
+import { accrueOrderTravelMargin } from '@/lib/referral/service';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -78,6 +79,10 @@ export async function POST(req: Request): Promise<NextResponse> {
       },
     })
     .where(eq(checkoutOrders.id, order.id));
+
+  // 총판 귀속 회원의 여행 패키지 결제면 총판 마진(예비 적립)을 만든다.
+  // 관리자 수동 paid 처리(/master/orders)와 같은 규칙 — 멱등이라 안전.
+  await accrueOrderTravelMargin(order.id).catch(() => 0);
 
   return NextResponse.json({ ok: true });
 }

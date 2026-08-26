@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { fetchTossPayment, tossConfigured } from '@/lib/payments/toss';
+import { accrueOrderTravelMargin, reverseOrder } from '@/lib/referral/service';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -54,6 +55,8 @@ export async function POST(req: Request): Promise<NextResponse> {
           meta: { ...order.meta, tossPaymentKey: paymentKey },
         })
         .where(eq(checkoutOrders.id, order.id));
+      // confirm 경로와 같은 규칙: 여행 패키지면 총판 마진 예비 적립 (멱등)
+      await accrueOrderTravelMargin(order.id).catch(() => 0);
     } else if (
       (payment.status === 'CANCELED' || payment.status === 'PARTIAL_CANCELED' || payment.status === 'ABORTED' || payment.status === 'EXPIRED')
       && order.status !== 'cancelled'
@@ -61,11 +64,12 @@ export async function POST(req: Request): Promise<NextResponse> {
       await db
         .update(checkoutOrders)
         .set({
-          status: 'cancelled',
-          updatedAt: new Date(),
           meta: { ...order.meta, tossPaymentKey: paymentKey, tossCancelStatus: payment.status },
         })
         .where(eq(checkoutOrders.id, order.id));
+      // 주문을 cancelled 로 바꾸고, 이미 적립된 수당(여행 마진 등)이 있으면
+      // 함께 환수한다 — 지급 전이면 reversed, 지급 후면 음수 행으로 차감.
+      await reverseOrder(order.id, `토스 ${payment.status}`).catch(() => 0);
     }
   } catch {
     /* 다음 웹훅/조회에서 다시 맞춘다 */
