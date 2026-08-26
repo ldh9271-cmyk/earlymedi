@@ -21,6 +21,10 @@ function won(n: number): string {
   return `₩${n.toLocaleString('ko-KR')}`;
 }
 
+function kst(d: Date): string {
+  return new Date(d.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 16).replace('T', ' ');
+}
+
 export default async function MasterLeadTopupsPage({
   searchParams,
 }: {
@@ -125,7 +129,7 @@ export default async function MasterLeadTopupsPage({
                   )}
                 </td>
                 <td style={{ padding: 12, color: '#6a6a6a', whiteSpace: 'nowrap' }}>
-                  {new Date(t.createdAt).toISOString().slice(0, 16).replace('T', ' ')}
+                  {kst(t.createdAt)}
                 </td>
                 <td style={{ padding: 12, whiteSpace: 'nowrap' }}>
                   {t.status === 'pending' ? (
@@ -160,7 +164,7 @@ export default async function MasterLeadTopupsPage({
           {unlocks.map((u, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', border: '1px solid #f0f0f0', borderRadius: 8, padding: '8px 12px', fontSize: 12 }}>
               <span><strong>{u.orgName}</strong> 이(가) 리드 열람</span>
-              <span>{won(u.priceWon)} · {new Date(u.createdAt).toISOString().slice(5, 16).replace('T', ' ')}</span>
+              <span>{won(u.priceWon)} · {kst(u.createdAt).slice(5)}</span>
             </div>
           ))}
         </div>

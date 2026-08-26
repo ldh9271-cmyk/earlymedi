@@ -73,11 +73,13 @@ export function maskContact(contact: string | null | undefined): string {
   return c.slice(0, 2) + '***';
 }
 
-/** 문의 본문에서 연락처·이메일 라인을 지운 미리보기를 만든다. */
+/** 문의 본문에서 신원·연락 라인(이름·연락처·이메일·메신저 등)을 지운 미리보기. */
 export function maskBodyPreview(body: string, maxLen = 160): string {
   const cleaned = body
     .split('\n')
-    .filter((line) => !/^\s*(연락처|이메일|전화|생년월일)\s*[:：]/.test(line))
+    .filter(
+      (line) => !/^\s*(이름|연락처|이메일|전화|생년월일|메신저)\s*[:：]/.test(line),
+    )
     .join('\n')
     .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '***@***')
     .replace(/\+?\d[\d\s\-().]{7,}\d/g, '***-****-****');
