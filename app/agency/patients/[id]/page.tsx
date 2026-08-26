@@ -39,8 +39,14 @@ export default async function PatientDetailPage({
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">대화 보기</Button>
-          <Button variant="brand">새 케이스 (Phase 5)</Button>
+          {patient.sourceConversationId ? (
+            <Button variant="outline" asChild>
+              <a href={`/agency/inbox?c=${patient.sourceConversationId}`}>대화 보기</a>
+            </Button>
+          ) : null}
+          <Button variant="brand" asChild>
+            <a href={`/agency/cases/new?patientId=${patient.id}`}>새 케이스</a>
+          </Button>
         </div>
       </div>
 

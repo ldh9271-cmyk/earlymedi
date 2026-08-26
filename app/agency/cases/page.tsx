@@ -1,7 +1,9 @@
+import Link from 'next/link';
 import { requireAccess } from '@/lib/auth/route-guards';
 import { withRls } from '@/lib/auth/rls-context';
 import { listCases } from '@/lib/db/repositories/cases';
 import { CaseBoard } from '@/components/agency/cases/case-board';
+import { Button } from '@/components/shared/ui/button';
 
 export const metadata = { title: '케이스' };
 
@@ -25,7 +27,12 @@ export default async function AgencyCasesPage({
             환자 1명이 거치는 전체 여정 ― <strong className="text-foreground">초기 상담 → RFQ → 견적 → 예약금 → 일정 → 입국 → 시술 → 사후관리 → 정산</strong>의 13단계 라이프사이클을 칸반(드래그로 단계 이동) · 리스트(검색·필터·정렬) 뷰로 추적합니다. 캘린더 · 지도 뷰는 준비 중.
           </p>
         </div>
-        <div className="text-xs text-muted-foreground">전체 {cases.length}건</div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground">전체 {cases.length}건</span>
+          <Button variant="brand" size="sm" asChild>
+            <Link href="/agency/cases/new">+ 새 케이스</Link>
+          </Button>
+        </div>
       </div>
 
       <CaseBoard
