@@ -502,6 +502,7 @@ const kr = {
   clinicsPage: {
     countSubtitle: '{n}곳의 검증된 병원 · 후기 · 예상 비용 안내',
     productsWord: '상품',
+    recommended: '추천상품',
     productsSubtitle: '원하는 상품을 골라 문의를 남기면 병원이 직접 연락드립니다 — 결제 없이 상담부터 시작하세요.',
     all: '전체',
     backToAll: '모든 병원',

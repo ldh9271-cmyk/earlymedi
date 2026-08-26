@@ -484,6 +484,7 @@ const en: Dictionary = {
   clinicsPage: {
     countSubtitle: '{n} verified hospitals · reviews · price guides',
     productsWord: 'Programs',
+    recommended: 'Recommended',
     productsSubtitle: 'Pick a program and send an inquiry — the clinic contacts you directly. Start with a consultation, no payment needed.',
     all: 'All',
     backToAll: 'All hospitals',

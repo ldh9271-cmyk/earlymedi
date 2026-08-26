@@ -245,7 +245,7 @@ export default async function ClinicsListPage({
     }
 
     const localized = await applyLocaleOverrides(filtered, params.locale);
-    const title = `${categoryLabel(categoryFilter, dict.clinicsPage.categories)} ${dict.clinicsPage.productsWord}`;
+    const title = categoryLabel(categoryFilter, dict.clinicsPage.categories);
 
     return (
       <section className="m-cl-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
@@ -363,7 +363,7 @@ export default async function ClinicsListPage({
     <section className="m-cl-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
       <style dangerouslySetInnerHTML={{ __html: CLINICS_MOBILE_CSS }} />
       <h1 className="m-cl-title" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
-        {dict.clinicsPage.productsWord}
+        {dict.clinicsPage.recommended}
       </h1>
       <p className="m-cl-subtitle" style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
         {dict.clinicsPage.productsSubtitle}
@@ -380,7 +380,7 @@ export default async function ClinicsListPage({
           <div key={s.key} style={{ marginTop: 36 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
               <h2 className="m-cl-sec-title" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.3px', margin: 0 }}>
-                {categoryLabel(s.key, dict.clinicsPage.categories)} {dict.clinicsPage.productsWord}
+                {categoryLabel(s.key, dict.clinicsPage.categories)}
               </h2>
               <Link
                 href={`/${params.locale}/clinics?category=${s.key}`}
@@ -424,10 +424,25 @@ function Chips({
       className="m-cl-chips-row"
       style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18, padding: 0, overflowX: 'auto' }}
     >
+      <Link
+        href={`/${locale}/clinics`}
+        style={{
+          flexShrink: 0,
+          display: 'inline-flex', alignItems: 'center',
+          padding: '8px 14px', borderRadius: 9999,
+          border: `1px solid ${active === null ? '#222' : '#dddddd'}`,
+          background: active === null ? '#222' : '#fff',
+          color: active === null ? '#fff' : '#222',
+          fontSize: 13, fontWeight: 500,
+          textDecoration: 'none', whiteSpace: 'nowrap',
+        }}
+      >
+        {dict.clinicsPage.recommended}
+      </Link>
       {SUB_CHIP_KEYS.map((key) => (
         <Link
           key={key}
-          href={active === key ? `/${locale}/clinics` : `/${locale}/clinics?category=${key}`}
+          href={`/${locale}/clinics?category=${key}`}
           style={{
             flexShrink: 0,
             display: 'inline-flex', alignItems: 'center',
@@ -439,7 +454,7 @@ function Chips({
             textDecoration: 'none', whiteSpace: 'nowrap',
           }}
         >
-          {dict.clinicsPage.categories[key]} {dict.clinicsPage.productsWord}
+          {dict.clinicsPage.categories[key]}
         </Link>
       ))}
     </div>
