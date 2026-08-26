@@ -126,7 +126,7 @@ const TRUST = [
 
 export default function BizPage(): JSX.Element {
   return (
-    <div style={{ background: '#ffffff', color: INK, fontFamily: FONT, minHeight: '100vh' }}>
+    <div style={{ background: '#ffffff', color: INK, fontFamily: FONT, minHeight: '100vh', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       {/* ── 헤더 ── */}
@@ -179,8 +179,9 @@ export default function BizPage(): JSX.Element {
             <br />
             글로우업투어가 데려다드립니다
           </h1>
-          <p style={{ fontSize: 17, color: MUTED, lineHeight: 1.65, margin: '16px auto 0', maxWidth: 640 }}>
+          <p style={{ fontSize: 17, color: MUTED, lineHeight: 1.65, margin: '16px auto 0', maxWidth: 680 }}>
             6개 언어 사이트와 AI 상담, 컨시어지가 모객부터 예약·결제·통역까지 대신합니다.
+            <br className="bz-hide-m" />
             사업자님은 <b style={{ color: INK }}>서비스에만 집중</b>하세요 — 정산은 실적이 생길 때만.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginTop: 28 }}>
