@@ -7,11 +7,32 @@ import { channels } from '@/drizzle/schema/channels';
 import { cases } from '@/drizzle/schema/cases';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
+import { hospitals } from '@/drizzle/schema/hospitals';
 import { LISTING_CATEGORIES } from '@/lib/listings/categories';
 import { InsightsBody, type InsightsData } from '@/components/agency/insights/insights-body';
 
 export const metadata = { title: 'GlowInsight 분석' };
 export const dynamic = 'force-dynamic';
+
+/** 국가 표기가 'KR'·'한국'처럼 섞여 저장돼 있어 ISO-2 로 합산한다. */
+const COUNTRY_NORMALIZE: Record<string, string> = {
+  한국: 'KR', 일본: 'JP', 중국: 'CN', 미국: 'US',
+  베트남: 'VN', 러시아: 'RU', 대만: 'TW', 태국: 'TH', 싱가포르: 'SG',
+};
+
+function normalizeCountries(
+  rows: Array<{ country: string | null; n: number }>,
+): Array<{ name: string; n: number }> {
+  const merged = new Map<string, number>();
+  for (const r of rows) {
+    const raw = (r.country ?? '').trim();
+    const name = raw ? COUNTRY_NORMALIZE[raw] ?? raw.toUpperCase() : '미상';
+    merged.set(name, (merged.get(name) ?? 0) + r.n);
+  }
+  return Array.from(merged, ([name, n]) => ({ name, n }))
+    .sort((a, b) => b.n - a.n)
+    .slice(0, 8);
+}
 
 /**
  * GlowInsight — 실데이터 분석. 문의(모든 채널) → 케이스 → 결제로
@@ -22,8 +43,15 @@ export default async function AgencyInsightsPage(): Promise<JSX.Element> {
   const ctx = await requireAccess({ allowedAccountTypes: ['agency'] });
 
   const data = await withRls(ctx, async (): Promise<InsightsData> => {
-    const [convByStage, convByChannel, convByCountry, caseByStage, orders, listingByCategory] =
-      await Promise.all([
+    const [
+      convByStage,
+      convByChannel,
+      convByCountry,
+      caseByStage,
+      orders,
+      listingByCategory,
+      hospitalCountRows,
+    ] = await Promise.all([
         db
           .select({ stage: conversations.stage, n: sql<number>`count(*)::int` })
           .from(conversations)
@@ -59,6 +87,11 @@ export default async function AgencyInsightsPage(): Promise<JSX.Element> {
           .from(partnerListings)
           .where(eq(partnerListings.status, 'approved'))
           .groupBy(partnerListings.category),
+        // 병원은 partner_listings 가 아니라 hospitals 테이블 — 의료 축은 여기서.
+        db
+          .select({ n: sql<number>`count(*)::int` })
+          .from(hospitals)
+          .where(eq(hospitals.organizationId, ctx.orgId)),
       ]);
 
     const stageCount = (stages: string[], rows: Array<{ stage: string; n: number }>): number =>
@@ -107,18 +140,21 @@ export default async function AgencyInsightsPage(): Promise<JSX.Element> {
       channels: convByChannel
         .map((r) => ({ name: r.kind, n: r.n }))
         .sort((a, b) => b.n - a.n),
-      countries: convByCountry
-        .map((r) => ({ name: r.country ?? '미상', n: r.n }))
-        .sort((a, b) => b.n - a.n)
-        .slice(0, 8),
-      categories: listingByCategory
-        .map((r) => ({
+      countries: normalizeCountries(convByCountry),
+      categories: [
+        ...listingByCategory.map((r) => ({
           key: r.category,
           label: categoryLabel.get(r.category) ?? r.category,
           n: r.n,
-          isMedical: r.category === 'hospital',
-        }))
-        .sort((a, b) => b.n - a.n),
+          isMedical: false,
+        })),
+        {
+          key: 'hospital',
+          label: '병원 (의료)',
+          n: hospitalCountRows[0]?.n ?? 0,
+          isMedical: true,
+        },
+      ].sort((a, b) => b.n - a.n),
       totals: {
         paidWon: paidOrders.reduce((s, o) => s + o.totalWon, 0),
         paidCount: paidOrders.length,
