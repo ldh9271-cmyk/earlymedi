@@ -35,6 +35,21 @@ function loadSdk(): Promise<TossPaymentsFn | null> {
 export type TossOpenOutcome = 'redirected' | 'cancelled' | 'error';
 
 /**
+ * 사이트 로케일 → 결제창 구성.
+ *   kr        → 국내 결제창 (한국어 UI · 카카오페이 등 국내 간편결제)
+ *   ja/zh     → 해외카드 다국어 결제창, 해당 언어로 시작
+ *   en/ru/vi  → 해외카드 다국어 결제창, 영어 (토스는 KO/EN/JA/ZH 만 지원)
+ * 다국어 결제창은 Visa·Master·JCB·UnionPay 등 해외 발급 카드 전용이다 —
+ * 외국인 고객이 실제로 쓰는 카드와도 맞는다.
+ */
+function cardOptionsForLocale(locale?: string): Record<string, unknown> {
+  const base = { useEscrow: false, flowMode: 'DEFAULT', useCardPoint: false, useAppCardOnly: false };
+  if (!locale || locale === 'kr' || locale === 'ko') return base;
+  const language = locale === 'ja' ? 'JA' : locale === 'zh' ? 'ZH' : 'EN';
+  return { ...base, useInternationalCardOnly: true, language };
+}
+
+/**
  * 결제창 열기. 성공적으로 인증이 진행되면 successUrl 로 리다이렉트되어
  * 이 프라미스는 사실상 페이지 이탈로 끝난다. 사용자가 창을 닫으면
  * 'cancelled', SDK 로드/호출 실패면 'error'.
@@ -46,6 +61,8 @@ export async function openTossPayment(opts: {
   successUrl: string;
   failUrl: string;
   customerEmail?: string | null;
+  /** 사이트 로케일 (kr/en/zh/ja/ru/vi) — 결제창 언어·해외카드 모드를 정한다. */
+  locale?: string;
 }): Promise<TossOpenOutcome> {
   const key = tossClientKey();
   if (!key) return 'error';
@@ -62,7 +79,7 @@ export async function openTossPayment(opts: {
       successUrl: opts.successUrl,
       failUrl: opts.failUrl,
       ...(opts.customerEmail ? { customerEmail: opts.customerEmail } : {}),
-      card: { useEscrow: false, flowMode: 'DEFAULT', useCardPoint: false, useAppCardOnly: false },
+      card: cardOptionsForLocale(opts.locale),
     });
     return 'redirected';
   } catch (err) {

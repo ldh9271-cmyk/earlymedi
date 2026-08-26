@@ -290,6 +290,7 @@ export default function ReserveButton({
         orderName: summary.title,
         successUrl: `${window.location.origin}/${locale}/checkout/toss/success`,
         failUrl: `${window.location.origin}/${locale}/checkout/toss/fail`,
+        locale, // kr→국내 결제창, ja/zh→해당 언어 다국어 결제창, 그 외→영어
       });
       setIssuing(false);
       if (outcome === 'redirected' || outcome === 'cancelled') return;
