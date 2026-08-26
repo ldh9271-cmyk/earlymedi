@@ -39,6 +39,8 @@ export const PUBLIC_PREFIXES = [
   '/ja',
   '/ru',
   '/vi',
+  // B2B 마케팅 홈 — 루트(app/page.tsx)를 브랜드 도메인 아래로 편입한 경로.
+  '/biz',
   '/login',
   '/signup',
   '/select-org',

@@ -62,8 +62,10 @@ export async function fiveStepAuth(request: NextRequest): Promise<NextResponse> 
   // to the best-matching locale prefix so foreign visitors land on
   // their language without an extra click.
   //
-  // earlymedi.vercel.app / localhost / preview URLs keep `/` pointing
-  // at the existing B2B marketing page — operators bookmark that.
+  // The B2B marketing page now lives at /biz on the brand domain.
+  // earlymedi.vercel.app's root — its old address — permanently
+  // forwards there so the B2B surface has one canonical URL.
+  // localhost / preview URLs keep `/` rendering the B2B page directly.
   if (pathname === '/') {
     const hostHeader = (request.headers.get('host') ?? '').toLowerCase();
     // Strip any :port (e.g. localhost:3000) for the membership check.
@@ -75,6 +77,9 @@ export async function fiveStepAuth(request: NextRequest): Promise<NextResponse> 
       const url = request.nextUrl.clone();
       url.pathname = `/${locale}`;
       return NextResponse.redirect(url);
+    }
+    if (host === 'earlymedi.vercel.app') {
+      return NextResponse.redirect('https://www.glowuptour.com/biz', 308);
     }
   }
 
