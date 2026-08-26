@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Check, FileText, Inbox, Send, Trophy, X } from 'lucide-react';
 import { Button } from '@/components/shared/ui/button';
@@ -156,7 +157,11 @@ function CaseQuoteCard({
   onOpenRfq: () => void;
   onRecord: (q: QuoteRow) => void;
 }): JSX.Element {
+  const router = useRouter();
   const [pending, start] = useTransition();
+  // 네이티브 confirm/prompt 는 탭을 블록하므로 인라인 확인 모달을 쓴다.
+  const [confirmTarget, setConfirmTarget] = useState<{ kind: 'accept' | 'reject'; q: QuoteRow } | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   // 수신 견적 낮은 금액 우선, 그 외 상태는 뒤로.
   const sorted = [...c.quotes].sort((a, b) => {
@@ -167,25 +172,24 @@ function CaseQuoteCard({
   });
   const lowestReceived = sorted.find((q) => q.status === 'received')?.totalKrw ?? null;
 
-  function onAccept(q: QuoteRow): void {
-    if (!confirm(`${q.hospitalName} 견적(${won(q.totalKrw)})을 수락할까요?\n같은 케이스의 나머지 견적은 자동 탈락 처리됩니다.`)) return;
+  function runConfirmed(): void {
+    const target = confirmTarget;
+    if (!target) return;
+    setConfirmTarget(null);
     start(async () => {
       try {
-        await acceptQuoteAction({ caseId: c.id, quoteId: q.id });
-        toast.success(`${q.hospitalName} 견적을 수락했습니다.`);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : '수락 실패');
-      }
-    });
-  }
-
-  function onReject(q: QuoteRow): void {
-    const reason = prompt(`${q.hospitalName} 견적을 탈락 처리합니다. 사유 (선택):`) ?? undefined;
-    if (reason === undefined && !confirm('사유 없이 탈락 처리할까요?')) return;
-    start(async () => {
-      try {
-        await rejectQuoteAction({ caseId: c.id, quoteId: q.id, reason });
-        toast.success('탈락 처리했습니다.');
+        if (target.kind === 'accept') {
+          await acceptQuoteAction({ caseId: c.id, quoteId: target.q.id });
+          toast.success(`${target.q.hospitalName} 견적을 수락했습니다.`);
+        } else {
+          await rejectQuoteAction({
+            caseId: c.id,
+            quoteId: target.q.id,
+            reason: rejectReason.trim() || undefined,
+          });
+          toast.success('탈락 처리했습니다.');
+        }
+        router.refresh();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : '처리 실패');
       }
@@ -263,11 +267,26 @@ function CaseQuoteCard({
                           ) : null}
                           {q.status === 'received' ? (
                             <>
-                              <Button variant="brand" size="sm" className="h-6 px-2 text-[11px]" onClick={() => onAccept(q)} disabled={pending}>
+                              <Button
+                                variant="brand"
+                                size="sm"
+                                className="h-6 px-2 text-[11px]"
+                                onClick={() => setConfirmTarget({ kind: 'accept', q })}
+                                disabled={pending}
+                              >
                                 <Check className="mr-0.5 h-3 w-3" />
                                 수락
                               </Button>
-                              <Button variant="outline" size="sm" className="h-6 px-2 text-[11px]" onClick={() => onReject(q)} disabled={pending}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 px-2 text-[11px]"
+                                onClick={() => {
+                                  setRejectReason('');
+                                  setConfirmTarget({ kind: 'reject', q });
+                                }}
+                                disabled={pending}
+                              >
                                 탈락
                               </Button>
                             </>
@@ -293,6 +312,61 @@ function CaseQuoteCard({
               ))}
           </div>
         ) : null}
+
+        {confirmTarget ? (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setConfirmTarget(null)}
+          >
+            <div
+              className="w-full max-w-sm rounded-xl bg-background p-5 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {confirmTarget.kind === 'accept' ? (
+                <>
+                  <h3 className="text-sm font-semibold">견적 수락</h3>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    <strong className="text-foreground">{confirmTarget.q.hospitalName}</strong> 견적(
+                    {won(confirmTarget.q.totalKrw)})을 수락합니다. 같은 케이스의 나머지 견적은 자동
+                    탈락 처리되고, 케이스가 [견적 수락] 단계로 넘어갑니다.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-sm font-semibold">견적 탈락 처리</h3>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    <strong className="text-foreground">{confirmTarget.q.hospitalName}</strong> 견적을
+                    탈락 처리합니다.
+                  </p>
+                  <div className="mt-3 space-y-1.5">
+                    <Label htmlFor="rej-reason" className="text-xs">사유 (선택)</Label>
+                    <Input
+                      id="rej-reason"
+                      placeholder="예) 환자 예산 초과"
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      maxLength={500}
+                    />
+                  </div>
+                </>
+              )}
+              <div className="mt-4 flex justify-end gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => setConfirmTarget(null)}>
+                  취소
+                </Button>
+                <Button
+                  type="button"
+                  variant={confirmTarget.kind === 'accept' ? 'brand' : 'destructive'}
+                  size="sm"
+                  onClick={runConfirmed}
+                  disabled={pending}
+                >
+                  {confirmTarget.kind === 'accept' ? '수락 확정' : '탈락 확정'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -307,6 +381,7 @@ function RfqModal({
   hospitalOptions: Array<{ id: string; name: string }>;
   onClose: () => void;
 }): JSX.Element {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
@@ -334,6 +409,7 @@ function RfqModal({
     try {
       const result = await sendRfqAction({ caseId: c.id, hospitalIds: Array.from(selected) });
       toast.success(`${result.created}개 병원에 RFQ를 기록했습니다.`);
+      router.refresh();
       onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'RFQ 발송 실패');
@@ -410,6 +486,7 @@ function RecordQuoteModal({
   q: QuoteRow;
   onClose: () => void;
 }): JSX.Element {
+  const router = useRouter();
   const [totalKrw, setTotalKrw] = useState(q.totalKrw != null ? String(q.totalKrw) : '');
   const [depositKrw, setDepositKrw] = useState(q.depositKrw != null ? String(q.depositKrw) : '');
   const [validUntil, setValidUntil] = useState(q.validUntil ?? '');
@@ -436,6 +513,7 @@ function RecordQuoteModal({
         internalMemo: internalMemo.trim() || null,
       });
       toast.success('견적을 기록했습니다.');
+      router.refresh();
       onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '기록 실패');
