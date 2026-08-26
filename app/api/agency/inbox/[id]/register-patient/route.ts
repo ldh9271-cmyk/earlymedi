@@ -23,10 +23,43 @@ import { PaywallError } from '@/lib/billing/trial-quota';
  * 만들어진 환자가 있으면(경합 등) 새로 만들지 않고 연결만 한다.
  */
 
-/** 초기 인바운드 메시지에서 전화·이메일을 찾아낸다 (리드 폼 라벨 우선). */
-function extractContact(bodies: string[]): { phone?: string; email?: string } {
+/** 국가 표기(한국어·ISO-2) → 거주 국가 ISO-2 + 국적 ISO-3. */
+const COUNTRY_MAP: Record<string, { cc: string; nat: string }> = {
+  한국: { cc: 'KR', nat: 'KOR' }, KR: { cc: 'KR', nat: 'KOR' },
+  일본: { cc: 'JP', nat: 'JPN' }, JP: { cc: 'JP', nat: 'JPN' },
+  중국: { cc: 'CN', nat: 'CHN' }, CN: { cc: 'CN', nat: 'CHN' },
+  미국: { cc: 'US', nat: 'USA' }, US: { cc: 'US', nat: 'USA' },
+  베트남: { cc: 'VN', nat: 'VNM' }, VN: { cc: 'VN', nat: 'VNM' },
+  러시아: { cc: 'RU', nat: 'RUS' }, RU: { cc: 'RU', nat: 'RUS' },
+  대만: { cc: 'TW', nat: 'TWN' }, TW: { cc: 'TW', nat: 'TWN' },
+  태국: { cc: 'TH', nat: 'THA' }, TH: { cc: 'TH', nat: 'THA' },
+  싱가포르: { cc: 'SG', nat: 'SGP' }, SG: { cc: 'SG', nat: 'SGP' },
+};
+
+function mapCountry(label: string | null | undefined): { cc?: string; nat?: string } {
+  if (!label) return {};
+  const hit = COUNTRY_MAP[label.trim()] ?? COUNTRY_MAP[label.trim().toUpperCase()];
+  return hit ? { cc: hit.cc, nat: hit.nat } : {};
+}
+
+/** 한글 이름을 성/이름으로 나눈다 (2~4자 단성 가정 — 복성은 수동 보정). */
+function splitKoreanName(name: string): { surname?: string; givenNames?: string } {
+  if (/^[가-힣]{2,4}$/.test(name)) {
+    return { surname: name.slice(0, 1), givenNames: name.slice(1) };
+  }
+  return {};
+}
+
+type LeadInfo = {
+  phone?: string; email?: string; name?: string; countryLabel?: string;
+  interest?: string; interestHospital?: string;
+};
+
+/** 초기 인바운드 메시지에서 리드 폼 정보를 최대한 회수한다.
+ *  형식: [환자 포털 문의 · KR] 이름: 문석호 (한국) / 연락처: … / 관심 분야: … / 이메일: … */
+function extractLead(bodies: string[]): LeadInfo {
   const text = bodies.join('\n');
-  const out: { phone?: string; email?: string } = {};
+  const out: LeadInfo = {};
 
   const email = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.exec(text);
   if (email) out.email = email[0];
@@ -42,6 +75,18 @@ function extractContact(bodies: string[]): { phone?: string; email?: string } {
       out.phone = digits;
     }
   }
+
+  // 이름: 문석호 (한국) — 괄호는 국가 표기
+  const name = /이름\s*[:：]\s*([^\n(（]+?)(?:\s*[（(]([^)）]+)[)）])?\s*(?:\n|$)/.exec(text);
+  if (name?.[1]) out.name = name[1].trim();
+  if (name?.[2]) out.countryLabel = name[2].trim();
+
+  const interest = /관심\s*분야\s*[:：]\s*([^\n]+)/.exec(text);
+  if (interest?.[1] && !/미입력|선택 안 함/.test(interest[1])) out.interest = interest[1].trim();
+
+  const hospital = /관심\s*병원\s*[:：]\s*([^\n]+)/.exec(text);
+  if (hospital?.[1] && !/미입력|선택 안 함/.test(hospital[1])) out.interestHospital = hospital[1].trim();
+
   return out;
 }
 
@@ -92,7 +137,7 @@ export async function POST(
         return NextResponse.json({ data: { patientId: existing.id, already: true } });
       }
 
-      // 초기 인바운드 메시지에서 연락처를 찾는다 (리드 폼 본문)
+      // 초기 인바운드 메시지에서 리드 폼 정보를 회수한다
       const inbound = await db
         .select({ body: messages.body })
         .from(messages)
@@ -105,23 +150,47 @@ export async function POST(
         )
         .orderBy(asc(messages.sentAt))
         .limit(5);
-      const contact = extractContact(inbound.map((m) => m.body));
+      const lead = extractLead(inbound.map((m) => m.body));
 
-      const countryCode =
-        conv.contactCountryCode && /^[A-Za-z]{2}$/.test(conv.contactCountryCode)
-          ? conv.contactCountryCode.toUpperCase()
-          : undefined;
+      // 국가: 리드 폼 괄호 표기("(한국)") 우선, 없으면 대화 컨택트 값 — 둘 다
+      // 한국어 표기·ISO-2 를 매핑표로 정규화한다.
+      const country = mapCountry(lead.countryLabel).cc
+        ? mapCountry(lead.countryLabel)
+        : mapCountry(conv.contactCountryCode);
+
+      const fullName = lead.name || conv.contactDisplayName?.trim() || '(이름 미상)';
+      const nameParts = splitKoreanName(fullName);
+
+      const tags = ['인박스 등록'];
+      if (lead.interest) tags.push(`관심:${lead.interest}`);
 
       const created = await createPatient(orgId, access.ctx.userId, {
-        fullName: conv.contactDisplayName?.trim() || '(이름 미상)',
-        countryCode,
+        fullName,
+        surname: nameParts.surname,
+        givenNames: nameParts.givenNames,
+        countryCode: country.cc,
+        nationality: country.nat,
         locale: conv.contactLocale ?? undefined,
-        phone: contact.phone,
-        email: contact.email,
+        phone: lead.phone,
+        email: lead.email,
         sourceConversationId: conversationId,
         sourceChannel: conv.channelKind,
-        tags: ['인박스 등록'],
+        tags,
       });
+
+      // 관심 분야·관심 병원은 구조화 컬럼이 없어 metadata 에 남긴다
+      if (lead.interest || lead.interestHospital) {
+        await db
+          .update(patients)
+          .set({
+            metadata: {
+              leadSource: '환자 포털 문의',
+              ...(lead.interest ? { interest: lead.interest } : {}),
+              ...(lead.interestHospital ? { interestHospital: lead.interestHospital } : {}),
+            },
+          })
+          .where(and(eq(patients.organizationId, orgId), eq(patients.id, created.id)));
+      }
 
       await db
         .update(conversations)
