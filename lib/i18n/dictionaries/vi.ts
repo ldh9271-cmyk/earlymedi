@@ -601,6 +601,7 @@ const vi: Dictionary = {
     edit: 'Chỉnh sửa',
     oneGuest: '1 khách',
     defaultDate: 'Thứ Hai, 3/11/2026',
+    dateRequired: 'Vui lòng chọn ngày',
     defaultTime: '14:00',
     priceDetails: 'Chi tiết giá',
     lineSession: '{price} × 1 {unit}',

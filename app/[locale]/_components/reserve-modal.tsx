@@ -127,6 +127,8 @@ export default function ReserveButton({
   const [minDate, setMinDate] = useState('');
   const [maxDate, setMaxDate] = useState('');
   const [qrFailed, setQrFailed] = useState(false);
+  // 날짜를 고르지 않고 '결제하기'를 누르면 켜진다 — 날짜 필드 강조 + 안내
+  const [dateNeeded, setDateNeeded] = useState(false);
   const [invoiceNo, setInvoiceNo] = useState<string | null>(null);
   const [issuing, setIssuing] = useState(false);
   const [finishing, setFinishing] = useState(false);
@@ -244,6 +246,12 @@ export default function ReserveButton({
    */
   async function issueInvoice(): Promise<void> {
     if (issuing) return;
+    // 날짜를 고르지 않으면 결제로 넘어가지 않는다 — 모든 로케일 공통.
+    // (fixedDateLabel 상품은 날짜가 상품에서 파생되므로 예외)
+    if (!fixedDateLabel && !ymd) {
+      setDateNeeded(true);
+      return;
+    }
     // 팝업이 열려 있는 동안 세션이 만료됐거나, 확인 전에 열린 경우를 막는다
     if (!(await resolveAuthed())) {
       window.location.href = signupHref();
@@ -481,23 +489,37 @@ export default function ReserveButton({
                   {fixedDateLabel ? (
                     <InfoRow label={labels.date} value={fixedDateLabel} />
                   ) : (
-                    <label style={{ ...fieldBox, marginBottom: 10 }}>
-                      <span style={fieldLabel}>{labels.date}</span>
-                      <input
-                        type="date"
-                        value={ymd}
-                        min={minDate}
-                        max={maxDate}
-                        onChange={(e) => {
-                          // 달력은 min/max 로 막히지만 직접 입력은 통과하므로 보정
-                          let v = e.target.value;
-                          if (v && minDate && v < minDate) v = minDate;
-                          if (v && maxDate && v > maxDate) v = maxDate;
-                          setYmd(v);
+                    <>
+                      <label
+                        style={{
+                          ...fieldBox,
+                          marginBottom: dateNeeded ? 6 : 10,
+                          ...(dateNeeded ? { border: '1.5px solid #dc2626', background: '#fff5f5' } : {}),
                         }}
-                        style={fieldInput}
-                      />
-                    </label>
+                      >
+                        <span style={{ ...fieldLabel, ...(dateNeeded ? { color: '#dc2626' } : {}) }}>{labels.date}</span>
+                        <input
+                          type="date"
+                          value={ymd}
+                          min={minDate}
+                          max={maxDate}
+                          onChange={(e) => {
+                            // 달력은 min/max 로 막히지만 직접 입력은 통과하므로 보정
+                            let v = e.target.value;
+                            if (v && minDate && v < minDate) v = minDate;
+                            if (v && maxDate && v > maxDate) v = maxDate;
+                            setYmd(v);
+                            if (v) setDateNeeded(false);
+                          }}
+                          style={fieldInput}
+                        />
+                      </label>
+                      {dateNeeded ? (
+                        <p style={{ color: '#dc2626', fontSize: 12, fontWeight: 600, margin: '0 0 10px 2px' }}>
+                          {labels.dateRequired}
+                        </p>
+                      ) : null}
+                    </>
                   )}
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

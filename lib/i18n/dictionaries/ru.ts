@@ -601,6 +601,7 @@ const ru: Dictionary = {
     edit: 'Изменить',
     oneGuest: '1 гость',
     defaultDate: 'Пн, 3 ноября 2026',
+    dateRequired: 'Пожалуйста, выберите дату',
     defaultTime: '14:00',
     priceDetails: 'Детали цены',
     lineSession: '{price} × 1 {unit}',

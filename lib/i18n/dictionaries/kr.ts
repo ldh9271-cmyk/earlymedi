@@ -620,6 +620,7 @@ const kr = {
     edit: '변경',
     oneGuest: '게스트 1명',
     defaultDate: '2026년 11월 3일 (월)',
+    dateRequired: '날짜를 선택해 주세요',
     defaultTime: '오후 2:00',
     priceDetails: '요금 내역',
     lineSession: '{price} × 1{unit}',

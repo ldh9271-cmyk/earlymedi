@@ -598,6 +598,7 @@ const zh: Dictionary = {
     edit: '修改',
     oneGuest: '1 人',
     defaultDate: '2026 年 11 月 3 日（周一）',
+    dateRequired: '请选择日期',
     defaultTime: '下午 2:00',
     priceDetails: '价格明细',
     lineSession: '{price} × 1 {unit}',

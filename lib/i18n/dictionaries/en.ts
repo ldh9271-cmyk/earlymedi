@@ -601,6 +601,7 @@ const en: Dictionary = {
     edit: 'Edit',
     oneGuest: '1 guest',
     defaultDate: 'Mon, Nov 3, 2026',
+    dateRequired: 'Please select a date',
     defaultTime: '2:00 PM',
     priceDetails: 'Price details',
     lineSession: '{price} × 1 {unit}',

@@ -600,6 +600,7 @@ const ja: Dictionary = {
     edit: '変更',
     oneGuest: 'ゲスト 1名',
     defaultDate: '2026年11月3日（月）',
+    dateRequired: '日付を選択してください',
     defaultTime: '午後2:00',
     priceDetails: '料金内訳',
     lineSession: '{price} × 1{unit}',
