@@ -31,7 +31,10 @@ export async function nextDistributorCode(countryCode: string): Promise<string> 
     .select({ code: referralPartners.code })
     .from(referralPartners)
     .where(and(eq(referralPartners.role, 'distributor'), like(referralPartners.code, `${cc}_%`)));
-  const re = new RegExp(`^${cc}_(\d+)$`);
+  // 주의: 템플릿 리터럴에서 \d 는 이스케이프가 사라져 'd'가 된다 — \\d 필수.
+  // (이 버그로 기존 코드가 항상 JP_0001 을 재발급 → 유니크 충돌 → 총판
+  //  생성이 code_collision 으로 실패했었다. 2026-08-27 수정)
+  const re = new RegExp(`^${cc}_(\\d+)$`);
   let max = 0;
   for (const r of rows) {
     const m = re.exec(r.code);

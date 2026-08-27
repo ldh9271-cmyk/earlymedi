@@ -165,4 +165,8 @@ const MP_CSS =
   + '.m-mp-grid2 { grid-template-columns: 1fr !important; }'
   + '.m-mp-region-form { grid-template-columns: 1fr 1fr !important; }'
   + '.m-mp-region-form button { grid-column: span 2; }'
+  // iOS 는 16px 미만 입력에 포커스하면 화면을 확대해 레이아웃이 튄다
+  + '.m-mp-page input, .m-mp-page select { font-size: 16px !important; }'
+  + '.m-mp-page button[type="submit"] { width: 100%; }'
+  + '.m-mp-head span, .m-mp-head { word-break: break-all; }'
   + '}';

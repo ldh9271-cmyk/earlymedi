@@ -28,6 +28,23 @@ const label: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#6a6
 const btn = (bg: string): React.CSSProperties => ({ background: bg, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' });
 const card: React.CSSProperties = { border: '1px solid #ebebeb', borderRadius: 12, padding: 18, background: '#fff' };
 
+// 모바일 대응 — 4열 그리드·긴 URL·13px 입력(iOS 포커스 확대)이 좁은
+// 화면을 깨뜨리지 않게 640px 이하에서 재배치한다.
+const PD_CSS =
+  '.m-pd-page code { word-break: break-all; }'
+  + '@media (max-width: 640px) {'
+  + '.m-pd-page { padding: 20px 14px 80px !important; }'
+  + '.m-pd-card { padding: 14px !important; }'
+  + '.m-pd-grid4 { grid-template-columns: 1fr 1fr !important; }'
+  + '.m-pd-grid2 { grid-template-columns: 1fr !important; }'
+  + '.m-pd-grid3 { grid-template-columns: 1fr !important; }'
+  + '.m-pd-ref-form { grid-template-columns: 1fr 1fr !important; }'
+  + '.m-pd-ref-form button { grid-column: span 2; }'
+  + '.m-pd-page input, .m-pd-page select { font-size: 16px !important; }'
+  + '.m-pd-page button[type="submit"] { min-height: 40px; }'
+  + '.m-pd-qr { width: 96px !important; height: 96px !important; }'
+  + '}';
+
 export default async function DistributorDetailPage({
   params, searchParams,
 }: { params: { id: string }; searchParams: { error?: string; ok?: string; created?: string } }): Promise<JSX.Element> {
@@ -63,7 +80,8 @@ export default async function DistributorDetailPage({
   const partnerName = (id: string | null): string => (id === d.id ? `${d.name} (총판)` : (id && byId.get(id)?.name) || '—');
 
   return (
-    <div style={{ padding: '28px 32px 100px', maxWidth: 1240, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
+    <div className="m-pd-page" style={{ padding: '28px 32px 100px', maxWidth: 1240, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
+      <style dangerouslySetInnerHTML={{ __html: PD_CSS }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <Link href="/master/partners" style={{ fontSize: 12, color: '#6a6a6a' }}>← 총판 목록</Link>
@@ -74,7 +92,7 @@ export default async function DistributorDetailPage({
           </div>
           <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 4 }}>QR 링크 <code>{SITE}/r/{d.code}</code> · 추천인 초대 링크 <code>{SITE}/r/{d.code}?join=1</code></div>
         </div>
-        <div dangerouslySetInnerHTML={{ __html: qr }} style={{ width: 120, height: 120 }} />
+        <div className="m-pd-qr" dangerouslySetInnerHTML={{ __html: qr }} style={{ width: 120, height: 120 }} />
       </div>
 
       {searchParams.created ? <p style={{ color: '#047857', fontSize: 13, margin: 0 }}>총판이 생성됐습니다. QR 을 총판에 전달하고, 대시보드 계정 이메일을 연결하세요.</p> : null}
@@ -102,7 +120,7 @@ export default async function DistributorDetailPage({
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
           병원이 시술 완료를 알려오면 여기에 입력합니다. 수당 원장이 자동 생성되고, 완료일 + {cfg.holdDays}일 뒤 확정됩니다. 정산 비율에 따라 수수료의 {feeSharePct}%가 총판 몫입니다.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+        <div className="m-pd-grid4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           <div><span style={label}>종류</span>
             <select name="kind" style={input} defaultValue="procedure"><option value="procedure">시술</option><option value="travel">여행상품 (10% 마진 + 포함 시술)</option></select></div>
           <div><span style={label}>추천인 코드 (비우면 총판 직접)</span><input name="partnerCode" style={input} placeholder="JP7K2M9Q" /></div>
@@ -130,7 +148,7 @@ export default async function DistributorDetailPage({
       </form>
 
       {/* ── 정산 처리 ─────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="m-pd-grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <form action={confirmDueAction} style={card}>
           <input type="hidden" name="distributorId" value={d.id} />
           <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 6px' }}>확정 처리</h3>
@@ -185,7 +203,7 @@ export default async function DistributorDetailPage({
             </tbody>
           </table>
         </div>
-        <form action={createReferrerAction} style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr auto', gap: 8, alignItems: 'end' }}>
+        <form action={createReferrerAction} className="m-pd-ref-form" style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr auto', gap: 8, alignItems: 'end' }}>
           <input type="hidden" name="distributorId" value={d.id} />
           <div><span style={label}>추천인 이름 *</span><input name="name" required style={input} /></div>
           <div><span style={label}>상위 코드 (비우면 총판 직속)</span><input name="parentCode" style={input} placeholder={d.code} /></div>
@@ -276,14 +294,14 @@ export default async function DistributorDetailPage({
         <FeeShareField defaultPct={feeSharePct} />
 
         <div style={{ fontSize: 12, fontWeight: 700, color: '#222', margin: '4px 0 8px' }}>병원 유치 수수료율 (배당 이익이 얼마나 들어오는지)</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        <div className="m-pd-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
           <div><span style={label}>성형외과 %</span><input name="fee_ps" defaultValue={cfg.feePctByCategory.plastic_surgery} style={input} /></div>
           <div><span style={label}>피부과 %</span><input name="fee_derm" defaultValue={cfg.feePctByCategory.dermatology} style={input} /></div>
           <div><span style={label}>기타 %</span><input name="fee_default" defaultValue={cfg.feePctByCategory.default} style={input} /></div>
         </div>
 
         <div style={{ fontSize: 12, fontWeight: 700, color: '#222', margin: '16px 0 8px' }}>여행상품 · 지급 확정</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        <div className="m-pd-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
           <div><span style={label}>여행상품 마진 %</span><input name="travelMarginPct" defaultValue={cfg.travelMarginPct} style={input} /></div>
           <div><span style={label}>확정 보류일 (시술 완료 후)</span><input name="holdDays" defaultValue={cfg.holdDays} style={input} /></div>
         </div>
