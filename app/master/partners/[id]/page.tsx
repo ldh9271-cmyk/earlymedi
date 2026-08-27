@@ -32,6 +32,9 @@ const card: React.CSSProperties = { border: '1px solid #ebebeb', borderRadius: 1
 // 화면을 깨뜨리지 않게 640px 이하에서 재배치한다.
 const PD_CSS =
   '.m-pd-page code { word-break: break-all; }'
+  // QR SVG 는 생성 시 160px 고정 속성을 갖는다 — 컨테이너보다 크면
+  // 넘쳐서 잘리므로 항상 컨테이너 폭에 맞춰 스케일한다.
+  + '.m-pd-qr svg { width: 100%; height: auto; display: block; }'
   + '@media (max-width: 640px) {'
   + '.m-pd-page { padding: 20px 14px 80px !important; }'
   + '.m-pd-card { padding: 14px !important; }'
@@ -42,7 +45,7 @@ const PD_CSS =
   + '.m-pd-ref-form button { grid-column: span 2; }'
   + '.m-pd-page input, .m-pd-page select { font-size: 16px !important; }'
   + '.m-pd-page button[type="submit"] { min-height: 40px; }'
-  + '.m-pd-qr { width: 96px !important; height: 96px !important; }'
+  + '.m-pd-qr { width: 144px !important; height: auto !important; margin: 0 auto; }'
   + '}';
 
 export default async function DistributorDetailPage({
@@ -92,7 +95,7 @@ export default async function DistributorDetailPage({
           </div>
           <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 4 }}>QR 링크 <code>{SITE}/r/{d.code}</code> · 추천인 초대 링크 <code>{SITE}/r/{d.code}?join=1</code></div>
         </div>
-        <div className="m-pd-qr" dangerouslySetInnerHTML={{ __html: qr }} style={{ width: 120, height: 120 }} />
+        <div className="m-pd-qr" dangerouslySetInnerHTML={{ __html: qr }} style={{ width: 120, flexShrink: 0 }} />
       </div>
 
       {searchParams.created ? <p style={{ color: '#047857', fontSize: 13, margin: 0 }}>총판이 생성됐습니다. QR 을 총판에 전달하고, 대시보드 계정 이메일을 연결하세요.</p> : null}
