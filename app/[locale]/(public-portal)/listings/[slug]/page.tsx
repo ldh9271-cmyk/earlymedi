@@ -413,14 +413,18 @@ export default async function ListingDetailPage({
           return typeof listing.details[k] === 'string' ? (listing.details[k] as string).trim() : '';
         };
         // services 행은 카테고리마다 담는 내용이 다르다 — 샵은 시술,
-        // 호텔은 부대시설, 맛집은 대표 메뉴. 라벨도 그에 맞춰 고른다.
+        // 호텔은 부대시설, 맛집은 대표 메뉴, 퍼스널컬러는 진단 프로그램.
+        // 라벨도 그에 맞춰 고른다.
         const isHotel = listing.category === 'hotel';
-        const isFood = listing.category === 'food' || listing.category === 'restaurant';
-        const servicesLabel = isHotel
-          ? { kr: '부대시설', en: 'Facilities', zh: '酒店设施', ja: '館内施設', ru: 'Инфраструктура', vi: 'Tiện ích' }
-          : isFood
-            ? { kr: '대표 메뉴', en: 'Signature dishes', zh: '招牌菜', ja: '看板メニュー', ru: 'Фирменные блюда', vi: 'Món đặc trưng' }
-            : { kr: '시술', en: 'Services', zh: '服务项目', ja: 'サービス', ru: 'Услуги', vi: 'Dịch vụ' };
+        const SERVICES_LABELS: Record<string, Record<string, string>> = {
+          hotel: { kr: '부대시설', en: 'Facilities', zh: '酒店设施', ja: '館内施設', ru: 'Инфраструктура', vi: 'Tiện ích' },
+          food: { kr: '대표 메뉴', en: 'Signature dishes', zh: '招牌菜', ja: '看板メニュー', ru: 'Фирменные блюда', vi: 'Món đặc trưng' },
+          restaurant: { kr: '대표 메뉴', en: 'Signature dishes', zh: '招牌菜', ja: '看板メニュー', ru: 'Фирменные блюда', vi: 'Món đặc trưng' },
+          personal_color: { kr: '진단 프로그램', en: 'Programmes', zh: '诊断项目', ja: '診断プログラム', ru: 'Программы', vi: 'Chương trình phân tích' },
+        };
+        const servicesLabel = SERVICES_LABELS[listing.category] ?? {
+          kr: '시술', en: 'Services', zh: '服务项目', ja: 'サービス', ru: 'Услуги', vi: 'Dịch vụ',
+        };
         const rows: Array<{ label: Record<string, string>; value: string }> = [
           { label: { kr: '전화', en: 'Phone', zh: '电话', ja: '電話', ru: 'Телефон', vi: 'Điện thoại' }, value: s('phone') },
           { label: { kr: '영업시간', en: 'Hours', zh: '营业时间', ja: '営業時間', ru: 'Часы работы', vi: 'Giờ mở cửa' }, value: s('hours') },
