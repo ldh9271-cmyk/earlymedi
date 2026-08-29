@@ -412,19 +412,33 @@ export default async function ListingDetailPage({
           if (localized) return localized;
           return typeof listing.details[k] === 'string' ? (listing.details[k] as string).trim() : '';
         };
+        // services 행은 카테고리마다 담는 내용이 다르다 — 샵은 시술,
+        // 호텔은 부대시설, 맛집은 대표 메뉴. 라벨도 그에 맞춰 고른다.
+        const isHotel = listing.category === 'hotel';
+        const isFood = listing.category === 'food' || listing.category === 'restaurant';
+        const servicesLabel = isHotel
+          ? { kr: '부대시설', en: 'Facilities', zh: '酒店设施', ja: '館内施設', ru: 'Инфраструктура', vi: 'Tiện ích' }
+          : isFood
+            ? { kr: '대표 메뉴', en: 'Signature dishes', zh: '招牌菜', ja: '看板メニュー', ru: 'Фирменные блюда', vi: 'Món đặc trưng' }
+            : { kr: '시술', en: 'Services', zh: '服务项目', ja: 'サービス', ru: 'Услуги', vi: 'Dịch vụ' };
         const rows: Array<{ label: Record<string, string>; value: string }> = [
           { label: { kr: '전화', en: 'Phone', zh: '电话', ja: '電話', ru: 'Телефон', vi: 'Điện thoại' }, value: s('phone') },
           { label: { kr: '영업시간', en: 'Hours', zh: '营业时间', ja: '営業時間', ru: 'Часы работы', vi: 'Giờ mở cửa' }, value: s('hours') },
           { label: { kr: '오시는 길', en: 'Getting there', zh: '交通', ja: 'アクセス', ru: 'Как добраться', vi: 'Đường đi' }, value: s('station') },
-          { label: { kr: '시술', en: 'Services', zh: '服务项目', ja: 'サービス', ru: 'Услуги', vi: 'Dịch vụ' }, value: s('services') },
+          { label: servicesLabel, value: s('services') },
           { label: { kr: '가격대', en: 'Price range', zh: '价格区间', ja: '料金目安', ru: 'Цены', vi: 'Khoảng giá' }, value: s('priceRange') },
           { label: { kr: '외국인 응대', en: 'Language support', zh: '外语支持', ja: '外国語対応', ru: 'Языки', vi: 'Hỗ trợ ngoại ngữ' }, value: s('foreignerSupport') },
         ].filter((r) => r.value);
         if (rows.length === 0) return null;
-        const heading: Record<string, string> = {
-          kr: '매장 정보', en: 'Shop information', zh: '店铺信息',
-          ja: '店舗情報', ru: 'О салоне', vi: 'Thông tin cửa hàng',
-        };
+        const heading: Record<string, string> = isHotel
+          ? {
+              kr: '호텔 정보', en: 'Hotel information', zh: '酒店信息',
+              ja: 'ホテル情報', ru: 'Об отеле', vi: 'Thông tin khách sạn',
+            }
+          : {
+              kr: '매장 정보', en: 'Shop information', zh: '店铺信息',
+              ja: '店舗情報', ru: 'О салоне', vi: 'Thông tin cửa hàng',
+            };
         return (
           <>
             <Divider />
@@ -499,10 +513,11 @@ export default async function ListingDetailPage({
         const note = (typeof trNote === 'string' && trNote.trim())
           ? trNote
           : (typeof listing.details.priceNote === 'string' ? listing.details.priceNote : '');
-        const heading: Record<string, string> = {
-          kr: '가격표', en: 'Price list', zh: '价目表',
-          ja: '料金表', ru: 'Прайс-лист', vi: 'Bảng giá',
-        };
+        // 맛집은 같은 표가 메뉴판 역할을 하므로 헤딩만 갈아끼운다.
+        const heading: Record<string, string> =
+          listing.category === 'food' || listing.category === 'restaurant'
+            ? { kr: '메뉴', en: 'Menu', zh: '菜单', ja: 'メニュー', ru: 'Меню', vi: 'Thực đơn' }
+            : { kr: '가격표', en: 'Price list', zh: '价目表', ja: '料金表', ru: 'Прайс-лист', vi: 'Bảng giá' };
         return (
           <>
             <Divider />
