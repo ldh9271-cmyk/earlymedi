@@ -41,8 +41,7 @@ export function computeBilling(accounts: ReadonlyArray<AccountSnapshot>): Billin
   const byAccountType: Record<string, { count: number; mrrKrw: number }> = {};
 
   for (const a of accounts) {
-    if (!byAccountType[a.accountType]) byAccountType[a.accountType] = { count: 0, mrrKrw: 0 };
-    const bucket = byAccountType[a.accountType]!;
+    const bucket = byAccountType[a.accountType] ?? (byAccountType[a.accountType] = { count: 0, mrrKrw: 0 });
     bucket.count += 1;
 
     if (a.status === 'cancelled') {

@@ -115,19 +115,6 @@ export const ROUTE_PREVIEWS: Record<string, RoutePreview> = {
     workingLinks: AGENCY_WORKING,
     accent: 'brand',
   },
-  '/agency/visa': {
-    title: '비자 · 여행 서류',
-    description: '의료비자 (M-1·M-2·G-1) 초청장 발급, 여권 검증, 항공권 확인을 한 곳에서 처리합니다.',
-    bullets: [
-      'AI OCR 여권 자동 인식 + 유효성 검증',
-      'M-1 초청장 자동 생성 (병원 직인 e-서명)',
-      'KOIHA 등록 환자 자동 매핑',
-      '항공권 · 호텔 바우처 패키징',
-      '국가별 비자 요구사항 자동 가이드 (10개국)',
-    ],
-    workingLinks: AGENCY_WORKING,
-    accent: 'slate',
-  },
   '/agency/payments': {
     title: '결제 · 예약금',
     description: '환자 예약금, 시술비, 패키지 결제를 Stripe · Toss로 받고 환불 · 분쟁을 관리합니다.',
