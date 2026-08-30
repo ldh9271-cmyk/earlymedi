@@ -124,10 +124,10 @@ export default async function SignupPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[26px] font-extrabold tracking-tight text-tour-ink">
+        <h1 className="text-[26px] font-extrabold tracking-tight text-surface-ink">
           글로우업투어 파트너 가입
         </h1>
-        <p className="mt-1.5 text-sm leading-relaxed text-tour-mute">
+        <p className="mt-1.5 text-sm leading-relaxed text-surface-mute">
           {alreadyAuthed
             ? '기본 정보 4가지만 입력하시면 파트너 콘솔로 바로 들어갑니다.'
             : '이메일·비밀번호로 가입하거나, 로그인 화면에서 Google·매직링크를 이용할 수 있습니다.'}
@@ -148,23 +148,23 @@ export default async function SignupPage({
         </CardContent>
       </Card>
 
-      <div className="rounded-2xl border border-tour-line bg-tour-tint px-4 py-3.5">
-        <p className="text-[13px] font-bold text-tour-ink">가입 후 이렇게 진행됩니다</p>
-        <ol className="mt-2 space-y-1.5 text-xs leading-relaxed text-tour-mute">
+      <div className="rounded-2xl border border-surface-line bg-surface-tint px-4 py-3.5">
+        <p className="text-[13px] font-bold text-surface-ink">가입 후 이렇게 진행됩니다</p>
+        <ol className="mt-2 space-y-1.5 text-xs leading-relaxed text-surface-mute">
           <li>
-            <span className="font-semibold text-tour-ink">1. 상품 · 정보 등록</span> — 콘솔에서
+            <span className="font-semibold text-surface-ink">1. 상품 · 정보 등록</span> — 콘솔에서
             상품·가격·사진을 올리면 담당자 승인 후 게시됩니다.
           </li>
           <li>
-            <span className="font-semibold text-tour-ink">2. 6개 언어 자동 노출</span> — 한 번
+            <span className="font-semibold text-surface-ink">2. 6개 언어 자동 노출</span> — 한 번
             등록으로 한·영·중·일·러·베 페이지가 생성되고 AI 상담이 24시간 응대합니다.
           </li>
           <li>
-            <span className="font-semibold text-tour-ink">3. 예약 · 결제 · 정산</span> — 다국어
+            <span className="font-semibold text-surface-ink">3. 예약 · 결제 · 정산</span> — 다국어
             카드결제까지 플랫폼이 처리하고 월 1회 정산합니다.
           </li>
         </ol>
-        <p className="mt-3 border-t border-tour-line pt-2.5 text-[11px] leading-relaxed text-tour-mute">
+        <p className="mt-3 border-t border-surface-line pt-2.5 text-[11px] leading-relaxed text-surface-mute">
           가입과 입점 신청은 무료입니다. 환자 관리(CRM · 인박스 · 시술 차트 · 사후관리)를 쓰는
           의료기관·유치업체는 환자 10명까지 무료 체험 후 11명째 등록 시점에 유료 플랜 전환 안내가
           표시됩니다. 세금·은행·사업자 등록 정보는 가입 후 설정에서 추가할 수 있습니다.

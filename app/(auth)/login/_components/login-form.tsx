@@ -162,13 +162,13 @@ export function LoginForm({
 
   if (magicLinkSent) {
     return (
-      <div className="space-y-3 rounded-2xl border border-tour-200 bg-tour-50 p-4 text-sm text-tour-700">
+      <div className="space-y-3 rounded-2xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-700">
         <p className="font-medium">📩 매직링크를 보냈습니다.</p>
         <p>이메일 받은편지함에서 링크를 클릭해 로그인하세요. (스팸함도 확인)</p>
         <button
           type="button"
           onClick={() => setMagicLinkSent(false)}
-          className="text-xs text-tour-700 underline hover:text-tour-800"
+          className="text-xs text-brand-700 underline hover:text-brand-800"
         >
           다른 방법으로 로그인
         </button>
@@ -183,7 +183,7 @@ export function LoginForm({
         type="button"
         onClick={onGoogleSignIn}
         disabled={googleLoading || magicLoading || pwLoading}
-        className="inline-flex w-full items-center justify-center gap-2.5 rounded-full border border-tour-line bg-white px-4 py-3 text-sm font-semibold text-tour-ink transition hover:bg-tour-tint disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2.5 rounded-full border border-surface-line bg-white px-4 py-3 text-sm font-semibold text-surface-ink transition hover:bg-surface-tint disabled:opacity-60"
       >
         <GoogleIcon className="h-4 w-4" />
         {googleLoading ? 'Google로 이동 중…' : 'Google로 계속하기'}
@@ -265,7 +265,7 @@ export function LoginForm({
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <Button
               type="submit"
-              variant="tour"
+              variant="brand"
               className="w-full rounded-full py-5 font-bold"
               disabled={pwLoading || magicLoading || googleLoading}
             >
@@ -302,7 +302,7 @@ export function LoginForm({
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <Button
               type="submit"
-              variant="tour"
+              variant="brand"
               className="w-full rounded-full py-5 font-bold"
               disabled={magicLoading || pwLoading || googleLoading}
             >

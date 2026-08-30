@@ -109,8 +109,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Brand Indigo 600 — primary */
-    --primary: 239 84% 59%;
+    /* 글로우업투어 로즈 600 (#c2143c) — primary */
+    --primary: 346 81% 42%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96%;
@@ -127,7 +127,7 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 239 84% 59%;
+    --ring: 346 81% 42%;
 
     --radius: 0.625rem;
   }
@@ -142,7 +142,7 @@
     --popover: 222 47% 13%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 239 84% 67%;
+    --primary: 347 77% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217 33% 17%;
@@ -159,7 +159,7 @@
 
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 239 84% 67%;
+    --ring: 347 77% 50%;
   }
 }
 

@@ -15,20 +15,39 @@ const config: Config = {
     },
     extend: {
       colors: {
-        // KoreaGlowUp brand
+        // ─── 글로우업투어 브랜드 로즈 ────────────────────────────
+        // 예전에는 인디고(#4F46E5)였다. glowuptour.com 고객 포털·/biz
+        // 파트너 랜딩이 이미 로즈였기 때문에 로그인만 넘어오면 색이
+        // 바뀌어, 콘솔까지 한 브랜드로 맞춘 것.
+        //
+        // 500·600·700 은 순정 브랜드 로즈(#ff385c, 흰 글씨 대비 3.5:1)를
+        // 그대로 쓰지 않고 어둡게 잡았다. bg-brand-500 + text-white 가
+        // 9~12px 칩에 쓰이는 곳이 있어서, 인디고 시절 대비를 그대로
+        // 유지하는 값으로 고른 것 (500 4.70 / 600 6.07 / 700 7.76 —
+        // 인디고는 4.47 / 6.29 / 7.90 이었다).
+        //
+        // 순정 로즈가 필요한 곳(로고 마크, 대형 마케팅 면)은 brand-glow.
         brand: {
-          DEFAULT: '#4F46E5', // Indigo 600 — 신뢰
-          50:  '#EEF2FF',
-          100: '#E0E7FF',
-          200: '#C7D2FE',
-          300: '#A5B4FC',
-          400: '#818CF8',
-          500: '#6366F1',
-          600: '#4F46E5',
-          700: '#4338CA',
-          800: '#3730A3',
-          900: '#312E81',
-          950: '#1E1B4B',
+          DEFAULT: '#c2143c',
+          50:  '#fff1f4',
+          100: '#ffe0e6',
+          200: '#fecdd6',
+          300: '#fda4b6',
+          400: '#fb6f8d',
+          500: '#e11d48',
+          600: '#c2143c',
+          700: '#a3123a',
+          800: '#881337',
+          900: '#6d0f2c',
+          950: '#4c0519',
+          glow: '#ff385c', // 브랜드 마크 원색 — 로고·대형 면 전용
+        },
+        // 로즈와 함께 쓰는 중립값 (고객 포털·/biz 와 동일).
+        surface: {
+          ink:  '#222222', // 본문
+          mute: '#6a6a6a', // 보조 텍스트
+          line: '#ebebeb', // 보더
+          tint: '#f7f7f7', // 섹션 배경
         },
         hospitality: {
           DEFAULT: '#F59E0B', // Amber 500 — 호스피탈리티
@@ -45,47 +64,6 @@ const config: Config = {
           500: '#10B981',
           600: '#059669',
           700: '#047857',
-        },
-        // ─── 글로우업투어 (공개 브랜드) 팔레트 ────────────────────
-        // glowuptour.com 고객 포털과 /biz 파트너 랜딩이 쓰는 로즈.
-        // 지금까지 인라인 hex(#ff385c 등)로만 흩어져 있던 값을 토큰화한 것.
-        // brand(인디고)는 콘솔 내부 화면용으로 그대로 두고, 브랜드 얼굴이
-        // 되는 화면(랜딩·인증)에서만 tour 를 쓴다.
-        tour: {
-          DEFAULT: '#ff385c',
-          50:  '#fff5f7', // 히어로 틴트
-          100: '#ffe4e9',
-          200: '#fecdd3', // 소프트 보더
-          300: '#fda4b3',
-          400: '#ff6b87',
-          500: '#ff385c',
-          600: '#e8214a',
-          700: '#c81e42', // 배지 텍스트
-          800: '#a11836',
-          ink:  '#222222', // 본문
-          mute: '#6a6a6a', // 보조 텍스트
-          line: '#ebebeb', // 보더
-          tint: '#f7f7f7', // 섹션 배경
-        },
-        // ─── Korea Glow-up Challenge (Atelier) palette ──────────────
-        // 환자 포털 신규 디자인 시스템 (claude.ai design import).
-        // 따뜻한 ivory 베이스 + wine 액센트 + gold 프리미엄.
-        // 사용처: /[locale]/glowup/* 라우트 전용 — 기존 brand/hospitality/
-        // care 토큰은 그대로 두고 새 토큰만 추가 (legacy 화면 영향 X).
-        glow: {
-          ivory: '#EAE6DF',  // 메인 배경 (warm sand)
-          cream: '#F5F1EA',  // 카드 배경 (lighter ivory)
-          paper: '#FBF8F2',  // 가장 밝은 표면 (text on dark)
-          sand:  '#D8CDB9',  // 분리선·muted 배경
-          dune:  '#D6CCBC',  // 보더
-          ink:   '#1B1512',  // 본문 텍스트 (deep brown-black)
-          jet:   '#16110E',  // 폰 프레임·헤더
-          wine:  '#7C3A4B',  // 메인 CTA (deep wine)
-          gold:  '#C9A86A',  // 프리미엄 액센트
-          mist:  '#9A8E84',  // 라벨·메타
-          stone: '#8A7F73',  // 보조 텍스트
-          slate: '#5C544C',  // 본문 muted
-          umber: '#6B6258',  // 라벨 텍스트
         },
         // shadcn/ui tokens
         border: 'hsl(var(--border))',

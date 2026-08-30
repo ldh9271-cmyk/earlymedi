@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Bell, ChevronDown, LogOut, Search, Settings, UserCircle } from 'lucide-react';
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
+import { Logo } from '@/components/shared/brand/logo';
 import { ACCOUNT_TYPE_COLOR, ACCOUNT_TYPE_LABEL_KO } from '@/lib/auth/account-types';
 import type { AccountType } from '@/lib/auth/account-types';
 
@@ -19,9 +20,10 @@ export function Topbar({
   const color = ACCOUNT_TYPE_COLOR[accountType];
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/95 px-5 backdrop-blur">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground md:hidden">
-        K-Glowup AI Concierge
-      </div>
+      {/* 사이드바가 접히는 모바일에서의 브랜드 자리 */}
+      <Link href="/" aria-label="글로우업투어" className="flex items-center md:hidden">
+        <Logo size="xs" />
+      </Link>
 
       <Badge variant={color} className="hidden md:inline-flex">
         {ACCOUNT_TYPE_LABEL_KO[accountType]}
