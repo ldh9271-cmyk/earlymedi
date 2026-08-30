@@ -1,11 +1,22 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Card, CardContent } from '@/components/shared/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { LoginForm } from './_components/login-form';
 
-export const metadata = { title: '로그인' };
+// absolute — 루트 레이아웃의 '· KoreaGlowUp AI Concierge' 템플릿은
+// 콘솔 내부용이라, 브랜드 얼굴인 이 화면에서는 글로우업투어로 덮는다.
+export const metadata = { title: { absolute: '파트너 로그인 · 글로우업투어' } };
 export const dynamic = 'force-dynamic';
+
+const CUSTOMER_LOCALES: Array<[string, string]> = [
+  ['kr', '한국어'],
+  ['en', 'English'],
+  ['zh', '中文'],
+  ['ja', '日本語'],
+  ['ru', 'Русский'],
+  ['vi', 'Tiếng Việt'],
+];
 
 export default function LoginPage({
   searchParams,
@@ -30,28 +41,31 @@ export default function LoginPage({
     redirect(`/api/auth/callback?${forward.searchParams.toString()}`);
   }
 
+  const signupHref = `/signup${searchParams.next ? `?next=${encodeURIComponent(searchParams.next)}` : ''}`;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <span className="inline-block rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-brand-700">
-          의료관광 사업자 전용
-        </span>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight">사업자 로그인</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          의료기관 · 유치업체 · 파트너업체 · 프리랜서를 위한 통합 콘솔입니다.
+        <Link
+          href="/biz"
+          className="inline-flex items-center gap-1.5 rounded-full border border-tour-200 bg-tour-50 px-3 py-1 text-[11.5px] font-bold text-tour-700 transition hover:bg-tour-100"
+        >
+          글로우업투어 파트너 센터
+        </Link>
+        <h1 className="mt-3 text-[26px] font-extrabold tracking-tight text-tour-ink">
+          파트너 로그인
+        </h1>
+        <p className="mt-1.5 text-sm leading-relaxed text-tour-mute">
+          병원 · 뷰티샵 · 호텔 · 여행사 · 총판을 위한 통합 콘솔입니다.
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">시작하기</CardTitle>
-          <CardDescription>기존 사업자 계정으로 로그인하거나 새로 가입하세요.</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Card className="rounded-2xl border-tour-line shadow-none">
+        <CardContent className="pt-6">
           <Tabs defaultValue="login">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">로그인</TabsTrigger>
-              <TabsTrigger value="signup">회원가입</TabsTrigger>
+              <TabsTrigger value="signup">입점 · 가입</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login" className="pt-4">
@@ -59,54 +73,68 @@ export default function LoginPage({
             </TabsContent>
 
             <TabsContent value="signup" className="space-y-3 pt-4">
-              <div className="rounded-lg border bg-care-50 px-4 py-3 text-sm text-care-700">
-                <p className="font-semibold">🎁 무료 체험 — 환자 10명까지</p>
-                <p className="mt-1 text-xs">
-                  이메일·비밀번호로 직접 가입하거나, Google · 매직링크로 가입할 수 있습니다.
-                  11명째 환자 등록부터 유료 전환.
+              <div className="rounded-xl border border-tour-200 bg-tour-50 px-4 py-3.5">
+                <p className="text-[13px] font-bold text-tour-ink">
+                  등록 한 번으로 6개 언어 페이지에 노출됩니다
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-tour-mute">
+                  상품·가격·사진을 콘솔에 올리면 승인 후 한·영·중·일·러·베 페이지가 자동
+                  생성되고, 예약·다국어 결제·정산까지 플랫폼이 처리합니다.
                 </p>
               </div>
+
               <a
-                href={`/signup${searchParams.next ? `?next=${encodeURIComponent(searchParams.next)}` : ''}`}
-                className="block w-full rounded-md bg-brand-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-brand-700"
+                href={signupHref}
+                className="block w-full rounded-full bg-tour-500 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-tour-600"
               >
-                회원가입 페이지로 →
+                사업자 계정 만들기 →
               </a>
-              <p className="text-xs text-muted-foreground">
-                또는 Google · 매직링크로 빠른 가입:
+
+              <p className="pt-1 text-[11.5px] text-tour-mute">
+                또는 Google · 매직링크로 바로 시작하기
               </p>
               <LoginForm
                 nextPath={searchParams.next ?? '/signup'}
                 sent={searchParams.sent === '1'}
+                omitPassword
               />
+
+              <p className="border-t border-tour-line pt-3 text-[11px] leading-relaxed text-tour-mute">
+                가입과 입점 신청은 무료입니다. 환자 관리(CRM)를 사용하는 의료기관·유치업체는
+                환자 10명까지 무료 체험 후 유료 플랜으로 전환됩니다.
+              </p>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
 
-      <div className="rounded-lg border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
-        <p className="font-medium text-foreground">환자이신가요?</p>
-        <p className="mt-0.5">
-          환자 포털에서 매직링크로 안전하게 로그인하실 수 있습니다.
+      <div className="rounded-2xl border border-tour-line bg-tour-tint px-4 py-3.5">
+        <p className="text-[12.5px] font-bold text-tour-ink">고객이신가요?</p>
+        <p className="mt-0.5 text-[11.5px] text-tour-mute">
+          예약 조회·상담은 글로우업투어 고객 페이지에서 이용하실 수 있습니다.
         </p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <Link href="/kr/login" className="underline-offset-2 hover:underline">한국어</Link>
-          <span>·</span>
-          <Link href="/en/login" className="underline-offset-2 hover:underline">English</Link>
-          <span>·</span>
-          <Link href="/zh/login" className="underline-offset-2 hover:underline">中文</Link>
-          <span>·</span>
-          <Link href="/ja/login" className="underline-offset-2 hover:underline">日本語</Link>
+        <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[11.5px]">
+          {CUSTOMER_LOCALES.map(([code, label], i) => (
+            <span key={code} className="flex items-center gap-2">
+              {i > 0 ? <span className="text-tour-line">·</span> : null}
+              <Link
+                href={`/${code}/login`}
+                className="text-tour-mute underline-offset-2 transition hover:text-tour-700 hover:underline"
+              >
+                {label}
+              </Link>
+            </span>
+          ))}
         </div>
       </div>
 
-      <p className="text-center text-xs text-muted-foreground">
+      <p className="text-center text-[11px] text-tour-mute">
         가입 시{' '}
-        <Link href="/legal/terms" className="underline">
+        <Link href="/legal/terms" className="underline underline-offset-2">
           이용약관
         </Link>{' '}
         및{' '}
-        <Link href="/legal/privacy" className="underline">
+        <Link href="/legal/privacy" className="underline underline-offset-2">
           개인정보처리방침
         </Link>
         에 동의합니다.
@@ -114,4 +142,3 @@ export default function LoginPage({
     </div>
   );
 }
-

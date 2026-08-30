@@ -15,6 +15,7 @@ const buttonVariants = cva(
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
         brand: 'bg-brand-600 text-white hover:bg-brand-700',
+        tour: 'bg-tour-500 text-white hover:bg-tour-600',
         hospitality: 'bg-hospitality-500 text-white hover:bg-hospitality-600',
         care: 'bg-care-500 text-white hover:bg-care-600',
       },

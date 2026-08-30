@@ -28,9 +28,16 @@ type PasswordValues = z.infer<typeof passwordSchema>;
 export function LoginForm({
   nextPath,
   sent,
+  omitPassword = false,
 }: {
   nextPath: string;
   sent: boolean;
+  /**
+   * 가입 탭에서처럼 "Google · 매직링크로 바로 시작" 용도로 쓸 때 true.
+   * 비밀번호 탭은 signInWithPassword — 기존 계정 로그인이라 가입 문맥에
+   * 두면 버튼이 "로그인"으로 떠서 사용자가 헷갈린다. 그래서 숨긴다.
+   */
+  omitPassword?: boolean;
 }): JSX.Element {
   const router = useRouter();
   const [magicLinkSent, setMagicLinkSent] = useState(sent);
@@ -155,13 +162,13 @@ export function LoginForm({
 
   if (magicLinkSent) {
     return (
-      <div className="space-y-3 rounded-lg border bg-care-50 p-4 text-sm text-care-700">
+      <div className="space-y-3 rounded-2xl border border-tour-200 bg-tour-50 p-4 text-sm text-tour-700">
         <p className="font-medium">📩 매직링크를 보냈습니다.</p>
         <p>이메일 받은편지함에서 링크를 클릭해 로그인하세요. (스팸함도 확인)</p>
         <button
           type="button"
           onClick={() => setMagicLinkSent(false)}
-          className="text-xs text-care-700 underline hover:text-care-900"
+          className="text-xs text-tour-700 underline hover:text-tour-800"
         >
           다른 방법으로 로그인
         </button>
@@ -176,7 +183,7 @@ export function LoginForm({
         type="button"
         onClick={onGoogleSignIn}
         disabled={googleLoading || magicLoading || pwLoading}
-        className="inline-flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2.5 rounded-full border border-tour-line bg-white px-4 py-3 text-sm font-semibold text-tour-ink transition hover:bg-tour-tint disabled:opacity-60"
       >
         <GoogleIcon className="h-4 w-4" />
         {googleLoading ? 'Google로 이동 중…' : 'Google로 계속하기'}
@@ -194,14 +201,17 @@ export function LoginForm({
       </div>
 
       {/* Email/password vs Magic link */}
-      <Tabs defaultValue="password">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue={omitPassword ? 'magic' : 'password'}>
+        <TabsList className={omitPassword ? 'hidden' : 'grid w-full grid-cols-2'}>
           <TabsTrigger value="password">비밀번호</TabsTrigger>
           <TabsTrigger value="magic">매직링크</TabsTrigger>
         </TabsList>
 
         {/* Password tab */}
-        <TabsContent value="password" className="space-y-3 pt-3">
+        <TabsContent
+          value="password"
+          className={omitPassword ? 'hidden' : 'space-y-3 pt-3'}
+        >
           <form onSubmit={pwForm.handleSubmit(onPasswordSubmit)} className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="pw-email">이메일</Label>
@@ -255,8 +265,8 @@ export function LoginForm({
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <Button
               type="submit"
-              variant="brand"
-              className="w-full"
+              variant="tour"
+              className="w-full rounded-full py-5 font-bold"
               disabled={pwLoading || magicLoading || googleLoading}
             >
               {pwLoading ? '로그인 중…' : '로그인'}
@@ -292,8 +302,8 @@ export function LoginForm({
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <Button
               type="submit"
-              variant="brand"
-              className="w-full"
+              variant="tour"
+              className="w-full rounded-full py-5 font-bold"
               disabled={magicLoading || pwLoading || googleLoading}
             >
               {magicLoading ? '전송 중…' : '매직링크 받기'}

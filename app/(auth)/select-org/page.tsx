@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 import { Building2 } from 'lucide-react';
 import { SwitchOrgForm } from './_components/switch-org-form';
 
-export const metadata = { title: '활성 조직 선택' };
+export const metadata = { title: { absolute: '조직 선택 · 글로우업투어' } };
 
 export default async function SelectOrgPage({
   searchParams,
@@ -98,7 +98,7 @@ export default async function SelectOrgPage({
         description={
           isMaster
             ? '마스터 모드입니다. 조직이 한 곳이라도 생성되면 모두 여기에 표시됩니다.'
-            : '간편 가입(30초)으로 첫 조직을 만드세요. 환자 10명까지 무료 체험.'
+            : '간편 가입(30초)으로 첫 사업자 조직을 만드세요.'
         }
         action={
           isMaster ? undefined : (
