@@ -1,5 +1,6 @@
-import { Sidebar, type SidebarSection } from './sidebar';
+import { Sidebar, SidebarNav, type SidebarSection } from './sidebar';
 import { Topbar } from './topbar';
+import { MobileNavDrawer } from './mobile-nav';
 import { MasterBanner } from './master-banner';
 import { TrialBanner } from '@/components/shared/trial-banner';
 import type { AccountType } from '@/lib/auth/account-types';
@@ -38,7 +39,21 @@ export function AppShell({
         currentPath={currentPath}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar accountType={accountType} userEmail={userEmail} userName={userName} />
+        <Topbar
+          accountType={accountType}
+          userEmail={userEmail}
+          userName={userName}
+          mobileNav={
+            <MobileNavDrawer>
+              <SidebarNav
+                accountType={accountType}
+                orgName={orgName}
+                sections={sections}
+                currentPath={currentPath}
+              />
+            </MobileNavDrawer>
+          }
+        />
         {/* Master banner sits ABOVE the trial banner so the cross-tenant
             warning is the first thing the operator sees. */}
         {isMaster ? <MasterBanner orgName={orgName} accountType={accountType} /> : null}

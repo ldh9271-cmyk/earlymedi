@@ -55,6 +55,34 @@ export function Sidebar({
       <div className="flex h-16 items-center gap-3 px-5">
         <Logo size="sm" />
       </div>
+      <SidebarNav
+        accountType={accountType}
+        orgName={orgName}
+        sections={sections}
+        currentPath={currentPath}
+      />
+    </aside>
+  );
+}
+
+/**
+ * 조직 헤더 + 섹션별 메뉴 목록. 데스크톱 <Sidebar> 와 모바일 드로어
+ * (<MobileNavDrawer> 의 children) 가 같은 서버 렌더 콘텐츠를 공유한다 —
+ * 모바일이라고 메뉴가 빠지는 일이 없도록 한 곳에서만 정의한다.
+ */
+export function SidebarNav({
+  accountType,
+  orgName,
+  sections,
+  currentPath,
+}: {
+  accountType: AccountType;
+  orgName: string;
+  sections: SidebarSection[];
+  currentPath?: string;
+}): JSX.Element {
+  return (
+    <>
       <div className="border-y px-5 py-3">
         <div className="text-xs uppercase tracking-wider text-muted-foreground">
           {ACCOUNT_TYPE_LABEL_KO[accountType]}
@@ -97,6 +125,6 @@ export function Sidebar({
           </div>
         ))}
       </nav>
-    </aside>
+    </>
   );
 }

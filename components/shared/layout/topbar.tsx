@@ -12,15 +12,20 @@ export function Topbar({
   accountType,
   userEmail,
   userName,
+  mobileNav,
 }: {
   accountType: AccountType;
   userEmail: string;
   userName?: string;
+  /** 모바일 햄버거+드로어 (<MobileNavDrawer>). 서버(AppShell)에서
+   *  렌더돼 ReactNode 로 내려온다 — md 이상에서는 스스로 숨는다. */
+  mobileNav?: React.ReactNode;
 }): JSX.Element {
   const color = ACCOUNT_TYPE_COLOR[accountType];
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/95 px-5 backdrop-blur">
-      {/* 사이드바가 접히는 모바일에서의 브랜드 자리 */}
+      {/* 모바일: 햄버거(드로어) + 브랜드 — 사이드바가 접히는 화면의 진입점 */}
+      {mobileNav}
       <Link href="/" aria-label="글로우업투어" className="flex items-center md:hidden">
         <Logo size="xs" />
       </Link>

@@ -200,7 +200,7 @@ export default async function PublicLandingPage({
       <MainHeader locale={locale} activeKey="all" t={dict.header} />
 
       <main className="m-main" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
-        <Hero t={dict.landing} />
+        <Hero locale={params.locale} t={dict.landing} />
         {rows.map((row) =>
           row.cards.length > 0 ? (
             <CategoryRow
@@ -458,8 +458,9 @@ function FinalCta({ locale, t }: { locale: PublicLocale; t: Dictionary['landing'
 }
 
 // ─── 1. Hero ───────────────────────────────────────────────────────
-// CTA jumps to in-page #programs anchor — no locale needed.
-function Hero({ t }: { t: Dictionary['landing'] }): JSX.Element {
+// 배너 카피가 "4박 5일" 상품 소개이므로 CTA 를 해당 상품 상세로
+// 직결한다 (예전에는 #programs 인페이지 앵커였다 — founder 2026-08-30).
+function Hero({ locale, t }: { locale: string; t: Dictionary['landing'] }): JSX.Element {
   return (
     <section className="m-hero-wrap" style={{ padding: '40px 0 8px' }}>
       <div
@@ -523,7 +524,7 @@ function Hero({ t }: { t: Dictionary['landing'] }): JSX.Element {
             {t.heroSubtitle}
           </p>
           <Link
-            href={`#programs`}
+            href={`/${locale}/listings/k-beauty-tour-4n5d`}
             className="m-hero-cta"
             style={{
               display: 'inline-block', marginTop: 24,
