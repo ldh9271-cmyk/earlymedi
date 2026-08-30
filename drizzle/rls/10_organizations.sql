@@ -85,6 +85,30 @@ CREATE POLICY affiliations_write ON public.freelancer_affiliations
   )
   WITH CHECK (agency_org_id = public.current_org_id());
 
+-- 계약 상대·RFQ 발신처의 조직명 읽기 — 병원 콘솔의 계약/RFQ 화면이
+-- 상대 에이전시 이름을 표시할 수 있어야 한다. self-read 만으로는
+-- partner_contracts 행은 보여도 상대 org 이름을 못 읽는다.
+DROP POLICY IF EXISTS org_counterparty_read ON public.organizations;
+CREATE POLICY org_counterparty_read ON public.organizations
+  FOR SELECT
+  USING (
+    public.is_active_member(public.current_org_id())
+    AND (
+      EXISTS (
+        SELECT 1 FROM public.partner_contracts pc
+        WHERE (pc.agency_org_id = organizations.id AND pc.partner_org_id = public.current_org_id())
+           OR (pc.partner_org_id = organizations.id AND pc.agency_org_id = public.current_org_id())
+      )
+      OR EXISTS (
+        SELECT 1
+        FROM public.case_quotes cq
+        JOIN public.hospitals h ON h.id = cq.hospital_id
+        WHERE cq.organization_id = organizations.id
+          AND h.linked_org_id = public.current_org_id()
+      )
+    )
+  );
+
 -- ── partner_contracts ───────────────────────────────────────────────
 ALTER TABLE public.partner_contracts ENABLE ROW LEVEL SECURITY;
 
