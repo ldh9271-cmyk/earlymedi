@@ -257,14 +257,14 @@ export const SEOUL_TRAINING_PRODUCTS: ReadonlyArray<TrainingPackageSeed> = [
   // ── 병원 연수 라인 축소판 3종 (founder 2026-08-30) ────────────────
   // 6박 7일에서 파생: 공통 골격(OT → 강남 세미나·수료증 → 대형
   // 상급종합병원 견학)에 관광·참관 일정을 박수에 맞춰 가감한다.
-  // 참가비는 6박 7일(620만)만 확정 — 나머지는 "문의"로 노출.
+  // 참가비 founder 2026-08-30 확정: 3박4일 350만 · 4박5일 440만 · 5박6일 540만 · 6박7일 620만.
   {
     title: '병원 연수 3박 4일 — 강남 세미나·수료증 + 대형병원 견학',
     slug: 'k-medical-training-3n4d',
     description:
       '해외 의료인·의료기관 관계자 단체를 위한 3박 4일 병원 연수 기본 과정입니다. 강남 성형외과·피부과 세미나를 이수하고 주최 기관 명의의 수료증을 받은 뒤, 대형 상급종합병원을 견학합니다. 견학 후 오후에는 경복궁·북촌 반나절 산책, 출국 전 명동 쇼핑을 배치했습니다. 통역(영·중·일)·전용 차량·호텔 3박 포함, 10인 이상 단체 기준.',
     locationLabel: '강남 · 명동',
-    priceWon: 0, // 참가비 미정 — 확정 전까지 "문의"
+    priceWon: 3_500_000,
     durationDays: 4,
     promoLabel: '세미나 · 수료증',
     itinerary: [
@@ -323,7 +323,7 @@ export const SEOUL_TRAINING_PRODUCTS: ReadonlyArray<TrainingPackageSeed> = [
     description:
       '3박 4일 과정에 서울 관광 하루와 명동 피부과 참관을 더한 4박 5일 연수 패키지입니다. 강남 성형외과·피부과 세미나(수료증 발급)와 대형 상급종합병원 견학을 마친 뒤, 경복궁·북촌·인사동 관광 하루를 보내고 출국 전 명동 피부과의 외국인 응대 현장을 참관합니다. 통역(영·중·일)·전용 차량·호텔 4박 포함, 10인 이상 단체 기준.',
     locationLabel: '강남 · 명동',
-    priceWon: 0, // 참가비 미정 — 확정 전까지 "문의"
+    priceWon: 4_400_000,
     durationDays: 5,
     promoLabel: '수료증 · 병원 견학',
     itinerary: [
@@ -392,7 +392,7 @@ export const SEOUL_TRAINING_PRODUCTS: ReadonlyArray<TrainingPackageSeed> = [
     description:
       '4박 5일 과정에 하루를 더해 참관과 관광을 여유 있게 배치한 5박 6일 연수 패키지입니다. 강남 성형외과·피부과 세미나(수료증 발급), 대형 상급종합병원 견학, 경복궁·북촌 관광에 이어 닷새째에 명동 피부과 참관과 쇼핑, 한식 파인다이닝 일정을 소화하고 마지막 날 여유 있게 출국합니다. 통역(영·중·일)·전용 차량·호텔 5박 포함, 10인 이상 단체 기준.',
     locationLabel: '강남 · 명동',
-    priceWon: 0, // 참가비 미정 — 확정 전까지 "문의"
+    priceWon: 5_400_000,
     durationDays: 6,
     promoLabel: '병원 견학 · 서울 관광',
     itinerary: [
