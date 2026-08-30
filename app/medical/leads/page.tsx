@@ -46,6 +46,18 @@ function won(n: number): string {
   return `₩${n.toLocaleString('ko-KR')}`;
 }
 
+/**
+ * 국내/해외 판별 — 과금 트랙이 갈린다 (founder 2026-08-31 모델):
+ *   국내 문의 → 리드 마켓에서 건당 구매
+ *   해외 문의 → 판매하지 않는다. 컨시어지가 케이스로 상담하고,
+ *              성사(최종 결제) 시 병원 수수료를 정산 (계약 요율 10~30%)
+ * country_code 가 있으면 국가 기준, 없으면 문의 언어(ko) 기준.
+ */
+function isDomesticLead(countryCode: string | null, locale: string | null): boolean {
+  if (countryCode && countryCode !== '—') return countryCode === 'KR' || countryCode === '한국';
+  return locale === 'ko' || locale === 'kr';
+}
+
 const TOPUP_STATUS_LABEL: Record<string, string> = {
   pending: '입금 확인 대기',
   confirmed: '충전 완료',
@@ -141,15 +153,21 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
     };
   });
 
+  // 국내만 판매 — 해외 문의는 리드 마켓 대상이 아니다 (성사 수수료 트랙).
+  const allLeads = leads;
+  const domesticLeads = allLeads.filter((l) => isDomesticLead(l.countryCode, l.locale));
+  const overseasCount = allLeads.length - domesticLeads.length;
+
   return (
     <div className="space-y-6">
       <div>
         <Badge variant="brand" className="mb-2">🎯 리드 마켓</Badge>
         <h1 className="text-2xl font-bold tracking-tight">리드 마켓 — 환자 문의 DB</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          glowuptour.com 상품 문의로 들어온 환자 리드입니다. 관심 분야별{' '}
-          <strong className="text-foreground">건당 ₩30,000~60,000</strong> 에 연락처를 열람할 수
-          있고, 한 번 연 리드는 무료로 다시 볼 수 있습니다.
+          glowuptour.com 문의 중 <strong className="text-foreground">국내 환자 리드</strong>를 관심
+          분야별 <strong className="text-foreground">건당 ₩30,000~60,000</strong> 에 열람합니다. 한 번
+          연 리드는 무료로 다시 볼 수 있습니다. 해외 환자 문의는 판매하지 않습니다 — 컨시어지가
+          상담을 진행하고, 시술이 성사되면 최종 결제액에 대한 수수료(계약 요율 10~30%)만 정산됩니다.
         </p>
       </div>
 
@@ -222,17 +240,30 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
         </CardContent>
       </Card>
 
-      {/* 리드 목록 */}
+      {/* 해외 문의 안내 — 판매 대상 아님, 성사 수수료 트랙 */}
+      {overseasCount > 0 ? (
+        <Card className="border-brand-200 bg-brand-50">
+          <CardContent className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5">
+            <p className="text-xs text-brand-800">
+              🌏 해외 환자 문의 <strong>{overseasCount}건</strong>은 글로우업투어 컨시어지가 상담
+              중입니다 — 리드 구매 없이, 우리 병원으로 성사되면 RFQ·케이스로 연결되고 최종
+              결제액의 수수료(계약 요율 10~30%)만 정산됩니다.
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* 리드 목록 (국내) */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold">문의 리드 {leads.length}건</h2>
-        {leads.length === 0 ? (
+        <h2 className="text-sm font-bold">국내 문의 리드 {domesticLeads.length}건</h2>
+        {domesticLeads.length === 0 ? (
           <Card>
             <CardContent className="p-10 text-center text-sm text-muted-foreground">
-              아직 판매 가능한 리드가 없습니다 — 환자 문의가 들어오면 여기에 표시됩니다.
+              아직 판매 가능한 국내 리드가 없습니다 — 국내 환자 문의가 들어오면 여기에 표시됩니다.
             </CardContent>
           </Card>
         ) : (
-          leads.map((l) => (
+          domesticLeads.map((l) => (
             <Card key={l.id} className={l.unlocked ? 'border-care-300' : ''}>
               <CardContent className="p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">

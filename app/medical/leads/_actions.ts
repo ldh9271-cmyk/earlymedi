@@ -89,11 +89,27 @@ export async function unlockLeadAction(input: {
 
   // 리드 존재 + 관심 분야 → 가격 산정 (첫 인바운드 메시지 metadata)
   const [conv] = await db
-    .select({ id: conversations.id })
+    .select({
+      id: conversations.id,
+      countryCode: conversations.contactCountryCode,
+      locale: conversations.contactLocale,
+    })
     .from(conversations)
     .where(eq(conversations.id, conversationId))
     .limit(1);
   if (!conv) return { ok: false, error: '리드를 찾을 수 없습니다' };
+
+  // 국내 리드만 판매 — 해외 문의는 리드 마켓 대상이 아니다 (성사 수수료
+  // 트랙). UI 필터와 별개로 서버에서도 반드시 막는다.
+  const isDomestic = conv.countryCode && conv.countryCode !== '—'
+    ? conv.countryCode === 'KR' || conv.countryCode === '한국'
+    : conv.locale === 'ko' || conv.locale === 'kr';
+  if (!isDomestic) {
+    return {
+      ok: false,
+      error: '해외 환자 문의는 판매 대상이 아닙니다 — 성사 시 계약 요율(10~30%) 수수료로 정산됩니다.',
+    };
+  }
 
   const inbound = await db
     .select({ metadata: messages.metadata })

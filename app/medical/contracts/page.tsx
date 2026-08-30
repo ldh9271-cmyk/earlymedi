@@ -85,6 +85,16 @@ export default async function MedicalContractsPage(): Promise<JSX.Element> {
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-0 text-sm">
                   <div>
+                    <span className="text-xs text-muted-foreground">해외 성사 수수료율 </span>
+                    <span className="font-medium">
+                      {(() => {
+                        const pct = (r.referralRatePolicyJson as { commissionPct?: number } | null)
+                          ?.commissionPct;
+                        return typeof pct === 'number' ? `${pct}%` : '협의 중 (10~30%)';
+                      })()}
+                    </span>
+                  </div>
+                  <div>
                     <span className="text-xs text-muted-foreground">에이전시 서명 </span>
                     <span className="font-medium">{r.agencySignedAt ? fmt(r.agencySignedAt) : '대기'}</span>
                   </div>

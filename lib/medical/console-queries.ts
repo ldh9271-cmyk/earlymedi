@@ -134,6 +134,8 @@ export async function listHospitalCharts(orgId: string) {
     .select({
       id: treatmentCharts.id,
       status: treatmentCharts.status,
+      /** 케이스를 소유한 유치업체 org — 계약 수수료율 매칭에 쓴다. */
+      agencyOrgId: treatmentCharts.organizationId,
       treatmentDate: treatmentCharts.treatmentDate,
       doctorName: treatmentCharts.doctorName,
       grandTotalKrw: treatmentCharts.grandTotalKrw,
@@ -178,7 +180,10 @@ export async function listContracts(orgId: string) {
   return db
     .select({
       id: partnerContracts.id,
+      agencyOrgId: partnerContracts.agencyOrgId,
       agencyName: organizations.name,
+      /** { commissionPct?: number } — 해외 성사 수수료율 (10~30). */
+      referralRatePolicyJson: partnerContracts.referralRatePolicyJson,
       isActive: partnerContracts.isActive,
       agencySignedAt: partnerContracts.agencySignedAt,
       partnerSignedAt: partnerContracts.partnerSignedAt,

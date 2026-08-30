@@ -45,7 +45,8 @@ export default async function MedicalRfqsPage(): Promise<JSX.Element> {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">RFQ 인박스</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          유치업체에서 도착한 견적 요청에 금액·조건을 회신합니다. 회신한 견적은 에이전시의
+          해외 환자 케이스의 견적 요청입니다 — 수신·회신은 무료이며, 시술이 성사되어 최종
+          결제가 확정될 때 계약 요율(10~30%)의 수수료만 정산됩니다. 회신한 견적은 에이전시
           비교 화면에 올라가고, 선택 결과가 이 목록에 표시됩니다.
         </p>
       </div>
