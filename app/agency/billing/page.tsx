@@ -98,10 +98,16 @@ export default async function AgencyBillingPage(): Promise<JSX.Element> {
   }
 
   const statusMeta = STATUS_META[account.status] ?? STATUS_META.trial!;
-  const trialPct = Math.min(
-    100,
-    Math.round((account.trialUsesCount / Math.max(account.trialUsesLimit, 1)) * 100),
-  );
+  // 무료 체험은 기간(1개월) 기준. 남은 일수와 경과율을 계산한다.
+  const trialEnd = account.trialEndsAt ? new Date(account.trialEndsAt) : null;
+  const daysLeft = trialEnd
+    ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+    : null;
+  const trialTotalDays = Math.max(account.trialDays, 1);
+  const trialPct =
+    daysLeft === null
+      ? 0
+      : Math.min(100, Math.max(0, Math.round(((trialTotalDays - daysLeft) / trialTotalDays) * 100)));
 
   return (
     <div className="space-y-6">
@@ -151,30 +157,32 @@ export default async function AgencyBillingPage(): Promise<JSX.Element> {
         </CardContent>
       </Card>
 
-      {/* 무료 체험 사용량 */}
-      {account.status === 'trial' ? (
+      {/* 무료 체험 기간 */}
+      {account.status === 'trial' && trialEnd && daysLeft !== null ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">무료 체험 사용량</CardTitle>
+            <CardTitle className="text-base">무료 체험 기간</CardTitle>
             <CardDescription className="text-xs">
-              고객(환자) 등록 {account.trialUsesLimit}명까지 무료 — 한도 도달 시 신규 등록에 유료
-              전환이 필요합니다. 사용량은 등록 시점에 차감되며 삭제해도 되돌아가지 않습니다.
+              가입일부터 {account.trialDays}일간 전체 기능을 무료로 이용합니다 — 기간이 끝나면 신규
+              환자 등록에 유료 전환이 필요합니다. 기간 중 등록한 환자 데이터는 전환 후에도 그대로
+              유지됩니다.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
               <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted/40">
                 <div
-                  className={`h-full rounded-full ${trialPct >= 80 ? 'bg-amber-500' : 'bg-brand-500'}`}
+                  className={`h-full rounded-full ${daysLeft <= 7 ? 'bg-amber-500' : 'bg-brand-500'}`}
                   style={{ width: `${Math.max(trialPct, 2)}%` }}
                 />
               </div>
               <div className="text-sm font-semibold">
-                {account.trialUsesCount} / {account.trialUsesLimit}명
+                {daysLeft > 0 ? `${daysLeft}일 남음` : '종료됨'}
               </div>
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              남은 무료 등록: {Math.max(0, account.trialUsesLimit - account.trialUsesCount)}명
+              체험 종료 {formatLocal(trialEnd, 'Asia/Seoul', 'yyyy-MM-dd')} · 기간 중 등록한 환자{' '}
+              {account.trialUsesCount}명
             </p>
           </CardContent>
         </Card>

@@ -53,40 +53,47 @@ export default async function UpgradePage(): Promise<JSX.Element> {
     <div className="space-y-6">
       <div>
         <Badge variant="hospitality" className="mb-2">유료 플랜으로 전환</Badge>
-        <h1 className="text-2xl font-bold tracking-tight">KoreaGlowUp 무료 한도 도달</h1>
+        <h1 className="text-2xl font-bold tracking-tight">1개월 무료 체험이 끝났습니다</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {activeOrg ? (
             <>
-              <strong>{activeOrg.name}</strong> ({ACCOUNT_TYPE_LABEL_KO[activeOrg.accountType]}) 의 무료 환자
-              등록 10명 한도를 사용했습니다. 11명째부터는 유료 플랜이 필요합니다.
+              <strong>{activeOrg.name}</strong> ({ACCOUNT_TYPE_LABEL_KO[activeOrg.accountType]}) 의 1개월
+              무료 체험 기간이 종료되었습니다. 계속 이용하시려면 유료 플랜으로 전환해 주세요.
             </>
           ) : (
-            '무료 체험 한도에 도달하셨습니다. 유료 플랜으로 전환해 주세요.'
+            '1개월 무료 체험 기간이 종료되었습니다. 유료 플랜으로 전환해 주세요.'
           )}
         </p>
       </div>
 
-      {status ? (
+      {status && status.endsAt ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">현재 사용량</CardTitle>
+            <CardTitle className="text-base">체험 현황</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-end justify-between">
+            <div className="flex items-end justify-between gap-4">
               <div>
                 <div className="text-3xl font-bold tracking-tight">
-                  {status.used} <span className="text-base font-normal text-muted-foreground">/ {status.limit}명</span>
+                  {status.blocked ? (
+                    '종료됨'
+                  ) : (
+                    <>
+                      {status.daysRemaining}
+                      <span className="text-base font-normal text-muted-foreground"> 일 남음</span>
+                    </>
+                  )}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {status.blocked ? '추가 환자 등록이 차단되었습니다.' : `${status.remaining}명 더 등록 가능`}
+                  체험 종료일 {status.endsAt.toISOString().slice(0, 10)}
+                  {status.blocked ? ' · 신규 환자 등록이 차단되었습니다.' : ''}
                 </p>
               </div>
-              <div className="h-2 w-40 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full bg-hospitality-500 transition-all"
-                  style={{ width: `${Math.min(100, (status.used / status.limit) * 100)}%` }}
-                />
-              </div>
+              <p className="text-right text-xs text-muted-foreground">
+                체험 기간 중 등록
+                <br />
+                <span className="text-sm font-semibold text-foreground">{status.used}명</span>
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -95,13 +102,13 @@ export default async function UpgradePage(): Promise<JSX.Element> {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">전체 기능 무제한 사용</CardTitle>
-          <CardDescription>유료 전환 시 무제한 환자 등록 · 모든 AI 기능 · 사후관리 알림 · 전체 정산 기능</CardDescription>
+          <CardDescription>유료 전환 시 기간 제한 없이 환자 등록 · 모든 AI 기능 · 사후관리 알림 · 전체 정산 기능</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <ul className="space-y-2 text-sm">
             <li className="flex items-start gap-2">
               <span className="mt-0.5 text-care-600">✓</span>
-              <span>환자 등록 <strong>무제한</strong> (현재 10명 한도 해제)</span>
+              <span>환자 등록 <strong>무제한</strong> (체험 기간 제한 해제)</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-0.5 text-care-600">✓</span>

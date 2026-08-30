@@ -67,9 +67,8 @@ export async function POST(request: Request): Promise<Response> {
       return NextResponse.json(
         {
           error: 'paywall',
-          message: `무료 환자 ${err.limit}명 한도를 사용했습니다. 유료 플랜으로 전환해 주세요.`,
-          used: err.used,
-          limit: err.limit,
+          message: '1개월 무료 체험이 종료되었습니다. 유료 플랜으로 전환해 주세요.',
+          trialEndedAt: err.endedAt.toISOString(),
           upgradeUrl: '/upgrade',
         },
         { status: 402 },

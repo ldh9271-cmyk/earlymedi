@@ -18,7 +18,7 @@ export const BILLING_PLAN_SEEDS: NewBillingPlan[] = [
     monthlyFeeKrw: 99_000,
     annualFeeKrw: 0,
     prepaidChargeMinKrw: 0,
-    trialDays: 14,
+    trialDays: 30,
     settlementFeeBp: 150, // 1.50% of GMV
     seatLimit: 3,
     cycle: 'monthly',
@@ -34,7 +34,7 @@ export const BILLING_PLAN_SEEDS: NewBillingPlan[] = [
     monthlyFeeKrw: 299_000,
     annualFeeKrw: 0,
     prepaidChargeMinKrw: 0,
-    trialDays: 14,
+    trialDays: 30,
     settlementFeeBp: 100, // 1.00%
     seatLimit: 10,
     cycle: 'monthly',
@@ -58,7 +58,7 @@ export const BILLING_PLAN_SEEDS: NewBillingPlan[] = [
     monthlyFeeKrw: 699_000,
     annualFeeKrw: 0,
     prepaidChargeMinKrw: 0,
-    trialDays: 0,
+    trialDays: 30,
     settlementFeeBp: 70, // 0.70%
     seatLimit: null, // unlimited
     cycle: 'monthly',
@@ -113,7 +113,7 @@ export const BILLING_PLAN_SEEDS: NewBillingPlan[] = [
     monthlyFeeKrw: 0,
     annualFeeKrw: 6_000_000,
     prepaidChargeMinKrw: 0,
-    trialDays: 0,
+    trialDays: 30,
     settlementFeeBp: 30, // 0.30%
     seatLimit: null,
     cycle: 'annual',
@@ -156,7 +156,7 @@ export const BILLING_PLAN_SEEDS: NewBillingPlan[] = [
     monthlyFeeKrw: 49_000,
     annualFeeKrw: 0,
     prepaidChargeMinKrw: 0,
-    trialDays: 0,
+    trialDays: 30,
     settlementFeeBp: 150, // 1.50%
     seatLimit: 5,
     cycle: 'monthly',

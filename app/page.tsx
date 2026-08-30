@@ -117,7 +117,7 @@ function Hero(): JSX.Element {
           </div>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] text-muted-foreground">
             <span className="inline-flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3 text-care-600" /> 신용카드 없이 14일 무료
+              <CheckCircle2 className="h-3 w-3 text-care-600" /> 신용카드 없이 1개월 무료
             </span>
             <span className="inline-flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3 text-care-600" /> 의료법 27조의2 자동 준수
@@ -411,7 +411,7 @@ function PricingBand(): JSX.Element {
           lead="유치업체는 3-tier 구독 · 의료기관은 충전식 · 비의료는 마켓플레이스 수수료 · 프리랜서는 무료."
         />
         <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <PriceCard color="brand" name="유치업체" sub="Starter / Growth / Pro" price="₩30K~200K / 월" extra="14일 무료 체험" />
+          <PriceCard color="brand" name="유치업체" sub="Starter / Growth / Pro" price="₩30K~200K / 월" extra="1개월 무료 체험" />
           <PriceCard color="care" name="의료기관" sub="Pay-as-you-go / Committed" price="₩500K부터 충전" extra="등록비 ₩300K" />
           <PriceCard color="slate" name="파트너업체" sub="Listing / Active" price="₩50K + GMV 3% / 1.5%" extra="가입비 ₩50K" />
           <PriceCard color="hospitality" name="프리랜서" sub="Free" price="무료" extra="Agency 좌석에 포함" />
@@ -513,17 +513,17 @@ function FinalCta(): JSX.Element {
     <section className="border-b">
       <div className="mx-auto max-w-3xl px-6 py-20 text-center md:py-28">
         <h2 className="text-balance text-3xl font-bold tracking-tight md:text-5xl">
-          14일 무료. 신용카드 없이 시작.
+          1개월 무료. 신용카드 없이 시작.
         </h2>
         <p className="mt-3 text-balance text-sm text-muted-foreground md:text-base">
-          이메일·구글로 30초 가입 → 환자 10명까지 무료. 11명째부터 유료 전환.
+          이메일·구글로 30초 가입 → 1개월간 전체 기능 무료. 이후 유료 전환.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/signup"
             className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-6 text-sm font-semibold text-background transition hover:bg-foreground/90"
           >
-            무료로 10명 시작 <ArrowRight className="h-4 w-4" />
+            1개월 무료로 시작 <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="/login"

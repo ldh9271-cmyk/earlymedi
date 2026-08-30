@@ -101,7 +101,7 @@ export default function LoginPage({
 
               <p className="border-t border-surface-line pt-3 text-[11px] leading-relaxed text-surface-mute">
                 가입과 입점 신청은 무료입니다. 환자 관리(CRM)를 사용하는 의료기관·유치업체는
-                환자 10명까지 무료 체험 후 유료 플랜으로 전환됩니다.
+                가입 후 1개월간 무료로 이용하고, 이후 유료 플랜으로 전환됩니다.
               </p>
             </TabsContent>
           </Tabs>

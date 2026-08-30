@@ -166,8 +166,8 @@ export default async function SignupPage({
         </ol>
         <p className="mt-3 border-t border-surface-line pt-2.5 text-[11px] leading-relaxed text-surface-mute">
           가입과 입점 신청은 무료입니다. 환자 관리(CRM · 인박스 · 시술 차트 · 사후관리)를 쓰는
-          의료기관·유치업체는 환자 10명까지 무료 체험 후 11명째 등록 시점에 유료 플랜 전환 안내가
-          표시됩니다. 세금·은행·사업자 등록 정보는 가입 후 설정에서 추가할 수 있습니다.
+          의료기관·유치업체는 가입일부터 1개월간 무료로 이용하고, 기간이 끝나면 유료 플랜 전환
+          안내가 표시됩니다. 세금·은행·사업자 등록 정보는 가입 후 설정에서 추가할 수 있습니다.
         </p>
       </div>
     </div>

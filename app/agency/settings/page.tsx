@@ -47,7 +47,7 @@ export default async function AgencySettingsPage(): Promise<JSX.Element> {
       />
 
       <SettingsPromoCard
-        title="14일 무료 체험이 시작되었습니다"
+        title="1개월 무료 체험이 시작되었습니다"
         body="체험 종료 시 자동으로 Growth 플랜으로 전환됩니다. 만료 7·3·1일 전 알림이 발송됩니다."
         variant="brand"
         cta={
@@ -133,7 +133,7 @@ export default async function AgencySettingsPage(): Promise<JSX.Element> {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-base font-semibold">Agency Growth</span>
                 <Badge variant="care">trialing</Badge>
-                <span className="text-xs text-muted-foreground">14일 무료 체험 · D-9</span>
+                <span className="text-xs text-muted-foreground">1개월 무료 체험 · D-21</span>
               </div>
             </SettingsRow>
             <SettingsRow label="월 구독료">

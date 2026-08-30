@@ -4,40 +4,56 @@ import { db } from '@/lib/db/client';
 import { billingAccounts } from '@/drizzle/schema/billing';
 
 /**
- * Sentinel thrown when an organization on a trial plan has used up its free
- * quota and tries to register one more billable record. The route/server
- * action that catches this should redirect to /upgrade (or return HTTP 402).
+ * 무료 체험 게이트 — 기간(1개월) 기준.
+ *
+ * 예전에는 "환자 10명까지 무료"(trial_uses_count >= trial_uses_limit)로
+ * 막았다. 지금은 가입 후 30일이 지나면 막는다. 환자 등록 수는 계속
+ * 세지만(빌링 화면 표시용) 더 이상 차단 기준이 아니다.
+ *
+ * trial_ends_at 이 NULL 이면 만료가 없다 — 프리랜서·파트너 등록처럼
+ * 애초에 무료인 플랜이 여기 해당한다. 절대 차단하지 않는다.
+ */
+
+/**
+ * Sentinel thrown when an organization's free trial period has ended and it
+ * tries to register one more billable record. The route/server action that
+ * catches this should redirect to /upgrade (or return HTTP 402).
  */
 export class PaywallError extends Error {
   readonly code = 'paywall';
   constructor(
     public readonly organizationId: string,
-    public readonly used: number,
-    public readonly limit: number,
+    /** 체험이 끝난 시각 */
+    public readonly endedAt: Date,
   ) {
-    super(`trial quota exhausted (${used}/${limit})`);
+    super(`trial period ended (${endedAt.toISOString()})`);
     this.name = 'PaywallError';
   }
 }
 
 export type TrialStatus = {
   isPaid: boolean;
+  /** 체험 종료 시각. null = 만료 없음(무료 플랜). */
+  endsAt: Date | null;
+  /** 남은 일수(올림). endsAt 이 null 이면 null. 만료됐으면 0. */
+  daysRemaining: number | null;
+  /** 참고용 등록 수 — 차단 기준이 아니다. */
   used: number;
-  limit: number;
-  remaining: number;
-  blocked: boolean; // true ⇔ on trial AND used >= limit
+  blocked: boolean; // true ⇔ 체험 중이고 종료일이 지났다
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /**
- * Read the current trial quota state for an org. Cheap one-row lookup —
+ * Read the current trial state for an org. Cheap one-row lookup —
  * safe to call on every dashboard render or middleware pass.
  */
 export async function getTrialStatus(organizationId: string): Promise<TrialStatus | null> {
   const [row] = await db
     .select({
       status: billingAccounts.status,
+      trialEndsAt: billingAccounts.trialEndsAt,
       trialUsesCount: billingAccounts.trialUsesCount,
-      trialUsesLimit: billingAccounts.trialUsesLimit,
     })
     .from(billingAccounts)
     .where(eq(billingAccounts.organizationId, organizationId))
@@ -46,35 +62,34 @@ export async function getTrialStatus(organizationId: string): Promise<TrialStatu
   if (!row) return null;
 
   const isPaid = row.status === 'active' || row.status === 'past_due'; // paid lanes
-  const used = row.trialUsesCount;
-  const limit = row.trialUsesLimit;
-  const remaining = Math.max(0, limit - used);
-  const blocked = !isPaid && used >= limit;
-  return { isPaid, used, limit, remaining, blocked };
+  const endsAt = row.trialEndsAt ?? null;
+  const now = Date.now();
+  const daysRemaining =
+    endsAt === null ? null : Math.max(0, Math.ceil((endsAt.getTime() - now) / DAY_MS));
+  const blocked = !isPaid && endsAt !== null && endsAt.getTime() <= now;
+
+  return { isPaid, endsAt, daysRemaining, used: row.trialUsesCount, blocked };
 }
 
 /**
  * Enforce the paywall before a billable action proceeds. Throws PaywallError
- * if the org is on a trial plan and has already used its quota. No-op for
- * paid orgs.
+ * once the free month is over. No-op for paid orgs and for accounts with no
+ * expiry (free plans).
  */
 export async function assertTrialQuotaAvailable(organizationId: string): Promise<void> {
   const status = await getTrialStatus(organizationId);
   if (!status) return; // No billing account yet — treat as unmetered (shouldn't happen post-signup).
-  if (status.isPaid) return;
-  if (status.used >= status.limit) {
-    throw new PaywallError(organizationId, status.used, status.limit);
-  }
+  if (!status.blocked) return;
+  // blocked ⇒ endsAt is non-null by construction.
+  throw new PaywallError(organizationId, status.endsAt as Date);
 }
 
 /**
- * Increment the trial counter by 1 atomically. Called *after* a billable
- * insert succeeds (e.g. a new patient row landed in the table). We use a
- * single SQL UPDATE so concurrent inserts can't race past the limit by more
- * than one row — acceptable for a free trial; the next attempt will hit the
- * paywall.
+ * Increment the usage counter by 1 atomically. Called *after* a billable
+ * insert succeeds (e.g. a new patient row landed in the table).
  *
- * No-op for paid accounts (counter stays put after conversion).
+ * 차단에는 쓰이지 않는다 — 빌링 화면에 "체험 기간 중 등록한 환자 수"를
+ * 보여주기 위한 카운터다. 유료 전환 후에는 멈춘다.
  */
 export async function incrementTrialUsage(organizationId: string): Promise<void> {
   await db

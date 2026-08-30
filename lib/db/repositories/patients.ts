@@ -111,11 +111,9 @@ export async function createPatient(
   createdByUserId: string | null,
   input: CreatePatientInput,
 ): Promise<{ id: string; duplicateOfId?: string }> {
-  // Free-trial gate: throws PaywallError if the org has used up its 10-patient
-  // quota and hasn't converted to a paid plan. Caller should catch & redirect
-  // to /upgrade (UI) or return HTTP 402 (API). Duplicates *don't* consume
-  // quota — they still INSERT a separate row today but we early-return below
-  // wouldn't help since duplicates are also new rows; we just count them.
+  // Free-trial gate: throws PaywallError once the 1-month free period is over
+  // and the org hasn't converted to a paid plan. Caller should catch &
+  // redirect to /upgrade (UI) or return HTTP 402 (API).
   await assertTrialQuotaAvailable(organizationId);
 
   const phoneHash = input.phone ? hashFingerprint(input.phone) : null;

@@ -23,7 +23,7 @@ describe('billing plan seeds', () => {
     const get = (code: string) => BILLING_PLAN_SEEDS.find((p) => p.code === code);
     expect(get('agency_starter')?.monthlyFeeKrw).toBe(99_000);
     expect(get('agency_starter')?.settlementFeeBp).toBe(150);
-    expect(get('agency_starter')?.trialDays).toBe(14);
+    expect(get('agency_starter')?.trialDays).toBe(30);
 
     expect(get('agency_growth')?.monthlyFeeKrw).toBe(299_000);
     expect(get('agency_growth')?.settlementFeeBp).toBe(100);

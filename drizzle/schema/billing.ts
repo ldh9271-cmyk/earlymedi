@@ -132,11 +132,13 @@ export const billingAccounts = pgTable(
     // Configurable settlement-fee bearer policy: 'agency' | 'patient_added' | 'split'
     settlementFeeBearer: text('settlement_fee_bearer').notNull().default('agency'),
 
-    // Free-trial quota — counts billable creations (e.g. new patient rows).
-    // Once `trialUsesCount >= trialUsesLimit` AND status='trial', the
-    // application redirects new attempts to /upgrade. Resets to 0 when the
-    // org converts to a paid plan (status → 'active'). Default 10 free
-    // patient registrations for every new signup.
+    // 무료 체험은 기간 기준이다 — `trialEndsAt` 이 지나면 status='trial' 인
+    // 계정의 신규 등록을 /upgrade 로 보낸다 (lib/billing/trial-quota.ts).
+    // trialEndsAt 이 NULL 이면 만료 없음 = 무료 플랜(프리랜서·파트너 등록).
+    //
+    // 아래 두 컬럼은 예전 "환자 10명까지 무료" 시절의 게이트였고, 지금은
+    // 빌링 화면에 "체험 기간 중 등록한 환자 수"를 보여주는 카운터로만
+    // 남아 있다. 차단에는 관여하지 않는다.
     trialUsesLimit: integer('trial_uses_limit').notNull().default(10),
     trialUsesCount: integer('trial_uses_count').notNull().default(0),
 

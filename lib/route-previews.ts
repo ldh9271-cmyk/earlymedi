@@ -158,7 +158,7 @@ export const ROUTE_PREVIEWS: Record<string, RoutePreview> = {
     title: '요금제 · 청구서',
     description: 'KoreaGlowUp 자체의 구독 요금제 · 사용량 · 청구서를 확인하고 결제 수단을 관리합니다.',
     bullets: [
-      '현재 플랜 + 무료 체험 잔량 (10명 중 X명)',
+      '현재 플랜 + 무료 체험 잔여 기간 (D-N)',
       '사용량 메트릭 (환자 · AI 호출 · 메시지 · 비자 처리)',
       '월별 청구서 PDF 다운로드',
       '결제 수단 (카드 · 계좌이체 · 세금계산서) 관리',

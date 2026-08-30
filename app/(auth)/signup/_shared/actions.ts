@@ -9,6 +9,7 @@ import { organizations } from '@/drizzle/schema/organizations';
 import { users } from '@/drizzle/schema/users';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { billingAccounts, billingPlans } from '@/drizzle/schema/billing';
+import { trialEndsAt } from '@/lib/billing/plan-engine';
 import { freelancerAffiliations } from '@/drizzle/schema/affiliations';
 import { partnerContracts } from '@/drizzle/schema/contracts';
 import { setActiveOrgCookie } from '@/lib/auth/session-setters';
@@ -214,15 +215,18 @@ export async function quickSignupAction(rawInput: QuickSignupInput): Promise<str
     acceptedAt: new Date(),
   });
 
-  // 4. billing account on trial — 10-patient quota lives here (default in
-  // the schema), so we don't have to set it explicitly.
+  // 4. billing account — 유료 플랜은 plan.trialDays(=30일) 무료 체험으로,
+  // 무료 플랜(프리랜서·파트너 등록)은 만료 없이 바로 active 로 시작한다.
+  // trialEndsAt 이 null 이면 게이트가 절대 막지 않는다(trial-quota.ts).
+  const quickTrialEnd =
+    plan.trialDays > 0 ? trialEndsAt(new Date(), plan.trialDays) : null;
   await db.insert(billingAccounts).values({
     organizationId: org.id,
     planId: plan.id,
-    status: 'trial',
-    trialEndsAt: null, // no time-based expiry; only quota-based
+    status: quickTrialEnd ? 'trial' : 'active',
+    trialEndsAt: quickTrialEnd,
     currentPeriodStartsAt: new Date(),
-    currentPeriodEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    currentPeriodEndsAt: quickTrialEnd ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     billingEmail: auth.user.email ?? null,
     billingName: input.representativeName,
   });
@@ -323,8 +327,7 @@ export async function provisionOrganizationAction(rawInput: SignupInput): Promis
   });
 
   // 3. Billing account
-  const trialEnd =
-    plan.trialDays > 0 ? new Date(Date.now() + plan.trialDays * 24 * 60 * 60 * 1000) : null;
+  const trialEnd = plan.trialDays > 0 ? trialEndsAt(new Date(), plan.trialDays) : null;
   await db.insert(billingAccounts).values({
     organizationId: org.id,
     planId: plan.id,
