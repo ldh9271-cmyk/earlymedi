@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { confirmTossPayment, tossConfigured } from '@/lib/payments/toss';
-import { accrueOrderHospitalFee, accrueOrderTravelMargin } from '@/lib/referral/service';
+import { accrueOrderTravelMargin, stampOrderHospitalFee } from '@/lib/referral/service';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -84,7 +84,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   // 의료상품 결제면 병원 수수료(총판 배분율 적용)를 만든다.
   // 관리자 수동 paid 처리(/master/orders)와 같은 규칙 — 멱등이라 안전.
   await accrueOrderTravelMargin(order.id).catch(() => 0);
-  await accrueOrderHospitalFee(order.id).catch(() => 0);
+  await stampOrderHospitalFee(order.id).catch(() => false);
 
   return NextResponse.json({ ok: true });
 }

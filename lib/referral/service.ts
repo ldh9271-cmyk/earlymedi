@@ -345,24 +345,21 @@ export async function accrueOrderTravelMargin(orderId: string): Promise<number> 
 }
 
 /**
- * 사이트 결제 주문 → 병원 수수료 자동 정산 (해외 총판 트랙).
+ * 사이트 결제 주문 → 병원 수수료 정산 대기 스탬프 (해외 총판 트랙 1단계).
  *
- * 플랫폼에 게시된 의료상품(partner_listings.category='hospital')을 총판
- * 귀속 고객이 구매하고 입금이 확인(paid)되면, 구매가(상품 소계, 플랫폼
- * 서비스 수수료 제외)에 진료과별 병원 수수료율(feePctByCategory —
- * 성형 30%·피부 20% 등)을 적용해 수수료 풀을 만들고, 그 풀을 해당
- * 총판 계약의 배분율(config.feeShare.distributorPct, 총판별로 일본
- * 마스터가 설정)대로 총판/플랫폼(및 배분표 모드면 추천인 단계)으로
- * 나눠 수당 원장에 적립한다 — computeLedger 를 그대로 재사용하므로
- * 수동 실적 등록과 계산이 항상 일치한다.
+ * 플랫폼 결제액은 정산 기준이 아니다 — 수수료는 환자가 병원에서
+ * "실제로 결제한 금액"에서만 발생한다 (founder 2026-08-31). 그래서
+ * 입금 확인(paid) 시점에는 원장을 만들지 않고, 주문에 진료과·요율만
+ * 스탬프해 "병원 실결제액 확정 대기" 상태로 표시한다. 실제 원장은
+ * 마스터가 병원 실결제액을 확인해 settleOrderHospitalFeeActual 로
+ * 입력할 때 만들어진다.
  *
- * 확정(confirmAt)은 시술 예약일 + holdDays — "지급 확정 = 시술 완료 +
- * 14일, 환불 시 환수" 원칙. 예약일을 모르면 결제 확인 + holdDays.
- * 같은 주문에 중복 적립하지 않는다(멱등). 반환: 적립 합계 원화.
+ * 반환: 스탬프했으면 true (의료상품 + 총판 귀속 주문만).
  */
-export async function accrueOrderHospitalFee(orderId: string): Promise<number> {
+export async function stampOrderHospitalFee(orderId: string): Promise<boolean> {
   const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, orderId)).limit(1);
-  if (!order || !order.distributorId || !order.listingSlug) return 0;
+  if (!order || !order.distributorId || !order.listingSlug) return false;
+  if (order.procedureCategory) return true; // 이미 스탬프됨 (멱등)
 
   // 의료상품 여부는 게시 리스팅의 카테고리로 판단한다
   const [listing] = await db
@@ -370,32 +367,74 @@ export async function accrueOrderHospitalFee(orderId: string): Promise<number> {
     .from(partnerListings)
     .where(eq(partnerListings.slug, order.listingSlug))
     .limit(1);
-  if (!listing || listing.category !== 'hospital') return 0;
+  if (!listing || listing.category !== 'hospital') return false;
 
-  // 이미 이 주문에 병원 수수료 행이 있으면 중복 적립하지 않는다
-  const existing = await db
-    .select({ id: commissionLedger.id })
-    .from(commissionLedger)
-    .where(and(eq(commissionLedger.orderId, orderId), eq(commissionLedger.basis, 'hospital_fee')))
-    .limit(1);
-  if (existing.length > 0) return 0;
-
-  // 진료과: 리스팅 subType(성형/피부…) 우선, 없으면 주문의 관심 카테고리
   const details = (listing.details ?? {}) as { subType?: string };
-  const category = details.subType ?? order.interestKey ?? null;
+  const category = details.subType ?? order.interestKey ?? 'default';
+  const config = await getDistributorConfig(order.distributorId);
+  const feeBp = resolveFeeBp(category, config);
+
+  await db
+    .update(checkoutOrders)
+    .set({
+      procedureCategory: category,
+      hospitalFeeBp: feeBp,
+      meta: { ...(order.meta ?? {}), hospitalFeeAwaitingActual: true },
+      updatedAt: new Date(),
+    })
+    .where(eq(checkoutOrders.id, order.id));
+  return true;
+}
+
+/**
+ * 병원 실결제액 확정 → 수수료 원장 생성 (해외 총판 트랙 2단계).
+ *
+ * 마스터가 병원에서 실제 결제된 금액을 확인해 입력하면:
+ *   실결제액 × 진료과 요율(feePctByCategory) = 병원 수수료 풀
+ *   → 총판 배분율(config.feeShare.distributorPct, 총판별)대로 분배.
+ * 확정(confirmAt) = 시술일 + holdDays ("시술 완료 + 14일, 환불 시 환수").
+ *
+ * 재입력(정정)을 허용한다: 기존 hospital_fee 행은 지급 전이면 reversed,
+ * 이미 지급됐으면 음수 행으로 환수하고 새 금액으로 다시 만든다.
+ */
+export async function settleOrderHospitalFeeActual(input: {
+  orderId: string;
+  /** 병원에서 실제 결제된 금액 (원). */
+  actualAmountWon: number;
+  /** 시술일 YYYY-MM-DD — 확정 기산일. 없으면 오늘. */
+  procedureYmd?: string | null;
+  note?: string | null;
+}): Promise<{ rows: number; total: number }> {
+  const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, input.orderId)).limit(1);
+  if (!order) throw new Error('order_not_found');
+  if (!order.distributorId) throw new Error('총판 귀속이 없는 주문입니다');
+  if (input.actualAmountWon <= 0) throw new Error('실결제액이 0보다 커야 합니다');
+
+  // 진료과: paid 훅이 스탬프한 값 우선, 없으면 리스팅에서 다시 판별 (구주문)
+  let category = order.procedureCategory;
+  if (!category && order.listingSlug) {
+    const [listing] = await db
+      .select({ category: partnerListings.category, details: partnerListings.details })
+      .from(partnerListings)
+      .where(eq(partnerListings.slug, order.listingSlug))
+      .limit(1);
+    if (listing?.category === 'hospital') {
+      category = ((listing.details ?? {}) as { subType?: string }).subType ?? order.interestKey ?? 'default';
+    }
+  }
+  if (!category) throw new Error('의료상품 주문이 아닙니다');
 
   const config = await getDistributorConfig(order.distributorId);
   const feeBp = resolveFeeBp(category, config);
-  if (feeBp <= 0) return 0;
+  if (feeBp <= 0) throw new Error('이 진료과의 수수료율이 0입니다');
 
-  const procedureAmountWon = order.subtotalWon || order.totalWon;
   const chain = order.partnerId
     ? await resolveChain(order.partnerId)
     : { l1PartnerId: null, l2PartnerId: null };
   const drafts = computeLedger({
     kind: 'procedure',
     category,
-    procedureAmountWon,
+    procedureAmountWon: input.actualAmountWon,
     saleAmountWon: 0,
     hospitalFeeBp: feeBp,
     distributorId: order.distributorId,
@@ -404,41 +443,70 @@ export async function accrueOrderHospitalFee(orderId: string): Promise<number> {
     patientUserId: order.userId,
     config,
   });
-  if (drafts.length === 0) return 0;
 
-  const procDate = order.reserveYmd && /^\d{4}-\d{2}-\d{2}$/.test(order.reserveYmd)
-    ? new Date(order.reserveYmd + 'T00:00:00')
-    : (order.paidAt ?? new Date());
+  const procDate = input.procedureYmd && /^\d{4}-\d{2}-\d{2}$/.test(input.procedureYmd)
+    ? new Date(input.procedureYmd + 'T00:00:00')
+    : new Date();
   const confirmAt = new Date(procDate.getTime() + config.holdDays * 86_400_000);
 
   return db.transaction(async (tx) => {
-    await tx.insert(commissionLedger).values(
-      drafts.map((d) => ({
-        orderId: order.id,
-        distributorId: order.distributorId as string,
-        beneficiary: d.beneficiary,
-        beneficiaryPartnerId: d.beneficiaryPartnerId,
-        beneficiaryUserId: d.beneficiaryUserId,
-        basis: d.basis,
-        rateBp: d.rateBp,
-        baseAmountWon: d.baseAmountWon,
-        amountWon: d.amountWon,
-        status: 'pending' as const,
-        confirmAt,
-        note: `의료상품 결제 자동 정산 · ${order.invoiceNo}`,
-      })),
-    );
-    // 마스터 주문·정산 화면이 수동 실적 등록과 같은 필드를 보도록 채운다
+    // 기존 병원 수수료 행 정리 (정정 재입력)
+    const prev = await tx
+      .select()
+      .from(commissionLedger)
+      .where(and(eq(commissionLedger.orderId, order.id), eq(commissionLedger.basis, 'hospital_fee')));
+    for (const r of prev) {
+      if (r.status === 'reversed') continue;
+      if (r.status === 'paid') {
+        await tx.insert(commissionLedger).values({
+          orderId: r.orderId, distributorId: r.distributorId, beneficiary: r.beneficiary,
+          beneficiaryPartnerId: r.beneficiaryPartnerId, beneficiaryUserId: r.beneficiaryUserId,
+          basis: r.basis, rateBp: r.rateBp, baseAmountWon: r.baseAmountWon, amountWon: -r.amountWon,
+          status: 'confirmed', confirmAt: new Date(), note: '실결제액 정정 환수',
+        });
+      } else {
+        await tx.update(commissionLedger)
+          .set({ status: 'reversed', reversedAt: new Date(), note: '실결제액 정정으로 대체' })
+          .where(eq(commissionLedger.id, r.id));
+      }
+    }
+
+    if (drafts.length > 0) {
+      await tx.insert(commissionLedger).values(
+        drafts.map((d) => ({
+          orderId: order.id,
+          distributorId: order.distributorId as string,
+          beneficiary: d.beneficiary,
+          beneficiaryPartnerId: d.beneficiaryPartnerId,
+          beneficiaryUserId: d.beneficiaryUserId,
+          basis: d.basis,
+          rateBp: d.rateBp,
+          baseAmountWon: d.baseAmountWon,
+          amountWon: d.amountWon,
+          status: 'pending' as const,
+          confirmAt,
+          note: `병원 실결제 정산 · ${order.invoiceNo}${input.note ? ' · ' + input.note : ''}`,
+        })),
+      );
+    }
     await tx
       .update(checkoutOrders)
       .set({
         procedureCategory: category,
-        procedureAmountWon,
+        procedureAmountWon: input.actualAmountWon,
         hospitalFeeBp: feeBp,
+        completedAt: procDate,
+        meta: {
+          ...(order.meta ?? {}),
+          hospitalFeeAwaitingActual: false,
+          hospitalFeeSettledAt: new Date().toISOString(),
+          hospitalActualAmountWon: input.actualAmountWon,
+        },
         updatedAt: new Date(),
       })
       .where(eq(checkoutOrders.id, order.id));
-    return drafts.reduce((a, d) => a + d.amountWon, 0);
+
+    return { rows: drafts.length, total: drafts.reduce((a, d) => a + d.amountWon, 0) };
   });
 }
 

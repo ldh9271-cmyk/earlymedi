@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
-import { markOrderPaidAction, cancelOrderAction } from './_actions';
+import { markOrderPaidAction, cancelOrderAction, settleHospitalActualAction } from './_actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '예약 인보이스 — 마스터 관리자' };
@@ -202,6 +202,7 @@ export default async function MasterOrdersPage({
                             </form>
                           ) : null}
                         </div>
+                        <HospitalSettleBox order={r} />
                       </Td>
                     </tr>
                   );
@@ -211,6 +212,66 @@ export default async function MasterOrdersPage({
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * 병원 실결제액 확정 박스 — 총판 귀속 의료상품 주문(paid + 진료과 스탬프)에만
+ * 표시. 수수료 원장은 플랫폼 결제액이 아니라 여기 입력한 병원 실결제액으로
+ * 만들어진다. 정산 후에도 금액 정정(재정산)이 가능하다.
+ */
+function HospitalSettleBox({ order: r }: { order: typeof checkoutOrders.$inferSelect }): JSX.Element | null {
+  if (r.status !== 'paid' || !r.distributorId || !r.procedureCategory) return null;
+  const meta = (r.meta ?? {}) as { hospitalFeeSettledAt?: string; hospitalActualAmountWon?: number };
+  const settled = typeof meta.hospitalActualAmountWon === 'number' && meta.hospitalActualAmountWon > 0;
+  const feePct = r.hospitalFeeBp != null ? r.hospitalFeeBp / 100 : null;
+  return (
+    <div
+      style={{
+        marginTop: 8, padding: '8px 10px', borderRadius: 10,
+        border: `1px solid ${settled ? '#d1fae5' : '#fde3e9'}`,
+        background: settled ? '#f0fdf9' : '#fff5f7',
+      }}
+    >
+      <div style={{ fontSize: 11, fontWeight: 700, color: settled ? '#047857' : '#c2143c' }}>
+        {settled
+          ? `병원 실결제 ₩${(meta.hospitalActualAmountWon ?? 0).toLocaleString('ko-KR')} 정산됨`
+          : '병원 실결제액 확정 대기 — 수수료는 병원 실결제액 기준'}
+        {feePct != null ? ` · 요율 ${feePct}%` : ''}
+      </div>
+      <form
+        action={settleHospitalActualAction}
+        style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}
+      >
+        <input type="hidden" name="id" value={r.id} />
+        <input
+          name="actualAmountWon"
+          type="number"
+          min={10000}
+          step={10000}
+          required
+          placeholder="병원 실결제액 (원)"
+          defaultValue={settled ? meta.hospitalActualAmountWon : undefined}
+          style={{
+            width: 140, border: '1px solid #dddddd', borderRadius: 8,
+            padding: '4px 8px', fontSize: 12, fontFamily: 'inherit',
+          }}
+        />
+        <input
+          name="procedureYmd"
+          type="date"
+          defaultValue={r.reserveYmd ?? undefined}
+          title="시술일 — 지급 확정은 시술일 + 14일"
+          style={{
+            border: '1px solid #dddddd', borderRadius: 8,
+            padding: '3px 8px', fontSize: 12, fontFamily: 'inherit',
+          }}
+        />
+        <button type="submit" style={btnStyle(settled ? '#6a6a6a' : '#c2143c')}>
+          {settled ? '금액 정정' : '실결제 정산'}
+        </button>
+      </form>
     </div>
   );
 }

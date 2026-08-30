@@ -1,6 +1,11 @@
 /**
- * 총판 귀속 회원의 의료상품 구매 → 병원 수수료(진료과 요율) × 총판
- * 배분율 자동 적립 (실 DB). travel-margin.test.ts 와 같은 골격.
+ * 의료상품 병원 수수료 2단계 정산 (실 DB).
+ *
+ *  1단계 stampOrderHospitalFee   — 플랫폼 결제(paid) 시 진료과·요율만 스탬프.
+ *                                  원장 생성 없음 (플랫폼 결제액 ≠ 정산 기준).
+ *  2단계 settleOrderHospitalFeeActual — 병원 실결제액 입력 시 원장 생성.
+ *                                  재입력 = 기존 행 환수/무효 후 재정산.
+ *
  * 실행: npx vitest run --config vitest.integration.config.ts
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -70,42 +75,80 @@ async function makeOrder(slug: string, subtotal: number, reserveYmd = '2026-12-0
   return o!.id;
 }
 
-describe('hospital fee accrual on medical product purchase (real DB)', () => {
-  it('성형 상품 300만원 구매 → 수수료 풀 90만(30%) → 총판 63만(70%) · 플랫폼 27만', async () => {
+async function ledgerRows(orderId: string) {
+  return db.select().from(commissionLedger)
+    .where(and(eq(commissionLedger.orderId, orderId), eq(commissionLedger.basis, 'hospital_fee')));
+}
+
+describe('hospital fee two-phase settlement (real DB)', () => {
+  it('결제 시점: 진료과·요율만 스탬프, 원장 없음 (플랫폼 결제액은 기준 아님)', async () => {
     const orderId = await makeOrder(hospitalSlug, 3_000_000);
-    const total = await svc.accrueOrderHospitalFee(orderId);
-    // 수수료 풀 = 3,000,000 × 30% = 900,000. feeShare 70/30 분배.
-    expect(total).toBe(900_000);
-    const rows = await db.select().from(commissionLedger)
-      .where(and(eq(commissionLedger.orderId, orderId), eq(commissionLedger.basis, 'hospital_fee')));
+    expect(await svc.stampOrderHospitalFee(orderId)).toBe(true);
+    expect(await svc.stampOrderHospitalFee(orderId)).toBe(true); // 멱등
+
+    expect(await ledgerRows(orderId)).toHaveLength(0);
+    const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, orderId));
+    expect(order?.procedureCategory).toBe('plastic_surgery');
+    expect(order?.hospitalFeeBp).toBe(3000);
+    expect((order?.meta as Record<string, unknown>)?.hospitalFeeAwaitingActual).toBe(true);
+  });
+
+  it('실결제 500만 확정 → 풀 150만(30%) → 총판 105만(70%) · 플랫폼 45만, 확정=시술일+14일', async () => {
+    const orderId = await makeOrder(hospitalSlug, 3_000_000);
+    await svc.stampOrderHospitalFee(orderId);
+
+    const { total } = await svc.settleOrderHospitalFeeActual({
+      orderId, actualAmountWon: 5_000_000, procedureYmd: '2026-12-01',
+    });
+    expect(total).toBe(1_500_000);
+
+    const rows = await ledgerRows(orderId);
     const byBeneficiary = Object.fromEntries(rows.map((r) => [r.beneficiary, r.amountWon]));
-    expect(byBeneficiary.distributor).toBe(630_000);
-    expect(byBeneficiary.platform).toBe(270_000);
-    // 확정 시점 = 시술 예약일(KST 자정) + holdDays(14일) → KST 12-15
+    expect(byBeneficiary.distributor).toBe(1_050_000);
+    expect(byBeneficiary.platform).toBe(450_000);
+    // 기준액이 병원 실결제액이다
+    expect(rows.every((r) => r.baseAmountWon === 5_000_000)).toBe(true);
+    // 확정 시점 = 시술일(KST) + holdDays(14일) → KST 12-15
     const distRow = rows.find((r) => r.beneficiary === 'distributor');
     const kst = distRow?.confirmAt
       ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(distRow.confirmAt)
       : '';
     expect(kst).toBe('2026-12-15');
-    // 주문에 수수료 필드가 채워졌다 (마스터 화면 정합)
-    const [order] = await db.select({ cat: checkoutOrders.procedureCategory, bp: checkoutOrders.hospitalFeeBp })
-      .from(checkoutOrders).where(eq(checkoutOrders.id, orderId));
-    expect(order?.cat).toBe('plastic_surgery');
-    expect(order?.bp).toBe(3000);
+
+    const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, orderId));
+    expect(order?.procedureAmountWon).toBe(5_000_000);
+    expect((order?.meta as Record<string, unknown>)?.hospitalFeeAwaitingActual).toBe(false);
   });
 
-  it('같은 주문 재호출 → 중복 적립 없음 (멱등)', async () => {
-    const orderId = await makeOrder(hospitalSlug, 1_000_000);
-    expect(await svc.accrueOrderHospitalFee(orderId)).toBe(1_000_000 * 0.3);
-    expect(await svc.accrueOrderHospitalFee(orderId)).toBe(0);
+  it('금액 정정 재정산 → 기존 행 reversed, 새 금액으로 대체 (유효 합계 = 새 금액 기준)', async () => {
+    const orderId = await makeOrder(hospitalSlug, 3_000_000);
+    await svc.stampOrderHospitalFee(orderId);
+    await svc.settleOrderHospitalFeeActual({ orderId, actualAmountWon: 5_000_000, procedureYmd: '2026-12-01' });
+    await svc.settleOrderHospitalFeeActual({ orderId, actualAmountWon: 4_000_000, procedureYmd: '2026-12-01' });
+
+    const rows = await ledgerRows(orderId);
+    const activeSum = rows.filter((r) => r.status !== 'reversed').reduce((a, r) => a + r.amountWon, 0);
+    expect(activeSum).toBe(1_200_000); // 400만 × 30%
+    expect(rows.filter((r) => r.status === 'reversed')).toHaveLength(2); // 이전 500만 분배 2행
+    const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, orderId));
+    expect(order?.procedureAmountWon).toBe(4_000_000);
   });
 
-  it('의료상품이 아니면(호텔) 적립하지 않는다', async () => {
+  it('스탬프 없이도(구주문) 리스팅으로 진료과를 판별해 정산된다', async () => {
+    const orderId = await makeOrder(hospitalSlug, 2_000_000);
+    const { total } = await svc.settleOrderHospitalFeeActual({ orderId, actualAmountWon: 2_000_000 });
+    expect(total).toBe(600_000);
+  });
+
+  it('의료상품이 아니면(호텔) 스탬프도 정산도 거부', async () => {
     const orderId = await makeOrder(hotelSlug, 2_000_000);
-    expect(await svc.accrueOrderHospitalFee(orderId)).toBe(0);
+    expect(await svc.stampOrderHospitalFee(orderId)).toBe(false);
+    await expect(
+      svc.settleOrderHospitalFeeActual({ orderId, actualAmountWon: 1_000_000 }),
+    ).rejects.toThrow('의료상품');
   });
 
-  it('총판 귀속이 없으면 적립하지 않는다', async () => {
+  it('총판 귀속이 없으면 스탬프하지 않는다', async () => {
     const [o] = await db.insert(checkoutOrders).values({
       invoiceNo: 'TEST-' + Math.floor(Math.random() * 1e8), status: 'paid', locale: 'ja',
       listingSlug: hospitalSlug, listingTitle: 'TEST', reserveDate: '2026-12-01', reserveTime: '-',
@@ -113,6 +156,6 @@ describe('hospital fee accrual on medical product purchase (real DB)', () => {
       paidAt: new Date(),
     }).returning({ id: checkoutOrders.id });
     ids.orders.push(o!.id);
-    expect(await svc.accrueOrderHospitalFee(o!.id)).toBe(0);
+    expect(await svc.stampOrderHospitalFee(o!.id)).toBe(false);
   });
 });
