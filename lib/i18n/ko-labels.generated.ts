@@ -5400,6 +5400,13 @@ export const KO_LABELS = {
     "ru": "Вьетнамский",
     "vi": "Tiếng Việt"
   },
+  "병원 견학 · 서울 관광": {
+    "en": "Hospital Tour · Seoul Tour",
+    "zh": "医院参观 · 首尔观光",
+    "ja": "病院見学 · ソウル観光",
+    "ru": "Экскурсия по клинике · Тур по Сеулу",
+    "vi": "Tham quan bệnh viện · Du lịch Seoul"
+  },
   "병원 자체 다국어 안내 페이지 운영 · 방한 일정에 맞춘 예약 조율": {
     "en": "Multilingual web page · Custom scheduling for Korea trip",
     "zh": "运营多语种页面 · 根据访韩日程协调预约",
@@ -6639,6 +6646,13 @@ export const KO_LABELS = {
     "ru": "Керамель (виниры)",
     "vi": "Ceramel (Veneer)"
   },
+  "세미나 · 수료증": {
+    "en": "Seminar · Certificate",
+    "zh": "研讨会 · 结业证书",
+    "ja": "セミナー · 修了証",
+    "ru": "Семинар · Сертификат",
+    "vi": "Hội thảo · Chứng chỉ"
+  },
   "세부 분야별 전문 진료": {
     "en": "Specialized Care by Field",
     "zh": "细分领域专业诊疗",
@@ -7045,12 +7059,26 @@ export const KO_LABELS = {
     "ru": "Стиль Сон Хе Гё",
     "vi": "Tạo kiểu Song Hye-kyo"
   },
+  "수료증 · 병원 견학": {
+    "en": "Certificate · Hospital Tour",
+    "zh": "结业证书 · 医院参观",
+    "ja": "修了証 · 病院見学",
+    "ru": "Сертификат · Экскурсия по клинике",
+    "vi": "Chứng chỉ · Tham quan bệnh viện"
+  },
   "수료증 발급 · 단체 연수": {
     "en": "Certificate Issuance · Group Training",
     "zh": "颁发证书 · 团体研修",
     "ja": "修了証発行 · 団体研修",
     "ru": "Выдача сертификата · Групповое обучение",
     "vi": "Cấp chứng nhận · Đào tạo nhóm"
+  },
+  "수료증 발급 · 병원 견학": {
+    "en": "Certificate Issued · Hospital Tour",
+    "zh": "颁发结业证书 · 医院参观",
+    "ja": "修了証発行 · 病院見学",
+    "ru": "Выдача сертификата · Экскурсия по клинике",
+    "vi": "Cấp chứng chỉ · Tham quan bệnh viện"
   },
   "수만 건의 수술·수십만 건의 시술 경험, 무사고 안전 관리": {
     "en": "Tens of Thousands of Surgeries & Procedures, Accident-Free Safety",
