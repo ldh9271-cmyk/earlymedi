@@ -59,6 +59,9 @@ export * from './referral-program';
 // Freelancer referral codes (송객·인플루언서 추적 코드)
 export * from './freelancer-referral-codes';
 
+// Freelancer commission disputes (정산 이의 제기 티켓)
+export * from './freelancer-disputes';
+
 // Master-curated B2C category & procedure landing mappings
 export * from './category-listings';
 
