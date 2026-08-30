@@ -25,8 +25,9 @@ const ContactSchema = z.object({
 export async function updateBillingContactAction(
   raw: z.infer<typeof ContactSchema>,
 ): Promise<void> {
-  // 청구 연락처는 계정 유형과 무관한 조직 공통 설정 — medical 콘솔(잔액·사용량)도 이 액션을 공유한다.
-  const ctx = await requireAccess({ allowedAccountTypes: ['agency', 'medical'] });
+  // 청구 연락처는 계정 유형과 무관한 조직 공통 설정 —
+  // medical(잔액·사용량)·partner(청구서) 콘솔도 이 액션을 공유한다.
+  const ctx = await requireAccess({ allowedAccountTypes: ['agency', 'medical', 'non_medical'] });
   const input = ContactSchema.parse(raw);
 
   await withRls(ctx, async () => {
