@@ -1,0 +1,195 @@
+{
+ "rows": [
+  {
+   "slug": "공항-샌딩-서울-숙소-인천-김포",
+   "title": "공항 샌딩 (서울 숙소 → 인천/김포)",
+   "description": "서울 숙소에서 인천·김포 공항까지 세단 차량 샌딩. 출국 비행 2시간 30분 전 출발 기준. 시술 후 회복 동선 고려한 안전 운행.",
+   "price_won": 150000,
+   "price_unit": "회",
+   "promo_label": null,
+   "location_label": null,
+   "details": {
+    "subType": "free"
+   },
+   "cover_image_url": "/images/fit/airport-sending.webp",
+   "gallery_image_urls": [
+    "/images/fit/airport-sending-1.webp",
+    "/images/fit/airport-sending-2.webp",
+    "/images/fit/airport-sending-3.webp",
+    "/images/fit/airport-sending-4.webp"
+   ]
+  },
+  {
+   "slug": "공항-픽업-인천-김포-서울-숙소",
+   "title": "공항 픽업 (인천/김포 → 서울 숙소)",
+   "description": "인천·김포 공항에서 서울 숙소까지 세단 차량 픽업. 전담 기사 + 짐 운반 + 한국어 미숙 게스트 안내 포함. 항공편 도착 시간에 맞춰 출발.",
+   "price_won": 150000,
+   "price_unit": "회",
+   "promo_label": null,
+   "location_label": null,
+   "details": {
+    "subType": "free"
+   },
+   "cover_image_url": "/images/fit/airport-pickup.webp",
+   "gallery_image_urls": [
+    "/images/fit/airport-pickup-1.webp",
+    "/images/fit/airport-pickup-2.webp",
+    "/images/fit/airport-pickup-3.webp",
+    "/images/fit/airport-pickup-4.webp"
+   ]
+  },
+  {
+   "slug": "기사-반일-대절-4시간-스타렉스",
+   "title": "기사 반일 대절 (4시간, 스타렉스)",
+   "description": "스타렉스급 차량 + 전담 기사 4시간 대절. 시술·식사·쇼핑·면세점 동선 자유 구성. 최대 8인 탑승.",
+   "price_won": 200000,
+   "price_unit": "반일",
+   "promo_label": null,
+   "location_label": null,
+   "details": {
+    "subType": "free"
+   },
+   "cover_image_url": "/images/fit/driver-half-day.webp",
+   "gallery_image_urls": [
+    "/images/fit/driver-half-day-1.webp",
+    "/images/fit/driver-half-day-2.webp",
+    "/images/fit/driver-half-day-3.webp",
+    "/images/fit/driver-half-day-4.webp"
+   ]
+  },
+  {
+   "slug": "기사-종일-대절-8시간-스타렉스",
+   "title": "기사 종일 대절 (8시간, 스타렉스)",
+   "description": "스타렉스급 차량 + 전담 기사 8시간 대절. 하루 일정 전체 커버 (클리닉·맛집·관광·쇼핑). 최대 8인 탑승.",
+   "price_won": 300000,
+   "price_unit": "종일",
+   "promo_label": null,
+   "location_label": null,
+   "details": {
+    "subType": "free"
+   },
+   "cover_image_url": "/images/fit/driver-full-day.webp",
+   "gallery_image_urls": [
+    "/images/fit/driver-full-day-1.webp",
+    "/images/fit/driver-full-day-2.webp",
+    "/images/fit/driver-full-day-3.webp",
+    "/images/fit/driver-full-day-4.webp"
+   ]
+  },
+  {
+   "slug": "클리닉-동행-통역-반일-4시간",
+   "title": "클리닉 동행 통역 - 반일 (4시간)",
+   "description": "의료 통역 전문가가 클리닉 현장 4시간 동행. 의료 동의서·상담·시술·결제까지 의사소통 책임. 한·영·중·일 가능 (예약 시 언어 선택).",
+   "price_won": 150000,
+   "price_unit": "반일",
+   "promo_label": null,
+   "location_label": null,
+   "details": {
+    "subType": "free"
+   },
+   "cover_image_url": "/images/fit/interpreter-half-day.webp",
+   "gallery_image_urls": [
+    "/images/fit/interpreter-half-day-1.webp",
+    "/images/fit/interpreter-half-day-2.webp",
+    "/images/fit/interpreter-half-day-3.webp",
+    "/images/fit/interpreter-half-day-4.webp"
+   ]
+  },
+  {
+   "slug": "클리닉-동행-통역-종일-8시간",
+   "title": "클리닉 동행 통역 - 종일 (8시간)",
+   "description": "의료 통역 전문가가 클리닉 현장 8시간 동행. 복수 진료과·복잡 시술·전후 케어 안내까지 한 번에 커버. 한·영·중·일 가능.",
+   "price_won": 250000,
+   "price_unit": "종일",
+   "promo_label": null,
+   "location_label": null,
+   "details": {
+    "subType": "free"
+   },
+   "cover_image_url": "/images/fit/interpreter-full-day.webp",
+   "gallery_image_urls": [
+    "/images/fit/interpreter-full-day-1.webp",
+    "/images/fit/interpreter-full-day-2.webp",
+    "/images/fit/interpreter-full-day-3.webp",
+    "/images/fit/interpreter-full-day-4.webp"
+   ]
+  },
+  {
+   "slug": "클리닉-예약-대행-무료",
+   "title": "클리닉 예약 대행 (무료)",
+   "description": "1개 병원 상담 예약 무료 대행. 사용자 일정 + 진료과 매칭 + 일정 확정까지 컨시어지가 진행. 추가 통역·픽업은 별도 상품으로 결합 가능.",
+   "price_won": 0,
+   "price_unit": "건",
+   "promo_label": null,
+   "location_label": null,
+   "details": {
+    "subType": "free"
+   },
+   "cover_image_url": "/images/fit/booking-service.webp",
+   "gallery_image_urls": [
+    "/images/fit/booking-service-1.webp",
+    "/images/fit/booking-service-2.webp",
+    "/images/fit/booking-service-3.webp",
+    "/images/fit/booking-service-4.webp"
+   ]
+  },
+  {
+   "slug": "클리닉-픽업-샌딩-숙소-클리닉-왕복",
+   "title": "클리닉 픽업·샌딩 (숙소 ↔ 클리닉 왕복)",
+   "description": "숙소와 시술 클리닉 사이 왕복 차량 + 전담 기사. 시술 직후 마취·회복 상태 고려한 안전 동선. 진료·상담·결제 시간 대기 포함.",
+   "price_won": 250000,
+   "price_unit": "회",
+   "promo_label": null,
+   "location_label": null,
+   "details": {
+    "subType": "free"
+   },
+   "cover_image_url": "/images/fit/clinic-shuttle.webp",
+   "gallery_image_urls": [
+    "/images/fit/clinic-shuttle-1.webp",
+    "/images/fit/clinic-shuttle-2.webp",
+    "/images/fit/clinic-shuttle-3.webp",
+    "/images/fit/clinic-shuttle-4.webp"
+   ]
+  }
+ ],
+ "localeRows": 40,
+ "lc": [
+  {
+   "slug": "공항-샌딩-서울-숙소-인천-김포",
+   "locale": "en",
+   "title": "Airport Transfer (Seoul Accommodation → Incheon/Gimpo)",
+   "description": "Sedan transfer service from your Seoul accommodation to Incheon or Gimpo Airport. Departure is scheduled 2 hours and 30 minutes before flight departure. Safe driving tailored for post-procedure recovery."
+  },
+  {
+   "slug": "공항-샌딩-서울-숙소-인천-김포",
+   "locale": "ja",
+   "title": "空港送迎（ソウル宿所 → 仁川/金浦）",
+   "description": "ソウルのご宿泊先から仁川・金浦空港までのセダン送迎サービス。ご搭乗の2時間30分前の出発が基準です。施術後の回復に配慮した安全運転でご案内します。"
+  },
+  {
+   "slug": "공항-샌딩-서울-숙소-인천-김포",
+   "locale": "ru",
+   "title": "Трансфер в аэропорт (Отель в Сеуле → Инчхон/Кимпхо)",
+   "description": "Трансфер на седане из отеля в Сеуле в аэропорт Инчхон или Кимпхо. Выезд за 2 часа 30 минут до вылета. Безопасная поездка с учетом восстановления после процедур."
+  },
+  {
+   "slug": "공항-샌딩-서울-숙소-인천-김포",
+   "locale": "vi",
+   "title": "Đưa đón sân bay (Khách sạn Seoul → Incheon/Gimpo)",
+   "description": "Dịch vụ xe sedan đưa đón từ nơi lưu trú ở Seoul đến sân bay Incheon/Gimpo. Khởi hành trước giờ bay 2 tiếng 30 phút. Lái xe an toàn, phù hợp cho sự hồi phục sau trị liệu."
+  },
+  {
+   "slug": "공항-샌딩-서울-숙소-인천-김포",
+   "locale": "zh",
+   "title": "机场送机服务（首尔住宿地 → 仁川/金浦）",
+   "description": "提供从首尔住宿地前往仁川·金浦机场的高级轿车送机服务。基于航班起飞前2小时30分钟出发。贴心安全驾驶，全面考量术后恢复的需求。"
+  },
+  {
+   "slug": "공항-픽업-인천-김포-서울-숙소",
+   "locale": "en",
+   "title": "Airport Pickup (Incheon/Gimpo → Seoul Accommodation)",
+   "description": "Private sedan pickup service from Incheon/Gimpo Airport to your accommodation in Seoul. Includes a dedicated driver, luggage assistance, and guidance for non-Korean speaking guests. Departure scheduled according to your flight arrival time."
+  }
+ ]
+}

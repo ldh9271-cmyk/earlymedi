@@ -14,6 +14,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
+    // 표기는 lib/seo/brand.ts 의 BRAND_NAME 과 맞춘다 (검색엔진이 하나의
+    // 브랜드로 묶도록). 공개 포털 /[locale]/* 는 이 템플릿을 타지 않고
+    // withBrandSuffix + absolute 로 자체 처리한다 — 여기 걸리는 건
+    // 콘솔·인증·마케팅 같은 한국어 화면이다.
     default: '글로우업투어',
     template: '%s · 글로우업투어',
   },

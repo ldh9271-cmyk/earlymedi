@@ -334,10 +334,19 @@ export default async function ListingDetailPage({
           })
           .filter((d) => d.day && d.items.length > 0);
         if (days.length === 0) return null;
-        const itineraryHeading: Record<string, string> = {
-          kr: '여행 일정', en: 'Itinerary', zh: '行程安排',
-          ja: '旅行日程', ru: 'Программа тура', vi: 'Lịch trình',
-        };
+        // 같은 타임라인 구조를 두 가지로 쓴다 — 다일정 패키지는 "여행 일정",
+        // 자유여행 단품(픽업·대절·통역·예약대행)은 "이용 절차". 후자는
+        // day 자리에 1일차 대신 STEP 1 이 들어간다.
+        const isFreeService = listing.details.subType === 'free';
+        const itineraryHeading: Record<string, string> = isFreeService
+          ? {
+              kr: '이용 절차', en: 'How it works', zh: '使用流程',
+              ja: 'ご利用の流れ', ru: 'Как это работает', vi: 'Quy trình sử dụng',
+            }
+          : {
+              kr: '여행 일정', en: 'Itinerary', zh: '行程安排',
+              ja: '旅行日程', ru: 'Программа тура', vi: 'Lịch trình',
+            };
         return (
           <>
             <Divider />
@@ -938,7 +947,7 @@ function hostNameForCategory(category: string): string {
     case 'food': case 'restaurant': return 'Local Taste';
     case 'dermatology': return 'Cheongdam Derma';
     case 'plastic_surgery': return 'Gangnam Aesthetic';
-    default: return 'KoreaGlowUp Partner';
+    default: return 'GlowUpTour Partner';
   }
 }
 
