@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { fetchTossPayment, tossConfigured } from '@/lib/payments/toss';
-import { accrueOrderTravelMargin, reverseOrder } from '@/lib/referral/service';
+import { accrueOrderHospitalFee, accrueOrderTravelMargin, reverseOrder } from '@/lib/referral/service';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -55,8 +55,9 @@ export async function POST(req: Request): Promise<NextResponse> {
           meta: { ...order.meta, tossPaymentKey: paymentKey },
         })
         .where(eq(checkoutOrders.id, order.id));
-      // confirm 경로와 같은 규칙: 여행 패키지면 총판 마진 예비 적립 (멱등)
+      // confirm 경로와 같은 규칙: 여행 마진 + 의료상품 병원 수수료 (멱등)
       await accrueOrderTravelMargin(order.id).catch(() => 0);
+      await accrueOrderHospitalFee(order.id).catch(() => 0);
     } else if (
       (payment.status === 'CANCELED' || payment.status === 'PARTIAL_CANCELED' || payment.status === 'ABORTED' || payment.status === 'EXPIRED')
       && order.status !== 'cancelled'

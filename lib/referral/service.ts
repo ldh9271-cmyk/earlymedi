@@ -344,6 +344,104 @@ export async function accrueOrderTravelMargin(orderId: string): Promise<number> 
   return amountWon;
 }
 
+/**
+ * 사이트 결제 주문 → 병원 수수료 자동 정산 (해외 총판 트랙).
+ *
+ * 플랫폼에 게시된 의료상품(partner_listings.category='hospital')을 총판
+ * 귀속 고객이 구매하고 입금이 확인(paid)되면, 구매가(상품 소계, 플랫폼
+ * 서비스 수수료 제외)에 진료과별 병원 수수료율(feePctByCategory —
+ * 성형 30%·피부 20% 등)을 적용해 수수료 풀을 만들고, 그 풀을 해당
+ * 총판 계약의 배분율(config.feeShare.distributorPct, 총판별로 일본
+ * 마스터가 설정)대로 총판/플랫폼(및 배분표 모드면 추천인 단계)으로
+ * 나눠 수당 원장에 적립한다 — computeLedger 를 그대로 재사용하므로
+ * 수동 실적 등록과 계산이 항상 일치한다.
+ *
+ * 확정(confirmAt)은 시술 예약일 + holdDays — "지급 확정 = 시술 완료 +
+ * 14일, 환불 시 환수" 원칙. 예약일을 모르면 결제 확인 + holdDays.
+ * 같은 주문에 중복 적립하지 않는다(멱등). 반환: 적립 합계 원화.
+ */
+export async function accrueOrderHospitalFee(orderId: string): Promise<number> {
+  const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, orderId)).limit(1);
+  if (!order || !order.distributorId || !order.listingSlug) return 0;
+
+  // 의료상품 여부는 게시 리스팅의 카테고리로 판단한다
+  const [listing] = await db
+    .select({ category: partnerListings.category, details: partnerListings.details })
+    .from(partnerListings)
+    .where(eq(partnerListings.slug, order.listingSlug))
+    .limit(1);
+  if (!listing || listing.category !== 'hospital') return 0;
+
+  // 이미 이 주문에 병원 수수료 행이 있으면 중복 적립하지 않는다
+  const existing = await db
+    .select({ id: commissionLedger.id })
+    .from(commissionLedger)
+    .where(and(eq(commissionLedger.orderId, orderId), eq(commissionLedger.basis, 'hospital_fee')))
+    .limit(1);
+  if (existing.length > 0) return 0;
+
+  // 진료과: 리스팅 subType(성형/피부…) 우선, 없으면 주문의 관심 카테고리
+  const details = (listing.details ?? {}) as { subType?: string };
+  const category = details.subType ?? order.interestKey ?? null;
+
+  const config = await getDistributorConfig(order.distributorId);
+  const feeBp = resolveFeeBp(category, config);
+  if (feeBp <= 0) return 0;
+
+  const procedureAmountWon = order.subtotalWon || order.totalWon;
+  const chain = order.partnerId
+    ? await resolveChain(order.partnerId)
+    : { l1PartnerId: null, l2PartnerId: null };
+  const drafts = computeLedger({
+    kind: 'procedure',
+    category,
+    procedureAmountWon,
+    saleAmountWon: 0,
+    hospitalFeeBp: feeBp,
+    distributorId: order.distributorId,
+    l1PartnerId: chain.l1PartnerId,
+    l2PartnerId: chain.l2PartnerId,
+    patientUserId: order.userId,
+    config,
+  });
+  if (drafts.length === 0) return 0;
+
+  const procDate = order.reserveYmd && /^\d{4}-\d{2}-\d{2}$/.test(order.reserveYmd)
+    ? new Date(order.reserveYmd + 'T00:00:00')
+    : (order.paidAt ?? new Date());
+  const confirmAt = new Date(procDate.getTime() + config.holdDays * 86_400_000);
+
+  return db.transaction(async (tx) => {
+    await tx.insert(commissionLedger).values(
+      drafts.map((d) => ({
+        orderId: order.id,
+        distributorId: order.distributorId as string,
+        beneficiary: d.beneficiary,
+        beneficiaryPartnerId: d.beneficiaryPartnerId,
+        beneficiaryUserId: d.beneficiaryUserId,
+        basis: d.basis,
+        rateBp: d.rateBp,
+        baseAmountWon: d.baseAmountWon,
+        amountWon: d.amountWon,
+        status: 'pending' as const,
+        confirmAt,
+        note: `의료상품 결제 자동 정산 · ${order.invoiceNo}`,
+      })),
+    );
+    // 마스터 주문·정산 화면이 수동 실적 등록과 같은 필드를 보도록 채운다
+    await tx
+      .update(checkoutOrders)
+      .set({
+        procedureCategory: category,
+        procedureAmountWon,
+        hospitalFeeBp: feeBp,
+        updatedAt: new Date(),
+      })
+      .where(eq(checkoutOrders.id, order.id));
+    return drafts.reduce((a, d) => a + d.amountWon, 0);
+  });
+}
+
 /** 취소·환불 — 아직 지급 전이면 reversed, 이미 지급됐으면 음수 행을 추가해 다음 정산에서 환수. */
 export async function reverseOrder(orderId: string, note: string): Promise<number> {
   const rows = await db.select().from(commissionLedger).where(eq(commissionLedger.orderId, orderId));
