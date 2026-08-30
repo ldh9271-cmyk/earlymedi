@@ -114,7 +114,7 @@ export const ACCOUNT_TYPE_LABEL_EN: Record<AccountType, string> = {
 
 /** Brand accent color per category — used by sidebar / chips. */
 export const ACCOUNT_TYPE_COLOR: Record<AccountType, 'brand' | 'hospitality' | 'care' | 'slate'> = {
-  agency: 'brand', // Indigo 600
+  agency: 'brand', // 브랜드 로즈
   freelancer: 'hospitality', // Amber 500
   medical: 'care', // Emerald 500
   non_medical: 'slate', // neutral
