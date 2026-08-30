@@ -54,3 +54,8 @@ Thumbs.db
 
 # ko-labels 동기화 워터마크 (scripts/sync-ko-labels.mjs)
 .ko-labels-watermark
+
+# 스크래치 쿼리 스크립트 (로컬 전용)
+.q*.mjs
+.q*.txt
+.fit-*.mjs
