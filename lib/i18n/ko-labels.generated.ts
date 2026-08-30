@@ -1648,6 +1648,13 @@ export const KO_LABELS = {
     "ru": "Около ст. Экспресс-автовокзал",
     "vi": "Gần ga Express Bus Terminal"
   },
+  "고양": {
+    "en": "Goyang",
+    "zh": "高阳",
+    "ja": "高陽",
+    "ru": "Коян",
+    "vi": "Goyang"
+  },
   "고일환 원장": {
     "en": "Director Koh Il-hwan",
     "zh": "高一焕 院长",

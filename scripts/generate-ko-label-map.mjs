@@ -71,6 +71,9 @@ const detailLabels = [];
 const a = await sql`select distinct promo_label as l from category_listings where promo_label is not null and promo_label <> ''`;
 const b = await sql`select distinct promo_label as l from partner_listings where promo_label is not null and promo_label <> ''`;
 const c = await sql`select distinct price_unit as l from partner_listings where price_unit is not null and price_unit <> ''`;
+// 병원 카드/상세의 도시명도 이 맵을 탄다. 하드코딩하면 새 도시가 들어올 때마다
+// 조용히 번역에서 빠지므로 DB 에서 그대로 읽는다.
+const d2 = await sql`select distinct address_json->>'city' as l from hospitals where address_json->>'city' <> ''`;
 await sql.end();
 
 // DB 밖 하드코딩 라벨 (랜딩 호텔 어메니티 등) — 같은 맵에서 번역
@@ -79,12 +82,10 @@ const EXTRA_LABELS = [
   '수영장 무료 이용', '사우나 무료 이용', '컨시어지 서비스', '주차 무료',
   // K팝 투어 무료 스팟의 가격 자리 라벨 (details.priceRange)
   '무료 입장', '외부 촬영 무료', '유료 · 사전 예약제',
-  // 병원 주소 도시명
-  '서울', '부산', '인천', '대구', '대전', '광주', '제주',
 ];
 
 const hasKorean = (s) => /[가-힯]/.test(s);
-const labels = [...new Set([...[...a, ...b, ...c].map((r) => r.l.trim()), ...EXTRA_LABELS, ...detailLabels])]
+const labels = [...new Set([...[...a, ...b, ...c, ...d2].map((r) => r.l.trim()), ...EXTRA_LABELS, ...detailLabels])]
   .filter((s) => s && hasKorean(s))
   .sort();
 

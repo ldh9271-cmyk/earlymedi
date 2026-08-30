@@ -51,3 +51,6 @@ supabase/.temp
 Thumbs.db
 
 .vercel
+
+# ko-labels 동기화 워터마크 (scripts/sync-ko-labels.mjs)
+.ko-labels-watermark
