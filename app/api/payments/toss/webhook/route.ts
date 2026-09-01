@@ -4,6 +4,7 @@ import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { fetchTossPayment, tossConfigured } from '@/lib/payments/toss';
 import { accrueOrderTravelMargin, reverseOrder, stampOrderHospitalFee } from '@/lib/referral/service';
+import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -38,7 +39,11 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   try {
     const [order] = await db
-      .select({ id: checkoutOrders.id, status: checkoutOrders.status, meta: checkoutOrders.meta })
+      .select({
+        id: checkoutOrders.id, status: checkoutOrders.status, meta: checkoutOrders.meta,
+        listingTitle: checkoutOrders.listingTitle, totalWon: checkoutOrders.totalWon,
+        userEmail: checkoutOrders.userEmail,
+      })
       .from(checkoutOrders)
       .where(eq(checkoutOrders.invoiceNo, payment.orderId))
       .limit(1);
@@ -58,6 +63,10 @@ export async function POST(req: Request): Promise<NextResponse> {
       // confirm 경로와 같은 규칙: 여행 마진 적립 + 의료상품 요율 스탬프 (멱등)
       await accrueOrderTravelMargin(order.id).catch(() => 0);
       await stampOrderHospitalFee(order.id).catch(() => false);
+      await notifyOrderEvent('paid', {
+        invoiceNo: payment.orderId, listingTitle: order.listingTitle, totalWon: order.totalWon,
+        userEmail: order.userEmail, method: 'toss:' + (payment.method ?? 'card'),
+      }).catch(() => false);
     } else if (
       (payment.status === 'CANCELED' || payment.status === 'PARTIAL_CANCELED' || payment.status === 'ABORTED' || payment.status === 'EXPIRED')
       && order.status !== 'cancelled'

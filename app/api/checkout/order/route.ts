@@ -6,6 +6,7 @@ import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { cookies } from 'next/headers';
 import { attributeUser, getAttribution, REF_COOKIE } from '@/lib/referral/service';
+import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -116,6 +117,12 @@ export async function POST(req: Request): Promise<NextResponse> {
         })
         .returning({ id: checkoutOrders.id, invoiceNo: checkoutOrders.invoiceNo });
       if (!row) return NextResponse.json({ error: 'insert_failed' }, { status: 502 });
+      // 운영자 텔레그램 알림 — 실패해도 발행 흐름에 영향 없음
+      await notifyOrderEvent('issued', {
+        invoiceNo: row.invoiceNo, listingTitle: input.listingTitle, totalWon: total,
+        guests: input.guests, reserveDate: input.reserveDate, reserveTime: input.reserveTime,
+        userEmail, locale: input.locale,
+      }).catch(() => false);
       return NextResponse.json({
         ok: true,
         invoiceNo: row.invoiceNo,
@@ -142,7 +149,11 @@ export async function PATCH(req: Request): Promise<NextResponse> {
   }
   try {
     const [order] = await db
-      .select({ id: checkoutOrders.id, userId: checkoutOrders.userId })
+      .select({
+        id: checkoutOrders.id, userId: checkoutOrders.userId,
+        listingTitle: checkoutOrders.listingTitle, totalWon: checkoutOrders.totalWon,
+        userEmail: checkoutOrders.userEmail,
+      })
       .from(checkoutOrders)
       .where(eq(checkoutOrders.invoiceNo, input.invoiceNo))
       .limit(1);
@@ -159,6 +170,10 @@ export async function PATCH(req: Request): Promise<NextResponse> {
       .update(checkoutOrders)
       .set({ status: 'reported', reportedAt: new Date(), updatedAt: new Date() })
       .where(eq(checkoutOrders.id, order.id));
+    await notifyOrderEvent('reported', {
+      invoiceNo: input.invoiceNo, listingTitle: order.listingTitle,
+      totalWon: order.totalWon, userEmail: order.userEmail,
+    }).catch(() => false);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: 'update_failed' }, { status: 502 });

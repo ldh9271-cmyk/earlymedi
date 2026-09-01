@@ -8,6 +8,7 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
+import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 import {
   accrueOrderTravelMargin,
   reverseOrder,
@@ -42,6 +43,18 @@ export async function markOrderPaidAction(formData: FormData): Promise<void> {
     // 진료과·요율만 스탬프한다 — 수수료 원장은 병원 실결제액 확정 시 생성
     await accrueOrderTravelMargin(id).catch(() => 0);
     await stampOrderHospitalFee(id).catch(() => false);
+    const [o] = await db
+      .select({
+        invoiceNo: checkoutOrders.invoiceNo, listingTitle: checkoutOrders.listingTitle,
+        totalWon: checkoutOrders.totalWon, userEmail: checkoutOrders.userEmail,
+      })
+      .from(checkoutOrders).where(eq(checkoutOrders.id, id)).limit(1);
+    if (o) {
+      await notifyOrderEvent('paid_manual', {
+        invoiceNo: o.invoiceNo, listingTitle: o.listingTitle,
+        totalWon: o.totalWon, userEmail: o.userEmail,
+      }).catch(() => false);
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'update_failed';
     if (msg.includes('NEXT_REDIRECT')) throw err;

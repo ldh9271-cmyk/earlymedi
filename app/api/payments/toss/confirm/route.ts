@@ -5,6 +5,7 @@ import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { confirmTossPayment, tossConfigured } from '@/lib/payments/toss';
 import { accrueOrderTravelMargin, stampOrderHospitalFee } from '@/lib/referral/service';
+import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -39,6 +40,8 @@ export async function POST(req: Request): Promise<NextResponse> {
       id: checkoutOrders.id,
       status: checkoutOrders.status,
       totalWon: checkoutOrders.totalWon,
+      listingTitle: checkoutOrders.listingTitle,
+      userEmail: checkoutOrders.userEmail,
       meta: checkoutOrders.meta,
     })
     .from(checkoutOrders)
@@ -85,6 +88,11 @@ export async function POST(req: Request): Promise<NextResponse> {
   // 관리자 수동 paid 처리(/master/orders)와 같은 규칙 — 멱등이라 안전.
   await accrueOrderTravelMargin(order.id).catch(() => 0);
   await stampOrderHospitalFee(order.id).catch(() => false);
+
+  await notifyOrderEvent('paid', {
+    invoiceNo: input.orderId, listingTitle: order.listingTitle, totalWon: order.totalWon,
+    userEmail: order.userEmail, method: 'toss:' + (result.method ?? 'card'),
+  }).catch(() => false);
 
   return NextResponse.json({ ok: true });
 }
