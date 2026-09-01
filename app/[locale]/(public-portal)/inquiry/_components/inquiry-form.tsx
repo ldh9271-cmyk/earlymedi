@@ -22,6 +22,13 @@ const COUNTRY_CODES = [
   'RU', 'KZ', 'UZ', 'IN', 'AE', 'SA', 'AU', 'CA', 'GB', 'DE', 'FR', 'IT',
 ];
 
+/** 국가 코드 → 국기 이모지 (지역 표시 문자 조합). */
+function flagEmoji(cc: string): string {
+  return [...cc.toUpperCase()]
+    .map((ch) => String.fromCodePoint(0x1f1e6 + ch.charCodeAt(0) - 65))
+    .join('');
+}
+
 const inputStyle: React.CSSProperties = {
   height: 48,
   width: '100%',
@@ -186,7 +193,7 @@ export function InquiryForm({
             style={inputStyle}
           >
             {COUNTRY_CODES.map((c) => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c} value={c}>{`${flagEmoji(c)} ${c}`}</option>
             ))}
           </select>
         </div>
