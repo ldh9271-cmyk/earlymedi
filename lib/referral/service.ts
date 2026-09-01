@@ -12,6 +12,7 @@ import {
   type DistributorConfig,
 } from '@/drizzle/schema/referral-program';
 import { computeLedger, resolveFeeBp } from './commission';
+import { notifyAttributionEvent, notifyDistributorAccrual } from '@/lib/notify/admin-alert';
 
 export const REF_COOKIE = 'gu_ref';
 /** 추천인 가입 초대로 들어온 경우 — /me/referral 에서 참여 버튼을 띄운다. */
@@ -125,6 +126,11 @@ export async function attributeUser(userId: string, code: string, source = 'qr')
       .update(referralPartners)
       .set({ signups: sql`${referralPartners.signups} + 1`, updatedAt: new Date() })
       .where(eq(referralPartners.id, partner.id));
+    // 운영자 알림 — 새 귀속이 생긴 최초 1회만 (onConflictDoNothing 통과 시)
+    await notifyAttributionEvent({
+      partnerLabel: `${partner.name} (${partner.code})`,
+      source,
+    }).catch(() => false);
   }
   return partner;
 }
@@ -224,7 +230,7 @@ export async function createResultOrderWithLedger(input: CreateResultOrderInput)
   const confirmAt = new Date(input.completedAt.getTime() + config.holdDays * 86_400_000);
   const total = input.kind === 'travel' ? input.saleAmountWon : input.procedureAmountWon;
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const [order] = await tx
       .insert(checkoutOrders)
       .values({
@@ -278,6 +284,20 @@ export async function createResultOrderWithLedger(input: CreateResultOrderInput)
       total: drafts.reduce((a, d) => a + d.amountWon, 0),
     };
   });
+
+  const [distRow] = await db
+    .select({ name: referralPartners.name, code: referralPartners.code })
+    .from(referralPartners)
+    .where(eq(referralPartners.id, input.distributorId))
+    .limit(1);
+  await notifyDistributorAccrual({
+    kind: '실적 등록',
+    distributorLabel: distRow ? `${distRow.name} (${distRow.code})` : input.distributorId,
+    invoiceNo: result.invoiceNo,
+    baseWon: total,
+    amountWon: result.total,
+  }).catch(() => false);
+  return result;
 }
 
 /**
@@ -341,6 +361,19 @@ export async function accrueOrderTravelMargin(orderId: string): Promise<number> 
     confirmAt,
     note: `여행상품 마진 ${marginPct}% · ${order.invoiceNo}`,
   });
+
+  const [distRow] = await db
+    .select({ name: referralPartners.name, code: referralPartners.code })
+    .from(referralPartners)
+    .where(eq(referralPartners.id, order.distributorId))
+    .limit(1);
+  await notifyDistributorAccrual({
+    kind: '여행 마진 적립',
+    distributorLabel: distRow ? `${distRow.name} (${distRow.code})` : order.distributorId,
+    invoiceNo: order.invoiceNo,
+    baseWon: saleBase,
+    amountWon,
+  }).catch(() => false);
   return amountWon;
 }
 
@@ -449,7 +482,7 @@ export async function settleOrderHospitalFeeActual(input: {
     : new Date();
   const confirmAt = new Date(procDate.getTime() + config.holdDays * 86_400_000);
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     // 기존 병원 수수료 행 정리 (정정 재입력)
     const prev = await tx
       .select()
@@ -508,6 +541,20 @@ export async function settleOrderHospitalFeeActual(input: {
 
     return { rows: drafts.length, total: drafts.reduce((a, d) => a + d.amountWon, 0) };
   });
+
+  const [distRow] = await db
+    .select({ name: referralPartners.name, code: referralPartners.code })
+    .from(referralPartners)
+    .where(eq(referralPartners.id, order.distributorId))
+    .limit(1);
+  await notifyDistributorAccrual({
+    kind: '병원 수수료 정산',
+    distributorLabel: distRow ? `${distRow.name} (${distRow.code})` : order.distributorId,
+    invoiceNo: order.invoiceNo,
+    baseWon: input.actualAmountWon,
+    amountWon: result.total,
+  }).catch(() => false);
+  return result;
 }
 
 /** 취소·환불 — 아직 지급 전이면 reversed, 이미 지급됐으면 음수 행을 추가해 다음 정산에서 환수. */

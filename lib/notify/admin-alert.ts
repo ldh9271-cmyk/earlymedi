@@ -1,5 +1,3 @@
-import 'server-only';
-
 /**
  * 운영자 텔레그램 알림.
  *
@@ -12,6 +10,10 @@ import 'server-only';
  *
  * 미설정이면 조용히 아무것도 하지 않는다 — 알림 실패가 결제 흐름을
  * 막아서는 안 되므로 호출부는 항상 .catch(() => {}) 로 감싼다.
+ *
+ * 'server-only' 가드는 두지 않는다 — referral service 경유로 통합
+ * 테스트(node)에서도 로드된다. 토큰은 NEXT_PUBLIC 이 아니라 클라이언트
+ * 번들에 노출되지 않고, vitest 실행 중에는 발송 자체를 차단한다.
  */
 
 const API = 'https://api.telegram.org';
@@ -26,6 +28,7 @@ function won(n: number): string {
 
 /** HTML 모드 텔레그램 메시지 발송. 수신자별 성공 여부와 무관하게 계속 보낸다. */
 export async function sendAdminTelegram(html: string): Promise<boolean> {
+  if (process.env.VITEST) return false; // 통합 테스트가 실데이터로 돌 때 오발송 방지
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatIds = (process.env.TELEGRAM_ADMIN_CHAT_ID ?? '')
     .split(',')
@@ -76,6 +79,68 @@ export async function notifyInquiryEvent(q: {
   if (q.memo?.trim()) lines.push('', esc(q.memo.trim().slice(0, 800)));
   lines.push('', 'https://www.glowuptour.com/agency/inbox');
   return sendAdminTelegram(lines.join('\n'));
+}
+
+/** 신규 회원 가입 알림 — OAuth·이메일 인증 콜백에서 1회. */
+export async function notifySignupEvent(q: {
+  email: string;
+  name?: string | null;
+  kind: 'general' | 'biz';
+  refLabel?: string | null;
+}): Promise<boolean> {
+  const lines = [
+    `<b>🙋 새 회원 가입</b> (${q.kind === 'biz' ? 'BIZ · 파트너 센터' : '일반 · 공개 포털'})`,
+    esc(q.email),
+  ];
+  if (q.name) lines.push(`이름: ${esc(q.name)}`);
+  if (q.refLabel) lines.push(`총판·추천 경유: ${esc(q.refLabel)}`);
+  lines.push('', 'https://www.glowuptour.com/master/members');
+  return sendAdminTelegram(lines.join('\n'));
+}
+
+/** 리드 마켓 열람(DB 판매) 알림 — 병원이 국내 문의를 건당 구매한 시점. */
+export async function notifyLeadUnlockEvent(q: {
+  orgName: string;
+  priceWon: number;
+  interestKey: string;
+  balanceKrw: number;
+}): Promise<boolean> {
+  const lines = [
+    '<b>🔓 리드 DB 판매</b>',
+    `병원: ${esc(q.orgName)}`,
+    `열람가: ${won(q.priceWon)} (${esc(q.interestKey)}) · 남은 잔액: ${won(q.balanceKrw)}`,
+    '',
+    'https://www.glowuptour.com/master/lead-topups',
+  ];
+  return sendAdminTelegram(lines.join('\n'));
+}
+
+/** 총판 실적 알림 — 수당 원장 생성(마진 적립·수수료 정산·실적 등록) 시. */
+export async function notifyDistributorAccrual(q: {
+  kind: '여행 마진 적립' | '병원 수수료 정산' | '실적 등록';
+  distributorLabel: string;
+  invoiceNo: string;
+  baseWon: number;
+  amountWon: number;
+}): Promise<boolean> {
+  const lines = [
+    `<b>📈 총판 실적 — ${q.kind}</b>`,
+    `총판: ${esc(q.distributorLabel)}`,
+    `<code>${esc(q.invoiceNo)}</code> · 기준액 ${won(q.baseWon)} → 수당 ${won(q.amountWon)}`,
+    '',
+    'https://www.glowuptour.com/master/partners',
+  ];
+  return sendAdminTelegram(lines.join('\n'));
+}
+
+/** 총판·추천 코드로 회원이 새로 귀속된 시점 (최초 1회). */
+export async function notifyAttributionEvent(q: {
+  partnerLabel: string;
+  source: string;
+}): Promise<boolean> {
+  return sendAdminTelegram(
+    [`<b>👥 총판 회원 귀속</b>`, `코드: ${esc(q.partnerLabel)} · 경로: ${esc(q.source)}`].join('\n'),
+  );
 }
 
 const EVENT_HEAD: Record<string, string> = {

@@ -10,6 +10,8 @@ import { leadTopups, leadUnlocks } from '@/drizzle/schema/lead-market';
 import { conversations } from '@/drizzle/schema/conversations';
 import { messages } from '@/drizzle/schema/messages';
 import { auditLogs } from '@/drizzle/schema/audit';
+import { organizations } from '@/drizzle/schema/organizations';
+import { notifyLeadUnlockEvent } from '@/lib/notify/admin-alert';
 import {
   LEAD_TOPUP_OPTIONS_WON,
   LEAD_TOPUP_UNIT_WON,
@@ -167,6 +169,23 @@ export async function unlockLeadAction(input: {
     entityId: conversationId,
     diff: { priceWon, interestKey },
   });
+
+  // 운영자 텔레그램 알림 — DB 판매 발생. 실패해도 열람은 성공 처리.
+  try {
+    const [org] = await db
+      .select({ name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.id, ctx.orgId))
+      .limit(1);
+    await notifyLeadUnlockEvent({
+      orgName: org?.name ?? ctx.orgId,
+      priceWon,
+      interestKey: interestKey ?? '기타',
+      balanceKrw: deducted[0]?.balance ?? 0,
+    });
+  } catch {
+    /* 알림 실패 무시 */
+  }
 
   revalidatePath('/medical/leads');
   return { ok: true, priceWon, already: false };
