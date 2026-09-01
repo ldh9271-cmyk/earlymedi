@@ -349,7 +349,6 @@ const vi: Dictionary = {
     courseBook: 'Đặt chỗ',
     courseNotCharged: 'Bạn chưa bị tính phí cho đến khi đặt được xác nhận',
     coursePersonUnit: 'người',
-    courseInterpreter: 'Hướng dẫn viên phiên dịch',
     courseIncluded: 'Đã bao gồm',
     courseHotel4: 'Khách sạn 5★ · 4 đêm',
     courseTotal: 'Tổng cộng',
@@ -412,22 +411,22 @@ const vi: Dictionary = {
     defaultHighlights: {
       hotel: [
         { title: 'Phòng 4–5 sao', desc: 'Chỉ tuyển chọn khách sạn cao cấp đã xác minh.' },
-        { title: 'Gồm đưa đón concierge', desc: 'Điều phối sân bay & phòng khám.' },
+        { title: 'Hỗ trợ đặt chỗ qua chat', desc: 'Hướng dẫn qua chat cho đến khi xác nhận đặt chỗ.' },
         { title: 'Hủy miễn phí đến 48h', desc: 'Không thu phí trước xác nhận.' },
       ],
       food: [
         { title: 'Món đặc trưng bản địa', desc: 'Được người địa phương yêu thích.' },
-        { title: 'Đặt chỗ & phiên dịch', desc: 'Xử lý trọn gói cho bạn.' },
+        { title: 'Hỗ trợ đặt chỗ qua chat', desc: 'Hướng dẫn qua chat cho đến khi xác nhận đặt chỗ.' },
         { title: 'Báo trước dị ứng', desc: 'Chia sẻ hạn chế ăn uống từ trước.' },
       ],
       beauty: [
         { title: 'Chuyên gia tư vấn 1:1', desc: 'Buổi 90 phút, kèm thẻ bảng màu cá nhân.' },
-        { title: 'Gồm concierge', desc: 'Đặt chỗ, phiên dịch (EN/中/日) và lộ trình.' },
+        { title: 'Hỗ trợ đặt chỗ qua chat', desc: 'Hướng dẫn qua chat cho đến khi xác nhận đặt chỗ.' },
         { title: 'Chưa thu phí trước xác nhận', desc: 'Hủy miễn phí đến 48h.' },
       ],
       fallback: [
         { title: 'Đối tác đã xác minh', desc: 'Đạt chuẩn tuyển chọn GlowUp.' },
-        { title: 'Concierge đồng hành', desc: 'Đặt chỗ, phiên dịch và lộ trình trọn gói.' },
+        { title: 'Hỗ trợ đặt chỗ qua chat', desc: 'Hướng dẫn qua chat cho đến khi xác nhận đặt chỗ.' },
         { title: 'Hủy miễn phí', desc: 'Không thu phí trước xác nhận, đến 48h.' },
       ],
     },
@@ -440,10 +439,7 @@ const vi: Dictionary = {
     inquire: 'Liên hệ',
     taxNote: 'Chưa gồm thuế và phí dịch vụ',
     noChargeYet: 'Chưa thu phí cho đến khi xác nhận đặt chỗ',
-    rowConcierge: 'Concierge đồng hành',
-    rowBooking: 'Đặt chỗ & phiên dịch',
     rowFreeCancel: 'Hủy miễn phí trước xác nhận',
-    included: 'Bao gồm',
     subtitles: {
       personal_color: 'Chẩn đoán màu cá nhân',
       makeup: 'Trang điểm K-beauty',

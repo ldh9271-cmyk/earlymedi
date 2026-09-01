@@ -18,7 +18,6 @@ export type CourseBookingLabels = {
   guestN: string; // '{n}' 치환 템플릿
   book: string;
   notCharged: string;
-  interpreter: string;
   included: string;
   thirdRow: string;
   total: string;
@@ -186,10 +185,6 @@ export default function CourseBookingCard({
         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6a6a6a' }}>
           <span>{priceLabel} × {guests}</span>
           <span>{totalLabel}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6a6a6a' }}>
-          <span>{labels.interpreter}</span>
-          <span>{labels.included}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6a6a6a' }}>
           <span>{labels.thirdRow}</span>

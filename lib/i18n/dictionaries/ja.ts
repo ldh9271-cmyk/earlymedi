@@ -348,7 +348,6 @@ const ja: Dictionary = {
     courseBook: '予約する',
     courseNotCharged: '予約確定までは料金は請求されません',
     coursePersonUnit: '名',
-    courseInterpreter: '通訳ガイド同行',
     courseIncluded: '含む',
     courseHotel4: '5 つ星ホテル 4 泊',
     courseTotal: '合計',
@@ -411,22 +410,22 @@ const ja: Dictionary = {
     defaultHighlights: {
       hotel: [
         { title: '4〜5つ星クラスの客室', desc: '検証済みラグジュアリーホテルのみ厳選。' },
-        { title: 'コンシェルジュ送迎付き', desc: '空港・クリニックの移動を調整。' },
+        { title: 'チャット予約サポート', desc: '予約確定までチャットでご案内します。' },
         { title: '最大48時間前まで無料キャンセル', desc: '確定前は請求なし。' },
       ],
       food: [
         { title: '地元シグネチャーメニュー', desc: '地元で人気の実力派コース。' },
-        { title: '予約・通訳代行', desc: '予約と通訳をまとめて対応。' },
+        { title: 'チャット予約サポート', desc: '予約確定までチャットでご案内します。' },
         { title: 'アレルギー事前案内', desc: '食事制限を事前に共有。' },
       ],
       beauty: [
         { title: '1:1専門コンサルタント', desc: '90分セッション、パーソナルパレットカード付き。' },
-        { title: 'コンシェルジュ付き', desc: '予約・通訳（英/中/日）・ルート案内まで。' },
+        { title: 'チャット予約サポート', desc: '予約確定までチャットでご案内します。' },
         { title: '確定前は請求なし', desc: '最大48時間前まで無料キャンセル。' },
       ],
       fallback: [
         { title: '検証済みパートナー', desc: 'GlowUpキュレーション基準を通過。' },
-        { title: 'コンシェルジュ同行', desc: '予約・通訳・ルートを一括対応。' },
+        { title: 'チャット予約サポート', desc: '予約確定までチャットでご案内します。' },
         { title: '確定前の無料キャンセル', desc: '最大48時間前まで無料。' },
       ],
     },
@@ -439,10 +438,7 @@ const ja: Dictionary = {
     inquire: '要問合せ',
     taxNote: '税金・サービス料別途',
     noChargeYet: '予約確定前は請求されません',
-    rowConcierge: 'コンシェルジュ同行',
-    rowBooking: '予約・通訳代行',
     rowFreeCancel: '確定前の無料キャンセル',
-    included: '含む',
     subtitles: {
       personal_color: 'パーソナルカラー診断',
       makeup: 'K-ビューティーメイク',

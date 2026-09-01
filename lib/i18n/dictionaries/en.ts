@@ -361,7 +361,6 @@ const en: Dictionary = {
     courseBook: 'Reserve',
     courseNotCharged: "You won't be charged until your booking is confirmed",
     coursePersonUnit: 'person',
-    courseInterpreter: 'Interpreter guide',
     courseIncluded: 'Included',
     courseHotel4: '5-star hotel · 4 nights',
     courseTotal: 'Total',
@@ -412,22 +411,22 @@ const en: Dictionary = {
     defaultHighlights: {
       hotel: [
         { title: '4–5 star properties', desc: 'Only verified luxury hotels curated.' },
-        { title: 'Concierge pickup included', desc: 'Airport & clinic transfers coordinated.' },
+        { title: 'Chat booking support', desc: 'We guide you via chat until your booking is confirmed.' },
         { title: 'Free cancellation up to 48h', desc: 'No charge before confirmation.' },
       ],
       food: [
         { title: 'Local signature course', desc: 'Loved and proven by locals.' },
-        { title: 'Booking & interpreter', desc: 'Reservation and interpretation handled for you.' },
+        { title: 'Chat booking support', desc: 'We guide you via chat until your booking is confirmed.' },
         { title: 'Allergy briefing', desc: 'Dietary restrictions shared in advance.' },
       ],
       beauty: [
         { title: '1:1 expert consultant', desc: '90-min session with personal palette card.' },
-        { title: 'Concierge included', desc: 'Booking, interpreter (EN/中/日) and route handled.' },
+        { title: 'Chat booking support', desc: 'We guide you via chat until your booking is confirmed.' },
         { title: 'No charge until confirmed', desc: 'Free cancellation up to 48h.' },
       ],
       fallback: [
         { title: 'Verified partner', desc: 'Passed GlowUp curation standards.' },
-        { title: 'Concierge escort', desc: 'Booking, interpreter and route in one.' },
+        { title: 'Chat booking support', desc: 'We guide you via chat until your booking is confirmed.' },
         { title: 'Free cancellation', desc: 'No charge before confirmation, up to 48h.' },
       ],
     },
@@ -440,10 +439,7 @@ const en: Dictionary = {
     inquire: 'Inquire',
     taxNote: 'Taxes & service fees not included',
     noChargeYet: "You won't be charged until confirmation",
-    rowConcierge: 'Concierge escort',
-    rowBooking: 'Booking & interpreter',
     rowFreeCancel: 'Free cancellation before confirmation',
-    included: 'Included',
     subtitles: {
       personal_color: 'Personal color analysis',
       makeup: 'K-beauty makeup',

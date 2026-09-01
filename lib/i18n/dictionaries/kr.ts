@@ -372,7 +372,6 @@ const kr = {
     courseBook: '예약하기',
     courseNotCharged: '예약 확정 전에는 요금이 청구되지 않습니다',
     coursePersonUnit: '1인',
-    courseInterpreter: '통역 가이드 동행',
     courseIncluded: '포함',
     courseHotel4: '5성 호텔 4박',
     courseTotal: '총 합계',
@@ -428,22 +427,22 @@ const kr = {
     defaultHighlights: {
       hotel: [
         { title: '4성·5성 등급 객실', desc: '검증된 럭셔리 호텔만 큐레이션.' },
-        { title: '컨시어지 픽업 포함', desc: '공항·시술 동선 일정 조율.' },
+        { title: '채팅 예약 안내', desc: '예약 확정까지 채팅으로 안내해 드립니다.' },
         { title: '무료 취소 최대 48h', desc: '예약 확정 전 무료 취소.' },
       ],
       food: [
         { title: '현지 시그니처 메뉴', desc: '현지인 사이에서 검증된 인기 코스.' },
-        { title: '통역 예약 동행', desc: '예약·통역 즉시 처리.' },
+        { title: '채팅 예약 안내', desc: '예약 확정까지 채팅으로 안내해 드립니다.' },
         { title: '식이 알러지 사전 안내', desc: '알러지·식이 제한 사전 공유.' },
       ],
       beauty: [
         { title: '1:1 전문 컨설턴트', desc: '90분 세션, 퍼스널 팔레트 카드 포함.' },
-        { title: '컨시어지 포함', desc: '예약·통역(영/중/일)·동선 안내까지 한 번에.' },
+        { title: '채팅 예약 안내', desc: '예약 확정까지 채팅으로 안내해 드립니다.' },
         { title: '확정 전 미청구', desc: '예약 확정 전 무료 취소 (최대 48h).' },
       ],
       fallback: [
         { title: '검증된 파트너', desc: '글로우업 큐레이션 기준 통과.' },
-        { title: '컨시어지 동행', desc: '예약·통역·동선 한 번에.' },
+        { title: '채팅 예약 안내', desc: '예약 확정까지 채팅으로 안내해 드립니다.' },
         { title: '확정 전 무료 취소', desc: '예약 확정 전 무료 취소 (최대 48h).' },
       ],
     },
@@ -456,10 +455,7 @@ const kr = {
     inquire: '문의',
     taxNote: '세금·서비스 수수료 별도',
     noChargeYet: '예약 확정 전에는 요금이 청구되지 않습니다',
-    rowConcierge: '컨시어지 동행',
-    rowBooking: '예약·통역 대행',
     rowFreeCancel: '확정 전 무료 취소',
-    included: '포함',
     subtitles: {
       personal_color: '퍼스널 컬러 진단',
       makeup: 'K-뷰티 메이크업',

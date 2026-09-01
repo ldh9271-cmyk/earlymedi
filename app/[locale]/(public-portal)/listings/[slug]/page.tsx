@@ -711,8 +711,6 @@ export default async function ListingDetailPage({
           </div>
           <div style={{ height: 1, background: '#ebebeb', margin: '18px 0' }} />
           <div style={{ fontSize: 13, color: '#3f3f3f', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Row label={d.rowConcierge} value={d.included} />
-            <Row label={d.rowBooking} value={d.included} />
             <Row label={d.rowFreeCancel} value="48h" />
           </div>
         </div>

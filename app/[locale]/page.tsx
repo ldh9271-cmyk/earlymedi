@@ -707,7 +707,6 @@ function Course({
             guestN: t.courseGuestN,
             book: t.courseBook,
             notCharged: t.courseNotCharged,
-            interpreter: t.courseInterpreter,
             included: t.courseIncluded,
             thirdRow: dbCourse ? courseDesc : t.courseHotel4,
             total: t.courseTotal,

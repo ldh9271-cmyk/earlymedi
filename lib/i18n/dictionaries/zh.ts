@@ -346,7 +346,6 @@ const zh: Dictionary = {
     courseBook: '预订',
     courseNotCharged: '确认预订前不会收取费用',
     coursePersonUnit: '人',
-    courseInterpreter: '翻译陪同',
     courseIncluded: '包含',
     courseHotel4: '五星酒店 4 晚',
     courseTotal: '合计',
@@ -409,22 +408,22 @@ const zh: Dictionary = {
     defaultHighlights: {
       hotel: [
         { title: '4–5星级客房', desc: '只甄选经过验证的豪华酒店。' },
-        { title: '含礼宾接送', desc: '协调机场与诊所行程。' },
+        { title: '聊天预订支持', desc: '确认预订前全程通过聊天引导。' },
         { title: '最长48小时免费取消', desc: '确认前不收费。' },
       ],
       food: [
         { title: '本地招牌菜', desc: '深受本地人喜爱的人气菜品。' },
-        { title: '预约·口译代办', desc: '预订与口译一站式处理。' },
+        { title: '聊天预订支持', desc: '确认预订前全程通过聊天引导。' },
         { title: '过敏事项提前沟通', desc: '饮食限制提前告知。' },
       ],
       beauty: [
         { title: '1:1专业顾问', desc: '90分钟诊断，含个人色彩卡。' },
-        { title: '含礼宾服务', desc: '预约、口译（英/中/日）与路线全程安排。' },
+        { title: '聊天预订支持', desc: '确认预订前全程通过聊天引导。' },
         { title: '确认前不扣款', desc: '最长48小时免费取消。' },
       ],
       fallback: [
         { title: '认证合作伙伴', desc: '通过GlowUp甄选标准。' },
-        { title: '礼宾陪同', desc: '预约、口译与路线一站式安排。' },
+        { title: '聊天预订支持', desc: '确认预订前全程通过聊天引导。' },
         { title: '确认前免费取消', desc: '最长48小时免费取消。' },
       ],
     },
@@ -437,10 +436,7 @@ const zh: Dictionary = {
     inquire: '咨询报价',
     taxNote: '不含税金及服务费',
     noChargeYet: '预订确认前不会扣款',
-    rowConcierge: '礼宾陪同',
-    rowBooking: '预约·口译代办',
     rowFreeCancel: '确认前免费取消',
-    included: '包含',
     subtitles: {
       personal_color: '个人色彩诊断',
       makeup: 'K-beauty 化妆',
