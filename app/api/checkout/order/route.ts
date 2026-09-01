@@ -34,6 +34,16 @@ const CreateSchema = z.object({
   reserveTime: z.string().min(1).max(60),
   guests: z.number().int().min(1).max(20),
   unitPriceWon: z.number().int().min(0).max(2_000_000_000),
+  /** 예약 시 수집한 연락처 (구글 가입 등 계정에 연락 수단이 없는 회원). */
+  contact: z
+    .object({
+      countryCode: z.string().max(2).nullable(),
+      phone: z.string().max(40).nullable(),
+      messengerKind: z.string().max(20).nullable(),
+      messengerId: z.string().max(100).nullable(),
+    })
+    .nullable()
+    .optional(),
 });
 
 const PatchSchema = z.object({
@@ -60,11 +70,28 @@ export async function POST(req: Request): Promise<NextResponse> {
   // 클라이언트가 보낸 id 를 믿지 않고 쿠키 세션에서 직접 읽는다.
   let userId: string | null = null;
   let userEmail: string | null = null;
+  // 연락처: 예약 폼에서 이번에 받은 값 우선, 없으면 계정 메타데이터
+  // (가입 폼 입력분)로 채운다 — 관리자가 주문만 보고 연락할 수 있게.
+  let contact = {
+    countryCode: input.contact?.countryCode ?? null,
+    phone: input.contact?.phone ?? null,
+    messengerKind: input.contact?.messengerKind ?? null,
+    messengerId: input.contact?.messengerId ?? null,
+  };
   try {
     const supabase = createSupabaseServerClient();
     const { data } = await supabase.auth.getUser();
     userId = data.user?.id ?? null;
     userEmail = data.user?.email ?? null;
+    const um = (data.user?.user_metadata ?? {}) as {
+      country_code?: string; phone?: string; messenger_kind?: string; messenger_id?: string;
+    };
+    contact = {
+      countryCode: contact.countryCode ?? um.country_code ?? null,
+      phone: contact.phone ?? um.phone ?? null,
+      messengerKind: contact.messengerKind ?? um.messenger_kind ?? null,
+      messengerId: contact.messengerId ?? um.messenger_id ?? null,
+    };
   } catch {
     /* 비로그인 예약도 허용 */
   }
@@ -113,7 +140,18 @@ export async function POST(req: Request): Promise<NextResponse> {
           userEmail,
           partnerId,
           distributorId,
-          meta: { ua: req.headers.get('user-agent') ?? '' },
+          meta: {
+            ua: req.headers.get('user-agent') ?? '',
+            ...(contact.phone || contact.messengerId || contact.countryCode
+              ? {
+                  contactCountry: contact.countryCode ?? undefined,
+                  contactPhone: contact.phone ?? undefined,
+                  contactMessenger: contact.messengerId
+                    ? ((contact.messengerKind ? contact.messengerKind + ' ' : '') + contact.messengerId)
+                    : undefined,
+                }
+              : {}),
+          },
         })
         .returning({ id: checkoutOrders.id, invoiceNo: checkoutOrders.invoiceNo });
       if (!row) return NextResponse.json({ error: 'insert_failed' }, { status: 502 });
@@ -122,6 +160,13 @@ export async function POST(req: Request): Promise<NextResponse> {
         invoiceNo: row.invoiceNo, listingTitle: input.listingTitle, totalWon: total,
         guests: input.guests, reserveDate: input.reserveDate, reserveTime: input.reserveTime,
         userEmail, locale: input.locale,
+        contact: [
+          contact.phone,
+          contact.messengerId
+            ? (contact.messengerKind ? contact.messengerKind + ' ' : '') + contact.messengerId
+            : null,
+          contact.countryCode,
+        ].filter(Boolean).join(' · ') || null,
       }).catch(() => false);
       return NextResponse.json({
         ok: true,

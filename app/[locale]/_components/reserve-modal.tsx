@@ -27,6 +27,19 @@ export type ReserveSummary = {
 };
 
 const MAX_GUESTS = 6;
+
+/** 연락처 수집용 국가 목록 — 공개 포털 문의 폼과 동일한 코드 셋. */
+const COUNTRY_CODES = [
+  'US', 'KR', 'CN', 'JP', 'TW', 'HK', 'SG', 'MY', 'TH', 'VN', 'PH', 'ID',
+  'RU', 'KZ', 'UZ', 'IN', 'AE', 'SA', 'AU', 'CA', 'GB', 'DE', 'FR', 'IT',
+] as const;
+const LOCALE_DEFAULT_COUNTRY: Record<string, string> = {
+  kr: 'KR', en: 'US', zh: 'CN', ja: 'JP', ru: 'RU', vi: 'VN',
+};
+const MESSENGER_KINDS = ['kakao', 'whatsapp', 'line', 'wechat', 'telegram'] as const;
+const MESSENGER_LABEL: Record<string, string> = {
+  kakao: 'KakaoTalk', whatsapp: 'WhatsApp', line: 'LINE', wechat: 'WeChat', telegram: 'Telegram',
+};
 /** 상담·픽업 가능한 시간대 (24h 기준, 로케일 포맷으로 표시). */
 const HOUR_SLOTS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 /** 알리페이 가맹점 QR — public/payment/ 에 실제 QR 이미지를 넣는다. */
@@ -134,19 +147,35 @@ export default function ReserveButton({
   const [finishing, setFinishing] = useState(false);
   // null = 확인 전, true/false = 로그인 여부. 헤더와 같은 브라우저 세션을 본다.
   const [authed, setAuthed] = useState<boolean | null>(null);
+  // 구글 가입 등으로 전화·메신저가 계정에 없는 회원 — 예약 시 1회 수집.
+  // 이메일 말고는 연락 수단이 없으면 예약 확정 연락이 막히기 때문.
+  const [contactNeeded, setContactNeeded] = useState(false);
+  const [ccode, setCcode] = useState('');
+  const [phone, setPhone] = useState('');
+  const [msgKind, setMsgKind] = useState('');
+  const [msgId, setMsgId] = useState('');
+  const [contactMissing, setContactMissing] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) { setAuthed(false); return undefined; }
     let mounted = true;
     void supabase.auth.getUser().then(({ data }) => {
-      if (mounted) setAuthed(!!data.user);
+      if (!mounted) return;
+      setAuthed(!!data.user);
+      const um = (data.user?.user_metadata ?? {}) as {
+        country_code?: string; phone?: string; messenger_kind?: string; messenger_id?: string;
+      };
+      if (data.user && !um.phone && !um.messenger_id) {
+        setContactNeeded(true);
+        setCcode(um.country_code ?? LOCALE_DEFAULT_COUNTRY[locale] ?? 'US');
+      }
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setAuthed(!!session?.user);
     });
     return () => { mounted = false; sub.subscription.unsubscribe(); };
-  }, []);
+  }, [locale]);
 
   // 오늘 날짜는 서버/클라 시간대가 어긋날 수 있어 mount 후 설정
   useEffect(() => { setMinDate(todayYmd()); setMaxDate(maxYmd()); }, []);
@@ -252,6 +281,11 @@ export default function ReserveButton({
       setDateNeeded(true);
       return;
     }
+    // 연락 수단이 없는 계정(구글 가입 등)은 국적·휴대폰을 받아야 진행
+    if (contactNeeded && (!ccode || phone.trim().length < 5)) {
+      setContactMissing(true);
+      return;
+    }
     // 팝업이 열려 있는 동안 세션이 만료됐거나, 확인 전에 열린 경우를 막는다
     if (!(await resolveAuthed())) {
       window.location.href = signupHref();
@@ -259,6 +293,25 @@ export default function ReserveButton({
     }
     setIssuing(true);
     setQrFailed(false);
+    // 입력받은 연락처는 계정 메타데이터에 저장 — 다음 예약부터는 안 묻는다.
+    // 저장 실패해도 예약은 계속하고, 주문 body 에 함께 실어 서버가 기록한다.
+    if (contactNeeded) {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        await supabase?.auth.updateUser({
+          data: {
+            country_code: ccode,
+            phone: phone.trim(),
+            ...(msgKind && msgId.trim()
+              ? { messenger_kind: msgKind, messenger_id: msgId.trim() }
+              : {}),
+          },
+        });
+        setContactNeeded(false);
+      } catch {
+        /* 메타데이터 저장 실패는 예약을 막지 않는다 */
+      }
+    }
     let issuedNo: string | null = null;
     try {
       const res = await fetch('/api/checkout/order', {
@@ -274,6 +327,14 @@ export default function ReserveButton({
           reserveTime: timeLabel,
           guests,
           unitPriceWon: summary.priceWon,
+          contact: contactNeeded || phone.trim()
+            ? {
+                countryCode: ccode || null,
+                phone: phone.trim() || null,
+                messengerKind: msgKind || null,
+                messengerId: msgId.trim() || null,
+              }
+            : null,
         }),
       });
       if (res.ok) {
@@ -550,6 +611,84 @@ export default function ReserveButton({
                       </select>
                     </label>
                   </div>
+
+                  {contactNeeded ? (
+                    <>
+                      <div style={{ height: 1, background: '#ebebeb', margin: '18px 0' }} />
+                      <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>{labels.contactTitle}</h3>
+                      <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 12px', lineHeight: 1.5 }}>
+                        {labels.contactHint}
+                      </p>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 10 }}>
+                        <label
+                          style={{
+                            ...fieldBox,
+                            ...(contactMissing && !ccode ? { border: '1.5px solid #dc2626', background: '#fff5f5' } : {}),
+                          }}
+                        >
+                          <span style={fieldLabel}>{labels.contactCountry}</span>
+                          <select
+                            value={ccode}
+                            onChange={(e) => { setCcode(e.target.value); setContactMissing(false); }}
+                            style={{ ...fieldInput, appearance: 'none', WebkitAppearance: 'none' }}
+                          >
+                            {COUNTRY_CODES.map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label
+                          style={{
+                            ...fieldBox,
+                            ...(contactMissing && phone.trim().length < 5
+                              ? { border: '1.5px solid #dc2626', background: '#fff5f5' }
+                              : {}),
+                          }}
+                        >
+                          <span style={fieldLabel}>{labels.contactPhone}</span>
+                          <input
+                            type="tel"
+                            value={phone}
+                            maxLength={40}
+                            placeholder="+82 10-0000-0000"
+                            onChange={(e) => { setPhone(e.target.value); setContactMissing(false); }}
+                            style={{ ...fieldInput, cursor: 'text' }}
+                          />
+                        </label>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 10, marginTop: 10 }}>
+                        <label style={fieldBox}>
+                          <span style={fieldLabel}>{labels.contactMessenger}</span>
+                          <select
+                            value={msgKind}
+                            onChange={(e) => setMsgKind(e.target.value)}
+                            style={{ ...fieldInput, appearance: 'none', WebkitAppearance: 'none' }}
+                          >
+                            <option value="">{labels.contactMsgNone}</option>
+                            {MESSENGER_KINDS.map((k) => (
+                              <option key={k} value={k}>{MESSENGER_LABEL[k]}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label style={fieldBox}>
+                          <span style={fieldLabel}>{labels.contactMessengerId}</span>
+                          <input
+                            type="text"
+                            value={msgId}
+                            maxLength={100}
+                            placeholder="@id"
+                            onChange={(e) => setMsgId(e.target.value)}
+                            style={{ ...fieldInput, cursor: 'text' }}
+                          />
+                        </label>
+                      </div>
+                      {contactMissing ? (
+                        <p style={{ color: '#dc2626', fontSize: 12, fontWeight: 600, margin: '8px 0 0 2px' }}>
+                          {labels.contactRequired}
+                        </p>
+                      ) : null}
+                    </>
+                  ) : null}
 
                   <div style={{ height: 1, background: '#ebebeb', margin: '18px 0' }} />
 

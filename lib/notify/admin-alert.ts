@@ -163,6 +163,8 @@ export async function notifyOrderEvent(
     userEmail?: string | null;
     locale?: string | null;
     method?: string | null;
+    /** 전화·메신저·국가 등 연락 수단 요약 한 줄. */
+    contact?: string | null;
   },
 ): Promise<boolean> {
   const lines = [
@@ -176,6 +178,7 @@ export async function notifyOrderEvent(
     lines.push(`${won(o.totalWon)}${o.method ? ` · ${esc(o.method)}` : ''}${o.locale ? ` · ${esc(o.locale)}` : ''}`);
   }
   if (o.userEmail) lines.push(`회원: ${esc(o.userEmail)}`);
+  if (o.contact) lines.push(`연락처: ${esc(o.contact)}`);
   lines.push('https://www.glowuptour.com/master/orders');
   return sendAdminTelegram(lines.join('\n'));
 }
