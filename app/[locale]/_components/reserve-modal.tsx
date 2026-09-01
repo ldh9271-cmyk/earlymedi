@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
+import { RESERVE_DEPOSIT_WON } from '@/lib/checkout/constants';
 import { openTossPayment, tossClientKey } from '@/lib/payments/toss-client';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 
@@ -109,6 +110,7 @@ export default function ReserveButton({
   summary,
   labels,
   listingSlug,
+  useDeposit = false,
   date,
   dateYmd,
   guestCount = 1,
@@ -125,6 +127,9 @@ export default function ReserveButton({
   labels: Dictionary['checkout'];
   /** 인보이스에 남길 상품 slug. */
   listingSlug?: string;
+  /** true = 예약금(정액)만 결제하고 잔금 현장결제 (여행 패키지 제외 상품).
+   *  false = 기존 전액 + 10% 수수료 결제 (여행 패키지). */
+  useDeposit?: boolean;
   date?: string;
   dateYmd?: string;
   guestCount?: number;
@@ -228,9 +233,11 @@ export default function ReserveButton({
   const timeLabel = timeOptions.find((o) => o.value === hour)?.label ?? labels.defaultTime;
   const guestsLabel = guests === 1 ? labels.oneGuest : labels.guestN.replace('{n}', String(guests));
 
+  // 예약금 모드: 상품가는 참고용, 온라인 결제는 예약금만 받고 잔금 현장결제.
+  // 여행 패키지(useDeposit=false)는 기존대로 전액 + 10% 수수료 결제.
   const lineAmount = summary.priceWon * guests;
-  const serviceFee = Math.round((lineAmount * 0.1) / 1000) * 1000;
-  const total = lineAmount + serviceFee;
+  const serviceFee = useDeposit ? 0 : Math.round((lineAmount * 0.1) / 1000) * 1000;
+  const payNow = useDeposit ? RESERVE_DEPOSIT_WON : lineAmount + serviceFee;
 
   const confirmHref = buildInquiryHref({
     locale,
@@ -239,7 +246,7 @@ export default function ReserveButton({
     date: dateLabel,
     time: timeLabel,
     guests: guestsLabel,
-    total,
+    total: useDeposit ? lineAmount : payNow,
   });
 
   /**
@@ -354,7 +361,7 @@ export default function ReserveButton({
     // 자체가 실패하면 기존 알리페이 QR 단계로 폴백한다.
     if (issuedNo && tossClientKey()) {
       const outcome = await openTossPayment({
-        amount: total,
+        amount: payNow,
         orderId: issuedNo,
         orderName: summary.title,
         successUrl: `${window.location.origin}/${locale}/checkout/toss/success`,
@@ -697,12 +704,21 @@ export default function ReserveButton({
                     label={priceLine(labels.lineSession, summary.priceWon, summary.priceUnitLabel, guests)}
                     value={`₩${lineAmount.toLocaleString('ko-KR')}`}
                   />
-                  <PriceRow label={labels.serviceFee} value={`₩${serviceFee.toLocaleString('ko-KR')}`} />
+                  {useDeposit ? (
+                    <PriceRow label={labels.payOnSiteRow} value={`₩${lineAmount.toLocaleString('ko-KR')}`} />
+                  ) : (
+                    <PriceRow label={labels.serviceFee} value={`₩${serviceFee.toLocaleString('ko-KR')}`} />
+                  )}
                   <div style={{ height: 1, background: '#ebebeb', margin: '12px 0' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700 }}>
-                    <span>{labels.total} (KRW)</span>
-                    <span>₩{total.toLocaleString('ko-KR')}</span>
+                    <span>{useDeposit ? labels.depositRow : labels.total} (KRW)</span>
+                    <span>₩{payNow.toLocaleString('ko-KR')}</span>
                   </div>
+                  {useDeposit ? (
+                    <p style={{ fontSize: 12, color: '#6a6a6a', margin: '10px 0 0', lineHeight: 1.55 }}>
+                      {labels.depositNote} {labels.approvalNote}
+                    </p>
+                  ) : null}
                 </>
               ) : (
                 <>
@@ -721,12 +737,19 @@ export default function ReserveButton({
                     </div>
                   ) : null}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: 14, color: '#6a6a6a' }}>{labels.payAmount}</span>
-                    <span style={{ fontSize: 20, fontWeight: 700 }}>₩{total.toLocaleString('ko-KR')}</span>
+                    <span style={{ fontSize: 14, color: '#6a6a6a' }}>
+                      {useDeposit ? labels.depositRow : labels.payAmount}
+                    </span>
+                    <span style={{ fontSize: 20, fontWeight: 700 }}>₩{payNow.toLocaleString('ko-KR')}</span>
                   </div>
                   <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 4 }}>
                     {dateLabel} · {timeLabel} · {guestsLabel}
                   </div>
+                  {useDeposit ? (
+                    <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 4 }}>
+                      {labels.payOnSiteRow}: ₩{lineAmount.toLocaleString('ko-KR')} — {labels.depositNote}
+                    </div>
+                  ) : null}
 
                   {/* 가맹점에서 받은 QR 카드 이미지 자체가 헤더·Pay Now·
                       결제수단 로고를 모두 담고 있어 그대로 노출한다. */}

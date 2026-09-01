@@ -3,10 +3,12 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
+import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { cookies } from 'next/headers';
 import { attributeUser, getAttribution, REF_COOKIE } from '@/lib/referral/service';
 import { notifyOrderEvent } from '@/lib/notify/admin-alert';
+import { RESERVE_DEPOSIT_WON } from '@/lib/checkout/constants';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -20,8 +22,10 @@ export const maxDuration = 20;
  *         이는 게스트의 자기신고이므로 실제 입금 확인은 관리자가
  *         알리페이 정산과 대조해 paid 로 올린다.
  *
- * 금액은 클라이언트 값을 믿지 않고 단가 × 인원 + 10% 수수료로 서버에서
- * 다시 계산한다.
+ * 결제 금액 = 정액 예약금(RESERVE_DEPOSIT_WON)만. 상품가(단가 × 인원)는
+ * 참고용으로 subtotal 에 기록하고, 잔금은 방문 당일 현장 결제가 원칙.
+ * 예약금 확인 후 컨시어지가 가능 여부를 확정한다 (founder 2026-09-01).
+ * 금액은 클라이언트 값을 믿지 않고 서버에서 계산한다.
  */
 
 const CreateSchema = z.object({
@@ -112,9 +116,27 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
   }
 
+  // 예약금 모드 여부 — 여행 패키지는 기존 전액 결제 유지 (founder).
+  // 카테고리는 클라이언트를 믿지 않고 리스팅에서 서버가 직접 판별한다.
+  let useDeposit = false;
+  if (input.listingSlug) {
+    try {
+      const [listing] = await db
+        .select({ category: partnerListings.category })
+        .from(partnerListings)
+        .where(eq(partnerListings.slug, input.listingSlug))
+        .limit(1);
+      useDeposit = !!listing && listing.category !== 'travel_package';
+    } catch {
+      /* 조회 실패 시 기존 전액 결제로 폴백 */
+    }
+  }
+
+  // 예약금 모드: subtotal = 상품가(현장 결제 예정), total = 예약금.
+  // 전액 모드(여행): 기존대로 상품가 + 10% 수수료.
   const subtotal = input.unitPriceWon * input.guests;
-  const serviceFee = Math.round((subtotal * 0.1) / 1000) * 1000;
-  const total = subtotal + serviceFee;
+  const serviceFee = useDeposit ? 0 : Math.round((subtotal * 0.1) / 1000) * 1000;
+  const total = useDeposit ? RESERVE_DEPOSIT_WON : subtotal + serviceFee;
 
   // 번호 충돌 시 재시도 (같은 날 4자리 난수라 드물게 겹칠 수 있음)
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -142,6 +164,7 @@ export async function POST(req: Request): Promise<NextResponse> {
           distributorId,
           meta: {
             ua: req.headers.get('user-agent') ?? '',
+            ...(useDeposit ? { depositWon: RESERVE_DEPOSIT_WON, payOnSiteWon: subtotal } : {}),
             ...(contact.phone || contact.messengerId || contact.countryCode
               ? {
                   contactCountry: contact.countryCode ?? undefined,
@@ -167,6 +190,9 @@ export async function POST(req: Request): Promise<NextResponse> {
             : null,
           contact.countryCode,
         ].filter(Boolean).join(' · ') || null,
+        extra: useDeposit
+          ? `예약금 인보이스 — 현장결제 예정 ₩${subtotal.toLocaleString('ko-KR')} · 입금 확인 후 가능 여부 확정 필요`
+          : null,
       }).catch(() => false);
       return NextResponse.json({
         ok: true,

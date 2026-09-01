@@ -697,6 +697,7 @@ export default async function ListingDetailPage({
             summary={reserveSummary}
             labels={dict.checkout}
             listingSlug={listing.slug}
+            useDeposit={listing.category !== 'travel_package'}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               marginTop: 18, height: 52,
@@ -754,6 +755,7 @@ export default async function ListingDetailPage({
           summary={reserveSummary}
           labels={dict.checkout}
           listingSlug={listing.slug}
+          useDeposit={listing.category !== 'travel_package'}
           style={{
             background: '#ff385c', color: '#fff',
             fontSize: 15, fontWeight: 700,

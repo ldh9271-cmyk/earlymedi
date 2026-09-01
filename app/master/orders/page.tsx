@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
-import { markOrderPaidAction, cancelOrderAction, settleHospitalActualAction } from './_actions';
+import { markOrderPaidAction, cancelOrderAction, confirmReservationAction, settleHospitalActualAction } from './_actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '예약 인보이스 — 마스터 관리자' };
@@ -174,7 +174,9 @@ export default async function MasterOrdersPage({
                       <Td align="right">
                         <div style={{ fontWeight: 700 }}>₩{r.totalWon.toLocaleString('ko-KR')}</div>
                         <div style={{ fontSize: 11, color: '#9c9c9c', marginTop: 2 }}>
-                          ₩{r.subtotalWon.toLocaleString('ko-KR')} + 수수료 ₩{r.serviceFeeWon.toLocaleString('ko-KR')}
+                          {r.serviceFeeWon > 0
+                            ? `₩${r.subtotalWon.toLocaleString('ko-KR')} + 수수료 ₩${r.serviceFeeWon.toLocaleString('ko-KR')}`
+                            : `현장결제 예정 ₩${r.subtotalWon.toLocaleString('ko-KR')}`}
                         </div>
                       </Td>
                       <Td>
@@ -194,6 +196,25 @@ export default async function MasterOrdersPage({
                               <input type="hidden" name="id" value={r.id} />
                               <button type="submit" style={btnStyle('#047857')}>입금 확인</button>
                             </form>
+                          ) : null}
+                          {r.status === 'paid' && (r.meta as { depositWon?: number } | null)?.depositWon ? (
+                            (r.meta as { reserveConfirmedAt?: string } | null)?.reserveConfirmedAt ? (
+                              <span
+                                style={{
+                                  background: '#ecfdf5', color: '#047857', borderRadius: 9999,
+                                  padding: '4px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap',
+                                }}
+                              >
+                                예약 확정됨
+                              </span>
+                            ) : (
+                              <form action={confirmReservationAction}>
+                                <input type="hidden" name="id" value={r.id} />
+                                <button type="submit" style={btnStyle('#1d4ed8')} title="파트너와 해당 시간 가능 여부 확인 후 확정">
+                                  예약 확정
+                                </button>
+                              </form>
+                            )
                           ) : null}
                           {r.status !== 'cancelled' && r.status !== 'paid' ? (
                             <form action={cancelOrderAction}>

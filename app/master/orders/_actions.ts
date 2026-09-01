@@ -90,6 +90,41 @@ export async function settleHospitalActualAction(formData: FormData): Promise<vo
   redirect('/master/orders');
 }
 
+/**
+ * 예약 확정 — 예약금 입금이 확인된 주문에 대해, 운영자가 해당
+ * 날짜·시간 예약 가능 여부를 파트너와 확인한 뒤 누른다. 불가하면
+ * 이 버튼 대신 고객 연락처로 일정을 조율하고 날짜 변경 후 확정한다.
+ */
+export async function confirmReservationAction(formData: FormData): Promise<void> {
+  await assertMaster();
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/master/orders?error=missing_id');
+  try {
+    const [order] = await db
+      .select({ id: checkoutOrders.id, status: checkoutOrders.status, meta: checkoutOrders.meta })
+      .from(checkoutOrders)
+      .where(eq(checkoutOrders.id, id))
+      .limit(1);
+    if (!order) redirect('/master/orders?error=not_found');
+    if (order.status !== 'paid') {
+      redirect(`/master/orders?error=${encodeURIComponent('예약금 입금 확인(paid) 후 확정할 수 있습니다')}`);
+    }
+    await db
+      .update(checkoutOrders)
+      .set({
+        meta: { ...(order.meta ?? {}), reserveConfirmedAt: new Date().toISOString() },
+        updatedAt: new Date(),
+      })
+      .where(eq(checkoutOrders.id, order.id));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'confirm_failed';
+    if (msg.includes('NEXT_REDIRECT')) throw err;
+    redirect(`/master/orders?error=${encodeURIComponent(msg)}`);
+  }
+  revalidatePath('/master/orders');
+  redirect('/master/orders');
+}
+
 export async function cancelOrderAction(formData: FormData): Promise<void> {
   await assertMaster();
   const id = String(formData.get('id') ?? '');

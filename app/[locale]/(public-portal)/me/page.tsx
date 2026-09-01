@@ -130,7 +130,13 @@ export default async function MyPage({
       ) : (
         <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {rows.map((r) => {
-            const s = statusMeta[r.status] ?? { label: r.status, bg: '#f5f5f5', fg: '#6a6a6a' };
+            // 예약금 주문: 입금 확인 후 컨시어지 확정(meta.reserveConfirmedAt)까지
+            // 한 단계가 더 있다 — 확정되면 '예약 확정'으로 표시한다.
+            const orderMeta = (r.meta ?? {}) as { depositWon?: number; reserveConfirmedAt?: string };
+            const isDeposit = !!orderMeta.depositWon;
+            const s = r.status === 'paid' && orderMeta.reserveConfirmedAt
+              ? { label: t.statusConfirmed, bg: '#ecfdf5', fg: '#047857' }
+              : statusMeta[r.status] ?? { label: r.status, bg: '#f5f5f5', fg: '#6a6a6a' };
             const highlighted = searchParams.invoice === r.invoiceNo;
             return (
               <article
@@ -153,6 +159,11 @@ export default async function MyPage({
                   <span style={{ fontSize: 12, color: '#6a6a6a', fontWeight: 600 }}>
                     {t.invoiceLabel} {r.invoiceNo}
                   </span>
+                  {r.status === 'paid' && isDeposit && !orderMeta.reserveConfirmedAt ? (
+                    <span style={{ fontSize: 11, color: '#b45309', fontWeight: 600 }}>
+                      {t.confirmWait}
+                    </span>
+                  ) : null}
                 </div>
 
                 <div
@@ -182,7 +193,9 @@ export default async function MyPage({
                       ₩{r.totalWon.toLocaleString('ko-KR')}
                     </div>
                     <div style={{ fontSize: 11, color: '#9c9c9c', marginTop: 2 }}>
-                      ₩{r.subtotalWon.toLocaleString('ko-KR')} + {t.feeLabel} ₩{r.serviceFeeWon.toLocaleString('ko-KR')}
+                      {isDeposit
+                        ? `${dict.checkout.payOnSiteRow} ₩${r.subtotalWon.toLocaleString('ko-KR')}`
+                        : `₩${r.subtotalWon.toLocaleString('ko-KR')} + ${t.feeLabel} ₩${r.serviceFeeWon.toLocaleString('ko-KR')}`}
                     </div>
                   </div>
                 </div>
