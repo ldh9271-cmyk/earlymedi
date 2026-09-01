@@ -10,6 +10,7 @@ import { conversations } from '@/drizzle/schema/conversations';
 import { messages } from '@/drizzle/schema/messages';
 import { auditLogs } from '@/drizzle/schema/audit';
 import { detectLocale } from '@/lib/ai/translation';
+import { notifyInquiryEvent } from '@/lib/notify/admin-alert';
 
 /**
  * Public inquiry intake — no Supabase session, no RLS context.
@@ -204,6 +205,18 @@ export async function submitPublicInquiryAction(
       hospitalName: input.hospitalName ?? undefined,
     },
   });
+
+  // 운영자 텔레그램 알림 — 문의 DB 정보 그대로. 실패해도 접수는 성공 처리.
+  await notifyInquiryEvent({
+    locale: input.locale,
+    name: input.name,
+    countryCode: input.countryCode,
+    contact: input.contact,
+    birthDate: input.birthDate,
+    interests: input.interests,
+    hospitalName: input.hospitalName ?? (input.hospitalId ? `ID ${input.hospitalId}` : null),
+    memo: input.memo,
+  }).catch(() => false);
 
   await db.insert(auditLogs).values({
     organizationId: intakeOrgId,

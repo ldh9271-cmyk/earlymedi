@@ -54,6 +54,30 @@ export async function sendAdminTelegram(html: string): Promise<boolean> {
   return anyOk;
 }
 
+/** 공개 포털 1:1 문의 접수 알림 — 문의 DB에 저장되는 정보 그대로 전달. */
+export async function notifyInquiryEvent(q: {
+  locale: string;
+  name: string;
+  countryCode: string;
+  contact: string;
+  birthDate?: string | null;
+  interests?: string[];
+  hospitalName?: string | null;
+  memo?: string;
+}): Promise<boolean> {
+  const lines = [
+    `<b>📩 새 1:1 문의</b> (${esc(q.locale.toUpperCase())})`,
+    `이름: ${esc(q.name)} (${esc(q.countryCode)})`,
+    `연락처: ${esc(q.contact)}`,
+  ];
+  if (q.birthDate) lines.push(`생년월일: ${esc(q.birthDate)}`);
+  if (q.interests && q.interests.length > 0) lines.push(`관심 분야: ${esc(q.interests.join(', '))}`);
+  if (q.hospitalName) lines.push(`관심 병원: ${esc(q.hospitalName)}`);
+  if (q.memo?.trim()) lines.push('', esc(q.memo.trim().slice(0, 800)));
+  lines.push('', 'https://www.glowuptour.com/agency/inbox');
+  return sendAdminTelegram(lines.join('\n'));
+}
+
 const EVENT_HEAD: Record<string, string> = {
   issued: '🧾 새 예약 인보이스',
   reported: '💰 입금 신고 — 확인 필요',
