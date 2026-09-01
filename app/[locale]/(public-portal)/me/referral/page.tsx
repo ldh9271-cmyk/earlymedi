@@ -5,10 +5,10 @@ import { and, desc, eq, inArray } from 'drizzle-orm';
 import QRCode from 'qrcode';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
-import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
+import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/auth/supabase-server';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
-import { commissionLedger } from '@/drizzle/schema/referral-program';
+import { commissionLedger, referralAttributions } from '@/drizzle/schema/referral-program';
 import {
   attributeUser, confirmDueLedger, getPartnerByCode, getPartnerByUserId, listReferrers, partnerTotals,
   REF_COOKIE, REF_JOIN_COOKIE,
@@ -114,12 +114,79 @@ export default async function ReferralPage({
   };
   const fmt = (n: number): string => `₩${n.toLocaleString('ko-KR')}`;
 
-  // 총판: 추천인 목록 + 월 정산서
+  // 총판: 가입 회원 명부 + 추천인 목록 + 월 정산서
   let referrers: Awaited<ReturnType<typeof listReferrers>> = [];
   let statement: Array<{ name: string; code: string; count: number; amount: number }> = [];
+  let members: Array<{
+    userId: string; label: string; via: string; source: string;
+    joinedAt: Date; orders: number; spentWon: number;
+  }> = [];
   const period = searchParams.period && /^\d{4}-\d{2}$/.test(searchParams.period) ? searchParams.period : new Date().toISOString().slice(0, 7);
   if (isDistributor) {
     referrers = await listReferrers(me.id);
+
+    // ── 내 QR·추천 코드로 가입해 영구 귀속된 회원 명부 ──────────
+    // 표시는 마스킹 이메일까지만 — 회원 PII 는 총판에게 전부
+    // 노출하지 않는다. 주문 집계는 입금 확인(paid)된 건만 센다.
+    const attrRows = await db
+      .select({
+        userId: referralAttributions.userId,
+        partnerId: referralAttributions.partnerId,
+        source: referralAttributions.source,
+        createdAt: referralAttributions.createdAt,
+      })
+      .from(referralAttributions)
+      .where(eq(referralAttributions.distributorId, me.id))
+      .orderBy(desc(referralAttributions.createdAt))
+      .limit(200);
+
+    const emailById = new Map<string, string>();
+    if (attrRows.length > 0) {
+      try {
+        const svc = createSupabaseServiceClient();
+        const { data } = await (svc as unknown as {
+          auth: { admin: { listUsers: (o: { perPage: number }) => Promise<{ data?: { users?: Array<{ id: string; email?: string }> } }> } };
+        }).auth.admin.listUsers({ perPage: 500 });
+        for (const u of data?.users ?? []) if (u.email) emailById.set(u.id, u.email);
+      } catch {
+        /* 이메일 조회 실패 시 익명 표기로 대체 */
+      }
+    }
+
+    const ordersByUser = new Map<string, { orders: number; spentWon: number }>();
+    if (attrRows.length > 0) {
+      const paidRows = await db
+        .select({ userId: checkoutOrders.userId, totalWon: checkoutOrders.totalWon })
+        .from(checkoutOrders)
+        .where(and(
+          eq(checkoutOrders.distributorId, me.id),
+          eq(checkoutOrders.status, 'paid'),
+          inArray(checkoutOrders.userId, attrRows.map((r) => r.userId)),
+        ));
+      for (const o of paidRows) {
+        if (!o.userId) continue;
+        const cur = ordersByUser.get(o.userId) ?? { orders: 0, spentWon: 0 };
+        cur.orders += 1; cur.spentWon += o.totalWon;
+        ordersByUser.set(o.userId, cur);
+      }
+    }
+
+    const partnerName = new Map<string, string>([[me.id, `${me.name} (${me.code})`]]);
+    for (const r of referrers) partnerName.set(r.id, `${r.name} (${r.code})`);
+    const maskEmail = (e: string | undefined): string =>
+      e ? e.replace(/^(..)[^@]*(@.*)$/, '$1***$2') : '';
+    members = attrRows.map((r) => {
+      const agg = ordersByUser.get(r.userId) ?? { orders: 0, spentWon: 0 };
+      return {
+        userId: r.userId,
+        label: maskEmail(emailById.get(r.userId)) || `member-${r.userId.slice(0, 8)}`,
+        via: partnerName.get(r.partnerId) ?? '—',
+        source: r.source,
+        joinedAt: r.createdAt,
+        orders: agg.orders,
+        spentWon: agg.spentWon,
+      };
+    });
     const byId = new Map(referrers.map((r) => [r.id, r]));
     const [y = 2026, m = 1] = period.split('-').map(Number);
     const from = new Date(Date.UTC(y, m - 1, 1));
@@ -206,6 +273,39 @@ export default async function ReferralPage({
       {isDistributor ? (
         <>
           <div className="m-ref-noprint">
+            <h2 style={{ fontSize: 17, fontWeight: 700, margin: '28px 0 10px' }}>{t.membersTitle} ({members.length})</h2>
+            {members.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 12, padding: 18 }}>{t.membersNone}</p>
+            ) : (
+              <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontVariantNumeric: 'tabular-nums', minWidth: 560 }}>
+                  <thead><tr style={{ background: '#fafafa', textAlign: 'left' }}>
+                    <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mJoined}</th>
+                    <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mMember}</th>
+                    <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mVia}</th>
+                    <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right' }}>{t.mOrders}</th>
+                  </tr></thead>
+                  <tbody>
+                    {members.map((m) => (
+                      <tr key={m.userId} style={{ borderTop: '1px solid #f0f0f0' }}>
+                        <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
+                          {m.joinedAt.toLocaleDateString(locale === 'kr' ? 'ko-KR' : locale)}
+                        </td>
+                        <td style={{ padding: '9px 12px', fontWeight: 600, wordBreak: 'break-all' }}>{m.label}</td>
+                        <td style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>
+                          {m.via}
+                          <span style={{ marginLeft: 6, fontSize: 11, color: '#9c9c9c' }}>{m.source}</span>
+                        </td>
+                        <td style={{ padding: '9px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          {m.orders > 0 ? <><b>{m.orders}</b> · {fmt(m.spentWon)}</> : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             <h2 style={{ fontSize: 17, fontWeight: 700, margin: '28px 0 10px' }}>{t.referrers} ({referrers.length})</h2>
             <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 480 }}>
