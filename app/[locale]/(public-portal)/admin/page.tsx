@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { desc, eq, and, sql } from 'drizzle-orm';
+import { desc, eq, and, sql, inArray } from 'drizzle-orm';
 import { ShieldAlert, Users, MessageCircle, Globe2, Building2 } from 'lucide-react';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
@@ -8,6 +8,7 @@ import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/a
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { conversations } from '@/drizzle/schema/conversations';
+import { orgMemberships } from '@/drizzle/schema/memberships';
 import { messages } from '@/drizzle/schema/messages';
 import { channels } from '@/drizzle/schema/channels';
 import { Card, CardContent } from '@/components/shared/ui/card';
@@ -116,8 +117,25 @@ export default async function PatientAdminPage({
         email_confirmed_at?: string | null;
         user_metadata?: PatientSignup['meta'];
       }>;
+      // 환자 = BIZ 가 아닌 계정. BIZ 판정은 마스터 회원 리스트와 동일:
+      // 파트너 센터 마커(partner_center) 또는 조직 멤버십 보유.
+      // 마커 없는 가입(구글 OAuth 등)은 조직이 없으면 환자로 본다.
+      const bizMarked = new Set(
+        users.filter((u) => u.user_metadata?.signup_source === 'partner_center').map((u) => u.id),
+      );
+      try {
+        const memberRows = users.length
+          ? await db
+              .select({ userId: orgMemberships.userId })
+              .from(orgMemberships)
+              .where(inArray(orgMemberships.userId, users.map((u) => u.id)))
+          : [];
+        for (const r of memberRows) bizMarked.add(r.userId);
+      } catch {
+        /* 멤버십 조회 실패 시 마커만으로 분류 */
+      }
       signups = users
-        .filter((u) => u.user_metadata?.signup_source === 'patient_portal')
+        .filter((u) => !bizMarked.has(u.id))
         .map((u) => ({
           id: u.id,
           email: u.email,

@@ -88,11 +88,30 @@ export default async function MasterMembersPage({
     loadError = e instanceof Error ? e.message : 'unknown';
   }
 
+  // ── 분류 규칙 ───────────────────────────────────────────────────
+  // BIZ = 조직 멤버십 보유 또는 파트너 센터 가입 마커(partner_center).
+  // 나머지는 전부 일반 회원 — 마커가 없는 계정(구글 OAuth 등 메타데이터
+  // 미기록 가입)은 조직이 없는 한 일반으로 본다 (founder 2026-09-01).
+  const memberIdSet = new Set<string>();
+  try {
+    if (authUsers.length > 0) {
+      const rows = await db
+        .select({ userId: orgMemberships.userId })
+        .from(orgMemberships)
+        .where(inArray(orgMemberships.userId, authUsers.map((u) => u.id)));
+      for (const r of rows) memberIdSet.add(r.userId);
+    }
+  } catch {
+    /* 멤버십 조회 실패 시 마커만으로 분류 */
+  }
+  const isBiz = (u: AuthUser): boolean =>
+    memberIdSet.has(u.id) || u.user_metadata?.signup_source === 'partner_center';
+
   const general = authUsers
-    .filter((u) => u.user_metadata?.signup_source === 'patient_portal')
+    .filter((u) => !isBiz(u))
     .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
   const bizAuth = authUsers
-    .filter((u) => u.user_metadata?.signup_source !== 'patient_portal')
+    .filter(isBiz)
     .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 
   // ── BIZ 가입자에 소속 조직·역할 붙이기 ──────────────────────────
@@ -293,9 +312,9 @@ export default async function MasterMembersPage({
       </div>
 
       <p style={{ fontSize: 11, color: '#9c9c9c', marginTop: 12 }}>
-        * 일반 회원 = 공개 포털(/kr·/en 등) 자가 가입 (signup_source=patient_portal). BIZ 회원 =
-        파트너 센터 가입 — 소속 조직이 없으면 가입 후 조직 개설 전 상태입니다. 500명 초과 시
-        페이지네이션이 필요합니다.
+        * BIZ 회원 = 조직 멤버십 보유 또는 파트너 센터 가입 계정. 그 외(공개 포털 가입, 가입
+        출처 미기록 포함)는 모두 일반 회원으로 분류합니다. &quot;조직 미개설&quot; = 파트너 센터로
+        가입했지만 아직 조직을 만들지 않은 상태. 500명 초과 시 페이지네이션이 필요합니다.
       </p>
     </div>
   );

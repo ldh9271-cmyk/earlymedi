@@ -100,6 +100,7 @@ export function InviteSignupForm({
           password: values.password,
           options: {
             emailRedirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(`/invite/${token}`)}`,
+            data: { signup_source: 'partner_center' },
           },
         });
         if (signUpErr) {

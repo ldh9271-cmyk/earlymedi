@@ -258,6 +258,7 @@ export function QuickSignupForm({
             password: values.password!,
             options: {
               emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/signup`,
+              data: { signup_source: 'partner_center' },
             },
           });
           if (signUpErr) {
