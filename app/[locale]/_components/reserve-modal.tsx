@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { LOCALE_TO_BCP47, type PublicLocale } from '@/lib/i18n/locales';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import { RESERVE_DEPOSIT_WON } from '@/lib/checkout/constants';
+import CountrySelect from './country-select';
 import { openTossPayment, tossClientKey } from '@/lib/payments/toss-client';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 
@@ -37,12 +38,6 @@ const COUNTRY_CODES = [
 const LOCALE_DEFAULT_COUNTRY: Record<string, string> = {
   kr: 'KR', en: 'US', zh: 'CN', ja: 'JP', ru: 'RU', vi: 'VN',
 };
-/** 국가 코드 → 국기 이모지 (지역 표시 문자 조합). */
-export function flagEmoji(cc: string): string {
-  return [...cc.toUpperCase()]
-    .map((ch) => String.fromCodePoint(0x1f1e6 + ch.charCodeAt(0) - 65))
-    .join('');
-}
 const MESSENGER_KINDS = ['kakao', 'whatsapp', 'line', 'wechat', 'telegram'] as const;
 const MESSENGER_LABEL: Record<string, string> = {
   kakao: 'KakaoTalk', whatsapp: 'WhatsApp', line: 'LINE', wechat: 'WeChat', telegram: 'Telegram',
@@ -633,23 +628,20 @@ export default function ReserveButton({
                         {labels.contactHint}
                       </p>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 10 }}>
-                        <label
+                        <div
                           style={{
                             ...fieldBox,
                             ...(contactMissing && !ccode ? { border: '1.5px solid #dc2626', background: '#fff5f5' } : {}),
                           }}
                         >
                           <span style={fieldLabel}>{labels.contactCountry}</span>
-                          <select
+                          <CountrySelect
                             value={ccode}
-                            onChange={(e) => { setCcode(e.target.value); setContactMissing(false); }}
-                            style={{ ...fieldInput, appearance: 'none', WebkitAppearance: 'none' }}
-                          >
-                            {COUNTRY_CODES.map((c) => (
-                              <option key={c} value={c}>{`${flagEmoji(c)} ${c}`}</option>
-                            ))}
-                          </select>
-                        </label>
+                            onChange={(c) => { setCcode(c); setContactMissing(false); }}
+                            codes={COUNTRY_CODES}
+                            ariaLabel={labels.contactCountry}
+                          />
+                        </div>
                         <label
                           style={{
                             ...fieldBox,

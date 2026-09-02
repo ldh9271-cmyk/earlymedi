@@ -17,17 +17,12 @@ import { submitPublicInquiryAction } from '../actions';
  * rest of the /kr surface that uses inline styles throughout.
  */
 
+import CountrySelect from '@/app/[locale]/_components/country-select';
+
 const COUNTRY_CODES = [
   'US', 'KR', 'CN', 'JP', 'TW', 'HK', 'SG', 'MY', 'TH', 'VN', 'PH', 'ID',
   'RU', 'KZ', 'UZ', 'IN', 'AE', 'SA', 'AU', 'CA', 'GB', 'DE', 'FR', 'IT',
 ];
-
-/** 국가 코드 → 국기 이모지 (지역 표시 문자 조합). */
-function flagEmoji(cc: string): string {
-  return [...cc.toUpperCase()]
-    .map((ch) => String.fromCodePoint(0x1f1e6 + ch.charCodeAt(0) - 65))
-    .join('');
-}
 
 const inputStyle: React.CSSProperties = {
   height: 48,
@@ -186,16 +181,16 @@ export function InquiryForm({
         </div>
         <div>
           <label htmlFor="inq-country" style={labelStyle}>{labels.country}</label>
-          <select
-            id="inq-country"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            style={inputStyle}
-          >
-            {COUNTRY_CODES.map((c) => (
-              <option key={c} value={c}>{`${flagEmoji(c)} ${c}`}</option>
-            ))}
-          </select>
+          <div style={{ ...inputStyle, display: 'flex', alignItems: 'center' }}>
+            <div style={{ width: '100%' }}>
+              <CountrySelect
+                value={country}
+                onChange={setCountry}
+                codes={COUNTRY_CODES}
+                ariaLabel={labels.country}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
