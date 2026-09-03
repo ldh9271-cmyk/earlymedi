@@ -17,13 +17,19 @@ export function DetailInfo({
   imageUrl,
   address,
   venueName,
+  introTitle,
+  introBody,
 }: {
   imageUrl?: string;
   address?: string;
   venueName: string;
+  /** 이미지 위에 얹는 소개 블록 — 시술명 등 제목. */
+  introTitle?: string;
+  /** 소개 본문 (줄바꿈 유지). */
+  introBody?: string;
 }): JSX.Element | null {
   const [expanded, setExpanded] = useState(false);
-  if (!imageUrl && !address) return null;
+  if (!imageUrl && !address && !introBody) return null;
 
   const mapsLink = address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
@@ -34,6 +40,21 @@ export function DetailInfo({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {introBody ? (
+        <div>
+          {introTitle ? (
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>{introTitle}</h3>
+          ) : null}
+          <p
+            style={{
+              fontSize: 14, color: '#3f3f3f', lineHeight: 1.7,
+              margin: 0, whiteSpace: 'pre-line',
+            }}
+          >
+            {introBody}
+          </p>
+        </div>
+      ) : null}
       {imageUrl ? (
         <div>
           <div

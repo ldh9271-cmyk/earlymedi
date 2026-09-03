@@ -525,7 +525,14 @@ export default async function ListingDetailPage({
         const address = typeof listing.details.address === 'string'
           ? listing.details.address
           : '';
-        if (!landingUrl && !address) return null;
+        // 소개 블록 — details.detailIntro { title, body } + 로케일 오버라이드
+        // detailIntroI18n[locale]. 이미지 위에 시술 설명 등을 얹을 때 쓴다.
+        const introBase = listing.details.detailIntro as { title?: string; body?: string } | undefined;
+        const introI18n = (listing.details.detailIntroI18n as
+          | Record<string, { title?: string; body?: string }>
+          | undefined)?.[params.locale];
+        const intro = params.locale === 'kr' ? introBase : introI18n ?? introBase;
+        if (!landingUrl && !address && !intro?.body) return null;
         const heading: Record<string, string> = {
           kr: '상세 정보', en: 'Details', zh: '详细信息',
           ja: '詳細情報', ru: 'Подробности', vi: 'Thông tin chi tiết',
@@ -541,6 +548,8 @@ export default async function ListingDetailPage({
                 imageUrl={landingUrl || undefined}
                 address={address || undefined}
                 venueName={listing.title}
+                introTitle={intro?.title}
+                introBody={intro?.body}
               />
             </section>
           </>
