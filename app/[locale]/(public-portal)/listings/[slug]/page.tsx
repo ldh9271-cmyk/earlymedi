@@ -7,6 +7,7 @@ import { localizePriceUnit } from '@/lib/i18n/price-unit';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { DetailInfo } from './_components/detail-info';
 import { HeroMobileCarousel } from './_components/hero-mobile-carousel';
+import HeroDesktopGallery from './_components/hero-desktop-gallery';
 import ReserveButton, { type ReserveSummary } from '@/app/[locale]/_components/reserve-modal';
 import { BRAND_NAME } from '@/lib/seo/brand';
 
@@ -75,7 +76,6 @@ export default async function ListingDetailPage({
   const d = dict.detail;
 
   const heroSrc = listing.coverImageUrl ?? listing.galleryImageUrls[0] ?? '';
-  const galleryCount = Math.max(1, listing.galleryImageUrls.length || (listing.coverImageUrl ? 1 : 0));
   const rating = listing.rating ? (listing.rating / 10).toFixed(2) : '4.92';
   const reviewsCount = listing.reviewsCount > 0 ? listing.reviewsCount : 0;
   const reviewsLabel = d.reviewsCount.replace('{n}', String(reviewsCount));
@@ -129,89 +129,20 @@ export default async function ListingDetailPage({
         <HeroMobileCarousel
           slides={[heroSrc, ...listing.galleryImageUrls].filter(Boolean)}
           backHref={`/${params.locale}`}
+          listingSlug={listing.slug}
+          linkCopiedText={d.linkCopied}
         />
       </div>
 
-      {/* Desktop: Airbnb 1-large + 2x2-thumbs grid (uses cover + first 4 galleryImageUrls).
+      {/* Desktop: Airbnb 1-large + 2x2-thumbs grid — 클라이언트 컴포넌트.
+          이미지 클릭 → 전체 라이트박스, 공유·즐겨찾기 버튼 동작 포함.
           Mobile: hidden via CSS — replaced by HeroMobileCarousel above. */}
-      <section
-        className="m-lh-gallery"
-        style={{
-          position: 'relative',
-          maxWidth: 1100,
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gridTemplateRows: 'repeat(2, 170px)',
-          gap: 8,
-          padding: '0 12px',
-          height: 'auto',
-        }}
-      >
-        <div
-          className="m-lh-main"
-          style={{
-            gridColumn: 'span 2',
-            gridRow: 'span 2',
-            background: heroSrc
-              ? `#f2f2f2 url(${heroSrc}) center / cover`
-              : 'linear-gradient(135deg, #d8c7f5, #e7d6fb)',
-            borderRadius: 14,
-            position: 'relative',
-            minHeight: 280,
-          }}
-        >
-          <Link
-            href={`/${params.locale}`}
-            aria-label="Back"
-            style={floatingBtn({ left: 14 })}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
-              <path d="M15 5l-7 7 7 7" />
-            </svg>
-          </Link>
-        </div>
-        {/* 4 thumbs — fall back to a soft gradient when DB has fewer images. */}
-        {[0, 1, 2, 3].map((i) => {
-          const src = listing.galleryImageUrls[i];
-          return (
-            <div
-              key={i}
-              className={`m-lh-thumb m-lh-thumb-${i}`}
-              style={{
-                background: src
-                  ? `#f2f2f2 url(${src}) center / cover`
-                  : 'linear-gradient(135deg, #f7f7f7 0%, #ebebeb 100%)',
-                borderRadius: 14,
-              }}
-            />
-          );
-        })}
-        {/* Share + save buttons — pinned top-right of the gallery cluster. */}
-        <div className="m-lh-controls" style={{ position: 'absolute', top: 14, right: 26, display: 'flex', gap: 8 }}>
-          <button type="button" aria-label="Share" style={floatingBtnInline()}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
-              <path d="M4 12v8h16v-8M12 3v13M8 7l4-4 4 4" />
-            </svg>
-          </button>
-          <button type="button" aria-label="Save" style={floatingBtnInline()}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
-              <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
-            </svg>
-          </button>
-        </div>
-        <div
-          className="m-lh-counter"
-          style={{
-            position: 'absolute', bottom: 14, right: 26,
-            background: 'rgba(0,0,0,0.65)', color: '#fff',
-            fontSize: 12, fontWeight: 600,
-            padding: '4px 10px', borderRadius: 9999,
-          }}
-        >
-          1 / {galleryCount}
-        </div>
-      </section>
+      <HeroDesktopGallery
+        slides={[heroSrc, ...listing.galleryImageUrls].filter(Boolean)}
+        backHref={`/${params.locale}`}
+        listingSlug={listing.slug}
+        linkCopiedText={d.linkCopied}
+      />
 
       {/* 상세 랜딩 이미지는 더 이상 full-bleed 로 렌더하지 않는다 —
           좌측 콘텐츠 칼럼 내부 "상세 정보" 섹션에서 truncated +
@@ -805,27 +736,7 @@ const LISTING_HERO_CSS = ''
   +   '.m-ld-bottom-bar { display: none !important; }'
   + '}';
 
-function floatingBtnInline(): React.CSSProperties {
-  return {
-    width: 36, height: 36, borderRadius: 9999,
-    background: '#fff', border: 'none', cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: 'rgba(0,0,0,0.15) 0 2px 6px',
-  };
-}
 
-function floatingBtn(p: { left?: number }): React.CSSProperties {
-  return {
-    position: 'absolute',
-    top: 14,
-    ...(p.left !== undefined ? { left: p.left } : {}),
-    width: 36, height: 36, borderRadius: 9999,
-    background: '#fff', border: 'none', cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: 'rgba(0,0,0,0.15) 0 2px 6px',
-    textDecoration: 'none',
-  };
-}
 
 type Highlight = { icon: 'expert' | 'concierge' | 'check'; title: string; desc: string };
 

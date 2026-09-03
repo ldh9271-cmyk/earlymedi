@@ -439,6 +439,7 @@ const ja: Dictionary = {
     taxNote: '税金・サービス料別途',
     noChargeYet: '予約確定前は請求されません',
     rowFreeCancel: '確定前の無料キャンセル',
+    linkCopied: 'リンクをコピーしました',
     subtitles: {
       personal_color: 'パーソナルカラー診断',
       makeup: 'K-ビューティーメイク',

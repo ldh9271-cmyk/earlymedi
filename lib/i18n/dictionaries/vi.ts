@@ -440,6 +440,7 @@ const vi: Dictionary = {
     taxNote: 'Chưa gồm thuế và phí dịch vụ',
     noChargeYet: 'Chưa thu phí cho đến khi xác nhận đặt chỗ',
     rowFreeCancel: 'Hủy miễn phí trước xác nhận',
+    linkCopied: 'Đã sao chép liên kết',
     subtitles: {
       personal_color: 'Chẩn đoán màu cá nhân',
       makeup: 'Trang điểm K-beauty',

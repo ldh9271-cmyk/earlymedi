@@ -437,6 +437,7 @@ const zh: Dictionary = {
     taxNote: '不含税金及服务费',
     noChargeYet: '预订确认前不会扣款',
     rowFreeCancel: '确认前免费取消',
+    linkCopied: '链接已复制',
     subtitles: {
       personal_color: '个人色彩诊断',
       makeup: 'K-beauty 化妆',

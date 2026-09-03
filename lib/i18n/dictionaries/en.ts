@@ -440,6 +440,7 @@ const en: Dictionary = {
     taxNote: 'Taxes & service fees not included',
     noChargeYet: "You won't be charged until confirmation",
     rowFreeCancel: 'Free cancellation before confirmation',
+    linkCopied: 'Link copied',
     subtitles: {
       personal_color: 'Personal color analysis',
       makeup: 'K-beauty makeup',

@@ -1,7 +1,20 @@
 'use client';
 
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
+
+const FAV_KEY = 'gu_favs';
+
+function readFavs(): string[] {
+  try {
+    const raw = localStorage.getItem(FAV_KEY);
+    const arr = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(arr) ? (arr as string[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 /**
  * 모바일 전용 hero 캐러셀 — cover + 갤러리를 한 장씩 가로 스크롤로
@@ -16,12 +29,50 @@ import { useEffect, useRef, useState } from 'react';
 export function HeroMobileCarousel({
   slides,
   backHref,
+  listingSlug,
+  linkCopiedText,
 }: {
   slides: ReadonlyArray<string>;
   backHref: string;
+  listingSlug?: string;
+  linkCopiedText?: string;
 }): JSX.Element {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [idx, setIdx] = useState(0);
+  const [fav, setFav] = useState(false);
+  const [toast, setToast] = useState(false);
+
+  useEffect(() => {
+    if (listingSlug) setFav(readFavs().includes(listingSlug));
+  }, [listingSlug]);
+
+  async function share(): Promise<void> {
+    const url = window.location.href;
+    try {
+      if (navigator.share) { await navigator.share({ url, title: document.title }); return; }
+      throw new Error('no-share');
+    } catch {
+      try {
+        await navigator.clipboard.writeText(url);
+        setToast(true);
+        setTimeout(() => setToast(false), 2200);
+      } catch { /* 무시 */ }
+    }
+  }
+
+  function toggleFav(): void {
+    if (!listingSlug) return;
+    try {
+      const favs = readFavs();
+      const next = favs.includes(listingSlug)
+        ? favs.filter((x) => x !== listingSlug)
+        : [...favs, listingSlug];
+      localStorage.setItem(FAV_KEY, JSON.stringify(next));
+      setFav(next.includes(listingSlug));
+    } catch {
+      setFav((v) => !v);
+    }
+  }
 
   useEffect(() => {
     const el = containerRef.current;
@@ -95,13 +146,17 @@ export function HeroMobileCarousel({
       </Link>
 
       <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 8 }}>
-        <button type="button" aria-label="Share" style={floatingBtn()}>
+        <button type="button" aria-label="Share" onClick={share} style={floatingBtn()}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
             <path d="M4 12v8h16v-8M12 3v13M8 7l4-4 4 4" />
           </svg>
         </button>
-        <button type="button" aria-label="Save" style={floatingBtn()}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
+        <button type="button" aria-label="Save" aria-pressed={fav} onClick={toggleFav} style={floatingBtn()}>
+          <svg
+            width="16" height="16" viewBox="0 0 24 24"
+            fill={fav ? '#ff385c' : 'none'}
+            stroke={fav ? '#ff385c' : '#222'} strokeWidth="1.8"
+          >
             <path d="M12 20s-7-4.5-9.2-8.5C1.3 8.7 2.5 5.5 5.5 5.5c1.8 0 2.9 1 3.5 2 .6-1 1.7-2 3.5-2 3 0 4.2 3.2 2.7 6C19 15.5 12 20 12 20z" />
           </svg>
         </button>
@@ -117,6 +172,21 @@ export function HeroMobileCarousel({
       >
         {idx + 1} / {slides.length}
       </div>
+
+      {toast && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              style={{
+                position: 'fixed', bottom: 96, left: '50%', transform: 'translateX(-50%)',
+                background: 'rgba(0,0,0,0.8)', color: '#fff', fontSize: 13, fontWeight: 600,
+                padding: '10px 18px', borderRadius: 9999, zIndex: 400,
+              }}
+            >
+              {linkCopiedText ?? 'Link copied'}
+            </div>,
+            document.body,
+          )
+        : null}
 
       {/* 인디케이터 도트 — 슬라이드 수 ≤ 6 일 때만 노출. */}
       {slides.length > 1 && slides.length <= 6 ? (

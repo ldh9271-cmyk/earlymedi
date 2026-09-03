@@ -440,6 +440,7 @@ const ru: Dictionary = {
     taxNote: 'Налоги и сервисный сбор не включены',
     noChargeYet: 'Оплата не взимается до подтверждения',
     rowFreeCancel: 'Бесплатная отмена до подтверждения',
+    linkCopied: 'Ссылка скопирована',
     subtitles: {
       personal_color: 'Диагностика цветотипа',
       makeup: 'K-beauty макияж',

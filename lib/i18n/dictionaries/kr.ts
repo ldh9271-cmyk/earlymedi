@@ -456,6 +456,7 @@ const kr = {
     taxNote: '세금·서비스 수수료 별도',
     noChargeYet: '예약 확정 전에는 요금이 청구되지 않습니다',
     rowFreeCancel: '확정 전 무료 취소',
+    linkCopied: '링크가 복사되었습니다',
     subtitles: {
       personal_color: '퍼스널 컬러 진단',
       makeup: 'K-뷰티 메이크업',
