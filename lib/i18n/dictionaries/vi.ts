@@ -586,6 +586,8 @@ const vi: Dictionary = {
     distributorTitle: "Bảng điều khiển tổng đại lý",
     membersTitle: "Thành viên",
     membersNone: "Chưa có thành viên nào đăng ký qua mã của bạn. Hãy chia sẻ QR hoặc liên kết.",
+    dashViewOnly: 'Màn hình chỉ để xem — bạn có thể kiểm tra QR, hoa hồng, thành viên và bảng kê.',
+    dashMembersCount: 'Thành viên',
     mJoined: "Ngày đăng ký",
     mMember: "Thành viên",
     mVia: "Mã giới thiệu",

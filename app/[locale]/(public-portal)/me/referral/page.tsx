@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
 
 const SITE = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || 'https://glowuptour.com';
 const CSS =
-  '@media (max-width: 768px) { .m-ref-page { padding: 24px 16px 96px !important; } .m-ref-two { grid-template-columns: 1fr !important; } }'
+  '@media (max-width: 768px) { .m-ref-page { padding: 24px 16px 96px !important; } .m-ref-two { grid-template-columns: 1fr !important; } .m-ref-stats { grid-template-columns: 1fr 1fr !important; } }'
   + '@media print { .m-ref-noprint { display: none !important; } .m-ref-page { padding: 0 !important; } }';
 
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<{ title: string }> {
@@ -217,6 +217,9 @@ export default async function ReferralPage({
       <div className="m-ref-noprint">
         <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>{isDistributor ? t.distributorTitle : t.title}</h1>
         <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>{t.subtitle}</p>
+        {isDistributor ? (
+          <p style={{ fontSize: 13, color: '#c2143c', margin: '8px 0 0', fontWeight: 600 }}>{t.dashViewOnly}</p>
+        ) : null}
         {searchParams.joined ? <p style={{ fontSize: 13, color: '#047857', marginTop: 10 }}>✓ {t.joinTitle}</p> : null}
 
         {/* 코드 · QR · 링크 */}
@@ -234,38 +237,56 @@ export default async function ReferralPage({
           </div>
         </div>
 
-        {/* 통계 */}
-        <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
-          {[[t.clicks, String(me.clicks), '#222'], [t.signups, String(me.signups), '#222'], [t.pending, fmt(totals.pending), '#b45309'], [t.confirmed, fmt(totals.confirmed), '#1d4ed8'], [t.paid, fmt(totals.paid), '#047857']].map(([l, v, c]) => (
-            <div key={l} style={{ border: '1px solid #ebebeb', borderRadius: 12, padding: '12px 16px', minWidth: 140, flex: 1 }}>
-              <div style={{ fontSize: 12, color: '#6a6a6a' }}>{l}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2, color: c }}>{v}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* 내 수당 내역 */}
-        <h2 style={{ fontSize: 17, fontWeight: 700, margin: '28px 0 10px' }}>{t.recent}</h2>
-        {myRows.length === 0 ? (
-          <p style={{ fontSize: 13, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 12, padding: 18 }}>{t.noRows}</p>
-        ) : (
-          <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontVariantNumeric: 'tabular-nums', minWidth: 560 }}>
-              <tbody>
-                {myRows.map(({ l, o }) => {
-                  const s = statusLabel(l.status, l.basis);
-                  return (
-                    <tr key={l.id} style={{ borderTop: '1px solid #f0f0f0' }}>
-                      <td style={{ padding: '10px 12px' }}><b>{o.invoiceNo}</b><div style={{ fontSize: 11, color: '#9c9c9c' }}>{o.title}</div></td>
-                      <td style={{ padding: '10px 12px', fontSize: 12 }}>{roleLabel(l.beneficiary)} · {l.basis === 'travel_margin' ? t.basisTravel : t.basisFee} {(l.rateBp / 100).toFixed(0)}%</td>
-                      <td style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.amountWon)}</td>
-                      <td style={{ padding: '10px 12px', color: s.color, fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap' }}>{s.text}<div style={{ color: '#9c9c9c', fontWeight: 400 }}>{l.confirmAt.toLocaleDateString(locale === 'kr' ? 'ko-KR' : locale)}</div></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        {/* 통계 — 총판은 큰 카드 4개(가입 회원·예상·확정·지급)로 간단히.
+            추천인(개인)은 기존 5칸 유지. */}
+        {isDistributor ? (
+          <div className="m-ref-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 20 }}>
+            {[
+              [t.dashMembersCount, String(me.signups), '#222'],
+              [t.pending, fmt(totals.pending), '#b45309'],
+              [t.confirmed, fmt(totals.confirmed), '#1d4ed8'],
+              [t.paid, fmt(totals.paid), '#047857'],
+            ].map(([l, v, c]) => (
+              <div key={l} style={{ border: '1px solid #ebebeb', borderRadius: 14, padding: '18px 16px' }}>
+                <div style={{ fontSize: 13, color: '#6a6a6a', fontWeight: 600 }}>{l}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, marginTop: 6, color: c }}>{v}</div>
+              </div>
+            ))}
           </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
+              {[[t.clicks, String(me.clicks), '#222'], [t.signups, String(me.signups), '#222'], [t.pending, fmt(totals.pending), '#b45309'], [t.confirmed, fmt(totals.confirmed), '#1d4ed8'], [t.paid, fmt(totals.paid), '#047857']].map(([l, v, c]) => (
+                <div key={l} style={{ border: '1px solid #ebebeb', borderRadius: 12, padding: '12px 16px', minWidth: 140, flex: 1 }}>
+                  <div style={{ fontSize: 12, color: '#6a6a6a' }}>{l}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2, color: c }}>{v}</div>
+                </div>
+              ))}
+            </div>
+
+            <h2 style={{ fontSize: 17, fontWeight: 700, margin: '28px 0 10px' }}>{t.recent}</h2>
+            {myRows.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 12, padding: 18 }}>{t.noRows}</p>
+            ) : (
+              <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontVariantNumeric: 'tabular-nums', minWidth: 560 }}>
+                  <tbody>
+                    {myRows.map(({ l, o }) => {
+                      const s = statusLabel(l.status, l.basis);
+                      return (
+                        <tr key={l.id} style={{ borderTop: '1px solid #f0f0f0' }}>
+                          <td style={{ padding: '10px 12px' }}><b>{o.invoiceNo}</b><div style={{ fontSize: 11, color: '#9c9c9c' }}>{o.title}</div></td>
+                          <td style={{ padding: '10px 12px', fontSize: 12 }}>{roleLabel(l.beneficiary)} · {l.basis === 'travel_margin' ? t.basisTravel : t.basisFee} {(l.rateBp / 100).toFixed(0)}%</td>
+                          <td style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.amountWon)}</td>
+                          <td style={{ padding: '10px 12px', color: s.color, fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap' }}>{s.text}<div style={{ color: '#9c9c9c', fontWeight: 400 }}>{l.confirmAt.toLocaleDateString(locale === 'kr' ? 'ko-KR' : locale)}</div></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -306,22 +327,27 @@ export default async function ReferralPage({
               </div>
             )}
 
-            <h2 style={{ fontSize: 17, fontWeight: 700, margin: '28px 0 10px' }}>{t.referrers} ({referrers.length})</h2>
-            <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 480 }}>
-                <tbody>
-                  {referrers.map((r) => (
-                    <tr key={r.id} style={{ borderTop: '1px solid #f0f0f0' }}>
-                      <td style={{ padding: '9px 12px', fontWeight: 600 }}>{r.name}</td>
-                      <td style={{ padding: '9px 12px', fontFamily: 'monospace' }}>{r.code}</td>
-                      <td style={{ padding: '9px 12px', color: '#6a6a6a', fontSize: 12 }}>{r.parentId === me.id ? '—' : referrers.find((x) => x.id === r.parentId)?.name ?? ''}</td>
-                      <td style={{ padding: '9px 12px', textAlign: 'right', fontSize: 12 }}>{r.clicks} / {r.signups}</td>
-                    </tr>
-                  ))}
-                  {referrers.length === 0 ? <tr><td style={{ padding: 16, color: '#6a6a6a', fontSize: 13 }}>—</td></tr> : null}
-                </tbody>
-              </table>
-            </div>
+            {/* 추천인이 있을 때만 접이식으로 노출 — 없으면 화면을 비운다
+                (조회 전용 간단 대시보드: 기본은 QR·수당·회원·정산서만). */}
+            {referrers.length > 0 ? (
+              <details style={{ marginTop: 28 }}>
+                <summary style={{ fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>{t.referrers} ({referrers.length})</summary>
+                <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto', marginTop: 10 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 480 }}>
+                    <tbody>
+                      {referrers.map((r) => (
+                        <tr key={r.id} style={{ borderTop: '1px solid #f0f0f0' }}>
+                          <td style={{ padding: '9px 12px', fontWeight: 600 }}>{r.name}</td>
+                          <td style={{ padding: '9px 12px', fontFamily: 'monospace' }}>{r.code}</td>
+                          <td style={{ padding: '9px 12px', color: '#6a6a6a', fontSize: 12 }}>{r.parentId === me.id ? '—' : referrers.find((x) => x.id === r.parentId)?.name ?? ''}</td>
+                          <td style={{ padding: '9px 12px', textAlign: 'right', fontSize: 12 }}>{r.clicks} / {r.signups}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            ) : null}
           </div>
 
           <div style={{ marginTop: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

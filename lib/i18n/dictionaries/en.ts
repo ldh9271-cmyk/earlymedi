@@ -586,6 +586,8 @@ const en: Dictionary = {
     distributorTitle: "Distributor dashboard",
     membersTitle: "Members",
     membersNone: "No members have signed up through your code yet. Share your QR or link.",
+    dashViewOnly: 'This is a view-only screen — you can check your QR, earnings, members, and statements.',
+    dashMembersCount: 'Members',
     mJoined: "Joined",
     mMember: "Member",
     mVia: "Via code",

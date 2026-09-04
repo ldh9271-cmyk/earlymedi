@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/shared/empty-state';
 export const dynamic = 'force-dynamic';
 import { Building2 } from 'lucide-react';
 import { SwitchOrgForm } from './_components/switch-org-form';
+import { getPartnerByUserId } from '@/lib/referral/service';
 
 export const metadata = { title: { absolute: '조직 선택 · 글로우업투어' } };
 
@@ -89,6 +90,16 @@ export default async function SelectOrgPage({
   }
 
   const active = memberships.filter((m) => m.status === 'active');
+
+  // 총판·추천인 계정(조직 없음)은 '가입된 조직이 없습니다' 대신 자기
+  // 조회 전용 대시보드(/{랜딩언어}/me/referral)로 바로 보낸다.
+  if (!isMaster && active.length === 0) {
+    const partner = await getPartnerByUserId(auth.user.id).catch(() => null);
+    if (partner) {
+      const loc = ['kr', 'en', 'zh', 'ja', 'ru', 'vi'].includes(partner.landingLocale) ? partner.landingLocale : 'ja';
+      redirect(`/${loc}/me/referral`);
+    }
+  }
 
   if (active.length === 0) {
     return (

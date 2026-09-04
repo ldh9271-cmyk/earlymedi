@@ -605,6 +605,8 @@ const kr = {
     distributorTitle: "총판 대시보드",
     membersTitle: "가입 회원",
     membersNone: "아직 내 코드로 가입한 회원이 없습니다. QR·링크를 공유해 보세요.",
+    dashViewOnly: '이 화면은 조회 전용입니다 — QR·수당·가입 회원·정산서를 확인만 하실 수 있습니다.',
+    dashMembersCount: '가입 회원',
     mJoined: "가입일",
     mMember: "회원",
     mVia: "유입 코드",

@@ -583,6 +583,8 @@ const zh: Dictionary = {
     distributorTitle: "总代理面板",
     membersTitle: "注册会员",
     membersNone: "还没有会员通过您的代码注册，快分享您的二维码或链接吧。",
+    dashViewOnly: '本页面仅供查看 — 可确认二维码、佣金、注册会员与结算单。',
+    dashMembersCount: '注册会员',
     mJoined: "注册日期",
     mMember: "会员",
     mVia: "来源代码",

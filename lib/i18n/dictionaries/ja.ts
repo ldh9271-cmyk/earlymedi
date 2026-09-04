@@ -585,6 +585,8 @@ const ja: Dictionary = {
     distributorTitle: "総代理店ダッシュボード",
     membersTitle: "登録会員",
     membersNone: "まだあなたのコードで登録した会員はいません。QR・リンクを共有してみてください。",
+    dashViewOnly: 'この画面は閲覧専用です — QR・報酬・登録会員・精算書を確認できます。',
+    dashMembersCount: '登録会員',
     mJoined: "登録日",
     mMember: "会員",
     mVia: "経由コード",
