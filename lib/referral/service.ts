@@ -169,8 +169,10 @@ export async function joinAsReferrer(opts: {
   if (existing) return existing;
   const parent = await getPartnerByCode(opts.parentCode);
   if (!parent) throw new Error('invite_not_found');
-  const distributorId = parent.role === 'distributor' ? parent.id : parent.distributorId;
-  if (!distributorId) throw new Error('invite_not_found');
+  // 2단계 고정: 추천인은 총판 직속으로만 생긴다 (총판 → 추천인 → 고객).
+  // 추천인의 코드로는 하위 추천인을 만들 수 없다.
+  if (parent.role !== 'distributor') throw new Error('invite_distributor_only');
+  const distributorId = parent.id;
   for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
       const [row] = await db

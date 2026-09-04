@@ -238,7 +238,6 @@ export default async function DistributorDetailPage({
         <form action={createReferrerAction} className="m-pd-ref-form" style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr auto', gap: 8, alignItems: 'end' }}>
           <input type="hidden" name="distributorId" value={d.id} />
           <div><span style={label}>추천인 이름 *</span><input name="name" required style={input} /></div>
-          <div><span style={label}>상위 코드 (비우면 총판 직속)</span><input name="parentCode" style={input} placeholder={d.code} /></div>
           <div><span style={label}>연락처</span><input name="contact" style={input} /></div>
           <div><span style={label}>계정 이메일</span><input name="userEmail" type="email" style={input} /></div>
           <button type="submit" style={btn('#222')}>추천인 등록</button>

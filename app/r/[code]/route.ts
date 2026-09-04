@@ -23,7 +23,9 @@ export async function GET(req: Request, { params }: { params: { code: string } }
   const locale = wantLocale && isPublicLocale(wantLocale)
     ? wantLocale
     : (partner && isPublicLocale(partner.landingLocale) ? partner.landingLocale : 'en');
-  const join = url.searchParams.get('join') === '1';
+  // 추천인 초대(join)는 총판 코드에서만 유효 — 추천인의 코드에 ?join=1 이
+  // 붙어 와도 고객 링크로 취급한다 (총판 → 추천인 → 고객, 2단계 고정).
+  const join = url.searchParams.get('join') === '1' && partner?.role === 'distributor';
 
   const target = new URL(
     join ? `/${locale}/me/referral` : `/${locale}`,

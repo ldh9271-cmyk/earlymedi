@@ -66,8 +66,11 @@ export default async function ReferralPage({
 
   // ── 아직 추천인이 아님: 초대 여부에 따라 참여 폼 / 안내 ─────────
   if (!me) {
-    const inviteCode = jar.get(REF_JOIN_COOKIE)?.value ?? refCode ?? null;
-    const inviter = inviteCode ? await getPartnerByCode(inviteCode) : null;
+    // 추천인 참여 폼은 총판의 초대 링크(?join=1)로 왔을 때만 — 추천인의
+    // 고객 링크로 온 사람은 고객이지 하위 추천인이 아니다 (2단계 고정).
+    const inviteCode = jar.get(REF_JOIN_COOKIE)?.value ?? null;
+    const invitedBy = inviteCode ? await getPartnerByCode(inviteCode) : null;
+    const inviter = invitedBy && invitedBy.role === 'distributor' ? invitedBy : null;
     return (
       <section className="m-ref-page" style={{ maxWidth: 640, margin: '0 auto', padding: '40px 24px 96px' }}>
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -105,6 +108,8 @@ export default async function ReferralPage({
   const customerLink = `${SITE}/r/${me.code}`;
   const inviteLink = `${SITE}/r/${me.code}?join=1`;
   const qr = await QRCode.toString(customerLink, { type: 'svg', margin: 1, width: 180 });
+  // 추천인 화면에 '소속 총판'을 보여준다 (총판 → 추천인 → 고객, 2단계 고정)
+  const myDistributor = !isDistributor && me.distributorId ? await getPartnerById(me.distributorId).catch(() => null) : null;
   const totals = await partnerTotals(me.id);
 
   const myRows = await db
@@ -243,8 +248,9 @@ export default async function ReferralPage({
         ) : null}
         {searchParams.joined ? <p style={{ fontSize: 13, color: '#047857', marginTop: 10 }}>✓ {t.joinTitle}</p> : null}
 
-        {/* 코드 · QR · 링크 */}
-        <div className="m-ref-two" style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, marginTop: 24, border: '1px solid #ebebeb', borderRadius: 14, padding: 20 }}>
+        {/* ① 고객 모집 — 코드 · QR · 고객용 링크 (총판·추천인 공통) */}
+        {isDistributor ? <h2 style={{ fontSize: 16, fontWeight: 700, margin: '24px 0 8px' }}>{t.sectionCustomer}</h2> : null}
+        <div className="m-ref-two" style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, marginTop: isDistributor ? 0 : 24, border: '1px solid #ebebeb', borderRadius: 14, padding: 20 }}>
           <div dangerouslySetInnerHTML={{ __html: qr }} style={{ width: 180, height: 180 }} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#6a6a6a' }}>{t.myCode}</div>
@@ -252,11 +258,30 @@ export default async function ReferralPage({
             <p style={{ fontSize: 13, color: '#6a6a6a', margin: '8px 0 0', lineHeight: 1.6 }}>{t.qrHint}</p>
             <div style={{ marginTop: 14, fontSize: 12, fontWeight: 700, color: '#6a6a6a' }}>{t.linkLabel}</div>
             <code style={{ display: 'block', background: '#f7f7f7', borderRadius: 8, padding: '8px 10px', fontSize: 13, wordBreak: 'break-all', marginTop: 4 }}>{customerLink}</code>
-            <div style={{ marginTop: 12, fontSize: 12, fontWeight: 700, color: '#6a6a6a' }}>{t.inviteLabel}</div>
-            <code style={{ display: 'block', background: '#fff5f7', border: '1px solid #fecdd3', borderRadius: 8, padding: '8px 10px', fontSize: 13, wordBreak: 'break-all', marginTop: 4 }}>{inviteLink}</code>
-            <p style={{ fontSize: 12, color: '#6a6a6a', margin: '6px 0 0', lineHeight: 1.55 }}>{t.inviteHint}</p>
+            {!isDistributor ? (
+              <>
+                {myDistributor ? (
+                  <div style={{ marginTop: 14, fontSize: 13 }}>
+                    <span style={{ fontWeight: 700, color: '#6a6a6a' }}>{t.myDistributor}</span>{' '}
+                    <b>{myDistributor.name}</b> <span style={{ fontFamily: 'monospace', color: '#6a6a6a' }}>({myDistributor.code})</span>
+                  </div>
+                ) : null}
+                <p style={{ fontSize: 12, color: '#6a6a6a', margin: '8px 0 0', lineHeight: 1.55 }}>{t.referrerNote}</p>
+              </>
+            ) : null}
           </div>
         </div>
+
+        {/* ② 추천인(영업) 초대 링크 — 총판만. 추천인은 하위 추천인을 둘 수 없다. */}
+        {isDistributor ? (
+          <>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: '22px 0 8px' }}>{t.sectionInvite}</h2>
+            <div style={{ border: '1px solid #fecdd3', background: '#fffafb', borderRadius: 14, padding: 20 }}>
+              <code style={{ display: 'block', background: '#fff', border: '1px solid #fecdd3', borderRadius: 8, padding: '8px 10px', fontSize: 13, wordBreak: 'break-all' }}>{inviteLink}</code>
+              <p style={{ fontSize: 13, color: '#3f3f3f', margin: '10px 0 0', lineHeight: 1.65 }}>{t.inviteHint}</p>
+            </div>
+          </>
+        ) : null}
 
         {/* 통계 — 총판은 큰 카드 4개(가입 회원·예상·확정·지급)로 간단히.
             추천인(개인)은 기존 5칸 유지. */}

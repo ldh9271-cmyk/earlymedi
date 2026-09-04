@@ -94,15 +94,8 @@ export async function createReferrerAction(fd: FormData): Promise<void> {
   await assertDistributorInScope(distributorId, scope.region);
   const name = str(fd, 'name');
   if (!distributorId || !name) back(`/master/partners/${distributorId}`, { error: '이름은 필수입니다' });
-  const parentCode = str(fd, 'parentCode').toUpperCase();
-  let parentId: string = distributorId;
-  if (parentCode) {
-    const [p] = await db.select().from(referralPartners).where(eq(referralPartners.code, parentCode)).limit(1);
-    if (!p || (p.id !== distributorId && p.distributorId !== distributorId)) {
-      back(`/master/partners/${distributorId}`, { error: `상위 코드 ${parentCode} 를 이 총판 아래에서 찾을 수 없습니다` });
-    }
-    parentId = p.id;
-  }
+  // 2단계 고정: 추천인은 항상 총판 직속 (총판 → 추천인 → 고객).
+  const parentId: string = distributorId;
   const d = await getPartnerById(distributorId);
   for (let i = 0; i < 5; i += 1) {
     try {
