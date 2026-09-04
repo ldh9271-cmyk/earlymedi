@@ -43,7 +43,13 @@ export async function GET(req: Request, { params }: { params: { code: string } }
     .catch(() => undefined);
 
   const res = NextResponse.redirect(target, 302);
-  const cookieBase = { path: '/', maxAge: REF_COOKIE_MAX_AGE, sameSite: 'lax' as const, httpOnly: true, secure: url.protocol === 'https:' };
+  // www.glowuptour.com 과 glowuptour.com 이 모두 서비스되므로, 호스트 전용
+  // 쿠키면 링크는 www 로 눌렀는데 결제는 apex 에서 하는 경우 귀속이 유실된다
+  // (2026-09-04 실제 발생). 등록 도메인 전체에 공유되도록 domain 을 지정한다.
+  const host = url.hostname;
+  const rootDomain = host.split('.').slice(-2).join('.');
+  const domain = host === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(host) ? undefined : `.${rootDomain}`;
+  const cookieBase = { path: '/', maxAge: REF_COOKIE_MAX_AGE, sameSite: 'lax' as const, httpOnly: true, secure: url.protocol === 'https:', ...(domain ? { domain } : {}) };
   // 최초 접촉 우선 — 이미 다른 코드 쿠키가 있으면 덮어쓰지 않는다
   const existing = req.headers.get('cookie')?.match(new RegExp(`(?:^|; )${REF_COOKIE}=([^;]+)`))?.[1];
   if (!existing) res.cookies.set(REF_COOKIE, partner.code, cookieBase);

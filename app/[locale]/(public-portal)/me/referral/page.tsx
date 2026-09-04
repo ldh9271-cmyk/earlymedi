@@ -11,8 +11,8 @@ import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { commissionLedger, referralAttributions } from '@/drizzle/schema/referral-program';
 import { isMasterEmail } from '@/lib/auth/master';
 import {
-  attributeUser, confirmDueLedger, getPartnerByCode, getPartnerById, getPartnerByUserId, getRegionAdmin,
-  listReferrers, partnerTotals, REF_COOKIE, REF_JOIN_COOKIE,
+  attributeUser, claimPartnerByEmail, confirmDueLedger, getPartnerByCode, getPartnerById, getPartnerByUserId,
+  getRegionAdmin, listReferrers, partnerTotals, REF_COOKIE, REF_JOIN_COOKIE,
 } from '@/lib/referral/service';
 import { joinReferrerAction } from './_actions';
 import { PrintButton } from './print-button';
@@ -62,6 +62,9 @@ export default async function ReferralPage({
     }
   }
 
+  // 비밀번호 로그인은 인증 콜백을 지나지 않으므로, 마스터가 미리 저장해 둔
+  // 총판 계정 이메일(가입 대기)을 여기서도 연결한다.
+  if (!previewOf && user.email) await claimPartnerByEmail(user.id, user.email).catch(() => 0);
   const me = previewOf ?? (await getPartnerByUserId(user.id));
 
   // ── 아직 추천인이 아님: 초대 여부에 따라 참여 폼 / 안내 ─────────
