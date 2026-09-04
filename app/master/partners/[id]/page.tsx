@@ -10,7 +10,7 @@ import { commissionLedger, DEFAULT_DISTRIBUTOR_CONFIG } from '@/drizzle/schema/r
 import { getPartnerById, getRegionAdmin, listReferrers } from '@/lib/referral/service';
 import {
   confirmDueAction, createReferrerAction, createResultAction, linkPartnerUserAction,
-  reverseOrderAction, saveConfigAction, settleAction, togglePartnerAction,
+  renameDistributorAction, reverseOrderAction, saveConfigAction, settleAction, togglePartnerAction,
 } from '../_actions';
 import { FeeShareField } from '../fee-share-field';
 
@@ -88,7 +88,22 @@ export default async function DistributorDetailPage({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <Link href="/master/partners" style={{ fontSize: 12, color: '#6a6a6a' }}>← 총판 목록</Link>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: '6px 0 0' }}>{d.name}</h1>
+          <form action={renameDistributorAction} style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0 0' }}>
+            <input type="hidden" name="partnerId" value={d.id} />
+            <input
+              name="name"
+              defaultValue={d.name}
+              maxLength={120}
+              required
+              style={{ fontSize: 22, fontWeight: 700, border: '1px solid #e5e5e5', borderRadius: 8, padding: '2px 8px', fontFamily: 'inherit', width: 320, background: '#fff' }}
+            />
+            <button
+              type="submit"
+              style={{ border: '1px solid #dddddd', background: '#fff', color: '#222', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+            >
+              이름 저장
+            </button>
+          </form>
           <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 4 }}>
             코드 <b style={{ fontFamily: 'monospace', color: '#222' }}>{d.code}</b> · {d.countryCode} · 랜딩 /{d.landingLocale}
             {d.userEmail ? ` · 계정 ${d.userEmail}${d.userId ? ' (연결됨)' : ' (가입 대기 — 가입 시 자동 연결)'}` : ''}

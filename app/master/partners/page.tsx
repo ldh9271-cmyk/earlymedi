@@ -6,7 +6,7 @@ import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { commissionLedger, referralPartners } from '@/drizzle/schema/referral-program';
 import { getRegionAdmin, listDistributors, listRegionAdmins } from '@/lib/referral/service';
-import { addRegionAdminAction, createDistributorAction, removeRegionAdminAction } from './_actions';
+import { addRegionAdminAction, createDistributorAction, deleteDistributorAction, removeRegionAdminAction } from './_actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '총판·추천인 프로그램 — 마스터 관리자' };
@@ -86,6 +86,16 @@ export default async function MasterPartnersPage({
                   <td style={{ padding: 12, color: '#047857', whiteSpace: 'nowrap' }}>₩{s.paid.toLocaleString('ko-KR')}</td>
                   <td style={{ padding: 12, whiteSpace: 'nowrap' }}>
                     <Link href={`/master/partners/${d.id}`} style={{ fontSize: 12, color: '#222', textDecoration: 'underline' }}>관리</Link>
+                    <form action={deleteDistributorAction} style={{ display: 'inline', marginLeft: 10 }}>
+                      <input type="hidden" name="partnerId" value={d.id} />
+                      <button
+                        type="submit"
+                        title="총판·하위 추천인·귀속·수당 원장을 모두 삭제합니다 (되돌릴 수 없음)"
+                        style={{ border: '1px solid #dc2626', color: '#dc2626', background: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        삭제
+                      </button>
+                    </form>
                   </td>
                 </tr>
               );

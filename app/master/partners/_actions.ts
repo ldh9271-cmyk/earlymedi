@@ -3,7 +3,7 @@
 import 'server-only';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
@@ -125,6 +125,43 @@ export async function createReferrerAction(fd: FormData): Promise<void> {
     }
   }
   back(`/master/partners/${distributorId}`, { error: 'code_collision' });
+}
+
+/**
+ * 총판 삭제 — 총판과 하위 추천인·귀속·수당 원장을 함께 지운다.
+ * 지역 마스터는 자기 국가 총판만. 주문(checkout_orders)은 회계 기록이라
+ * 남긴다(파트너 id 만 남고 상세 화면에서 '—' 로 표시됨).
+ */
+export async function deleteDistributorAction(fd: FormData): Promise<void> {
+  const scope = await assertScope();
+  const id = str(fd, 'partnerId');
+  if (!id) back('/master/partners', { error: 'missing_id' });
+  await assertDistributorInScope(id, scope.region);
+  const d = await getPartnerById(id);
+  if (!d || d.role !== 'distributor') back('/master/partners', { error: '총판을 찾을 수 없습니다' });
+
+  await db.transaction(async (tx) => {
+    // 수당 원장 → 귀속 → 하위 추천인 → 총판 순으로 정리
+    await tx.execute(sql`DELETE FROM commission_ledger WHERE distributor_id = ${id}`);
+    await tx.execute(sql`DELETE FROM referral_attributions WHERE distributor_id = ${id}`);
+    await tx.execute(sql`DELETE FROM referral_partners WHERE role = 'referrer' AND distributor_id = ${id}`);
+    await tx.delete(referralPartners).where(eq(referralPartners.id, id));
+  });
+  revalidatePath('/master/partners');
+  back('/master/partners', { ok: `${d.name} (${d.code}) 총판을 삭제했습니다` });
+}
+
+/** 총판 이름 변경. */
+export async function renameDistributorAction(fd: FormData): Promise<void> {
+  const scope = await assertScope();
+  const id = str(fd, 'partnerId');
+  const name = str(fd, 'name');
+  if (!id || !name || name.length > 120) back(`/master/partners/${id}`, { error: '이름을 확인해 주세요' });
+  await assertDistributorInScope(id, scope.region);
+  await db.update(referralPartners).set({ name, updatedAt: new Date() }).where(eq(referralPartners.id, id));
+  revalidatePath(`/master/partners/${id}`);
+  revalidatePath('/master/partners');
+  back(`/master/partners/${id}`, { ok: `이름을 '${name}' 으로 변경했습니다` });
 }
 
 /**
