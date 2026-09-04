@@ -122,7 +122,7 @@ export default async function DistributorDetailPage({
           <input type="hidden" name="partnerId" value={d.id} />
           <div style={{ flex: 1, minWidth: 260 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px' }}>총판 대시보드 계정 연결</h3>
-            <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 8px' }}>총판 담당자가 사이트에 가입한 이메일을 입력하세요. 연결되면 그 계정으로 로그인해 QR·수당·정산서를 봅니다.</p>
+            <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 8px' }}>총판 담당자 이메일을 입력하세요. 아직 가입 전이어도 저장되며, 그 이메일로 가입·로그인하는 순간 자동 연결됩니다. 연결되면 그 계정으로 로그인해 QR·수당·정산서를 봅니다.</p>
             <input name="email" type="email" required defaultValue={d.userEmail ?? ''} placeholder="partner@example.jp" style={{ ...input, maxWidth: 360 }} />
           </div>
           <button type="submit" style={btn('#1d4ed8')}>계정 연결</button>
