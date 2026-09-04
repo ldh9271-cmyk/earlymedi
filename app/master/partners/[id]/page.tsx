@@ -115,19 +115,23 @@ export default async function DistributorDetailPage({
 
       {searchParams.created ? <p style={{ color: '#047857', fontSize: 13, margin: 0 }}>총판이 생성됐습니다. QR 을 총판에 전달하고, 대시보드 계정 이메일을 연결하세요.</p> : null}
 
-      {/* ── 총판 본인 계정 연결 — 연결돼야 /me/referral 대시보드가 열린다 ── */}
-      {!d.userId ? (
-        <form action={linkPartnerUserAction} style={{ ...card, borderColor: '#1d4ed8', display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <input type="hidden" name="distributorId" value={d.id} />
-          <input type="hidden" name="partnerId" value={d.id} />
-          <div style={{ flex: 1, minWidth: 260 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px' }}>총판 대시보드 계정 연결</h3>
-            <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 8px' }}>총판 담당자 이메일을 입력하세요. 아직 가입 전이어도 저장되며, 그 이메일로 가입·로그인하는 순간 자동 연결됩니다. 연결되면 그 계정으로 로그인해 QR·수당·정산서를 봅니다.</p>
-            <input name="email" type="email" required defaultValue={d.userEmail ?? ''} placeholder="partner@example.jp" style={{ ...input, maxWidth: 360 }} />
-          </div>
-          <button type="submit" style={btn('#1d4ed8')}>계정 연결</button>
-        </form>
-      ) : null}
+      {/* ── 총판 본인 계정 연결 — 연결돼야 /me/referral 대시보드가 열린다.
+             연결 후에도 계정을 바꿀 수 있도록 항상 표시한다 (마스터·지역
+             마스터 공통). ── */}
+      <form action={linkPartnerUserAction} style={{ ...card, borderColor: '#1d4ed8', display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <input type="hidden" name="distributorId" value={d.id} />
+        <input type="hidden" name="partnerId" value={d.id} />
+        <div style={{ flex: 1, minWidth: 260 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px' }}>총판 대시보드 계정 {d.userId ? '변경' : '연결'}</h3>
+          <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 8px' }}>
+            {d.userId
+              ? '연결된 계정을 다른 이메일로 바꾸려면 새 이메일을 입력하세요. 아직 가입 전 이메일이면 그 이메일로 가입·로그인할 때 자동 연결됩니다.'
+              : '총판 담당자 이메일을 입력하세요. 아직 가입 전이어도 저장되며, 그 이메일로 가입·로그인하는 순간 자동 연결됩니다. 연결되면 그 계정으로 로그인해 QR·수당·정산서를 봅니다.'}
+          </p>
+          <input name="email" type="email" required defaultValue={d.userEmail ?? ''} placeholder="partner@example.jp" style={{ ...input, maxWidth: 360 }} />
+        </div>
+        <button type="submit" style={btn('#1d4ed8')}>계정 {d.userId ? '변경' : '연결'}</button>
+      </form>
       {searchParams.error ? <p style={{ color: '#dc2626', fontSize: 13, margin: 0 }}>{searchParams.error}</p> : null}
       {searchParams.ok ? <p style={{ color: '#047857', fontSize: 13, margin: 0 }}>{searchParams.ok}</p> : null}
 

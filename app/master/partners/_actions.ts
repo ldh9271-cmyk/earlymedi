@@ -168,13 +168,21 @@ export async function renameDistributorAction(fd: FormData): Promise<void> {
  * 계정 연결: 파트너의 user_id 를 이메일로 찾아 묶는다.
  * 아직 가입 전인 이메일도 저장(가입 대기)해 두면, 그 이메일이 사이트에
  * 가입·로그인하는 순간 인증 콜백이 자동으로 user_id 를 연결한다.
+ *
+ * 총괄 마스터 + 지역 마스터(일본 총판 관리자) 모두 사용 — 지역 마스터는
+ * 자기 국가 총판만. distributorId 는 폼에서 오지만 신뢰하지 않고,
+ * 실제 파트너의 총판을 기준으로 국가 스코프를 검증한다.
  */
 export async function linkPartnerUserAction(fd: FormData): Promise<void> {
-  await assertMaster();
+  const scope = await assertScope();
   const partnerId = str(fd, 'partnerId');
   const distributorId = str(fd, 'distributorId');
   const email = str(fd, 'email').toLowerCase();
   if (!partnerId || !email) back(`/master/partners/${distributorId}`, { error: '이메일이 필요합니다' });
+  // 스코프 검증 — 파트너가 총판이면 그 자신, 추천인이면 소속 총판으로 확인
+  const target = await getPartnerById(partnerId);
+  if (!target) back(`/master/partners/${distributorId}`, { error: '대상을 찾을 수 없습니다' });
+  await assertDistributorInScope(target.role === 'distributor' ? partnerId : (target.distributorId ?? partnerId), scope.region);
   const uid = await findAuthUserIdByEmail(email);
   await db
     .update(referralPartners)
