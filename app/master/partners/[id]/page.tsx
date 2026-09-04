@@ -91,7 +91,7 @@ export default async function DistributorDetailPage({
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: '6px 0 0' }}>{d.name}</h1>
           <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 4 }}>
             코드 <b style={{ fontFamily: 'monospace', color: '#222' }}>{d.code}</b> · {d.countryCode} · 랜딩 /{d.landingLocale}
-            {d.userEmail ? ` · 계정 ${d.userEmail}${d.userId ? ' (연결됨)' : ' (미연결)'}` : ''}
+            {d.userEmail ? ` · 계정 ${d.userEmail}${d.userId ? ' (연결됨)' : ' (가입 대기 — 가입 시 자동 연결)'}` : ''}
           </div>
           <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 4 }}>QR 링크 <code>{SITE}/r/{d.code}</code> · 추천인 초대 링크 <code>{SITE}/r/{d.code}?join=1</code></div>
         </div>

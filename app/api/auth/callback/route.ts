@@ -2,7 +2,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
-import { attributeUser, REF_COOKIE } from '@/lib/referral/service';
+import { attributeUser, claimPartnerByEmail, REF_COOKIE } from '@/lib/referral/service';
 import { notifySignupEvent } from '@/lib/notify/admin-alert';
 
 /**
@@ -23,6 +23,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       const refPartner = refCode
         ? await attributeUser(data.user.id, refCode, 'oauth').catch(() => null)
         : null;
+
+      // 마스터가 총판에 미리 저장해 둔 이메일(가입 대기)이면 이 계정을
+      // 총판 대시보드 계정으로 자동 연결한다.
+      if (data.user.email) {
+        await claimPartnerByEmail(data.user.id, data.user.email).catch(() => 0);
+      }
 
       // 가입 출처 스탬프 — 구글 OAuth 는 이메일 가입과 달리 user_metadata
       // 를 우리가 못 채우므로, 콜백의 next 경로로 출처를 판정해 1회

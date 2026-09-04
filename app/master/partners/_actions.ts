@@ -127,7 +127,11 @@ export async function createReferrerAction(fd: FormData): Promise<void> {
   back(`/master/partners/${distributorId}`, { error: 'code_collision' });
 }
 
-/** 계정 연결: 파트너의 user_id 를 이메일로 찾아 묶는다 (Supabase auth.users 조회). */
+/**
+ * 계정 연결: 파트너의 user_id 를 이메일로 찾아 묶는다.
+ * 아직 가입 전인 이메일도 저장(가입 대기)해 두면, 그 이메일이 사이트에
+ * 가입·로그인하는 순간 인증 콜백이 자동으로 user_id 를 연결한다.
+ */
 export async function linkPartnerUserAction(fd: FormData): Promise<void> {
   await assertMaster();
   const partnerId = str(fd, 'partnerId');
@@ -135,10 +139,16 @@ export async function linkPartnerUserAction(fd: FormData): Promise<void> {
   const email = str(fd, 'email').toLowerCase();
   if (!partnerId || !email) back(`/master/partners/${distributorId}`, { error: '이메일이 필요합니다' });
   const uid = await findAuthUserIdByEmail(email);
-  if (!uid) back(`/master/partners/${distributorId}`, { error: `${email} 계정을 찾을 수 없습니다 — 먼저 사이트에서 가입해야 합니다` });
-  await db.update(referralPartners).set({ userId: uid, userEmail: email, updatedAt: new Date() }).where(eq(referralPartners.id, partnerId));
+  await db
+    .update(referralPartners)
+    .set({ userId: uid ?? null, userEmail: email, updatedAt: new Date() })
+    .where(eq(referralPartners.id, partnerId));
   revalidatePath(`/master/partners/${distributorId}`);
-  back(`/master/partners/${distributorId}`, { ok: `${email} 계정 연결` });
+  back(`/master/partners/${distributorId}`, {
+    ok: uid
+      ? `${email} 계정 연결`
+      : `${email} 저장됨 (가입 대기) — 이 이메일로 가입·로그인하면 자동 연결됩니다`,
+  });
 }
 
 /**

@@ -135,6 +135,23 @@ export async function attributeUser(userId: string, code: string, source = 'qr')
   return partner;
 }
 
+/**
+ * 마스터가 미리 저장해 둔 총판 대시보드 이메일(가입 대기)을 실제 계정에
+ * 연결한다 — 해당 이메일이 가입·로그인하는 순간 인증 콜백에서 호출.
+ * 이미 다른 계정이 연결된 파트너는 건드리지 않는다.
+ */
+export async function claimPartnerByEmail(userId: string, email: string): Promise<number> {
+  const rows = await db
+    .update(referralPartners)
+    .set({ userId, updatedAt: new Date() })
+    .where(and(
+      sql`lower(${referralPartners.userEmail}) = ${email.toLowerCase()}`,
+      sql`${referralPartners.userId} IS NULL`,
+    ))
+    .returning({ id: referralPartners.id });
+  return rows.length;
+}
+
 export async function getAttribution(userId: string): Promise<{ partnerId: string; distributorId: string } | null> {
   const [row] = await db
     .select({ partnerId: referralAttributions.partnerId, distributorId: referralAttributions.distributorId })
