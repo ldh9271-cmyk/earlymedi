@@ -592,7 +592,7 @@ const en: Dictionary = {
     referrerNote: 'Customers who sign up through your QR or link are attributed to you (the referrer) and your agency. Referrers cannot invite sub-referrers.',
     registeredReferrers: 'Registered referrers (sales agents)',
     referrersNone: 'No referrers yet. Send the invite link above to register your sales agents.',
-    referrerCustomerLink: 'This referrer's customer QR · link',
+    referrerCustomerLink: "This referrer's customer QR · link",
     dashViewOnly: 'This is a view-only screen — you can check your QR, earnings, members, and statements.',
     dashMembersCount: 'Members',
     mJoined: "Joined",
