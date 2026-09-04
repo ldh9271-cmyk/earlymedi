@@ -109,6 +109,16 @@ export default async function DistributorDetailPage({
             {d.userEmail ? ` · 계정 ${d.userEmail}${d.userId ? ' (연결됨)' : ' (가입 대기 — 가입 시 자동 연결)'}` : ''}
           </div>
           <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 4 }}>QR 링크 <code>{SITE}/r/{d.code}</code> · 추천인 초대 링크 <code>{SITE}/r/{d.code}?join=1</code></div>
+          <Link
+            href={`/${d.landingLocale}/me/referral?as=${d.id}`}
+            title="이 총판이 로그인하면 보이는 화면 (조회 전용)"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 10, fontSize: 12, fontWeight: 600, color: '#1d4ed8', border: '1px solid #bfdbfe', background: '#eff6ff', borderRadius: 8, padding: '5px 10px', textDecoration: 'none' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+            </svg>
+            총판이 보는 화면 미리보기
+          </Link>
         </div>
         <div className="m-pd-qr" dangerouslySetInnerHTML={{ __html: qr }} style={{ width: 120, flexShrink: 0 }} />
       </div>

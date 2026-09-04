@@ -9,9 +9,10 @@ import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/a
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { commissionLedger, referralAttributions } from '@/drizzle/schema/referral-program';
+import { isMasterEmail } from '@/lib/auth/master';
 import {
-  attributeUser, confirmDueLedger, getPartnerByCode, getPartnerByUserId, listReferrers, partnerTotals,
-  REF_COOKIE, REF_JOIN_COOKIE,
+  attributeUser, confirmDueLedger, getPartnerByCode, getPartnerById, getPartnerByUserId, getRegionAdmin,
+  listReferrers, partnerTotals, REF_COOKIE, REF_JOIN_COOKIE,
 } from '@/lib/referral/service';
 import { joinReferrerAction } from './_actions';
 import { PrintButton } from './print-button';
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 
 export default async function ReferralPage({
   params, searchParams,
-}: { params: { locale: string }; searchParams: { period?: string; joined?: string; error?: string } }): Promise<JSX.Element> {
+}: { params: { locale: string }; searchParams: { period?: string; joined?: string; error?: string; as?: string } }): Promise<JSX.Element> {
   if (!isPublicLocale(params.locale)) notFound();
   const locale = params.locale as PublicLocale;
   const dict = await getDictionary(locale);
@@ -47,7 +48,21 @@ export default async function ReferralPage({
   const refCode = jar.get(REF_COOKIE)?.value;
   if (refCode) await attributeUser(user.id, refCode, 'me').catch(() => null);
 
-  const me = await getPartnerByUserId(user.id);
+  // ── 마스터 미리보기: ?as=<파트너 id> — 총괄 마스터, 또는 그 파트너
+  //    국가의 지역 마스터만 해당 총판이 보는 화면을 그대로 볼 수 있다.
+  //    (마스터 콘솔 총판 목록의 '총판 화면' 아이콘에서 진입)
+  let previewOf: Awaited<ReturnType<typeof getPartnerById>> = null;
+  if (searchParams.as) {
+    const email = (user.email ?? '').toLowerCase();
+    const target = await getPartnerById(searchParams.as).catch(() => null);
+    if (target) {
+      const region = isMasterEmail(email) ? null : await getRegionAdmin(email).catch(() => null);
+      const allowed = isMasterEmail(email) || (!!region && region === target.countryCode);
+      if (allowed) previewOf = target;
+    }
+  }
+
+  const me = previewOf ?? (await getPartnerByUserId(user.id));
 
   // ── 아직 추천인이 아님: 초대 여부에 따라 참여 폼 / 안내 ─────────
   if (!me) {
@@ -215,6 +230,12 @@ export default async function ReferralPage({
     <section className="m-ref-page" style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px 96px' }}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="m-ref-noprint">
+        {previewOf ? (
+          <div style={{ background: '#fff7ed', border: '1px solid #fdba74', borderRadius: 12, padding: '10px 14px', marginBottom: 18, fontSize: 13, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span><b style={{ color: '#c2410c' }}>마스터 미리보기</b> — <b>{previewOf.name}</b> ({previewOf.code}) 총판 계정으로 로그인하면 보이는 화면입니다. 조회만 되고 아무것도 바뀌지 않습니다.</span>
+            <Link href={`/master/partners/${previewOf.id}`} style={{ color: '#222', fontWeight: 600, whiteSpace: 'nowrap' }}>← 관리 화면으로</Link>
+          </div>
+        ) : null}
         <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>{isDistributor ? t.distributorTitle : t.title}</h1>
         <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>{t.subtitle}</p>
         {isDistributor ? (

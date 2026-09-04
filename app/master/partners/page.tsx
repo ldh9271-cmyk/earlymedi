@@ -7,7 +7,6 @@ import { db } from '@/lib/db/client';
 import { commissionLedger, referralPartners } from '@/drizzle/schema/referral-program';
 import { getRegionAdmin, listDistributors, listRegionAdmins } from '@/lib/referral/service';
 import { addRegionAdminAction, createDistributorAction, deleteDistributorAction, removeRegionAdminAction } from './_actions';
-import ConfirmDeleteButton from './_components/confirm-delete';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '총판·추천인 프로그램 — 마스터 관리자' };
@@ -19,7 +18,7 @@ const label: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#6a6
 
 export default async function MasterPartnersPage({
   searchParams,
-}: { searchParams: { error?: string; ok?: string } }): Promise<JSX.Element> {
+}: { searchParams: { error?: string; ok?: string; confirmDelete?: string } }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
@@ -87,9 +86,34 @@ export default async function MasterPartnersPage({
                   <td style={{ padding: 12, color: '#047857', whiteSpace: 'nowrap' }}>₩{s.paid.toLocaleString('ko-KR')}</td>
                   <td style={{ padding: 12, whiteSpace: 'nowrap' }}>
                     <Link href={`/master/partners/${d.id}`} style={{ fontSize: 12, color: '#222', textDecoration: 'underline' }}>관리</Link>
-                    <span style={{ marginLeft: 10 }}>
-                      <ConfirmDeleteButton action={deleteDistributorAction} partnerId={d.id} label={`${d.name} (${d.code})`} />
-                    </span>
+                    <Link
+                      href={`/${d.landingLocale}/me/referral?as=${d.id}`}
+                      title="이 총판이 로그인하면 보이는 화면 (조회 전용)"
+                      style={{ marginLeft: 10, fontSize: 12, color: '#1d4ed8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, verticalAlign: 'middle' }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+                      </svg>
+                      총판 화면
+                    </Link>
+                    {searchParams.confirmDelete === d.id ? (
+                      <span style={{ marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 11, color: '#dc2626', fontWeight: 700 }}>{d.name} ({d.code}) 삭제?</span>
+                        <form action={deleteDistributorAction} style={{ display: 'inline' }}>
+                          <input type="hidden" name="partnerId" value={d.id} />
+                          <button type="submit" style={{ border: 'none', background: '#dc2626', color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>예, 삭제</button>
+                        </form>
+                        <Link href="/master/partners" style={{ border: '1px solid #dddddd', background: '#fff', color: '#222', borderRadius: 6, padding: '3px 10px', fontSize: 11, textDecoration: 'none' }}>취소</Link>
+                      </span>
+                    ) : (
+                      <Link
+                        href={`/master/partners?confirmDelete=${d.id}`}
+                        title="총판·하위 추천인·귀속·수당 원장을 모두 삭제합니다 (되돌릴 수 없음)"
+                        style={{ marginLeft: 10, border: '1px solid #dc2626', color: '#dc2626', background: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 11, textDecoration: 'none' }}
+                      >
+                        삭제
+                      </Link>
+                    )}
                   </td>
                 </tr>
               );
