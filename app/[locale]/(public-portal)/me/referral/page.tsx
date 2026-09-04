@@ -136,6 +136,8 @@ export default async function ReferralPage({
 
   // 총판: 가입 회원 명부 + 추천인 목록 + 월 정산서
   let referrers: Awaited<ReturnType<typeof listReferrers>> = [];
+  // 추천인별 고객용 QR (② 초대 링크 아래 목록에 표시)
+  let referrerQrs: string[] = [];
   let statement: Array<{ name: string; code: string; count: number; amount: number }> = [];
   let members: Array<{
     userId: string; label: string; via: string; source: string;
@@ -144,6 +146,9 @@ export default async function ReferralPage({
   const period = searchParams.period && /^\d{4}-\d{2}$/.test(searchParams.period) ? searchParams.period : new Date().toISOString().slice(0, 7);
   if (isDistributor) {
     referrers = await listReferrers(me.id);
+    referrerQrs = await Promise.all(
+      referrers.map((r) => QRCode.toString(`${SITE}/r/${r.code}`, { type: 'svg', margin: 1, width: 120 })),
+    );
 
     // ── 내 QR·추천 코드로 가입해 영구 귀속된 회원 명부 ──────────
     // 표시는 마스킹 이메일까지만 — 회원 PII 는 총판에게 전부
@@ -280,6 +285,30 @@ export default async function ReferralPage({
               <code style={{ display: 'block', background: '#fff', border: '1px solid #fecdd3', borderRadius: 8, padding: '8px 10px', fontSize: 13, wordBreak: 'break-all' }}>{inviteLink}</code>
               <p style={{ fontSize: 13, color: '#3f3f3f', margin: '10px 0 0', lineHeight: 1.65 }}>{t.inviteHint}</p>
             </div>
+
+            {/* 등록된 추천인(영업) — 각자의 고객용 QR · 링크. 추천인이 이 QR로
+                모은 고객은 추천인과 이 총판에 함께 귀속된다. */}
+            <h3 style={{ fontSize: 15, fontWeight: 700, margin: '18px 0 8px' }}>{t.registeredReferrers} ({referrers.length})</h3>
+            {referrers.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 12, padding: 16, margin: 0 }}>{t.referrersNone}</p>
+            ) : (
+              <div style={{ display: 'grid', gap: 10 }}>
+                {referrers.map((r, i) => (
+                  <div key={r.id} className="m-ref-two" style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16, border: '1px solid #ebebeb', borderRadius: 12, padding: 14, alignItems: 'center', opacity: r.isActive ? 1 : 0.55 }}>
+                    <div dangerouslySetInnerHTML={{ __html: referrerQrs[i] ?? '' }} style={{ width: 120, height: 120 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
+                        <b style={{ fontSize: 15 }}>{r.name}</b>
+                        <span style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: 1 }}>{r.code}</span>
+                        <span style={{ fontSize: 12, color: '#6a6a6a' }}>{t.clicks} {r.clicks} · {t.signups} {r.signups}</span>
+                      </div>
+                      <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: '#6a6a6a' }}>{t.referrerCustomerLink}</div>
+                      <code style={{ display: 'block', background: '#f7f7f7', borderRadius: 8, padding: '7px 10px', fontSize: 13, wordBreak: 'break-all', marginTop: 4 }}>{SITE}/r/{r.code}</code>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         ) : null}
 
@@ -373,27 +402,6 @@ export default async function ReferralPage({
               </div>
             )}
 
-            {/* 추천인이 있을 때만 접이식으로 노출 — 없으면 화면을 비운다
-                (조회 전용 간단 대시보드: 기본은 QR·수당·회원·정산서만). */}
-            {referrers.length > 0 ? (
-              <details style={{ marginTop: 28 }}>
-                <summary style={{ fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>{t.referrers} ({referrers.length})</summary>
-                <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto', marginTop: 10 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 480 }}>
-                    <tbody>
-                      {referrers.map((r) => (
-                        <tr key={r.id} style={{ borderTop: '1px solid #f0f0f0' }}>
-                          <td style={{ padding: '9px 12px', fontWeight: 600 }}>{r.name}</td>
-                          <td style={{ padding: '9px 12px', fontFamily: 'monospace' }}>{r.code}</td>
-                          <td style={{ padding: '9px 12px', color: '#6a6a6a', fontSize: 12 }}>{r.parentId === me.id ? '—' : referrers.find((x) => x.id === r.parentId)?.name ?? ''}</td>
-                          <td style={{ padding: '9px 12px', textAlign: 'right', fontSize: 12 }}>{r.clicks} / {r.signups}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-            ) : null}
           </div>
 
           <div style={{ marginTop: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
