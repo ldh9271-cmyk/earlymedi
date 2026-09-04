@@ -598,6 +598,7 @@ const zh: Dictionary = {
     perfOrders: '笔',
     referrerPayoutNote: '平台不规定推荐人（销售）的分成比例。奖励统一支付给总代理，推荐人的分配由总代理与推荐人自行结算。',
     stmtDirect: '总代理直接',
+    stmtRealtimeNote: '实时结算 — 待定为本月预计确认的金额（疗程·旅行完成并过保留期后确认），确认·已付为已处理金额。',
     dashViewOnly: '本页面仅供查看 — 可确认二维码、佣金、注册会员与结算单。',
     dashMembersCount: '注册会员',
     mJoined: "注册日期",

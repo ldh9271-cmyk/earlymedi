@@ -601,6 +601,7 @@ const vi: Dictionary = {
     perfOrders: 'đơn',
     referrerPayoutNote: 'Nền tảng không quy định tỷ lệ hoa hồng cho người giới thiệu (kinh doanh). Hoa hồng được trả trọn cho đại lý và đại lý tự thanh toán với người giới thiệu.',
     stmtDirect: 'Đại lý trực tiếp',
+    stmtRealtimeNote: 'Bảng kê theo thời gian thực — Chờ là số dự kiến xác nhận trong tháng này (xác nhận sau thời gian giữ kể từ khi hoàn tất dịch vụ/chuyến đi), Xác nhận và Đã trả là số đã xử lý.',
     dashViewOnly: 'Màn hình chỉ để xem — bạn có thể kiểm tra QR, hoa hồng, thành viên và bảng kê.',
     dashMembersCount: 'Thành viên',
     mJoined: "Ngày đăng ký",

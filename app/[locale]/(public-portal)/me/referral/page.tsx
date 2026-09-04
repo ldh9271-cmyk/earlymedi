@@ -145,7 +145,8 @@ export default async function ReferralPage({
   type Perf = { members: number; orders: number; paidWon: number; pending: number; confirmed: number; paid: number };
   const ZERO_PERF: Perf = { members: 0, orders: 0, paidWon: 0, pending: 0, confirmed: 0, paid: 0 };
   const perf = new Map<string, Perf>();
-  let statement: Array<{ name: string; code: string; count: number; amount: number }> = [];
+  // 월 정산서 행 — 실시간: 대기(확정 예정)·확정·지급을 모두 담는다
+  let statement: Array<{ name: string; code: string; count: number; pending: number; confirmed: number; paid: number; amount: number }> = [];
   let members: Array<{
     userId: string; label: string; via: string; source: string;
     joinedAt: Date; orders: number; spentWon: number;
@@ -253,23 +254,27 @@ export default async function ReferralPage({
     const to = new Date(Date.UTC(y, m, 1));
     // 월 정산서: 총판이 받을 금액을 '경유 추천인'별로 나눠 보여준다
     // (플랫폼은 총판에게 일괄 지급, 추천인 배분은 총판이 자체 정산).
+    // 실시간 정산 표기: 대기(pending, 확정 예정일이 이 달)도 포함한다.
     const rows = await db
-      .select({ via: checkoutOrders.partnerId, amountWon: commissionLedger.amountWon, confirmAt: commissionLedger.confirmAt })
+      .select({ via: checkoutOrders.partnerId, status: commissionLedger.status, amountWon: commissionLedger.amountWon, confirmAt: commissionLedger.confirmAt })
       .from(commissionLedger)
       .innerJoin(checkoutOrders, eq(checkoutOrders.id, commissionLedger.orderId))
       .where(and(
         eq(commissionLedger.distributorId, me.id),
-        inArray(commissionLedger.status, ['confirmed', 'paid']),
+        inArray(commissionLedger.status, ['pending', 'confirmed', 'paid']),
         inArray(commissionLedger.beneficiary, ['referrer_l1', 'referrer_l2', 'distributor']),
       ));
-    const agg = new Map<string, { name: string; code: string; count: number; amount: number }>();
+    const agg = new Map<string, { name: string; code: string; count: number; pending: number; confirmed: number; paid: number; amount: number }>();
     for (const r of rows) {
       if (r.confirmAt < from || r.confirmAt >= to) continue;
       const pid = r.via ?? me.id;
       const p = pid === me.id ? me : byId.get(pid);
       const key = pid;
-      const cur = agg.get(key) ?? { name: pid === me.id ? t.stmtDirect : (p?.name ?? '—'), code: p?.code ?? '', count: 0, amount: 0 };
+      const cur = agg.get(key) ?? { name: pid === me.id ? t.stmtDirect : (p?.name ?? '—'), code: p?.code ?? '', count: 0, pending: 0, confirmed: 0, paid: 0, amount: 0 };
       cur.count += 1; cur.amount += r.amountWon;
+      if (r.status === 'pending') cur.pending += r.amountWon;
+      else if (r.status === 'confirmed') cur.confirmed += r.amountWon;
+      else cur.paid += r.amountWon;
       agg.set(key, cur);
     }
     statement = [...agg.values()].sort((a, b) => b.amount - a.amount);
@@ -486,6 +491,9 @@ export default async function ReferralPage({
               <thead><tr style={{ background: '#fafafa', textAlign: 'left' }}>
                 <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.stmtPartner}</th>
                 <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right' }}>{t.stmtCount}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#b45309', textAlign: 'right' }}>{t.pending}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#1d4ed8', textAlign: 'right' }}>{t.confirmed}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#047857', textAlign: 'right' }}>{t.paid}</th>
                 <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right' }}>{t.stmtAmount}</th>
               </tr></thead>
               <tbody>
@@ -493,18 +501,24 @@ export default async function ReferralPage({
                   <tr key={s.code || s.name} style={{ borderTop: '1px solid #f0f0f0' }}>
                     <td style={{ padding: '9px 12px' }}>{s.name} <span style={{ fontFamily: 'monospace', color: '#9c9c9c', fontSize: 12 }}>{s.code}</span></td>
                     <td style={{ padding: '9px 12px', textAlign: 'right' }}>{s.count}</td>
+                    <td style={{ padding: '9px 12px', textAlign: 'right', color: '#b45309' }}>{fmt(s.pending)}</td>
+                    <td style={{ padding: '9px 12px', textAlign: 'right', color: '#1d4ed8' }}>{fmt(s.confirmed)}</td>
+                    <td style={{ padding: '9px 12px', textAlign: 'right', color: '#047857' }}>{fmt(s.paid)}</td>
                     <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700 }}>{fmt(s.amount)}</td>
                   </tr>
                 ))}
                 <tr style={{ borderTop: '2px solid #dddddd', background: '#fafafa' }}>
                   <td style={{ padding: '9px 12px', fontWeight: 700 }}>{t.stmtTotal}</td>
                   <td style={{ padding: '9px 12px', textAlign: 'right' }}>{statement.reduce((a, s) => a + s.count, 0)}</td>
+                  <td style={{ padding: '9px 12px', textAlign: 'right', color: '#b45309', fontWeight: 700 }}>{fmt(statement.reduce((a, s) => a + s.pending, 0))}</td>
+                  <td style={{ padding: '9px 12px', textAlign: 'right', color: '#1d4ed8', fontWeight: 700 }}>{fmt(statement.reduce((a, s) => a + s.confirmed, 0))}</td>
+                  <td style={{ padding: '9px 12px', textAlign: 'right', color: '#047857', fontWeight: 700 }}>{fmt(statement.reduce((a, s) => a + s.paid, 0))}</td>
                   <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 800 }}>{fmt(stmtTotal)}</td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <p style={{ fontSize: 11, color: '#9c9c9c', marginTop: 8, lineHeight: 1.6 }}>{t.stmtNote}</p>
+          <p style={{ fontSize: 11, color: '#9c9c9c', marginTop: 8, lineHeight: 1.6 }}>{t.stmtRealtimeNote} {t.stmtNote}</p>
         </>
       ) : null}
 

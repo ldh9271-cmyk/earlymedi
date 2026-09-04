@@ -601,6 +601,7 @@ const en: Dictionary = {
     perfOrders: 'orders',
     referrerPayoutNote: 'The platform does not set referrer (sales agent) rates. Rewards are paid to the agency in full, and the agency settles with its referrers directly.',
     stmtDirect: 'Agency direct',
+    stmtRealtimeNote: 'Real-time statement — Pending is the estimated amount scheduled to confirm this month (confirmed once the hold period passes after the treatment or trip); Confirmed and Paid are processed amounts.',
     dashViewOnly: 'This is a view-only screen — you can check your QR, earnings, members, and statements.',
     dashMembersCount: 'Members',
     mJoined: "Joined",

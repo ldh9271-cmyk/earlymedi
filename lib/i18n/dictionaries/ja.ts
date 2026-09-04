@@ -600,6 +600,7 @@ const ja: Dictionary = {
     perfOrders: '件',
     referrerPayoutNote: '紹介者（営業）の報酬率はプラットフォームでは定めません。報酬は総代理店に一括で支払われ、紹介者への配分は総代理店が紹介者と直接精算します。',
     stmtDirect: '総代理店直接',
+    stmtRealtimeNote: 'リアルタイム精算 — 保留中は今月確定予定の見込み額（施術・旅行完了後の保留期間経過で確定）、確定・支払済は処理済みの金額です。',
     dashViewOnly: 'この画面は閲覧専用です — QR・報酬・登録会員・精算書を確認できます。',
     dashMembersCount: '登録会員',
     mJoined: "登録日",

@@ -620,6 +620,7 @@ const kr = {
     perfOrders: '건',
     referrerPayoutNote: '추천인(영업) 수당 비율은 플랫폼이 정하지 않습니다. 플랫폼은 총판에게 일괄 지급하고, 추천인 배분은 총판이 추천인과 직접 정산합니다.',
     stmtDirect: '총판 직접 모집',
+    stmtRealtimeNote: '실시간 정산 — 대기는 확정 예정일이 이 달인 예상 금액(시술·여행 완료 후 보류 기간 경과 시 확정), 확정·지급은 처리 완료된 금액입니다.',
     dashViewOnly: '이 화면은 조회 전용입니다 — QR·수당·가입 회원·정산서를 확인만 하실 수 있습니다.',
     dashMembersCount: '가입 회원',
     mJoined: "가입일",
