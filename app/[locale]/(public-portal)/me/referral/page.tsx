@@ -138,6 +138,10 @@ export default async function ReferralPage({
   let referrers: Awaited<ReturnType<typeof listReferrers>> = [];
   // 추천인별 고객용 QR (② 초대 링크 아래 목록에 표시)
   let referrerQrs: string[] = [];
+  // 파트너(총판 본인·각 추천인)별 실적: 가입 회원 → 결제 완료 → 수당(대기/확정/지급)
+  type Perf = { members: number; orders: number; paidWon: number; pending: number; confirmed: number; paid: number };
+  const ZERO_PERF: Perf = { members: 0, orders: 0, paidWon: 0, pending: 0, confirmed: 0, paid: 0 };
+  const perf = new Map<string, Perf>();
   let statement: Array<{ name: string; code: string; count: number; amount: number }> = [];
   let members: Array<{
     userId: string; label: string; via: string; source: string;
@@ -179,21 +183,46 @@ export default async function ReferralPage({
     }
 
     const ordersByUser = new Map<string, { orders: number; spentWon: number }>();
-    if (attrRows.length > 0) {
-      const paidRows = await db
-        .select({ userId: checkoutOrders.userId, totalWon: checkoutOrders.totalWon })
+    const paidRows = attrRows.length > 0
+      ? await db
+        .select({ userId: checkoutOrders.userId, partnerId: checkoutOrders.partnerId, totalWon: checkoutOrders.totalWon })
         .from(checkoutOrders)
         .where(and(
           eq(checkoutOrders.distributorId, me.id),
           eq(checkoutOrders.status, 'paid'),
           inArray(checkoutOrders.userId, attrRows.map((r) => r.userId)),
-        ));
-      for (const o of paidRows) {
-        if (!o.userId) continue;
-        const cur = ordersByUser.get(o.userId) ?? { orders: 0, spentWon: 0 };
-        cur.orders += 1; cur.spentWon += o.totalWon;
-        ordersByUser.set(o.userId, cur);
-      }
+        ))
+      : [];
+    for (const o of paidRows) {
+      if (!o.userId) continue;
+      const cur = ordersByUser.get(o.userId) ?? { orders: 0, spentWon: 0 };
+      cur.orders += 1; cur.spentWon += o.totalWon;
+      ordersByUser.set(o.userId, cur);
+    }
+
+    // ── 추천인별 실적 구분: 어느 추천인(또는 총판 직접)을 거쳐 가입한
+    //    소비자가 얼마나 결제했고, 그 추천인 수당이 얼마인지 ──────────
+    const perfOf = (id: string): Perf => {
+      let p = perf.get(id);
+      if (!p) { p = { ...ZERO_PERF }; perf.set(id, p); }
+      return p;
+    };
+    for (const r of attrRows) perfOf(r.partnerId).members += 1;
+    for (const o of paidRows) {
+      if (!o.partnerId) continue;
+      const p = perfOf(o.partnerId);
+      p.orders += 1; p.paidWon += o.totalWon;
+    }
+    const ledgerByPartner = await db
+      .select({ b: commissionLedger.beneficiaryPartnerId, status: commissionLedger.status, amount: commissionLedger.amountWon })
+      .from(commissionLedger)
+      .where(eq(commissionLedger.distributorId, me.id));
+    for (const l of ledgerByPartner) {
+      if (!l.b) continue;
+      const p = perfOf(l.b);
+      if (l.status === 'pending') p.pending += l.amount;
+      else if (l.status === 'confirmed') p.confirmed += l.amount;
+      else if (l.status === 'paid') p.paid += l.amount;
     }
 
     const partnerName = new Map<string, string>([[me.id, `${me.name} (${me.code})`]]);
@@ -304,11 +333,38 @@ export default async function ReferralPage({
                       </div>
                       <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: '#6a6a6a' }}>{t.referrerCustomerLink}</div>
                       <code style={{ display: 'block', background: '#f7f7f7', borderRadius: 8, padding: '7px 10px', fontSize: 13, wordBreak: 'break-all', marginTop: 4 }}>{SITE}/r/{r.code}</code>
+                      {(() => {
+                        const p = perf.get(r.id) ?? ZERO_PERF;
+                        return (
+                          <div style={{ marginTop: 10, background: '#fafafa', borderRadius: 10, padding: '9px 12px' }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: '#6a6a6a', marginBottom: 4 }}>{t.refPerf}</div>
+                            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+                              <span><span style={{ color: '#6a6a6a' }}>{t.perfMembers}</span> <b>{p.members}</b></span>
+                              <span><span style={{ color: '#6a6a6a' }}>{t.refPaid}</span> <b>{p.orders}{t.perfOrders}</b> · <b>{fmt(p.paidWon)}</b></span>
+                              <span>
+                                <span style={{ color: '#6a6a6a' }}>{t.refCommission}</span>{' '}
+                                <b style={{ color: '#b45309' }}>{fmt(p.pending)}</b> / <b style={{ color: '#1d4ed8' }}>{fmt(p.confirmed)}</b> / <b style={{ color: '#047857' }}>{fmt(p.paid)}</b>
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
               </div>
             )}
+            {/* 총판 직접 모집(내 QR) 실적 — 추천인 경유와 비교용 */}
+            {(() => {
+              const p = perf.get(me.id) ?? ZERO_PERF;
+              return (
+                <div style={{ marginTop: 10, border: '1px dashed #dddddd', borderRadius: 12, padding: '10px 14px', fontSize: 13, display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'baseline', fontVariantNumeric: 'tabular-nums' }}>
+                  <b>{t.directPerf}</b>
+                  <span><span style={{ color: '#6a6a6a' }}>{t.perfMembers}</span> <b>{p.members}</b></span>
+                  <span><span style={{ color: '#6a6a6a' }}>{t.refPaid}</span> <b>{p.orders}{t.perfOrders}</b> · <b>{fmt(p.paidWon)}</b></span>
+                </div>
+              );
+            })()}
           </>
         ) : null}
 
