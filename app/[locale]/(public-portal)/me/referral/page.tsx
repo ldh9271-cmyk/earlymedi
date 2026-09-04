@@ -216,13 +216,16 @@ export default async function ReferralPage({
       const p = perfOf(o.partnerId);
       p.orders += 1; p.paidWon += o.totalWon;
     }
-    const ledgerByPartner = await db
-      .select({ b: commissionLedger.beneficiaryPartnerId, status: commissionLedger.status, amount: commissionLedger.amountWon })
+    // 수당은 총판에게만 지급되므로, '어느 추천인을 거친 매출에서 나온 총판
+    // 수당인지'를 주문의 partner_id(경유)로 나눠 보여준다 — 총판이 추천인과
+    // 자체 정산할 때 쓰는 숫자.
+    const ledgerByVia = await db
+      .select({ via: checkoutOrders.partnerId, status: commissionLedger.status, amount: commissionLedger.amountWon })
       .from(commissionLedger)
-      .where(eq(commissionLedger.distributorId, me.id));
-    for (const l of ledgerByPartner) {
-      if (!l.b) continue;
-      const p = perfOf(l.b);
+      .innerJoin(checkoutOrders, eq(checkoutOrders.id, commissionLedger.orderId))
+      .where(and(eq(commissionLedger.distributorId, me.id), eq(commissionLedger.beneficiary, 'distributor')));
+    for (const l of ledgerByVia) {
+      const p = perfOf(l.via ?? me.id);
       if (l.status === 'pending') p.pending += l.amount;
       else if (l.status === 'confirmed') p.confirmed += l.amount;
       else if (l.status === 'paid') p.paid += l.amount;
@@ -248,7 +251,12 @@ export default async function ReferralPage({
     const [y = 2026, m = 1] = period.split('-').map(Number);
     const from = new Date(Date.UTC(y, m - 1, 1));
     const to = new Date(Date.UTC(y, m, 1));
-    const rows = await db.select().from(commissionLedger)
+    // 월 정산서: 총판이 받을 금액을 '경유 추천인'별로 나눠 보여준다
+    // (플랫폼은 총판에게 일괄 지급, 추천인 배분은 총판이 자체 정산).
+    const rows = await db
+      .select({ via: checkoutOrders.partnerId, amountWon: commissionLedger.amountWon, confirmAt: commissionLedger.confirmAt })
+      .from(commissionLedger)
+      .innerJoin(checkoutOrders, eq(checkoutOrders.id, commissionLedger.orderId))
       .where(and(
         eq(commissionLedger.distributorId, me.id),
         inArray(commissionLedger.status, ['confirmed', 'paid']),
@@ -257,10 +265,10 @@ export default async function ReferralPage({
     const agg = new Map<string, { name: string; code: string; count: number; amount: number }>();
     for (const r of rows) {
       if (r.confirmAt < from || r.confirmAt >= to) continue;
-      const pid = r.beneficiaryPartnerId ?? me.id;
+      const pid = r.via ?? me.id;
       const p = pid === me.id ? me : byId.get(pid);
       const key = pid;
-      const cur = agg.get(key) ?? { name: p?.name ?? '—', code: p?.code ?? '', count: 0, amount: 0 };
+      const cur = agg.get(key) ?? { name: pid === me.id ? t.stmtDirect : (p?.name ?? '—'), code: p?.code ?? '', count: 0, amount: 0 };
       cur.count += 1; cur.amount += r.amountWon;
       agg.set(key, cur);
     }
@@ -316,6 +324,7 @@ export default async function ReferralPage({
             <div style={{ border: '1px solid #fecdd3', background: '#fffafb', borderRadius: 14, padding: 20 }}>
               <code style={{ display: 'block', background: '#fff', border: '1px solid #fecdd3', borderRadius: 8, padding: '8px 10px', fontSize: 13, wordBreak: 'break-all' }}>{inviteLink}</code>
               <p style={{ fontSize: 13, color: '#3f3f3f', margin: '10px 0 0', lineHeight: 1.65 }}>{t.inviteHint}</p>
+              <p style={{ fontSize: 12, color: '#c2143c', margin: '8px 0 0', lineHeight: 1.6, fontWeight: 600 }}>{t.referrerPayoutNote}</p>
             </div>
 
             {/* 등록된 추천인(영업) — 각자의 고객용 QR · 링크. 추천인이 이 QR로

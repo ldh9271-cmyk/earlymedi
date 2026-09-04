@@ -370,7 +370,9 @@ export async function accrueOrderTravelMargin(orderId: string): Promise<number> 
     orderId: order.id,
     distributorId: order.distributorId,
     beneficiary: 'distributor',
-    beneficiaryPartnerId: order.partnerId ?? order.distributorId,
+    // 수당은 총판에게만 지급 — 추천인 몫은 총판이 자체 정산 (경유 추천인은
+    // 주문의 partner_id 로 구분해 대시보드에 보여준다)
+    beneficiaryPartnerId: order.distributorId,
     beneficiaryUserId: null,
     basis: 'travel_margin',
     rateBp: Math.round(marginPct * 100),
