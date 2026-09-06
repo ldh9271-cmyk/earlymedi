@@ -683,6 +683,10 @@ export function MainHeader({
             <span className="m-mh-search-sub" style={{ display: 'block' }}>{t.search.subtitle}</span>
           </span>
         </form>
+        {/* 모바일 순서: 글로우업 찾기 → 지도 → 필터 (2026-09-07 사용자 요청) */}
+        <Link href={`/${locale}/map`} className="m-mh-search-filter" aria-label={t.quickMap} title={t.quickMap}>
+          <span aria-hidden="true" style={{ fontSize: 20, lineHeight: 1 }}>🗺️</span>
+        </Link>
         <Link
           href={`/${locale}/clinics`}
           className="m-mh-search-filter"
@@ -691,10 +695,6 @@ export function MainHeader({
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.8">
             <path d="M3 6h18M6 12h12M10 18h4" />
           </svg>
-        </Link>
-        {/* 모바일도 검색 pill 과 같은 줄 — 필터 원형 옆에 지도로 찾기 원형 버튼 */}
-        <Link href={`/${locale}/map`} className="m-mh-search-filter" aria-label={t.quickMap} title={t.quickMap}>
-          <span aria-hidden="true" style={{ fontSize: 20, lineHeight: 1 }}>🗺️</span>
         </Link>
       </div>
 
