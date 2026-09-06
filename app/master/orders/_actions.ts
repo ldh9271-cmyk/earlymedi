@@ -11,6 +11,7 @@ import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 import { onTripOrderPaid } from '@/lib/ai/trip-workflow';
 import { declareFinalAmount, masterSetSettlementStatus, type SettlementStatus } from '@/lib/voucher/settlement';
+import { refundAndCancel } from '@/lib/refund/service';
 import {
   accrueOrderTravelMargin,
   reverseOrder,
@@ -30,6 +31,23 @@ async function assertMaster(): Promise<void> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
   if (!isMasterEmail(auth.user.email ?? '')) redirect('/select-org');
+}
+
+/**
+ * 취소·환불 확정 — 결제(paid) 주문. 토스 결제는 취소 API 로 원결제수단(카드·카카오페이 등)에
+ * 환불되고, 알리페이 QR 은 수동 송금 표식만 남는다. 마진 원장 환수 + 고객 이메일.
+ */
+export async function refundCancelOrderAction(formData: FormData): Promise<void> {
+  await assertMaster();
+  const id = String(formData.get('id') ?? '');
+  const refundWon = Math.round(Number(String(formData.get('refundWon') ?? '0').replace(/[^\d]/g, '')));
+  const note = String(formData.get('note') ?? '').trim() || null;
+  if (!id) redirect('/master/orders?error=missing_id');
+  if (!Number.isFinite(refundWon) || refundWon < 0) redirect(`/master/orders?error=${encodeURIComponent('환불 금액이 올바르지 않습니다')}`);
+  const r = await refundAndCancel(id, { refundWon, note });
+  if (!r.ok) redirect(`/master/orders?error=${encodeURIComponent(r.error)}`);
+  revalidatePath('/master/orders');
+  redirect(`/master/orders?ok=${encodeURIComponent(r.method === 'toss' ? `토스 환불 ₩${r.refundWon.toLocaleString('ko-KR')} 완료` : r.method === 'alipay_manual' ? `취소됨 — 알리페이 ₩${r.refundWon.toLocaleString('ko-KR')} 수동 송금 필요` : '취소됨 (환불 없음)')}`);
 }
 
 /** QR 3자 검증 정산 상태 전환 — 이의 조정 후 확정, 수수료 청구/입금 표시, 되돌리기. */

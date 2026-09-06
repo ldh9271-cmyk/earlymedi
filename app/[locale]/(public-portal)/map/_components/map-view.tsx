@@ -12,6 +12,7 @@
  * 줌은 카카오 레벨(1=최대 확대 … 14) 기준으로 통일하고, 구글은 zoom = 20 - level 로 변환.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import MoreRow from '@/components/shared/more-row';
 
 type Marker = { k: 'h' | 'b' | 'l' | 'f' | 'a'; id: string; key: string; name: string; lat: number; lng: number; listed: boolean; foreign?: boolean; type?: string | null; cats?: string[]; slug?: string | null; region?: string | null };
 type Cluster = { lat: number; lng: number; count: number; listed: number; k: 'h' | 'b' | 'l' | 'f' | 'a' };
@@ -160,9 +161,6 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
   };
   const [dept, setDept] = useState(initial.dept);
   const [cat, setCat] = useState(initial.cat);
-  // 진료과·카테고리 칩 줄 접힘 상태 — URL 로 이미 고른 값이 있으면 펼친 채로 시작
-  const [deptOpen, setDeptOpen] = useState(Boolean(initial.dept));
-  const [catOpen, setCatOpen] = useState(Boolean(initial.cat));
   const [foreign, setForeign] = useState(initial.foreign);
   const [listed, setListed] = useState(initial.listed);
   const [q, setQ] = useState(initial.q);
@@ -274,13 +272,13 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
           </div>
           {/* 진료과·카테고리 칩은 기본 두 줄만 보이고 '더보기' 로 펼친다. */}
           {hasKind('hospital') ? (
-            <MoreRow label={labels.dept} open={deptOpen} onToggle={() => setDeptOpen(!deptOpen)} more={labels.showMore} less={labels.showLess}>
+            <MoreRow label={labels.dept} defaultOpen={Boolean(initial.dept)} more={labels.showMore} less={labels.showLess} style={{ marginTop: 6 }}>
               <button type="button" style={chip(!dept)} onClick={() => setDept('')}>{labels.all}</button>
               {depts.map((d) => <button key={d.key} type="button" style={chip(dept === d.key)} onClick={() => setDept(d.key)}>{d.label}</button>)}
             </MoreRow>
           ) : null}
           {hasKind('beauty') ? (
-            <MoreRow label={labels.cat} open={catOpen} onToggle={() => setCatOpen(!catOpen)} more={labels.showMore} less={labels.showLess}>
+            <MoreRow label={labels.cat} defaultOpen={Boolean(initial.cat)} more={labels.showMore} less={labels.showLess} style={{ marginTop: 6 }}>
               <button type="button" style={chip(!cat)} onClick={() => setCat('')}>{labels.all}</button>
               {cats.map((c) => <button key={c.key} type="button" style={chip(cat === c.key)} onClick={() => setCat(c.key)}>{c.label}</button>)}
             </MoreRow>
@@ -363,52 +361,6 @@ function hrefOf(m: Marker, locale: string): string {
   if (m.k === 'a') return `/${locale}/attractions/${encodeURIComponent(m.key)}`;
   return `/${locale}/shops/r/${encodeURIComponent(m.key)}`;
 }
-/**
- * 두 줄 칩 줄 — 기본은 칩 두 줄 높이까지만 보이고(넘치는 칩은 숨김), 오른쪽
- * '더보기 ▾' 를 누르면 전부 펼쳐진다. 칩 높이를 실제로 재서 두 줄 한도를
- * 정하므로 글꼴·언어가 달라도 정확히 두 줄이다. 두 줄 안에 다 들어가면
- * 버튼을 숨긴다. 진료과 20여 개·카테고리 10여 개가 패널을 다 차지하던 문제(모바일) 해결.
- */
-function MoreRow({ label, open, onToggle, more, less, children }: {
-  label: string; open: boolean; onToggle: () => void; more: string; less: string; children: React.ReactNode;
-}): JSX.Element {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [cap, setCap] = useState<number>(70);
-  const [overflow, setOverflow] = useState(true);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const measure = (): void => {
-      const first = el.firstElementChild as HTMLElement | null;
-      const h = first ? first.offsetHeight : 31;
-      const c = h * 2 + 6;
-      setCap(c);
-      setOverflow(el.scrollHeight > c + 2);
-    };
-    measure();
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
-    ro?.observe(el);
-    return () => ro?.disconnect();
-  }, [children]);
-  return (
-    <div style={{ marginTop: 6 }}>
-      <div style={{ fontSize: 11, color: '#6a6a6a' }}>{label}</div>
-      <div ref={ref} className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap', maxHeight: open ? undefined : cap, overflow: 'hidden' }}>
-        {children}
-      </div>
-      {/* 더보기/접기 — 두 줄 바로 아래 가운데 */}
-      {overflow ? (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
-          <button type="button" onClick={onToggle} aria-expanded={open}
-            style={{ border: '1px solid #e5e5e5', background: '#fafafa', borderRadius: 999, padding: '3px 14px', fontSize: 11, fontWeight: 700, color: '#1d4ed8', cursor: 'pointer', fontFamily: 'inherit' }}>
-            {open ? `${less} ▴` : `${more} ▾`}
-          </button>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 function catLabelOf(key: string, cats: Array<{ key: string; label: string }>): string {
   return cats.find((c) => c.key === key)?.label ?? key;
 }

@@ -5,7 +5,10 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
-import { markOrderPaidAction, cancelOrderAction, confirmReservationAction, settleHospitalActualAction, setMerchantSettlementStatusAction, masterDeclareSettlementAction } from './_actions';
+import { markOrderPaidAction, cancelOrderAction, confirmReservationAction, settleHospitalActualAction, setMerchantSettlementStatusAction, masterDeclareSettlementAction, refundCancelOrderAction } from './_actions';
+import ConfirmForm from './_components/confirm-form';
+import { orderEstimate, resolveRefundCategories, type CancelMeta, type CancelRequestMeta } from '@/lib/refund/service';
+import type { RefundCategory } from '@/lib/refund/policy';
 import { SETTLEMENT_STATUS_KO } from '@/lib/voucher/settlement';
 import type { VoucherMeta } from '@/lib/voucher/token';
 
@@ -30,7 +33,7 @@ const STATUS_LABEL: Record<string, { text: string; bg: string; fg: string }> = {
 export default async function MasterOrdersPage({
   searchParams,
 }: {
-  searchParams: { status?: string; error?: string };
+  searchParams: { status?: string; error?: string; ok?: string };
 }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -53,6 +56,9 @@ export default async function MasterOrdersPage({
   } catch (err) {
     dbError = err instanceof Error ? err.message : 'db_error';
   }
+
+  // 취소·환불 박스용 — 상품 종류별 환불 규정 카테고리 (쿼리 2번)
+  const refundCats = await resolveRefundCategories(rows).catch(() => new Map<string, RefundCategory>());
 
   let totals = { count: 0, paidWon: 0, pendingWon: 0 };
   try {
@@ -111,6 +117,9 @@ export default async function MasterOrdersPage({
         ))}
       </div>
 
+      {searchParams.ok ? (
+        <p style={{ color: '#047857', fontSize: 13, marginTop: 16, fontWeight: 700 }}>✅ {searchParams.ok}</p>
+      ) : null}
       {searchParams.error ? (
         <p style={{ color: '#dc2626', fontSize: 13, marginTop: 16 }}>처리에 실패했습니다: {searchParams.error}</p>
       ) : null}
@@ -193,11 +202,11 @@ export default async function MasterOrdersPage({
                       </Td>
                       <Td>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          {r.status !== 'paid' ? (
-                            <form action={markOrderPaidAction}>
+                          {r.status !== 'paid' && r.status !== 'cancelled' ? (
+                            <ConfirmForm action={markOrderPaidAction} message={`${r.invoiceNo} · ₩${r.totalWon.toLocaleString('ko-KR')}\n입금(결제)이 실제로 확인되었나요? 확인 처리하면 고객에게 결제 완료로 표시되고 QR 바우처가 열립니다.`}>
                               <input type="hidden" name="id" value={r.id} />
                               <button type="submit" style={btnStyle('#047857')}>입금 확인</button>
-                            </form>
+                            </ConfirmForm>
                           ) : null}
                           {r.status === 'paid' && (r.meta as { depositWon?: number } | null)?.depositWon ? (
                             (r.meta as { reserveConfirmedAt?: string } | null)?.reserveConfirmedAt ? (
@@ -210,12 +219,12 @@ export default async function MasterOrdersPage({
                                 예약 확정됨
                               </span>
                             ) : (
-                              <form action={confirmReservationAction}>
+                              <ConfirmForm action={confirmReservationAction} message={`${r.invoiceNo} · ${r.reserveDate} ${r.reserveTime}\n파트너와 해당 시간 예약 가능 여부를 확인했나요? 확정하면 고객에게 '예약 확정'으로 표시됩니다.`}>
                                 <input type="hidden" name="id" value={r.id} />
                                 <button type="submit" style={btnStyle('#1d4ed8')} title="파트너와 해당 시간 가능 여부 확인 후 확정">
                                   예약 확정
                                 </button>
-                              </form>
+                              </ConfirmForm>
                             )
                           ) : null}
                           {(r.meta as { voucher?: { checkedInAt?: string; checkedInByName?: string } } | null)?.voucher?.checkedInAt ? (
@@ -227,12 +236,13 @@ export default async function MasterOrdersPage({
                             </span>
                           ) : null}
                           {r.status !== 'cancelled' && r.status !== 'paid' ? (
-                            <form action={cancelOrderAction}>
+                            <ConfirmForm action={cancelOrderAction} message={`${r.invoiceNo} · ${r.listingTitle}\n이 주문을 취소합니다. 결제 전 주문이라 환불은 없습니다. 진행할까요?`}>
                               <input type="hidden" name="id" value={r.id} />
                               <button type="submit" style={btnStyle('#6a6a6a')}>취소</button>
-                            </form>
+                            </ConfirmForm>
                           ) : null}
                         </div>
+                        <CancelRefundBox order={r} category={refundCats.get(r.id) ?? 'travel'} />
                         <HospitalSettleBox order={r} />
                         <MerchantSettleBox order={r} />
                       </Td>
@@ -304,6 +314,59 @@ function HospitalSettleBox({ order: r }: { order: typeof checkoutOrders.$inferSe
           {settled ? '금액 정정' : '실결제 정산'}
         </button>
       </form>
+    </div>
+  );
+}
+
+/**
+ * 취소·환불 박스 — 결제(paid) 주문의 "취소·환불" 버튼과 고객 취소 요청 표시.
+ * 환불액 기본값은 플랫폼 환불 규정(lib/refund/policy)으로 계산한 예상액(고객 요청이 있으면 요청 당시 값).
+ * 마스터가 금액을 고쳐 전액·부분 환불할 수 있고, 확인 창을 한 번 거친다.
+ */
+function CancelRefundBox({ order: r, category }: { order: typeof checkoutOrders.$inferSelect; category: RefundCategory }): JSX.Element | null {
+  const m = (r.meta ?? {}) as { cancelRequest?: CancelRequestMeta; cancel?: CancelMeta; tossPaymentKey?: string; voucher?: { checkedInAt?: string } };
+  const won = (n: number): string => `₩${n.toLocaleString('ko-KR')}`;
+  if (r.status === 'cancelled') {
+    return m.cancel ? (
+      <div style={{ marginTop: 6, fontSize: 11, color: '#6a6a6a' }}>
+        취소 {new Date(m.cancel.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · 환불 {won(m.cancel.refundWon)}
+        {m.cancel.method === 'toss' ? ' (토스 취소 완료)' : m.cancel.method === 'alipay_manual' ? ' (알리페이 수동 송금 필요)' : ''}
+        {m.cancel.note ? ` · ${m.cancel.note}` : ''}
+      </div>
+    ) : null;
+  }
+  const req = m.cancelRequest ?? null;
+  const est = orderEstimate(r, category);
+  const defaultRefund = req ? req.refundWon : est.refundWon;
+  const tone = req ? { b: '#fecdd3', bg: '#fff5f7', c: '#c2143c' } : { b: '#ebebeb', bg: '#fafafa', c: '#6a6a6a' };
+  if (r.status !== 'paid' && !req) return null;
+  return (
+    <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 10, border: `1px solid ${tone.b}`, background: tone.bg }}>
+      {req ? (
+        <div style={{ fontSize: 11, fontWeight: 700, color: tone.c }}>
+          ↩️ 고객 취소 요청 {new Date(req.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · 규정 {req.pct}% → {won(req.refundWon)}
+          {req.reason ? <div style={{ fontWeight: 500, marginTop: 2 }}>사유: {req.reason}</div> : null}
+        </div>
+      ) : (
+        <div style={{ fontSize: 11, color: tone.c }}>
+          지금 취소 시 규정 환불 {est.pct}% → {won(est.refundWon)} ({category}{est.reserveYmd ? ` · ${est.daysBefore}일 전` : ''})
+          {m.voucher?.checkedInAt ? ' · 방문 확인됨' : ''}
+        </div>
+      )}
+      {r.status === 'paid' ? (
+        <ConfirmForm
+          action={refundCancelOrderAction}
+          message={`${r.invoiceNo} · ${r.listingTitle}\n₩{refundWon} 을(를) 환불하고 주문을 취소합니다.\n${m.tossPaymentKey ? '토스 결제 — 취소 API 로 즉시 원결제수단(카드·카카오페이)에 환불됩니다.' : '알리페이 QR 결제 — 환불은 수동 송금해야 합니다.'}\n진행할까요?`}
+          style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}
+        >
+          <input type="hidden" name="id" value={r.id} />
+          <input name="refundWon" inputMode="numeric" defaultValue={defaultRefund} title="환불 금액 (원) — 0 이면 환불 없이 취소"
+            style={{ width: 110, border: '1px solid #dddddd', borderRadius: 8, padding: '4px 8px', fontSize: 12, fontFamily: 'inherit' }} />
+          <input name="note" placeholder="메모 (고객 이메일에 표시)" style={{ width: 160, border: '1px solid #dddddd', borderRadius: 8, padding: '4px 8px', fontSize: 12, fontFamily: 'inherit' }} />
+          <button type="submit" style={btnStyle('#c2143c')}>취소·환불</button>
+          <span style={{ fontSize: 10, color: '#9c9c9c' }}>결제 {won(r.totalWon)}</span>
+        </ConfirmForm>
+      ) : null}
     </div>
   );
 }

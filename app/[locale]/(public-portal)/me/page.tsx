@@ -9,6 +9,9 @@ import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { aiTripPlans } from '@/drizzle/schema/ai-trip-plans';
 import { cookies } from 'next/headers';
 import { attributeUser, patientPointsBalance, REF_COOKIE } from '@/lib/referral/service';
+import { cancellableByConsumer, orderEstimate, resolveRefundCategories, type CancelRequestMeta } from '@/lib/refund/service';
+import { REFUND_POLICIES, tierRanges, type RefundCategory } from '@/lib/refund/policy';
+import CancelOrderButton from './_components/cancel-order';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,6 +88,10 @@ export default async function MyPage({
   } catch {
     dbError = true;
   }
+
+  // 취소 버튼용 — 상품 종류별 환불 규정 (쿼리 2번으로 일괄)
+  const refundCats = await resolveRefundCategories(rows).catch(() => new Map<string, RefundCategory>());
+  const tr = dict.refund;
 
   const statusMeta: Record<string, { label: string; bg: string; fg: string }> = {
     issued: { label: t.statusIssued, bg: '#fff7ed', fg: '#b45309' },
@@ -163,8 +170,12 @@ export default async function MyPage({
           {rows.map((r) => {
             // 예약금 주문: 입금 확인 후 컨시어지 확정(meta.reserveConfirmedAt)까지
             // 한 단계가 더 있다 — 확정되면 '예약 확정'으로 표시한다.
-            const orderMeta = (r.meta ?? {}) as { depositWon?: number; reserveConfirmedAt?: string };
+            const orderMeta = (r.meta ?? {}) as { depositWon?: number; reserveConfirmedAt?: string; cancelRequest?: CancelRequestMeta; cancel?: { refundWon?: number } };
             const isDeposit = !!orderMeta.depositWon;
+            const cat = refundCats.get(r.id) ?? 'travel';
+            const can = cancellableByConsumer(r);
+            const est = orderEstimate(r, cat);
+            const sameDayHours = REFUND_POLICIES[cat].find((x) => x.minDays === 0)?.sameDayHoursBefore ?? null;
             const s = r.status === 'paid' && orderMeta.reserveConfirmedAt
               ? { label: t.statusConfirmed, bg: '#ecfdf5', fg: '#047857' }
               : statusMeta[r.status] ?? { label: r.status, bg: '#f5f5f5', fg: '#6a6a6a' };
@@ -201,6 +212,17 @@ export default async function MyPage({
                   {r.status === 'paid' && isDeposit && !orderMeta.reserveConfirmedAt ? (
                     <span style={{ fontSize: 11, color: '#b45309', fontWeight: 600 }}>
                       {t.confirmWait}
+                    </span>
+                  ) : null}
+                  {/* 취소 — 미결제는 즉시, 결제 건은 환불 규정을 보여주고 취소 요청 */}
+                  {orderMeta.cancelRequest && r.status !== 'cancelled' ? (
+                    <span style={{ fontSize: 11, color: '#b45309', fontWeight: 700, background: '#fffbeb', borderRadius: 999, padding: '4px 10px', marginLeft: r.status === 'paid' ? 0 : 'auto' }}>
+                      {tr.requested} · ₩{orderMeta.cancelRequest.refundWon.toLocaleString('ko-KR')}
+                    </span>
+                  ) : can.ok ? (
+                    <span style={{ marginLeft: r.status === 'paid' ? 0 : 'auto' }}>
+                      <CancelOrderButton locale={locale} orderId={r.id} title={r.listingTitle} invoiceNo={r.invoiceNo} status={r.status} totalWon={r.totalWon}
+                        category={cat} estimate={est} tiers={tierRanges(cat)} sameDayHours={sameDayHours} labels={tr} />
                     </span>
                   ) : null}
                 </div>
@@ -276,6 +298,7 @@ export default async function MyPage({
 
       <p style={{ fontSize: 12, color: '#9c9c9c', marginTop: 24, lineHeight: 1.6 }}>
         {t.footNote}
+        {' '}<Link href={`/${locale}/policy/refund`} style={{ color: '#1d4ed8', fontWeight: 600 }}>{tr.policyLink} →</Link>
       </p>
     </section>
   );

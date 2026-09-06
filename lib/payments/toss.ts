@@ -84,6 +84,37 @@ export async function confirmTossPayment(opts: {
   }
 }
 
+/**
+ * 결제 취소(환불) — POST /v1/payments/{paymentKey}/cancel.
+ * cancelAmount 를 주지 않으면 전액 취소. 카카오페이 등 간편결제도 이 호출 하나로
+ * 원결제 수단에 환불된다 (계좌이체·가상계좌만 환불계좌가 따로 필요).
+ */
+export async function cancelTossPayment(opts: {
+  paymentKey: string;
+  cancelReason: string;
+  cancelAmount?: number;
+}): Promise<TossPaymentResult & { cancels?: Array<{ cancelAmount: number; canceledAt: string; cancelReason: string }> }> {
+  if (!tossConfigured()) return { ok: false, errorCode: 'not_configured', errorMessage: '' };
+  try {
+    const body: Record<string, unknown> = { cancelReason: opts.cancelReason.slice(0, 200) };
+    if (opts.cancelAmount != null) body.cancelAmount = Math.round(opts.cancelAmount);
+    const res = await fetch(`${TOSS_API_BASE}/payments/${encodeURIComponent(opts.paymentKey)}/cancel`, {
+      method: 'POST',
+      headers: { Authorization: authHeader(), 'Content-Type': 'application/json', 'Idempotency-Key': `${opts.paymentKey}:${Math.round(opts.cancelAmount ?? 0)}` },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    });
+    const raw = (await res.json()) as Record<string, unknown>;
+    const r = toResult(res.status, raw);
+    const cancels = Array.isArray(raw.cancels)
+      ? (raw.cancels as Array<Record<string, unknown>>).map((c) => ({ cancelAmount: Number(c.cancelAmount ?? 0), canceledAt: String(c.canceledAt ?? ''), cancelReason: String(c.cancelReason ?? '') }))
+      : undefined;
+    return { ...r, cancels };
+  } catch {
+    return { ok: false, errorCode: 'network', errorMessage: '' };
+  }
+}
+
 export type TossSettlement = {
   /** 거래(매출) 일자 YYYY-MM-DD. */
   soldDate: string;

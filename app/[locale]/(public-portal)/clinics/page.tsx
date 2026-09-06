@@ -11,6 +11,7 @@ import { hospitals } from '@/drizzle/schema/hospitals';
 import { categoryListings } from '@/drizzle/schema/category-listings';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
 import { DEPT_GROUPS } from '@/lib/hospital-registry/departments';
+import MoreRow from '@/components/shared/more-row';
 
 export const dynamic = 'force-dynamic';
 
@@ -396,7 +397,8 @@ export default async function ClinicsListPage({
       {/* 과별(진료과) 카테고리 — 심평원 진료과목 코드로 전국 병원을 정확히 나눈다 */}
       <div style={{ marginTop: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 8 }}>{dict.clinicsPage.registry.deptsTitle}</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingBottom: 4 }}>
+        {/* 모바일은 두 줄만 보이고 가운데 '더보기'로 펼침 (데스크톱은 전부) */}
+        <MoreRow mobileOnly gap={8} more={dict.mapPage.showMore} less={dict.mapPage.showLess} style={{ paddingBottom: 4 }}>
           {DEPT_GROUPS.map((g) => (
             <Link
               key={g.key}
@@ -406,7 +408,7 @@ export default async function ClinicsListPage({
               {(dict.clinicsPage.depts as Record<string, string>)[g.key] ?? g.ko}
             </Link>
           ))}
-        </div>
+        </MoreRow>
       </div>
 
       {dbError ? <ErrorBox message={dbError} /> : null}
