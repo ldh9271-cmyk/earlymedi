@@ -12,6 +12,15 @@ import { DEPT_GROUPS, DEPT_GROUP_BY_KEY, groupKeyOfCode } from '@/lib/hospital-r
 
 export const dynamic = 'force-dynamic';
 
+/** 글로우업 등록 병원(hospitals.primary_categories) → 과별 그룹 키. 레지스트리와 아직
+ *  연결되지 않은 등록 병원도 해당 과 목록에 컬러 카드로 함께 나오게 한다. */
+const HOSPITAL_CAT_TO_DEPT: Record<string, string[]> = {
+  plastic_surgery: ['plastic_surgery'], dermatology: ['dermatology'], hair: ['dermatology', 'plastic_surgery'],
+  dental: ['dental'], cosmetic_dental: ['dental'], ophthalmology: ['ophthalmology'], obstetrics: ['obgyn'], fertility: ['obgyn'],
+  oriental: ['oriental'], checkup: ['internal', 'family'], orthopedic: ['orthopedics'], cardiology: ['internal', 'thoracic'],
+  oncology: ['internal'], gastroenterology: ['internal'], neurology: ['neurology'], urology: ['urology'], ent: ['ent'], general: ['family', 'internal'],
+};
+
 const PAGE_SIZE = 24;
 const CSS =
   '.m-cl-hscroll::-webkit-scrollbar { display: none; }'
@@ -96,6 +105,25 @@ export default async function RegistryListPage({ params, searchParams }: { param
       const deptLabels = keys.map((k) => (dict.clinicsPage.depts as Record<string, string>)[k] ?? k);
       return { ...f, deptLabels } as RegistryCardRow;
     });
+    // 과별 필터 + 첫 페이지: 레지스트리 미연결 등록 병원도 해당 과에 포함 (컬러 카드, 글로우업 상세로 연결)
+    if (dept && page === 1) {
+      const unlinked = await db
+        .select({ id: hospitals.id, name: hospitals.name, slug: hospitals.slug, cover: hospitals.coverImageUrl, cats: hospitals.primaryCategories, addressJson: hospitals.addressJson })
+        .from(hospitals)
+        .where(sql`${hospitals.countryCode} = 'KR' and ${hospitals.isActiveForMatching} = true and not exists (select 1 from hospital_registry r where r.contracted_hospital_id = ${hospitals.id})`)
+        .limit(200);
+      const label = (dict.clinicsPage.depts as Record<string, string>)[dept] ?? dept;
+      const extras: RegistryCardRow[] = unlinked
+        .filter((h) => ((h.cats ?? []) as string[]).some((c) => (HOSPITAL_CAT_TO_DEPT[c] ?? []).includes(dept)))
+        .filter((h) => !sido || JSON.stringify(h.addressJson ?? {}).includes(sido))
+        .map((h) => ({
+          id: `hosp:${h.id}`, ykiho: h.slug, name: h.name, clCd: null, clName: dict.clinicsPage.registry.contractedBadge,
+          sidoName: ((h.addressJson as { city?: string } | null)?.city ?? null), sgguName: null, addr: null, drTotal: 0,
+          foreignLicensed: false, contractedHospitalId: h.id, claimStatus: 'approved', details: null, deptLabels: [label],
+          partnerSlug: h.slug, partnerCover: h.cover,
+        }));
+      if (extras.length) { rows = [...extras, ...rows]; total += extras.length; }
+    }
     const sidos = await db.selectDistinct({ s: hospitalRegistry.sidoName }).from(hospitalRegistry).where(isNotNull(hospitalRegistry.sidoName)).orderBy(hospitalRegistry.sidoName);
     sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));
   } catch (err) {

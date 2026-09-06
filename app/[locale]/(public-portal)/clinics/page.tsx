@@ -386,7 +386,7 @@ export default async function ClinicsListPage({
       {/* 과별(진료과) 카테고리 — 심평원 진료과목 코드로 전국 병원을 정확히 나눈다 */}
       <div style={{ marginTop: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 8 }}>{dict.clinicsPage.registry.deptsTitle}</div>
-        <div className="m-cl-hscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingBottom: 4 }}>
           {DEPT_GROUPS.map((g) => (
             <Link
               key={g.key}
@@ -467,24 +467,8 @@ function Chips({
       >
         {dict.clinicsPage.recommended}
       </Link>
-      {SUB_CHIP_KEYS.map((key) => (
-        <Link
-          key={key}
-          href={`/${locale}/clinics?category=${key}`}
-          style={{
-            flexShrink: 0,
-            display: 'inline-flex', alignItems: 'center',
-            padding: '8px 14px', borderRadius: 9999,
-            border: `1px solid ${active === key ? '#222' : '#dddddd'}`,
-            background: active === key ? '#222' : '#fff',
-            color: active === key ? '#fff' : '#222',
-            fontSize: 13, fontWeight: 500,
-            textDecoration: 'none', whiteSpace: 'nowrap',
-          }}
-        >
-          {dict.clinicsPage.categories[key]}
-        </Link>
-      ))}
+      {/* 성형외과~파트너병원 카테고리 칩은 비공개 (2026-09-06 결정) — 과별 전국 병원 찾기로 대체.
+          ?category= 뷰 자체는 홈 링크용으로 유지한다. */}
     </div>
   );
 }
