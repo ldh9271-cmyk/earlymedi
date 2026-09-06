@@ -93,33 +93,33 @@ export const FIT_PRODUCTS: ReadonlyArray<FitProductSeed> = [
     interestKey: 'beauty_tour',
   },
 
-  // ─── 숙소 ──────────────────────────────────────────────────────
+  // ─── 숙소 (2026-09-06 사용자 결정: 호텔 카테고리가 아니라 여행›자유여행에 노출) ───
   {
     title: '뷰티 회복 숙소 - 1박 (2인 1실 기준)',
     description:
       '클리닉 인근 호텔 1박, 2인 1실 기준 1인당 150,000원. 시술 직후 안정적 회복 환경 + 야간 컨시어지 응대 + 식이 제한식 메뉴 옵션.',
-    category: 'hotel',
+    category: 'travel_package',
     priceWon: 150_000,
     priceUnit: '인',
-    interestKey: 'hotel',
+    interestKey: 'beauty_tour',
   },
   {
     title: '뷰티 회복 숙소 - 3박 (조식 포함)',
     description:
       '클리닉 인근 호텔 3박 + 식이 제한식 조식 포함. 회복기 전담 케어 + 일일 컨디션 체크. 1인당 250,000원/박 × 3박 기준.',
-    category: 'hotel',
+    category: 'travel_package',
     priceWon: 750_000,
     priceUnit: '3박',
-    interestKey: 'hotel',
+    interestKey: 'beauty_tour',
   },
   {
     title: '서울 호텔 연계 예약 대행',
     description:
       '제휴 호텔 예약 대행. 명동·강남·청담·홍대 등 위치 선택 가능. 실비 + 수수료 10% 정산. 컨시어지가 시술 일정에 맞춘 위치 큐레이션.',
-    category: 'hotel',
+    category: 'travel_package',
     priceWon: 0,
     priceUnit: '실비+수수료 10%',
-    interestKey: 'hotel',
+    interestKey: 'beauty_tour',
   },
 
   // ─── 클리닉 예약 대행 ─────────────────────────────────────────

@@ -556,6 +556,46 @@ export default async function ListingDetailPage({
         );
       })()}
 
+      {/* 공공데이터(행안부 숙박업 인허가) 기본 정보 — details.registry 가 있는 호텔 상품.
+          업태·객실·층·개업·전화는 원천 데이터 그대로, 요금은 표기하지 않는다. */}
+      {(() => {
+        const reg = listing.details.registry as
+          | { mgtNo?: string; bizType?: string | null; rooms?: number; roomsKo?: number; roomsWe?: number; floors?: number; tel?: string | null; addrRoad?: string | null; openedDate?: string | null; syncedAt?: string }
+          | undefined;
+        if (!reg || !reg.mgtNo) return null;
+        const ts = dict.staysRegistry;
+        const tr = dict.clinicsPage.registry;
+        const rows: Array<[string, string]> = [];
+        if (reg.bizType) rows.push([ts.bizType, reg.bizType]);
+        if (reg.rooms) rows.push([ts.rooms, `${reg.rooms}${reg.roomsKo && reg.roomsWe ? ` (${ts.roomsKo} ${reg.roomsKo} · ${ts.roomsWe} ${reg.roomsWe})` : ''}`]);
+        if (reg.floors) rows.push([ts.floors, String(reg.floors)]);
+        if (reg.openedDate) rows.push([ts.opened, reg.openedDate]);
+        if (reg.tel) rows.push([tr.phone, reg.tel]);
+        if (reg.addrRoad) rows.push([tr.address, reg.addrRoad]);
+        return (
+          <>
+            <Divider />
+            <section style={{ padding: '0 22px' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', lineHeight: 1.3 }}>{tr.publicBadge}</h2>
+              <table style={{ width: '100%', fontSize: 14, borderCollapse: 'collapse' }}>
+                <tbody>
+                  {rows.map(([k, v]) => (
+                    <tr key={k} style={{ borderTop: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '9px 0', color: '#6a6a6a', width: 120, verticalAlign: 'top' }}>{k}</td>
+                      <td style={{ padding: '9px 0', color: '#222', fontWeight: 600 }}>{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p style={{ fontSize: 12, color: '#9c9c9c', margin: '10px 0 0', lineHeight: 1.6 }}>
+                {ts.dataSource}{reg.syncedAt ? ` · ${tr.synced} ${reg.syncedAt}` : ''} ·{' '}
+                <Link href={`/${params.locale}/stays/r/${encodeURIComponent(reg.mgtNo)}`} style={{ color: '#c2143c', fontWeight: 600 }}>{tr.publicBadge} →</Link>
+              </p>
+            </section>
+          </>
+        );
+      })()}
+
       <Divider />
 
       {/* Reviews */}
