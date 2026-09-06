@@ -10,15 +10,15 @@ import {
  * 건강보험심사평가원 오픈API 클라이언트 (공공데이터포털 apis.data.go.kr).
  *
  *  - 병원정보서비스 v2      : getHospBasisList  — 전국 요양기관 기본정보 (목록 적재)
- *  - 의료기관별상세정보 2.7 : getDgsbjtInfo2.7 (진료과목) · getDtlInfo2.7 (진료시간·주차·안내)
- *                            · getTrnsprtInfo2.7 (교통)      — 상세 화면용, 열람 시 갱신
+ *  - 의료기관별상세정보 2.8 : getDgsbjtInfo2.8 (진료과목) · getDtlInfo2.8 (진료시간·주차·안내)
+ *                            · getTrnsprtInfo2.8 (교통)      — 상세 화면용, 열람 시 갱신
  *
  * 인증키는 HIRA_SERVICE_KEY (공공데이터포털 '일반 인증키'). Encoding/Decoding
  * 어느 쪽이든 받도록 '%' 포함 여부로 판별한다.
  */
 const BASE = 'https://apis.data.go.kr/B551182';
 const BASIS_PATH = '/hospInfoServicev2/getHospBasisList';
-const DETAIL_SVC = '/MadmDtlInfoService2.7';
+const DETAIL_SVC = '/MadmDtlInfoService2.8';
 
 export const REGISTRY_PAGE_SIZE = 1000;
 /** 상세 정보 재조회 주기 — 열람 시 이보다 오래됐으면 새로 받는다 (실시간 반영). */
@@ -38,7 +38,18 @@ async function callApi(path: string, params: Record<string, string | number | un
     .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
     .join('&');
   const url = `${BASE}${path}?serviceKey=${serviceKeyParam()}&_type=json&${qs}`;
-  const res = await fetch(url, { cache: 'no-store', headers: { accept: 'application/json' } });
+  // 공공데이터포털은 간헐적으로 연결이 끊긴다 — 네트워크 오류만 2회 재시도
+  let res: Response | null = null;
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < 3 && !res; attempt += 1) {
+    try {
+      res = await fetch(url, { cache: 'no-store', headers: { accept: 'application/json' } });
+    } catch (e) {
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+    }
+  }
+  if (!res) throw new Error(`HIRA ${path} 연결 실패: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`);
   const text = await res.text();
   if (!res.ok) throw new Error(`HIRA ${path} HTTP ${res.status}: ${text.slice(0, 200)}`);
   let json: Json;
@@ -185,9 +196,9 @@ const pair = (a: unknown, b: unknown): [string, string] | undefined => {
 
 export async function fetchDetails(ykiho: string): Promise<RegistryDetails> {
   const [dept, dtl, trn] = await Promise.all([
-    callApi(`${DETAIL_SVC}/getDgsbjtInfo2.7`, { ykiho, numOfRows: 100 }).catch(() => ({ items: [] as Json[], totalCount: 0 })),
-    callApi(`${DETAIL_SVC}/getDtlInfo2.7`, { ykiho }).catch(() => ({ items: [] as Json[], totalCount: 0 })),
-    callApi(`${DETAIL_SVC}/getTrnsprtInfo2.7`, { ykiho, numOfRows: 50 }).catch(() => ({ items: [] as Json[], totalCount: 0 })),
+    callApi(`${DETAIL_SVC}/getDgsbjtInfo2.8`, { ykiho, numOfRows: 100 }).catch(() => ({ items: [] as Json[], totalCount: 0 })),
+    callApi(`${DETAIL_SVC}/getDtlInfo2.8`, { ykiho }).catch(() => ({ items: [] as Json[], totalCount: 0 })),
+    callApi(`${DETAIL_SVC}/getTrnsprtInfo2.8`, { ykiho, numOfRows: 50 }).catch(() => ({ items: [] as Json[], totalCount: 0 })),
   ]);
 
   const departments: RegistryDepartment[] = dept.items
@@ -212,13 +223,15 @@ export async function fetchDetails(ykiho: string): Promise<RegistryDetails> {
     }
     : undefined;
 
+  // 2.8 실제 필드: trafNm(교통수단) · lineNo(노선, 숫자로 올 수 있음) · arivPlc(하차 지점)
+  //               · dir(방향/경유) · rmk(승차 안내)
   const transport: RegistryTransport[] = trn.items.map((t) => ({
-    type: str(t.trafNm) ?? str(t.trafTpCd) ?? '',
+    type: str(t.trafNm) ?? '',
     line: str(t.lineNo) ?? undefined,
     station: str(t.arivPlc) ?? undefined,
-    exit: str(t.arivExit) ?? undefined,
+    exit: undefined,
     distance: str(t.dir) ?? undefined,
-    note: str(t.desc) ?? undefined,
+    note: str(t.rmk) ?? undefined,
   })).filter((t) => t.type || t.station);
 
   return { departments, hours, transport };
