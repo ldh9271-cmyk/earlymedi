@@ -40,6 +40,13 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const dept = p.get('dept') ?? ''; const cat = p.get('cat') ?? '';
   const foreign = p.get('foreign') === '1'; const listed = p.get('listed') === '1';
   const q = (p.get('q') ?? '').trim().slice(0, 40).replace(/[%_]/g, '');
+  const locRaw = p.get('locale') ?? 'kr';
+  const loc = ['kr', 'en', 'zh', 'ja', 'ru', 'vi'].includes(locRaw) ? locRaw : 'kr';
+  const en = loc !== 'kr';
+  const hospName = sql.raw(en ? "coalesce(nullif(hlc.name,''), r.name)" : 'r.name');
+  const hospJoin = sql.raw(en ? `left join hospital_locale_content hlc on hlc.hospital_id = h.id and hlc.locale = '${loc}'` : '');
+  const listName = sql.raw(en ? "coalesce(nullif(plc.title,''), r.name)" : 'r.name');
+  const listJoin = sql.raw(en ? `left join partner_listing_locale_content plc on plc.listing_id = l.id and plc.locale = '${loc}'` : '');
   const [swLat, swLng] = sw; const [neLat, neLng] = ne;
   // 너무 넓은 영역은 클러스터로만
   // 레벨 5 이상(서울 몇 개 구가 한 화면)부터는 격자 클러스터 — 개별 말풍선은 레벨 1~4
@@ -70,9 +77,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       out.clusters.push(...rows.map((r) => ({ ...r, k: 'h' as const })));
     } else {
       const rows = (await db.execute(sql`
-        select r.id, r.ykiho as key, r.name, r.lat, r.lng, r.cl_name as type, r.foreign_licensed as foreign, r.sggu_name as region,
+        select r.id, r.ykiho as key, ${hospName} as name, r.lat, r.lng, r.cl_name as type, r.foreign_licensed as foreign, r.sggu_name as region,
                (r.contracted_hospital_id is not null or r.claim_status = 'approved') as listed, h.slug
-          from hospital_registry r left join hospitals h on h.id = r.contracted_hospital_id
+          from hospital_registry r left join hospitals h on h.id = r.contracted_hospital_id ${hospJoin}
          where ${where}${qCond}
          order by listed desc, r.foreign_licensed desc, r.dr_total desc
          limit 600`)) as unknown as Array<{ id: string; key: string; name: string; lat: number; lng: number; type: string | null; foreign: boolean; region: string | null; listed: boolean; slug: string | null }>;
@@ -97,9 +104,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       out.clusters.push(...rows.map((r) => ({ ...r, k: 'b' as const })));
     } else {
       const rows = (await db.execute(sql`
-        select r.id, r.mgt_no as key, r.name, r.lat, r.lng, r.biz_type as type, r.category_keys as cats, r.sggu_name as region,
+        select r.id, r.mgt_no as key, ${listName} as name, r.lat, r.lng, r.biz_type as type, r.category_keys as cats, r.sggu_name as region,
                (r.contracted_listing_id is not null or r.claim_status = 'approved') as listed, l.slug
-          from beauty_registry r left join partner_listings l on l.id = r.contracted_listing_id
+          from beauty_registry r left join partner_listings l on l.id = r.contracted_listing_id ${listJoin}
          where ${where}${qCond}
          order by listed desc, r.chairs desc
          limit 600`)) as unknown as Array<{ id: string; key: string; name: string; lat: number; lng: number; type: string | null; cats: string[]; region: string | null; listed: boolean; slug: string | null }>;
@@ -125,9 +132,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       out.clusters.push(...rows.map((r) => ({ ...r, k: 'l' as const })));
     } else {
       const rows = (await db.execute(sql`
-        select r.id, r.mgt_no as key, r.name, r.lat, r.lng, r.biz_type as type, r.category_keys as cats, r.sggu_name as region,
+        select r.id, r.mgt_no as key, ${listName} as name, r.lat, r.lng, r.biz_type as type, r.category_keys as cats, r.sggu_name as region,
                (r.contracted_listing_id is not null or r.claim_status = 'approved') as listed, l.slug
-          from lodging_registry r left join partner_listings l on l.id = r.contracted_listing_id
+          from lodging_registry r left join partner_listings l on l.id = r.contracted_listing_id ${listJoin}
          where ${where}${qCond}
          order by listed desc, (r.rooms_ko + r.rooms_we) desc
          limit 600`)) as unknown as Array<{ id: string; key: string; name: string; lat: number; lng: number; type: string | null; cats: string[]; region: string | null; listed: boolean; slug: string | null }>;
@@ -153,9 +160,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       out.clusters.push(...rows.map((r) => ({ ...r, k: 'f' as const })));
     } else {
       const rows = (await db.execute(sql`
-        select r.id, r.mgt_no as key, r.name, r.lat, r.lng, r.biz_type as type, r.category_keys as cats, r.sggu_name as region,
+        select r.id, r.mgt_no as key, ${listName} as name, r.lat, r.lng, r.biz_type as type, r.category_keys as cats, r.sggu_name as region,
                (r.contracted_listing_id is not null or r.claim_status = 'approved') as listed, l.slug
-          from food_registry r left join partner_listings l on l.id = r.contracted_listing_id
+          from food_registry r left join partner_listings l on l.id = r.contracted_listing_id ${listJoin}
          where ${where}${qCond}
          order by listed desc, r.name
          limit 600`)) as unknown as Array<{ id: string; key: string; name: string; lat: number; lng: number; type: string | null; cats: string[]; region: string | null; listed: boolean; slug: string | null }>;

@@ -195,7 +195,7 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
     const p = provRef.current; if (!p) return;
     const b = p.getBounds();
     const apiKinds = [...kindSet].map((k) => KIND_TO_API[k]).join(',');
-    const qs = new URLSearchParams({ sw: `${b.sw.lat},${b.sw.lng}`, ne: `${b.ne.lat},${b.ne.lng}`, zoom: String(p.getLevel()), kinds: apiKinds || 'none' });
+    const qs = new URLSearchParams({ sw: `${b.sw.lat},${b.sw.lng}`, ne: `${b.ne.lat},${b.ne.lng}`, zoom: String(p.getLevel()), kinds: apiKinds || 'none', locale });
     if (dept) qs.set('dept', dept); if (cat) qs.set('cat', cat); if (foreign) qs.set('foreign', '1'); if (listed) qs.set('listed', '1'); if (q) qs.set('q', q);
     setLoading(true);
     try { const res = await fetch(`/api/map/markers?${qs.toString()}`); if (res.ok) setData((await res.json()) as Payload); }
