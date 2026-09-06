@@ -59,7 +59,7 @@ export default async function AttractionDetailPage({ params }: { params: { local
 
   return (
     <section style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 40px 80px' }}>
-      <style dangerouslySetInnerHTML={{ __html: '@media (max-width:768px){ .m-atd-page{padding:16px 16px 80px !important} }' }} />
+      <style dangerouslySetInnerHTML={{ __html: '@media (max-width:1024px){ .m-atd-grid{grid-template-columns:repeat(3,1fr) !important} } @media (max-width:768px){ .m-atd-page{padding:16px 16px 80px !important} .m-atd-grid{grid-template-columns:repeat(2,1fr) !important;gap:10px !important} }' }} />
       <Link href={`/${locale}/attractions/all`} style={{ fontSize: 12, color: '#6a6a6a' }}>← {t.title}</Link>
 
       {row.imageUrl ? (
@@ -95,7 +95,7 @@ export default async function AttractionDetailPage({ params }: { params: { local
       {nearby.length ? (
         <div style={{ marginTop: 40 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>{row.sidoName} {t.nearbyTitle}</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+          <div className="m-atd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
             {nearby.map((r) => <TourCard key={r.id} r={r} locale={locale} t={t} />)}
           </div>
         </div>
