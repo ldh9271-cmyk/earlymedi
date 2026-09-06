@@ -92,7 +92,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
         id: hospitalRegistry.id, ykiho: hospitalRegistry.ykiho, name: hospitalRegistry.name, clCd: hospitalRegistry.clCd, clName: hospitalRegistry.clName,
         sidoName: hospitalRegistry.sidoName, sgguName: hospitalRegistry.sgguName, addr: hospitalRegistry.addr, drTotal: hospitalRegistry.drTotal,
         foreignLicensed: hospitalRegistry.foreignLicensed, contractedHospitalId: hospitalRegistry.contractedHospitalId, claimStatus: hospitalRegistry.claimStatus,
-        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerCover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = ${hospitals.id} and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`,
+        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerCover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = hospitals.id and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`,
       })
       .from(hospitalRegistry)
       .leftJoin(hospitals, eq(hospitals.id, hospitalRegistry.contractedHospitalId))
@@ -109,7 +109,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
     // 과별 필터 + 첫 페이지: 레지스트리 미연결 등록 병원도 해당 과에 포함 (컬러 카드, 글로우업 상세로 연결)
     if (dept && page === 1) {
       const unlinked = await db
-        .select({ id: hospitals.id, name: hospitals.name, slug: hospitals.slug, cover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = ${hospitals.id} and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`, cats: hospitals.primaryCategories, addressJson: hospitals.addressJson })
+        .select({ id: hospitals.id, name: hospitals.name, slug: hospitals.slug, cover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = hospitals.id and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`, cats: hospitals.primaryCategories, addressJson: hospitals.addressJson })
         .from(hospitals)
         .where(sql`${hospitals.countryCode} = 'KR' and ${hospitals.isActiveForMatching} = true and not exists (select 1 from hospital_registry r where r.contracted_hospital_id = ${hospitals.id})`)
         .limit(200);
