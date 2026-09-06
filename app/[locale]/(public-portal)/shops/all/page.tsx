@@ -76,6 +76,29 @@ export default async function ShopsListPage({ params, searchParams }: { params: 
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE);
     rows = found as ShopCardRow[];
+    // 첫 페이지: 메인메뉴에 등록된 글로우 인증 뷰티샵(퍼스널컬러·헤어·메이크업·네일·반영구) 중
+    // 아직 미용업 레지스트리에 연결 안 된 것도 컬러 카드로 함께 노출 (글로우 인증 필터에서도 보이도록).
+    if (page === 1) {
+      const BEAUTY_PLIST_CATS = ['personal_color', 'hair', 'makeup', 'nail', 'pmu'];
+      const catsToInclude = cat ? (BEAUTY_PLIST_CATS.includes(cat) ? [cat] : []) : BEAUTY_PLIST_CATS;
+      if (catsToInclude.length > 0) {
+        const plist = await db
+          .select({ id: partnerListings.id, title: partnerListings.title, slug: partnerListings.slug, cover: partnerListings.coverImageUrl, category: partnerListings.category, addressJson: partnerListings.addressJson })
+          .from(partnerListings)
+          .where(sql`${partnerListings.category} in ('personal_color','hair','makeup','nail','pmu') and not exists (select 1 from beauty_registry b where b.contracted_listing_id = ${partnerListings.id})`)
+          .limit(200);
+        const extras: ShopCardRow[] = plist
+          .filter((l) => catsToInclude.includes(l.category as string))
+          .filter((l) => !sido || JSON.stringify(l.addressJson ?? {}).includes(sido))
+          .map((l) => ({
+            id: `plist:${l.id}`, mgtNo: l.slug, name: l.title, bizType: null, categoryKeys: [l.category as string],
+            sidoName: ((l.addressJson as { city?: string } | null)?.city ?? null), sgguName: null, addrRoad: null, addrLot: null,
+            statusCode: '01', chairs: 0, beds: 0, contractedListingId: l.id, claimStatus: 'approved', details: null,
+            partnerSlug: l.slug, partnerCover: l.cover,
+          }));
+        if (extras.length) { rows = [...extras, ...rows]; total += extras.length; }
+      }
+    }
     const sidos = await db.selectDistinct({ s: beautyRegistry.sidoName }).from(beautyRegistry).where(isNotNull(beautyRegistry.sidoName)).orderBy(beautyRegistry.sidoName);
     sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));
   } catch (err) {
