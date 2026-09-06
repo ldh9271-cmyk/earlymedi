@@ -26,7 +26,21 @@ export function simplifyName(name: string): string {
 }
 
 /** 결과 주소가 원 주소의 시·구와 같은지 (엉뚱한 지역 매칭 방지). */
+const SIDO_SHORT: Array<[RegExp, string]> = [
+  [/^서울/, '서울'], [/^부산/, '부산'], [/^대구/, '대구'], [/^인천/, '인천'], [/^광주/, '광주'], [/^대전/, '대전'], [/^울산/, '울산'], [/^세종/, '세종'],
+  [/^경기/, '경기'], [/^강원/, '강원'], [/^충청북|^충북/, '충북'], [/^충청남|^충남/, '충남'], [/^전라북|^전북/, '전북'], [/^전라남|^전남/, '전남'],
+  [/^경상북|^경북/, '경북'], [/^경상남|^경남/, '경남'], [/^제주/, '제주'],
+];
+function sidoOf(addr: string): string | null {
+  const first = addr.trim().split(/\s+/)[0] ?? '';
+  for (const [re, s] of SIDO_SHORT) if (re.test(first)) return s;
+  return null;
+}
+
 export function sameDistrict(expected: string, matched: string): boolean {
+  // 시도가 둘 다 식별되는데 다르면 거부 (서울 중구 vs 부산 중구 처럼 구 이름만 같은 경우 방지)
+  const a = sidoOf(expected); const b = sidoOf(matched);
+  if (a && b && a !== b) return false;
   // 주의: JS 의 \b 는 한글에 안 걸리므로 공백/끝 lookahead 로 토큰 경계를 잡는다. 시도('서울특별시')는 제외.
   const gu = (expected.match(/[가-힣]+(?:구|군|시)(?=\s|$)/g) ?? []).filter((g) => !/(특별시|광역시|특별자치시|특별자치도)$/.test(g));
   if (gu.length === 0) return true;

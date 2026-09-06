@@ -60,7 +60,8 @@ export default async function AttractionsListPage({ params, searchParams }: { pa
     total = cnt?.n ?? 0;
     const found = await db
       .select({
-        id: tourSpots.id, contentId: tourSpots.contentId, title: tourSpots.title, imageUrl: tourSpots.imageUrl, thumbUrl: tourSpots.thumbUrl,
+        // 다국어 제목: 관광공사 영·일·중 TourAPI 매칭분(i18n) 우선, 없으면 한국어
+        id: tourSpots.id, contentId: tourSpots.contentId, title: sql<string>`coalesce(${tourSpots.i18n}->${locale}->>'title', ${tourSpots.title})`, imageUrl: tourSpots.imageUrl, thumbUrl: tourSpots.thumbUrl,
         location: tourSpots.location, sidoName: tourSpots.sidoName, sgguName: tourSpots.sgguName, keyword: tourSpots.keyword, categoryKeys: tourSpots.categoryKeys,
       })
       .from(tourSpots)

@@ -9,6 +9,7 @@ import { syncFoodRecent } from '@/lib/food-registry/localdata';
 import { syncGalleryRecent, geocodeTourSpots } from '@/lib/tour-registry/tourapi';
 import { geocodeMissingPlatformPlaces } from '@/lib/geo/geocode';
 import { enrichHotelListingsFromTourApi } from '@/lib/lodging-registry/tourapi-stay';
+import { localizeHotelListings, localizeTourSpots } from '@/lib/tour-registry/tourapi-i18n';
 
 /**
  * Vercel Cron — 전국 병원 레지스트리 상세(진료과목·진료시간·교통) 순환 갱신.
@@ -39,7 +40,15 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const tourGeo = await geocodeTourSpots(30).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'tour_geo_failed' }));
     // 글로우 인증 호텔 게시물 사진·소개 (TourAPI 숙박) — 키 미승인이면 skipped 로 조용히 넘어감
     const hotelMedia = await enrichHotelListingsFromTourApi(10).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'hotel_media_failed' }));
-    return NextResponse.json({ refreshed: n, beauty, lodging, food, tour, geo, tourGeo, hotelMedia });
+    // 다국어(영·일·중) 제목·소개 — 언어별 트래픽 한도가 따로라 매일 조금씩
+    const i18n: Record<string, unknown> = {};
+    for (const lang of ['en', 'ja', 'zh'] as const) {
+      i18n[lang] = {
+        hotels: await localizeHotelListings(lang, 20).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'failed' })),
+        spots: await localizeTourSpots(lang, 120).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'failed' })),
+      };
+    }
+    return NextResponse.json({ refreshed: n, beauty, lodging, food, tour, geo, tourGeo, hotelMedia, i18n });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'failed' }, { status: 500 });
   }

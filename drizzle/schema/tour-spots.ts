@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { doublePrecision, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { doublePrecision, index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 /**
  * tour_spots — 전국 관광지(관광사진) 레지스트리 (한국관광공사 포토코리아 PhotoGalleryService1).
@@ -26,6 +26,8 @@ export const tourSpots = pgTable(
     lng: doublePrecision('lng'),
     geoSource: text('geo_source'), // null = 미시도 · 'kakao_kw' = 카카오 키워드 검색 실좌표 · 'centroid' = 못 찾아 시도 중심 유지
     geoMatched: text('geo_matched'), // 카카오가 찾은 장소명 | 주소 (검증용)
+    /** 다국어 — 관광공사 영문·일문·중문 TourAPI 매칭: { en: {contentId,title,overview?}, ja: …, zh: … } */
+    i18n: jsonb('i18n').$type<Record<string, { contentId: string; title: string; overview?: string; addr?: string }>>().notNull().default(sql`'{}'::jsonb`),
     createdTime: text('created_time'),
     modifiedTime: text('modified_time'),
     syncedAt: timestamp('synced_at', { withTimezone: true }).notNull().defaultNow(),

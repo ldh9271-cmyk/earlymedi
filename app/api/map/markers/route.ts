@@ -215,7 +215,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       out.clusters.push(...rows.map((r) => ({ ...r, k: 'a' as const })));
     } else {
       const rows = (await db.execute(sql`
-        select r.id, r.content_id as key, r.title as name, r.lat, r.lng, r.keyword as type, r.category_keys as cats,
+        select r.id, r.content_id as key, coalesce(r.i18n->${loc}->>'title', r.title) as name, r.lat, r.lng, r.keyword as type, r.category_keys as cats,
                concat_ws(' ', r.sido_name, r.sggu_name) as region
           from tour_spots r where ${where}${qCond} and r.geo_source = 'kakao_kw'
          order by r.modified_time desc nulls last

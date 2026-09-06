@@ -64,6 +64,21 @@ export async function findStay(name: string, addr: string, tel: string | null): 
   return null;
 }
 
+/** 지역(areaCode) 숙박 전체 목록 — 로컬 느슨 매칭용. 서울(1)은 200여 건이라 100건씩 몇 페이지면 끝난다. */
+export async function listStays(areaCode = '1'): Promise<StayMatch[]> {
+  const out: StayMatch[] = [];
+  for (let page = 1; page <= 20; page += 1) {
+    const r = await call('searchStay2', { areaCode, numOfRows: '100', pageNo: String(page), arrange: 'A' });
+    if (r.error) throw new Error(r.error);
+    for (const it of r.items) {
+      const m: StayMatch = { contentId: str(it.contentid), title: str(it.title), addr: str(it.addr1), tel: str(it.tel), firstImage: str(it.firstimage), mapx: str(it.mapx), mapy: str(it.mapy) };
+      if (m.contentId) out.push(m);
+    }
+    if (r.items.length < 100) break;
+  }
+  return out;
+}
+
 export type StayDetail = {
   overview: string; homepage: string; tel: string; images: string[];
   checkin: string; checkout: string; parking: string; facilities: string; rooms: string; roomType: string; scale: string; food: string; pickup: string; reservation: string; refund: string;
@@ -80,9 +95,11 @@ export async function fetchStayDetail(contentId: string): Promise<StayDetail> {
   const homepage = stripHtml(str(c.homepage)).match(/https?:\/\/\S+/)?.[0] ?? '';
   const flagMap: Array<[string, string]> = [['sauna', '사우나'], ['fitness', '피트니스'], ['publicbath', '공용 샤워실'], ['barbecue', '바비큐장'], ['beauty', '뷰티시설'], ['bicycle', '자전거 대여'], ['campfire', '캠프파이어'], ['karaoke', '노래방'], ['seminar', '세미나실'], ['sports', '스포츠시설'], ['chkcooking', '객실 취사']];
   const flags = flagMap.filter(([k]) => /^(1|y|yes|가능|있음)$/i.test(str(i[k]))).map(([, label]) => label);
+  // 대표사진(firstimage/firstimage2)은 목록 검색에 비어 있어도 상세 공통정보에 있을 수 있다 — 갤러리 앞에 합친다
+  const imgs = [str(c.firstimage), str(c.firstimage2), ...images.items.map((x) => str(x.originimgurl))].filter(Boolean);
   return {
     overview: stripHtml(str(c.overview)), homepage, tel: str(c.tel) || str(i.infocenterlodging),
-    images: images.items.map((x) => str(x.originimgurl)).filter(Boolean),
+    images: imgs.filter((u, idx) => imgs.indexOf(u) === idx),
     checkin: stripHtml(str(i.checkintime)), checkout: stripHtml(str(i.checkouttime)), parking: stripHtml(str(i.parkinglodging)),
     facilities: stripHtml(str(i.subfacility)), rooms: stripHtml(str(i.roomcount)), roomType: stripHtml(str(i.roomtype)), scale: stripHtml(str(i.scalelodging)),
     food: stripHtml(str(i.foodplace)), pickup: stripHtml(str(i.pickup)), reservation: stripHtml(str(i.reservationlodging)), refund: stripHtml(str(i.refundregulation)),
