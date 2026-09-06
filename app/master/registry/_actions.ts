@@ -11,6 +11,7 @@ import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { lodgingRegistry } from '@/drizzle/schema/lodging-registry';
+import { foodRegistry } from '@/drizzle/schema/food-registry';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { findRegistryMatch } from '@/lib/hospital-registry/match';
 
@@ -281,4 +282,68 @@ export async function setStayContractAction(fd: FormData): Promise<void> {
   await db.update(lodgingRegistry).set({ contractedListingId: listingId || null, updatedAt: new Date() }).where(eq(lodgingRegistry.id, registryId));
   revalidatePath('/master/registry');
   back({ ok: listingId ? '글로우업 숙소로 연결했습니다' : '연결을 해제했습니다' });
+}
+
+// ── 맛집(일반음식점 레지스트리) ─────────────────────────────────────
+
+/** 맛집 직접 등록 승인/반려. */
+export async function decideEatClaimAction(fd: FormData): Promise<void> {
+  await assertMaster();
+  const id = String(fd.get('registryId') ?? '');
+  const decision = String(fd.get('decision') ?? '');
+  if (!id || !['approved', 'rejected'].includes(decision)) back({ error: 'bad_request' });
+  await db.update(foodRegistry).set({ claimStatus: decision, updatedAt: new Date() })
+    .where(and(eq(foodRegistry.id, id), or(eq(foodRegistry.claimStatus, 'pending'), eq(foodRegistry.claimStatus, 'approved'))));
+  revalidatePath('/master/registry');
+  back({ ok: decision === 'approved' ? '맛집 직접 등록을 승인했습니다' : '반려했습니다' });
+}
+
+/** 글로우업 찐맛집 상품(partner_listings: food/restaurant) ↔ 일반음식점 레지스트리 자동 연결 (상호 + 시도). */
+export async function autoMatchEatsAction(): Promise<void> {
+  await assertMaster();
+  const listings = await db
+    .select({ id: partnerListings.id, title: partnerListings.title, category: partnerListings.category, addressJson: partnerListings.addressJson })
+    .from(partnerListings)
+    .where(inArray(partnerListings.category, ['food', 'restaurant']));
+  const linked = new Set(
+    (await db.select({ lid: foodRegistry.contractedListingId }).from(foodRegistry).where(sql`${foodRegistry.contractedListingId} is not null`)).map((r) => r.lid as string),
+  );
+  let matched = 0; const misses: string[] = [];
+  for (const l of listings) {
+    if (linked.has(l.id)) continue;
+    const title = l.title.replace(/\s*[(（][^)）]*[)）]\s*/g, ' ').replace(/\s*(강남|명동|압구정|홍대|청담|신사|역삼|서초|잠실|본점|점)(점|본점)?\s*$/, '').trim();
+    const addr = l.addressJson as { city?: string; addressLine1?: string } | null;
+    const city = (addr?.city ?? '').trim();
+    const like = `%${title.replace(/[%_]/g, '').replace(/\s+/g, '%')}%`;
+    const cands = await db
+      .select({ id: foodRegistry.id, name: foodRegistry.name, addrRoad: foodRegistry.addrRoad, sido: foodRegistry.sidoName })
+      .from(foodRegistry)
+      .where(and(ilike(foodRegistry.name, like), eq(foodRegistry.statusCode, '01'), sql`${foodRegistry.contractedListingId} is null`))
+      .limit(30);
+    const exact = cands.filter((c) => norm(c.name) === norm(title) || norm(c.name).startsWith(norm(title)));
+    let pick = exact.length === 1 ? exact[0] : null;
+    if (!pick && exact.length > 1 && city) {
+      const byCity = exact.filter((c) => (c.addrRoad ?? '').includes(city) || (c.sido ?? '') === city.slice(0, 2));
+      if (byCity.length === 1) pick = byCity[0];
+    }
+    if (pick) {
+      await db.update(foodRegistry).set({ contractedListingId: l.id, updatedAt: new Date() }).where(eq(foodRegistry.id, pick.id));
+      matched += 1;
+    } else {
+      misses.push(`${l.title}${exact.length > 1 ? ` (동명 ${exact.length}곳)` : ''}`);
+    }
+  }
+  revalidatePath('/master/registry');
+  back({ ok: `맛집 자동 연결 ${matched}곳 (미연결 ${misses.length})`, ...(misses.length ? { misses: misses.slice(0, 60).join('\n') } : {}) });
+}
+
+/** 맛집 개별 연결/해제 — 레지스트리 행에 partner_listings.id 지정. */
+export async function setEatContractAction(fd: FormData): Promise<void> {
+  await assertMaster();
+  const registryId = String(fd.get('registryId') ?? '');
+  const listingId = String(fd.get('listingId') ?? '').trim();
+  if (!registryId) back({ error: 'missing' });
+  await db.update(foodRegistry).set({ contractedListingId: listingId || null, updatedAt: new Date() }).where(eq(foodRegistry.id, registryId));
+  revalidatePath('/master/registry');
+  back({ ok: listingId ? '글로우업 맛집으로 연결했습니다' : '연결을 해제했습니다' });
 }

@@ -168,6 +168,7 @@ export const partnerSections: SidebarSection[] = [
       { href: '/partner/listings', label: '내 글로우업 상품', icon: Briefcase },
       { href: '/partner/registry', label: '매장 공개 정보', icon: Briefcase },
       { href: '/partner/lodging', label: '숙소 공개 정보', icon: Hotel },
+      { href: '/partner/eats', label: '맛집 공개 정보', icon: Utensils },
       { href: '/partner/menu', label: '메뉴 · 가격표', icon: Utensils },
       { href: '/partner/constraints', label: '시술 후 제약', icon: Truck },
       { href: '/partner/contracts', label: '계약', icon: TicketCheck },
@@ -191,7 +192,7 @@ export const partnerSections: SidebarSection[] = [
  */
 const SIMPLE_ALLOW: Record<'agency' | 'medical' | 'partner' | 'freelancer', string[]> = {
   medical: ['/medical/dashboard', '/scan', '/medical/registry', '/medical/inbox', '/medical/leads', '/medical/glowup-listings', '/medical/settlements', '/medical/settings'],
-  partner: ['/partner/dashboard', '/scan', '/partner/registry', '/partner/lodging', '/partner/listings', '/partner/bookings', '/partner/inbox', '/partner/settlements', '/partner/settings'],
+  partner: ['/partner/dashboard', '/scan', '/partner/registry', '/partner/lodging', '/partner/eats', '/partner/listings', '/partner/bookings', '/partner/inbox', '/partner/settlements', '/partner/settings'],
   agency: ['/agency/dashboard', '/scan', '/agency/inbox', '/agency/hospitals', '/agency/listings', '/agency/partners', '/agency/visa', '/agency/payments', '/agency/settings'],
   freelancer: ['/freelancer/dashboard', '/freelancer/inbox', '/freelancer/referral-codes', '/freelancer/commissions', '/freelancer/disputes', '/freelancer/settings'],
 };

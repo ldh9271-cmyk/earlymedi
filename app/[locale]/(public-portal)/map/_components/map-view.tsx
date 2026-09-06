@@ -13,12 +13,12 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-type Marker = { k: 'h' | 'b' | 'l'; id: string; key: string; name: string; lat: number; lng: number; listed: boolean; foreign?: boolean; type?: string | null; cats?: string[]; slug?: string | null; region?: string | null };
-type Cluster = { lat: number; lng: number; count: number; listed: number; k: 'h' | 'b' | 'l' };
-type Payload = { markers: Marker[]; clusters: Cluster[]; counts: { hospital: number; beauty: number; stays: number } };
+type Marker = { k: 'h' | 'b' | 'l' | 'f'; id: string; key: string; name: string; lat: number; lng: number; listed: boolean; foreign?: boolean; type?: string | null; cats?: string[]; slug?: string | null; region?: string | null };
+type Cluster = { lat: number; lng: number; count: number; listed: number; k: 'h' | 'b' | 'l' | 'f' };
+type Payload = { markers: Marker[]; clusters: Cluster[]; counts: { hospital: number; beauty: number; stays: number; eats: number } };
 
 type Labels = {
-  title: string; hospitals: string; shops: string; stays: string; all: string; foreign: string; listed: string; searchPlaceholder: string; myLocation: string;
+  title: string; hospitals: string; shops: string; stays: string; eats: string; all: string; foreign: string; listed: string; searchPlaceholder: string; myLocation: string;
   zoomHint: string; inView: string; listTitle: string; empty: string; noKey: string; detail: string; publicData: string; dept: string; cat: string;
   contractedBadge: string; foreignBadge: string; viewList: string; viewMap: string;
 };
@@ -128,10 +128,10 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
   const [ready, setReady] = useState(false);
   const [providerName, setProviderName] = useState<'kakao' | 'google' | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [data, setData] = useState<Payload>({ markers: [], clusters: [], counts: { hospital: 0, beauty: 0, stays: 0 } });
+  const [data, setData] = useState<Payload>({ markers: [], clusters: [], counts: { hospital: 0, beauty: 0, stays: 0, eats: 0 } });
   const [loading, setLoading] = useState(false);
   const [level, setLevel] = useState(initial.level);
-  const [kinds, setKinds] = useState<'all' | 'hospital' | 'beauty' | 'stays'>(initial.kinds === 'hospital' || initial.kinds === 'beauty' || initial.kinds === 'stays' ? initial.kinds : 'all');
+  const [kinds, setKinds] = useState<'all' | 'hospital' | 'beauty' | 'stays' | 'eats'>(['hospital', 'beauty', 'stays', 'eats'].includes(initial.kinds) ? initial.kinds as 'hospital' | 'beauty' | 'stays' | 'eats' : 'all');
   const [dept, setDept] = useState(initial.dept);
   const [cat, setCat] = useState(initial.cat);
   const [foreign, setForeign] = useState(initial.foreign);
@@ -169,7 +169,7 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
   const load = useCallback(async () => {
     const p = provRef.current; if (!p) return;
     const b = p.getBounds();
-    const qs = new URLSearchParams({ sw: `${b.sw.lat},${b.sw.lng}`, ne: `${b.ne.lat},${b.ne.lng}`, zoom: String(p.getLevel()), kinds: kinds === 'all' ? 'hospital,beauty,lodging' : kinds === 'stays' ? 'lodging' : kinds });
+    const qs = new URLSearchParams({ sw: `${b.sw.lat},${b.sw.lng}`, ne: `${b.ne.lat},${b.ne.lng}`, zoom: String(p.getLevel()), kinds: kinds === 'all' ? 'hospital,beauty,lodging,food' : kinds === 'stays' ? 'lodging' : kinds === 'eats' ? 'food' : kinds });
     if (dept) qs.set('dept', dept); if (cat) qs.set('cat', cat); if (foreign) qs.set('foreign', '1'); if (listed) qs.set('listed', '1'); if (q) qs.set('q', q);
     setLoading(true);
     try { const res = await fetch(`/api/map/markers?${qs.toString()}`); if (res.ok) setData((await res.json()) as Payload); }
@@ -184,7 +184,7 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
     for (const c of data.clusters) {
       const el = document.createElement('div');
       const size = Math.min(64, 34 + Math.log10(c.count + 1) * 12);
-      el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer;background:${c.k === 'h' ? 'rgba(29,78,216,.85)' : c.k === 'l' ? 'rgba(15,118,110,.85)' : 'rgba(157,23,77,.85)'};border:2px solid #fff;`;
+      el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer;background:${c.k === 'h' ? 'rgba(29,78,216,.85)' : c.k === 'l' ? 'rgba(15,118,110,.85)' : c.k === 'f' ? 'rgba(217,119,6,.88)' : 'rgba(157,23,77,.85)'};border:2px solid #fff;`;
       el.textContent = c.count.toLocaleString();
       el.onclick = () => { p.setLevel(p.getLevel() - 2); p.panTo({ lat: c.lat, lng: c.lng }); };
       p.add({ lat: c.lat, lng: c.lng }, el, 'center', 2);
@@ -192,11 +192,11 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
     for (const m of data.markers) {
       const el = document.createElement('a');
       el.href = hrefOf(m, locale);
-      const bg = m.listed ? '#ff385c' : m.k === 'h' ? '#334155' : m.k === 'l' ? '#0f766e' : '#6b7280';
+      const bg = m.listed ? '#ff385c' : m.k === 'h' ? '#334155' : m.k === 'l' ? '#0f766e' : m.k === 'f' ? '#b45309' : '#6b7280';
       const isActive = active === `${m.k}:${m.id}`;
       el.style.cssText = `display:inline-flex;align-items:center;gap:4px;max-width:180px;background:${bg};color:#fff;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:2px solid ${isActive ? '#fde047' : '#fff'};opacity:${m.listed ? 1 : 0.9};margin-bottom:6px;`;
       const dot = m.foreign ? '<span style="width:7px;height:7px;border-radius:50%;background:#60a5fa;display:inline-block"></span>' : '';
-      const tag = m.k === 'h' || m.k === 'l' ? (m.type ?? '') : (m.cats?.[0] ? catLabelOf(m.cats[0], cats) : (m.type ?? ''));
+      const tag = m.k === 'h' || m.k === 'l' || m.k === 'f' ? (m.type ?? '') : (m.cats?.[0] ? catLabelOf(m.cats[0], cats) : (m.type ?? ''));
       el.innerHTML = `${dot}<span style="opacity:.85;font-weight:600">${escapeHtml(tag)}</span><span style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(m.name)}</span>`;
       el.onmouseenter = () => setActive(`${m.k}:${m.id}`);
       p.add({ lat: m.lat, lng: m.lng }, el, 'bottom', isActive ? 10 : 3);
@@ -212,7 +212,7 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
     display: 'inline-flex', alignItems: 'center', padding: '6px 11px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
     border: `1px solid ${on ? '#222' : '#dddddd'}`, background: on ? '#222' : '#fff', color: on ? '#fff' : '#222', fontFamily: 'inherit',
   });
-  const total = (kinds === 'all' || kinds === 'hospital' ? data.counts.hospital : 0) + (kinds === 'all' || kinds === 'beauty' ? data.counts.beauty : 0) + (kinds === 'all' || kinds === 'stays' ? data.counts.stays : 0);
+  const total = (kinds === 'all' || kinds === 'hospital' ? data.counts.hospital : 0) + (kinds === 'all' || kinds === 'beauty' ? data.counts.beauty : 0) + (kinds === 'all' || kinds === 'stays' ? data.counts.stays : 0) + (kinds === 'all' || kinds === 'eats' ? data.counts.eats : 0);
 
   return (
     <div className={`m-map-root${mobileView === 'list' ? ' is-list' : ''}`} style={{ display: 'grid', gridTemplateColumns: panelOpen ? '380px 1fr' : '0px 1fr', height: 'calc(100vh - 140px)', minHeight: 520, position: 'relative', borderTop: '1px solid #ebebeb' }}>
@@ -226,9 +226,9 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
             <button type="submit" style={{ ...chip(true), padding: '8px 14px' }}>🔍</button>
           </form>
           <div className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
-            {(['all', 'hospital', 'beauty', 'stays'] as const).map((k) => (
-              <button key={k} type="button" style={chip(kinds === k)} onClick={() => { setKinds(k); if (k === 'beauty' || k === 'stays') setDept(''); if (k === 'hospital' || k === 'stays') setCat(''); }}>
-                {k === 'all' ? labels.all : k === 'hospital' ? labels.hospitals : k === 'beauty' ? labels.shops : labels.stays}
+            {(['all', 'hospital', 'beauty', 'stays', 'eats'] as const).map((k) => (
+              <button key={k} type="button" style={chip(kinds === k)} onClick={() => { setKinds(k); if (k !== 'hospital') setDept(''); if (k !== 'beauty') setCat(''); }}>
+                {k === 'all' ? labels.all : k === 'hospital' ? labels.hospitals : k === 'beauty' ? labels.shops : k === 'stays' ? labels.stays : labels.eats}
               </button>
             ))}
             <button type="button" style={chip(foreign)} onClick={() => setForeign(!foreign)}>{labels.foreign}</button>
@@ -252,7 +252,7 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
         <div style={{ padding: '8px 14px', fontSize: 12, color: '#6a6a6a', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
           <span>{labels.inView} · <b style={{ color: '#222' }}>{total.toLocaleString()}</b>{loading ? ' …' : ''}</span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <span>{labels.hospitals} {data.counts.hospital.toLocaleString()} · {labels.shops} {data.counts.beauty.toLocaleString()} · {labels.stays} {data.counts.stays.toLocaleString()}</span>
+            <span>{labels.hospitals} {data.counts.hospital.toLocaleString()} · {labels.shops} {data.counts.beauty.toLocaleString()} · {labels.stays} {data.counts.stays.toLocaleString()} · {labels.eats} {data.counts.eats.toLocaleString()}</span>
             <button type="button" className="m-map-viewbtn" onClick={() => setMobileView(mobileView === 'list' ? 'map' : 'list')}
               style={{ alignItems: 'center', gap: 4, border: '1px solid #222', background: mobileView === 'list' ? '#222' : '#fff', color: mobileView === 'list' ? '#fff' : '#222', borderRadius: 999, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               {mobileView === 'list' ? `🗺 ${labels.viewMap}` : `☰ ${labels.viewList}`}
@@ -271,7 +271,7 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', background: m.listed ? '#ff385c' : '#6b7280', borderRadius: 5, padding: '1px 6px' }}>{m.listed ? labels.contractedBadge : labels.publicData}</span>
                   {m.foreign ? <span style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 5, padding: '1px 6px' }}>{labels.foreignBadge}</span> : null}
-                  <span style={{ fontSize: 11, color: '#6a6a6a' }}>{m.k === 'h' || m.k === 'l' ? (m.type ?? '') : (m.cats ?? []).slice(0, 2).map((c) => catLabelOf(c, cats)).join(' · ')}</span>
+                  <span style={{ fontSize: 11, color: '#6a6a6a' }}>{m.k === 'h' || m.k === 'l' || m.k === 'f' ? (m.type ?? '') : (m.cats ?? []).slice(0, 2).map((c) => catLabelOf(c, cats)).join(' · ')}</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4 }}>{m.name}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
@@ -309,6 +309,8 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
           <span style={{ color: '#9d174d', fontWeight: 700 }}>{labels.shops} {data.counts.beauty.toLocaleString()}</span>
           <span style={{ margin: '0 10px', color: '#dddddd' }}>|</span>
           <span style={{ color: '#0f766e', fontWeight: 700 }}>{labels.stays} {data.counts.stays.toLocaleString()}</span>
+          <span style={{ margin: '0 10px', color: '#dddddd' }}>|</span>
+          <span style={{ color: '#b45309', fontWeight: 700 }}>{labels.eats} {data.counts.eats.toLocaleString()}</span>
           {providerName ? <span style={{ marginLeft: 10, fontSize: 10, color: '#9c9c9c' }}>{providerName === 'kakao' ? 'Kakao' : 'Google'}</span> : null}
         </div>
       </div>
@@ -319,7 +321,9 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
 function hrefOf(m: Marker, locale: string): string {
   if (m.k === 'h') return m.listed && m.slug ? `/${locale}/clinics/${m.slug}` : `/${locale}/clinics/r/${encodeURIComponent(m.key)}`;
   if (m.listed && m.slug) return `/${locale}/listings/${m.slug}`;
-  return m.k === 'l' ? `/${locale}/stays/r/${encodeURIComponent(m.key)}` : `/${locale}/shops/r/${encodeURIComponent(m.key)}`;
+  if (m.k === 'l') return `/${locale}/stays/r/${encodeURIComponent(m.key)}`;
+  if (m.k === 'f') return `/${locale}/eats/r/${encodeURIComponent(m.key)}`;
+  return `/${locale}/shops/r/${encodeURIComponent(m.key)}`;
 }
 function catLabelOf(key: string, cats: Array<{ key: string; label: string }>): string {
   return cats.find((c) => c.key === key)?.label ?? key;

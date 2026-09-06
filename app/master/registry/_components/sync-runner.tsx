@@ -115,6 +115,23 @@ export default function SyncRunner({ hasKey }: { hasKey: boolean }): JSX.Element
     }
   }
 
+  async function runFoodRecent(): Promise<void> {
+    setRunning(true); setError(null);
+    try {
+      const res = await fetch('/api/master/registry/sync', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ foodRecent: true }),
+      });
+      const j = (await res.json()) as { error?: string; pages?: number; upserted?: number };
+      if (!res.ok || j.error) throw new Error(j.error ?? `HTTP ${res.status}`);
+      setLog((l) => [`맛집 최근 3일 갱신 · ${j.pages}페이지 · ${j.upserted}건`, ...l].slice(0, 12));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '맛집 갱신 실패');
+    } finally {
+      setRunning(false);
+    }
+  }
+
   const pct = progress && progress.total > 0 ? Math.min(100, Math.round(((progress.page * 1000) / progress.total) * 100)) : 0;
 
   return (
@@ -149,6 +166,10 @@ export default function SyncRunner({ hasKey }: { hasKey: boolean }): JSX.Element
         <button type="button" onClick={runLodgingRecent} disabled={running || !hasKey}
           style={{ background: '#0f766e', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: running || !hasKey ? 0.6 : 1 }}>
           숙박업 최근 갱신
+        </button>
+        <button type="button" onClick={runFoodRecent} disabled={running || !hasKey}
+          style={{ background: '#b45309', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: running || !hasKey ? 0.6 : 1 }}>
+          맛집 최근 갱신
         </button>
       </div>
       {progress ? (

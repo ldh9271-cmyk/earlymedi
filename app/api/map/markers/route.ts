@@ -18,10 +18,10 @@ import { DEPT_GROUP_BY_KEY } from '@/lib/hospital-registry/departments';
  *  카카오맵 줌 레벨은 숫자가 작을수록 확대(1=최대 확대). 레벨 6 이상은 클러스터.
  */
 type Marker = {
-  k: 'h' | 'b' | 'l'; id: string; key: string; name: string; lat: number; lng: number;
+  k: 'h' | 'b' | 'l' | 'f'; id: string; key: string; name: string; lat: number; lng: number;
   listed: boolean; foreign?: boolean; type?: string | null; cats?: string[]; slug?: string | null; region?: string | null;
 };
-type Cluster = { lat: number; lng: number; count: number; listed: number; k: 'h' | 'b' | 'l' };
+type Cluster = { lat: number; lng: number; count: number; listed: number; k: 'h' | 'b' | 'l' | 'f' };
 
 function parseLatLng(v: string | null): [number, number] | null {
   if (!v) return null;
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // 격자 크기(도) — 줌에 따라
   const cell = zoom >= 11 ? 0.5 : zoom >= 9 ? 0.15 : zoom >= 7 ? 0.05 : zoom >= 6 ? 0.02 : 0.008;
 
-  const out: { markers: Marker[]; clusters: Cluster[]; counts: { hospital: number; beauty: number; stays: number } } = { markers: [], clusters: [], counts: { hospital: 0, beauty: 0, stays: 0 } };
+  const out: { markers: Marker[]; clusters: Cluster[]; counts: { hospital: number; beauty: number; stays: number; eats: number } } = { markers: [], clusters: [], counts: { hospital: 0, beauty: 0, stays: 0, eats: 0 } };
 
   if (kinds.includes('hospital')) {
     const conds: string[] = [
@@ -132,6 +132,34 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
          order by listed desc, (r.rooms_ko + r.rooms_we) desc
          limit 600`)) as unknown as Array<{ id: string; key: string; name: string; lat: number; lng: number; type: string | null; cats: string[]; region: string | null; listed: boolean; slug: string | null }>;
       out.markers.push(...rows.map((r) => ({ k: 'l' as const, id: r.id, key: r.key, name: r.name, lat: r.lat, lng: r.lng, listed: r.listed, type: r.type, cats: r.cats, slug: r.slug, region: r.region })));
+    }
+  }
+
+  if (kinds.includes('food')) {
+    const conds: string[] = [`status_code = '01'`, `lat between ${swLat} and ${neLat}`, `lng between ${swLng} and ${neLng}`];
+    const fcat = p.get('fcat') ?? '';
+    if (fcat && /^[a-z_]+$/.test(fcat)) conds.push(`category_keys @> array['${fcat}']::text[]`);
+    if (listed) conds.push(`(contracted_listing_id is not null or claim_status = 'approved')`);
+    const where = sql.raw(conds.join(' and '));
+    const qCond = q ? sql` and (name ilike ${'%' + q + '%'} or addr_road ilike ${'%' + q + '%'})` : sql``;
+    const [cnt] = (await db.execute(sql`select count(*)::int as n from food_registry where ${where}${qCond}`)) as unknown as Array<{ n: number }>;
+    out.counts.eats = cnt?.n ?? 0;
+    if (cluster && out.counts.eats > 300) {
+      const rows = (await db.execute(sql`
+        select avg(lat)::float as lat, avg(lng)::float as lng, count(*)::int as count,
+               count(*) filter (where contracted_listing_id is not null or claim_status = 'approved')::int as listed
+          from food_registry where ${where}${qCond}
+         group by floor(lat / ${cell}), floor(lng / ${cell})`)) as unknown as Array<{ lat: number; lng: number; count: number; listed: number }>;
+      out.clusters.push(...rows.map((r) => ({ ...r, k: 'f' as const })));
+    } else {
+      const rows = (await db.execute(sql`
+        select r.id, r.mgt_no as key, r.name, r.lat, r.lng, r.biz_type as type, r.category_keys as cats, r.sggu_name as region,
+               (r.contracted_listing_id is not null or r.claim_status = 'approved') as listed, l.slug
+          from food_registry r left join partner_listings l on l.id = r.contracted_listing_id
+         where ${where}${qCond}
+         order by listed desc, r.name
+         limit 600`)) as unknown as Array<{ id: string; key: string; name: string; lat: number; lng: number; type: string | null; cats: string[]; region: string | null; listed: boolean; slug: string | null }>;
+      out.markers.push(...rows.map((r) => ({ k: 'f' as const, id: r.id, key: r.key, name: r.name, lat: r.lat, lng: r.lng, listed: r.listed, type: r.type, cats: r.cats, slug: r.slug, region: r.region })));
     }
   }
 

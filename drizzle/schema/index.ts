@@ -80,3 +80,6 @@ export * from './beauty-registry';
 
 // 전국 숙박업소 레지스트리 (행안부 문화_숙박업)
 export * from './lodging-registry';
+
+// 전국 일반음식점 레지스트리 (행안부 식품_일반음식점)
+export * from './food-registry';

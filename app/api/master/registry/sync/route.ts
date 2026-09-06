@@ -12,6 +12,8 @@ import { syncBeautyPage, syncBeautyRecent } from '@/lib/beauty-registry/localdat
 import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { syncLodgingPage, syncLodgingRecent } from '@/lib/lodging-registry/localdata';
 import { lodgingRegistry } from '@/drizzle/schema/lodging-registry';
+import { syncFoodPage, syncFoodRecent } from '@/lib/food-registry/localdata';
+import { foodRegistry } from '@/drizzle/schema/food-registry';
 
 /**
  * 마스터 전용 — 심평원 병원정보 동기화.
@@ -59,14 +61,30 @@ export async function GET(): Promise<NextResponse> {
       lastSync: sql<string | null>`max(${lodgingRegistry.syncedAt})`,
     })
     .from(lodgingRegistry);
-  return NextResponse.json({ ...row, beauty, lodging, hasKey: Boolean(process.env.HIRA_SERVICE_KEY) });
+  const [food] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+      active: sql<number>`count(*) filter (where ${foodRegistry.statusCode} = '01')::int`,
+      contracted: sql<number>`count(*) filter (where ${foodRegistry.contractedListingId} is not null or ${foodRegistry.claimStatus} = 'approved')::int`,
+      lastSync: sql<string | null>`max(${foodRegistry.syncedAt})`,
+    })
+    .from(foodRegistry);
+  return NextResponse.json({ ...row, beauty, lodging, food, hasKey: Boolean(process.env.HIRA_SERVICE_KEY) });
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const denied = await assertMaster();
   if (denied) return denied;
-  const body = (await req.json().catch(() => ({}))) as { pageNo?: number; clCd?: string; sidoCd?: string; details?: boolean; limit?: number; deptCode?: string; beautyPage?: number; beautyRecent?: boolean; lodgingPage?: number; lodgingRecent?: boolean };
+  const body = (await req.json().catch(() => ({}))) as { pageNo?: number; clCd?: string; sidoCd?: string; details?: boolean; limit?: number; deptCode?: string; beautyPage?: number; beautyRecent?: boolean; lodgingPage?: number; lodgingRecent?: boolean; foodPage?: number; foodRecent?: boolean };
   try {
+    if (body.foodRecent) {
+      const r = await syncFoodRecent(new Date(Date.now() - 3 * 86_400_000), 20);
+      return NextResponse.json(r);
+    }
+    if (body.foodPage) {
+      const r = await syncFoodPage(Math.max(1, Number(body.foodPage) || 1));
+      return NextResponse.json(r);
+    }
     if (body.lodgingRecent) {
       const r = await syncLodgingRecent(new Date(Date.now() - 3 * 86_400_000), 20);
       return NextResponse.json(r);
