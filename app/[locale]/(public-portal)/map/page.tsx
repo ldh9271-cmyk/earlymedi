@@ -41,7 +41,7 @@ export default async function MapPage({ params, searchParams }: {
         locale={locale}
         kakaoKey={process.env.NEXT_PUBLIC_KAKAO_MAP_KEY?.trim() || null}
         googleKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY?.trim() || null}
-        labels={{ ...t, contractedBadge: tr.contractedBadge, foreignBadge: tr.foreignBadge }}
+        labels={{ ...t, contractedBadge: tr.listedBadgeBiz, foreignBadge: tr.foreignBadge }}
         depts={depts}
         cats={cats}
         initial={{

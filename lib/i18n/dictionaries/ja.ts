@@ -651,6 +651,7 @@ const ja: Dictionary = {
       countSuffix: "件",
       noResults: "条件に合う病院がありません。",
       contractedBadge: "GlowUp登録病院",
+      listedBadgeBiz: "グロウ認証",
       foreignBadge: "外国人診療可",
       foreignCountries: "誘致対象国",
       dept: "診療科",

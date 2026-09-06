@@ -670,6 +670,7 @@ const kr = {
       countSuffix: "곳",
       noResults: "조건에 맞는 병원이 없습니다.",
       contractedBadge: "글로우업 등록 병원",
+      listedBadgeBiz: "글로우 인증",
       foreignBadge: "외국인 진료 가능",
       foreignCountries: "유치 대상 국가",
       dept: "진료과",

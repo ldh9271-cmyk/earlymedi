@@ -238,7 +238,7 @@ async function RegistrySection({
       </div>
       <div className="m-cl-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginTop: 20 }}>
         {rows.map((r) => (
-          <ShopCard key={r.id} r={r} locale={locale} t={t} listedLabel={tr.contractedBadge} publicLabel={tr.publicBadge} />
+          <ShopCard key={r.id} r={r} locale={locale} t={t} listedLabel={tr.listedBadgeBiz} publicLabel={tr.publicBadge} />
         ))}
       </div>
       <div style={{ marginTop: 18 }}>

@@ -652,6 +652,7 @@ const vi: Dictionary = {
       countSuffix: "",
       noResults: "Không có bệnh viện phù hợp.",
       contractedBadge: "Có trên GlowUp",
+      listedBadgeBiz: "GlowUp chứng nhận",
       foreignBadge: "Nhận bệnh nhân nước ngoài",
       foreignCountries: "Đối tượng quốc gia",
       dept: "Khoa",

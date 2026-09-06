@@ -125,7 +125,7 @@ export default async function EatsListPage({ params, searchParams }: { params: {
         <p style={{ fontSize: 14, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 14, padding: 28, marginTop: 20, textAlign: 'center' }}>{tr.noResults}</p>
       ) : (
         <div className="m-ea-grid" style={{ marginTop: 20 }}>
-          {rows.map((r) => <EatCard key={r.id} r={r} locale={locale} t={t} listedLabel={tr.contractedBadge} publicLabel={tr.publicBadge} />)}
+          {rows.map((r) => <EatCard key={r.id} r={r} locale={locale} t={t} listedLabel={tr.listedBadgeBiz} publicLabel={tr.publicBadge} />)}
         </div>
       )}
 

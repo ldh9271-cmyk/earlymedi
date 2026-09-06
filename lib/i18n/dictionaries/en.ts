@@ -652,6 +652,7 @@ const en: Dictionary = {
       countSuffix: "",
       noResults: "No hospitals match these filters.",
       contractedBadge: "GlowUp listed",
+      listedBadgeBiz: "GlowUp Certified",
       foreignBadge: "Foreign patients welcome",
       foreignCountries: "Serves patients from",
       dept: "Department",

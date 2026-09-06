@@ -652,6 +652,7 @@ const ru: Dictionary = {
       countSuffix: "",
       noResults: "Нет больниц по заданным условиям.",
       contractedBadge: "Представлена на GlowUp",
+      listedBadgeBiz: "GlowUp сертифицирован",
       foreignBadge: "Принимает иностранных пациентов",
       foreignCountries: "Принимает пациентов из",
       dept: "Отделение",

@@ -87,7 +87,7 @@ export default async function ShopDetailPage({ params }: { params: { locale: str
 
       <div style={{ marginTop: 16 }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: listed ? '#c2143c' : '#6a6a6a', background: listed ? '#fff0f3' : '#f5f5f5', border: `1px solid ${listed ? '#fecdd3' : '#e5e5e5'}`, borderRadius: 999, padding: '2px 8px' }}>{listed ? tr.contractedBadge : tr.publicBadge}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: listed ? '#c2143c' : '#6a6a6a', background: listed ? '#fff0f3' : '#f5f5f5', border: `1px solid ${listed ? '#fecdd3' : '#e5e5e5'}`, borderRadius: 999, padding: '2px 8px' }}>{listed ? tr.listedBadgeBiz : tr.publicBadge}</span>
           {labels.map((l) => <span key={l} style={{ fontSize: 11, fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 999, padding: '2px 8px' }}>{l}</span>)}
           {row.claimStatus === 'pending' ? <span style={{ fontSize: 11, fontWeight: 700, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 8px' }}>{tr.claimPending}</span> : null}
         </div>
