@@ -69,11 +69,20 @@ export function StayCard({ r, locale, t, listedLabel, publicLabel }: {
       href={stayHref(locale, r)}
       style={{ display: 'block', textDecoration: 'none', color: 'inherit', border: '1px solid #ebebeb', borderRadius: 14, overflow: 'hidden', background: '#fff', filter: listed ? 'none' : 'grayscale(1)', opacity: listed ? 1 : 0.88 }}
     >
-      <div style={{ aspectRatio: '16/9', background: cover ? `#f2f2f2 url(${cover}) center / cover` : tone.bg, position: 'relative' }}>
+      <div style={{ aspectRatio: '16/9', background: cover ? `#f2f2f2 url(${cover}) center / cover` : (listed ? 'linear-gradient(135deg,#1f2937 0%,#374151 55%,#4b5563 100%)' : tone.bg), position: 'relative' }}>
         {!cover ? (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: tone.fg, textAlign: 'center' }}>{labels[0] ?? r.bizType ?? ''}</span>
-          </div>
+          // 사진이 없는 게시물: 실제 사진 대신 상호·업태·지역을 담은 디자인 썸네일 (가짜 사진을 붙이지 않는다)
+          listed ? (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '12px 14px', color: '#fff' }}>
+              <div style={{ position: 'absolute', top: 10, right: 12, fontSize: 22, opacity: 0.35 }}>🏨</div>
+              <div style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.3, textShadow: '0 1px 2px rgba(0,0,0,.4)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</div>
+              <div style={{ fontSize: 11, opacity: 0.85, marginTop: 3 }}>{[r.bizType, r.sgguName ?? r.sidoName].filter(Boolean).join(' · ')}</div>
+            </div>
+          ) : (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: tone.fg, textAlign: 'center' }}>{labels[0] ?? r.bizType ?? ''}</span>
+            </div>
+          )
         ) : null}
         {listed ? <span style={{ position: 'absolute', top: 8, left: 8, background: '#ff385c', color: '#fff', fontSize: 10, fontWeight: 800, borderRadius: 6, padding: '2px 6px' }}>glow-up</span> : null}
       </div>

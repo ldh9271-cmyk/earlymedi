@@ -125,24 +125,35 @@ export default async function ListingDetailPage({
       {/* 모바일 (<769) 전용 가로 스와이프 캐러셀 — cover + 갤러리
           이미지를 한 장씩 보여준다. 데스크톱에서는 LISTING_HERO_CSS
           가 display:none 처리. */}
-      <div className="m-lh-mobile-only">
-        <HeroMobileCarousel
-          slides={[heroSrc, ...listing.galleryImageUrls].filter(Boolean)}
-          backHref={`/${params.locale}`}
-          listingSlug={listing.slug}
-          linkCopiedText={d.linkCopied}
-        />
-      </div>
+      {[heroSrc, ...listing.galleryImageUrls].filter(Boolean).length === 0 ? (
+        // 사진이 없는 게시물(공공데이터 호텔 등): 가짜 사진 대신 상호·위치를 담은 디자인 히어로
+        <div style={{ margin: '0 22px', borderRadius: 18, padding: '44px 28px', background: 'linear-gradient(135deg,#1f2937 0%,#374151 55%,#4b5563 100%)', color: '#fff', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 16, right: 20, fontSize: 40, opacity: 0.25 }}>{listing.category === 'hotel' ? '🏨' : '📍'}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1.25, textShadow: '0 1px 2px rgba(0,0,0,.4)' }}>{listing.title}</div>
+          {listing.locationLabel ? <div style={{ fontSize: 14, opacity: 0.85, marginTop: 8 }}>{listing.locationLabel}</div> : null}
+        </div>
+      ) : (
+        <>
+          <div className="m-lh-mobile-only">
+            <HeroMobileCarousel
+              slides={[heroSrc, ...listing.galleryImageUrls].filter(Boolean)}
+              backHref={`/${params.locale}`}
+              listingSlug={listing.slug}
+              linkCopiedText={d.linkCopied}
+            />
+          </div>
 
-      {/* Desktop: Airbnb 1-large + 2x2-thumbs grid — 클라이언트 컴포넌트.
-          이미지 클릭 → 전체 라이트박스, 공유·즐겨찾기 버튼 동작 포함.
-          Mobile: hidden via CSS — replaced by HeroMobileCarousel above. */}
-      <HeroDesktopGallery
-        slides={[heroSrc, ...listing.galleryImageUrls].filter(Boolean)}
-        backHref={`/${params.locale}`}
-        listingSlug={listing.slug}
-        linkCopiedText={d.linkCopied}
-      />
+          {/* Desktop: Airbnb 1-large + 2x2-thumbs grid — 클라이언트 컴포넌트.
+              이미지 클릭 → 전체 라이트박스, 공유·즐겨찾기 버튼 동작 포함.
+              Mobile: hidden via CSS — replaced by HeroMobileCarousel above. */}
+          <HeroDesktopGallery
+            slides={[heroSrc, ...listing.galleryImageUrls].filter(Boolean)}
+            backHref={`/${params.locale}`}
+            listingSlug={listing.slug}
+            linkCopiedText={d.linkCopied}
+          />
+        </>
+      )}
 
       {/* 상세 랜딩 이미지는 더 이상 full-bleed 로 렌더하지 않는다 —
           좌측 콘텐츠 칼럼 내부 "상세 정보" 섹션에서 truncated +
