@@ -17,6 +17,7 @@ import { db } from '@/lib/db/client';
 import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { ShopCard, type ShopCardRow } from '@/app/[locale]/(public-portal)/shops/_registry/shared';
+import { StaysRegistryList, type StaysSearch } from '@/app/[locale]/(public-portal)/stays/_registry/list';
 
 /** 글로우업 뷰티 카테고리 → 미용업 레지스트리 카테고리 키 (전국 뷰티샵 찾기 리스트를 각 메인 카테고리에 노출). */
 const BEAUTY_KEY_TO_SHOP_CAT: Partial<Record<Exclude<PcCategoryKey, 'all'>, string>> = {
@@ -111,7 +112,7 @@ export default async function CategoryListPage({
   searchParams,
 }: {
   params: { locale: PublicLocale; key: string };
-  searchParams: { priceMin?: string; priceMax?: string; minRating?: string; loc?: string };
+  searchParams: { priceMin?: string; priceMax?: string; minRating?: string; loc?: string } & StaysSearch;
 }): Promise<JSX.Element> {
   if (!VALID_KEYS.has(params.key as Exclude<PcCategoryKey, 'all'>)) {
     notFound();
@@ -119,8 +120,11 @@ export default async function CategoryListPage({
   const key = params.key as Exclude<PcCategoryKey, 'all'>;
   const dict = await getDictionary(params.locale);
   const meta = dict.pcCategory[key];
+  // 호텔 카테고리는 전국 병원 찾기와 같은 형태 — 검색·지역·세부 카테고리·글로우 인증 토글 + 컬러(인증)/흑백(공공정보) 카드 목록.
+  // 상품 그리드 대신 숙박 레지스트리 목록(StaysRegistryList)을 카테고리 히어로 아래에 그대로 붙인다 (기본 세부 카테고리 = 호텔).
+  const registryList = key === 'hotel';
   const f = parseSurfaceFilters(searchParams);
-  const listings = await fetchListingsForSurface({
+  const listings = registryList ? [] : await fetchListingsForSurface({
     locale: params.locale,
     categories: KEY_TO_CATEGORIES[key],
     priceMin: f.priceMin,
@@ -179,7 +183,9 @@ export default async function CategoryListPage({
           {meta.subtitle}
         </p>
 
-        {listings.length === 0 ? (
+        {registryList ? (
+          <StaysRegistryList locale={params.locale} dict={dict} searchParams={searchParams} basePath={`/${params.locale}/glowup/pc/c/${key}`} defaultCat="hotel" heading={false} />
+        ) : listings.length === 0 ? (
           <EmptyState locale={params.locale} t={dict.pcCategory} />
         ) : (
           <div
