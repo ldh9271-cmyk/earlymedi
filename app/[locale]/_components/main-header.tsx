@@ -22,7 +22,8 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   // left, separate circular filter button on the right. Both link
   // to /clinics for v1; richer search modal lands in a follow-up.
   + '.m-mh-search-row { display: flex !important; align-items: center; gap: 8px; padding: 8px 12px 6px; }'
-  + '.m-mh-quick { justify-content: flex-start; padding: 2px 12px 6px; }'
+  + '.m-mh-quick { justify-content: center; padding: 2px 12px 6px; }'
+  + '.m-mh-cat-sub { padding: 4px 12px 8px; }'
   + '.m-mh-search-pill { flex: 1 1 auto; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 18px; border-radius: 9999px; border: 1px solid #ebebeb; background: #fff; box-shadow: rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.06) 0 1px 2px; color: #222; text-decoration: none; }'
   + '.m-mh-search-main { font-size: 14px; font-weight: 600; line-height: 1.2; }'
   + '.m-mh-search-sub { font-size: 12px; color: #6a6a6a; line-height: 1.2; margin-top: 2px; }'
@@ -52,6 +53,7 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   + '.m-mh-search-row { display: none; }'
   + '.m-mh-quick { display: flex; justify-content: center; gap: 8px; padding: 6px 16px 2px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }'
   + '.m-mh-quick::-webkit-scrollbar { display: none; }'
+  + '.m-mh-cat-sub { display: flex; justify-content: center; padding: 0 16px 10px; }'
   + '.m-mh-quick-item { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 9999px; border: 1px solid #ebebeb; background: #fff; color: #222; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; box-shadow: rgba(0,0,0,0.04) 0 1px 3px; }'
   + '.m-mh-quick-item:hover { border-color: #222; }'
   + '.m-mh-cat-ai { display: none !important; }'
@@ -179,6 +181,7 @@ export function MainHeader({
   // 통합 검색어 — 데스크톱 pill·모바일 pill 이 같은 상태를 공유하고
   // submit 시 /[locale]/search?q= 로 이동한다.
   const [searchQ, setSearchQ] = useState('');
+  const registryFinder = registryFinderFor(locale, activeKey, pathname ?? '', t);
   const accountRef = useRef<HTMLDivElement | null>(null);
   const filterRef = useRef<HTMLDivElement | null>(null);
   const langRef = useRef<HTMLDivElement | null>(null);
@@ -684,21 +687,13 @@ export function MainHeader({
         </Link>
       </div>
 
-      {/* 검색창 바로 아래 — 공공데이터 기반 찾기 6종 (지도 · 전국 병원 · 전국 뷰티샵 · 전국 숙박 · 전국 맛집 · 전국 관광지). 모든 화면 공통 */}
+      {/* 검색창 바로 아래 — 지도로 찾기만 가운데 하나. 전국 병원·뷰티샵·숙박·맛집·관광지 찾기(공공데이터)는
+          2026-09-07 부터 각 카테고리 안(카테고리 스트립 아래 registryFinder)으로 옮김 — 모바일에서 6개가 잘려 보이던 문제. */}
       <div className="m-mh-quick">
-        {([
-          [`/${locale}/map`, '🗺️', t.quickMap],
-          [`/${locale}/clinics/all`, '🏥', t.quickHospitals],
-          [`/${locale}/shops/all`, '💇', t.quickShops],
-          [`/${locale}/stays/all`, '🏨', t.quickStays],
-          [`/${locale}/eats/all`, '🍽️', t.quickEats],
-          [`/${locale}/attractions/all`, '📸', t.quickAttractions],
-        ] as Array<[string, string, string]>).map(([href, icon, label]) => (
-          <Link key={href} href={href} className="m-mh-quick-item">
-            <span aria-hidden="true">{icon}</span>
-            <span>{label}</span>
-          </Link>
-        ))}
+        <Link href={`/${locale}/map`} className="m-mh-quick-item">
+          <span aria-hidden="true">🗺️</span>
+          <span>{t.quickMap}</span>
+        </Link>
       </div>
 
       {/* Category strip — 8 lifestyle entries (전체/병원 dropdown + travel/lifestyle). */}
@@ -776,9 +771,59 @@ export function MainHeader({
             t={t}
           />
         </div>
+        {registryFinder ? (
+          <div className="m-mh-cat-sub">
+            <Link href={registryFinder.href} className="m-mh-quick-item">
+              <span aria-hidden="true">{registryFinder.icon}</span>
+              <span>{registryFinder.label}</span>
+              <span aria-hidden="true" style={{ color: '#6a6a6a' }}>›</span>
+            </Link>
+          </div>
+        ) : null}
       </div>
     </header>
   );
+}
+
+/**
+ * 카테고리 안의 공공데이터 찾기 — 현재 카테고리에 맞는 전국 레지스트리 하나만.
+ * 병원 → 전국 병원, 숙박 → 전국 숙박, 맛집 → 전국 맛집, 뷰티 6종 → 전국 뷰티샵(해당 업종 선택),
+ * 여행·K-팝 → 전국 관광지. (public-portal) 레이아웃은 activeKey='all' 로 오므로 경로로 보완한다.
+ * 이미 그 레지스트리 안이면 숨긴다.
+ */
+function registryFinderFor(
+  locale: PublicLocale,
+  activeKey: MainCategoryKey,
+  pathname: string,
+  t: Dictionary['header'],
+): { href: string; icon: string; label: string } | null {
+  const p = pathname.startsWith(`/${locale}/`) ? pathname.slice(locale.length + 1) : pathname;
+  const seg = p.split('/')[1] ?? '';
+  const key: MainCategoryKey | 'shops' | null = activeKey !== 'all'
+    ? activeKey
+    : seg === 'clinics' ? 'hospital'
+      : seg === 'stays' ? 'hotel'
+        : seg === 'eats' ? 'food'
+          : seg === 'shops' ? 'shops'
+            : seg === 'attractions' || seg === 'travel' ? 'travel'
+              : null;
+  if (!key) return null;
+  const shopCat: Partial<Record<MainCategoryKey, string>> = { hair: 'hair', makeup: 'makeup', nail: 'nail', pmu: 'pmu', color: 'personal_color', skin: 'skin' };
+  let target: { base: string; href: string; icon: string; label: string } | null = null;
+  switch (key) {
+    case 'hospital': target = { base: '/clinics/all', href: '/clinics/all', icon: '🏥', label: t.quickHospitals }; break;
+    case 'hotel': target = { base: '/stays/all', href: '/stays/all', icon: '🏨', label: t.quickStays }; break;
+    case 'food': target = { base: '/eats/all', href: '/eats/all', icon: '🍽️', label: t.quickEats }; break;
+    case 'travel': case 'kpop': target = { base: '/attractions/all', href: '/attractions/all', icon: '📸', label: t.quickAttractions }; break;
+    case 'shops': case 'hair': case 'makeup': case 'nail': case 'pmu': case 'color': case 'skin': case 'photo': {
+      const cat = key === 'shops' || key === 'photo' ? '' : shopCat[key] ?? '';
+      target = { base: '/shops/all', href: cat ? `/shops/all?cat=${cat}` : '/shops/all', icon: '💇', label: t.quickShops };
+      break;
+    }
+    default: return null;
+  }
+  if (p.startsWith(target.base)) return null;
+  return { href: `/${locale}${target.href}`, icon: target.icon, label: target.label };
 }
 
 function TopTab({
