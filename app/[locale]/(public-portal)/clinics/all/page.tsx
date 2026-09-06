@@ -51,8 +51,8 @@ export default async function RegistryListPage({ params, searchParams }: { param
 
   const q = (searchParams.q ?? '').trim().slice(0, 60);
   const sido = (searchParams.sido ?? '').trim();
-  const hasAny = Object.values(searchParams).some((v) => (v ?? '') !== '');
-  const type = searchParams.type ?? (hasAny ? 'all' : 'hospital');
+  // 전국 병원 찾기 진입 기본값 = 전체(병원급 이상 아님). 사용자가 명시하면 그 값을 따른다.
+  const type = searchParams.type ?? 'all';
   const foreign = searchParams.foreign === '1';
   // 기본값: 글로우 인증 선택(전국 병원 찾기 진입 시). 단 과별 전체보기(dept 지정)로 들어오면 공공정보도 함께 보이도록 off.
   const listed = searchParams.listed != null ? searchParams.listed === '1' : !(searchParams.dept && DEPT_GROUP_BY_KEY[searchParams.dept]);
