@@ -49,6 +49,9 @@ export const PUBLIC_PREFIXES = [
   '/invite',
   '/verify-email',
   '/api/auth',
+  // 공개 지도 마커 API(공공데이터만 반환) · Vercel Cron(라우트 안에서 CRON_SECRET 검증)
+  '/api/map',
+  '/api/cron',
   // 외부 메신저(Kakao i 오픈빌더, WeChat OA, LINE 등)가 우리 webhook을
   // 호출할 때는 Supabase 세션 쿠키가 없으므로 미들웨어 인증을 우회해야
   // 함. 각 webhook 라우트는 자체적으로 channel id + signature 검증으로
