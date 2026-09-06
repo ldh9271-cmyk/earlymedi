@@ -9,6 +9,7 @@ import { hospitalRegistry, HOSPITAL_GRADE_CL_CODES } from '@/drizzle/schema/hosp
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { RegistryCard, type RegistryCardRow } from '../_registry/shared';
 import { DEPT_GROUPS, DEPT_GROUP_BY_KEY, groupKeyOfCode } from '@/lib/hospital-registry/departments';
+import MoreRow from '@/components/shared/more-row';
 import { HOSPITAL_CAT_TO_DEPT, sidoMatches } from '@/lib/certified';
 
 export const dynamic = 'force-dynamic';
@@ -179,14 +180,15 @@ export default async function RegistryListPage({ params, searchParams }: { param
       <div style={{ marginTop: 12 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: '#6a6a6a', marginBottom: 6 }}>{t.dept}</div>
         {/* 가로 스크롤이면 오른쪽 칩이 잘려 보여(사용자 지적) 줄바꿈으로 전부 노출 */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingBottom: 4 }}>
-          <Link href={qs({ dept: '', page: '' })} style={{ ...chip(!dept), flexShrink: 0 }}>{t.filterAll}</Link>
+        {/* 첫 칩은 '전체' 대신 '추천 병원'(랜딩) — 병원 카테고리 랜딩과 같은 순서. 모바일은 두 줄 + 더보기 */}
+        <MoreRow mobileOnly gap={8} more={dict.mapPage.showMore} less={dict.mapPage.showLess} style={{ paddingBottom: 4 }}>
+          <Link href={`/${locale}/clinics`} style={{ ...chip(false), flexShrink: 0 }}>{dict.clinicsPage.recommended}</Link>
           {DEPT_GROUPS.map((g) => (
             <Link key={g.key} href={qs({ dept: g.key, type: 'all', page: '' })} style={{ ...chip(dept === g.key), flexShrink: 0 }}>
               {(dict.clinicsPage.depts as Record<string, string>)[g.key] ?? g.ko}
             </Link>
           ))}
-        </div>
+        </MoreRow>
       </div>
 
       {error ? <p style={{ color: '#dc2626', fontSize: 13, marginTop: 16 }}>{error}</p> : null}
