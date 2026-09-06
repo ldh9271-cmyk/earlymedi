@@ -63,11 +63,13 @@ export async function findRegistryMatch(names: string[], city: string | null): P
     if (cands.length === 1) break;
   }
   if (cands.length === 0) return { kind: 'none' };
-  if (cands.length === 1) return { kind: 'match', id: cands[0]!.id, name: cands[0]!.name };
+  const only = cands.length === 1 ? cands[0] : undefined;
+  if (only) return { kind: 'match', id: only.id, name: only.name };
   const c = (city ?? '').trim();
   if (c) {
     const byCity = cands.filter((r) => (r.addr ?? '').includes(c));
-    if (byCity.length === 1) return { kind: 'match', id: byCity[0]!.id, name: byCity[0]!.name };
+    const one = byCity.length === 1 ? byCity[0] : undefined;
+    if (one) return { kind: 'match', id: one.id, name: one.name };
     if (byCity.length > 1) return { kind: 'ambiguous', count: byCity.length, sample: byCity.slice(0, 3).map((r) => `${r.name} (${r.addr ?? ''})`) };
   }
   return { kind: 'ambiguous', count: cands.length, sample: cands.slice(0, 3).map((r) => `${r.name} (${r.addr ?? ''})`) };
