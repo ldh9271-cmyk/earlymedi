@@ -64,3 +64,6 @@ Thumbs.db
 /.q-*.mjs
 /.*.mts
 /.backfill-*.ts
+
+# 세션 임시 스크립트 (호텔 사진 작업 드라이버)
+.hotel-images*.mjs
