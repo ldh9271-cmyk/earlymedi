@@ -1,0 +1,154 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import { and, desc, eq, ilike, inArray, isNotNull, or, sql, type SQL } from 'drizzle-orm';
+import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
+import { getDictionary } from '@/lib/i18n/get-dictionary';
+import { db } from '@/lib/db/client';
+import { hospitalRegistry, HOSPITAL_GRADE_CL_CODES } from '@/drizzle/schema/hospital-registry';
+import { hospitals } from '@/drizzle/schema/hospitals';
+import { RegistryCard, type RegistryCardRow } from '../_registry/shared';
+
+export const dynamic = 'force-dynamic';
+
+const PAGE_SIZE = 24;
+const CSS =
+  '.m-ra-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }'
+  + '.m-ra-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }'
+  + '@media (max-width: 1024px) { .m-ra-grid { grid-template-columns: repeat(3, 1fr); } }'
+  + '@media (max-width: 768px) { .m-ra-page { padding: 20px 16px 80px !important; } .m-ra-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } .m-ra-title { font-size: 22px !important; } }';
+
+type Search = { q?: string; sido?: string; type?: string; foreign?: string; listed?: string; page?: string };
+
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  if (!isPublicLocale(params.locale)) return {};
+  const dict = await getDictionary(params.locale);
+  return { title: `${dict.clinicsPage.registry.title} · GlowUpTour`, description: dict.clinicsPage.registry.subtitle };
+}
+
+/**
+ * 전국 병원 찾기 — 심평원 레지스트리 전체.
+ * 컬러 = 글로우업 등록(계약 연결 또는 직접 등록 승인), 흑백 = 공공정보만.
+ * 기본 보기는 병원급 이상, '전체' 칩으로 의원까지 확장.
+ */
+export default async function RegistryListPage({ params, searchParams }: { params: { locale: string }; searchParams: Search }): Promise<JSX.Element> {
+  if (!isPublicLocale(params.locale)) notFound();
+  const locale = params.locale as PublicLocale;
+  const dict = await getDictionary(locale);
+  const t = dict.clinicsPage.registry;
+
+  const q = (searchParams.q ?? '').trim().slice(0, 60);
+  const sido = (searchParams.sido ?? '').trim();
+  const hasAny = Object.values(searchParams).some((v) => (v ?? '') !== '');
+  const type = searchParams.type ?? (hasAny ? 'all' : 'hospital');
+  const foreign = searchParams.foreign === '1';
+  const listed = searchParams.listed === '1';
+  const page = Math.max(1, Number(searchParams.page) || 1);
+
+  const conds: SQL[] = [];
+  if (q) {
+    const like = `%${q.replace(/[%_]/g, '')}%`;
+    conds.push(or(ilike(hospitalRegistry.name, like), ilike(hospitalRegistry.addr, like)) as SQL);
+  }
+  if (sido) conds.push(eq(hospitalRegistry.sidoName, sido));
+  if (type === 'hospital') conds.push(inArray(hospitalRegistry.clCd, HOSPITAL_GRADE_CL_CODES));
+  else if (type && type !== 'all') conds.push(eq(hospitalRegistry.clCd, type));
+  if (foreign) conds.push(eq(hospitalRegistry.foreignLicensed, true));
+  if (listed) conds.push(or(isNotNull(hospitalRegistry.contractedHospitalId), eq(hospitalRegistry.claimStatus, 'approved')) as SQL);
+  const where = conds.length ? and(...conds) : undefined;
+
+  let rows: RegistryCardRow[] = [];
+  let total = 0;
+  let sidoOptions: string[] = [];
+  let error: string | null = null;
+  try {
+    const [cnt] = await db.select({ n: sql<number>`count(*)::int` }).from(hospitalRegistry).where(where);
+    total = cnt?.n ?? 0;
+    const listedRank = sql`case when ${hospitalRegistry.contractedHospitalId} is not null or ${hospitalRegistry.claimStatus} = 'approved' then 0 else 1 end`;
+    const foreignRank = sql`case when ${hospitalRegistry.foreignLicensed} then 0 else 1 end`;
+    const gradeRank = sql`case when ${hospitalRegistry.clCd} in ('01','11','21','41','93') then 0 when ${hospitalRegistry.clCd} in ('28','29') then 1 else 2 end`;
+    const found = await db
+      .select({
+        id: hospitalRegistry.id, ykiho: hospitalRegistry.ykiho, name: hospitalRegistry.name, clCd: hospitalRegistry.clCd, clName: hospitalRegistry.clName,
+        sidoName: hospitalRegistry.sidoName, sgguName: hospitalRegistry.sgguName, addr: hospitalRegistry.addr, drTotal: hospitalRegistry.drTotal,
+        foreignLicensed: hospitalRegistry.foreignLicensed, contractedHospitalId: hospitalRegistry.contractedHospitalId, claimStatus: hospitalRegistry.claimStatus,
+        details: hospitalRegistry.details, partnerSlug: hospitals.slug, partnerCover: hospitals.coverImageUrl,
+      })
+      .from(hospitalRegistry)
+      .leftJoin(hospitals, eq(hospitals.id, hospitalRegistry.contractedHospitalId))
+      .where(where)
+      .orderBy(listedRank, foreignRank, gradeRank, desc(hospitalRegistry.drTotal), hospitalRegistry.name)
+      .limit(PAGE_SIZE)
+      .offset((page - 1) * PAGE_SIZE);
+    rows = found as RegistryCardRow[];
+    const sidos = await db.selectDistinct({ s: hospitalRegistry.sidoName }).from(hospitalRegistry).where(isNotNull(hospitalRegistry.sidoName)).orderBy(hospitalRegistry.sidoName);
+    sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));
+  } catch (err) {
+    error = err instanceof Error ? err.message : 'db_error';
+  }
+
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const qs = (patch: Partial<Search>): string => {
+    const p = new URLSearchParams();
+    const merged: Search = { q, sido, type, foreign: foreign ? '1' : '', listed: listed ? '1' : '', ...patch };
+    for (const [k, v] of Object.entries(merged)) if (v) p.set(k, String(v));
+    const s = p.toString();
+    return `/${locale}/clinics/all${s ? `?${s}` : ''}`;
+  };
+  const chip = (active: boolean): React.CSSProperties => ({
+    display: 'inline-flex', alignItems: 'center', padding: '7px 13px', borderRadius: 9999, fontSize: 13, fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap',
+    border: `1px solid ${active ? '#222' : '#dddddd'}`, background: active ? '#222' : '#fff', color: active ? '#fff' : '#222',
+  });
+
+  return (
+    <section className="m-ra-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <Link href={`/${locale}/clinics`} style={{ fontSize: 12, color: '#6a6a6a' }}>← {dict.clinicsPage.recommended}</Link>
+      <h1 className="m-ra-title" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: '6px 0 0' }}>{t.title}</h1>
+      <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0', lineHeight: 1.6 }}>{t.subtitle}</p>
+
+      {/* 검색 */}
+      <form action={`/${locale}/clinics/all`} method="get" style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
+        <input type="hidden" name="type" value={type} />
+        {foreign ? <input type="hidden" name="foreign" value="1" /> : null}
+        {listed ? <input type="hidden" name="listed" value="1" /> : null}
+        <input name="q" defaultValue={q} placeholder={t.searchPlaceholder}
+          style={{ flex: 1, minWidth: 220, border: '1px solid #dddddd', borderRadius: 999, padding: '11px 16px', fontSize: 14, fontFamily: 'inherit' }} />
+        <select name="sido" defaultValue={sido} style={{ border: '1px solid #dddddd', borderRadius: 999, padding: '10px 14px', fontSize: 13, fontFamily: 'inherit', background: '#fff' }}>
+          <option value="">{t.region}</option>
+          {sidoOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <button type="submit" style={{ background: '#ff385c', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.search}</button>
+      </form>
+
+      {/* 필터 칩 */}
+      <div className="m-ra-filters" style={{ marginTop: 12 }}>
+        <Link href={qs({ type: 'hospital', page: '' })} style={chip(type === 'hospital')}>{t.filterHospitalGrade}</Link>
+        <Link href={qs({ type: 'all', page: '' })} style={chip(type === 'all')}>{t.filterAll}</Link>
+        <Link href={qs({ foreign: foreign ? '' : '1', page: '' })} style={chip(foreign)}>{t.filterForeign}</Link>
+        <Link href={qs({ listed: listed ? '' : '1', page: '' })} style={chip(listed)}>{t.filterContracted}</Link>
+        <span style={{ fontSize: 13, color: '#6a6a6a', marginLeft: 'auto' }}>{t.results} <b style={{ color: '#222' }}>{total.toLocaleString(locale === 'kr' ? 'ko-KR' : 'en-US')}</b>{t.countSuffix}</span>
+      </div>
+
+      {error ? <p style={{ color: '#dc2626', fontSize: 13, marginTop: 16 }}>{error}</p> : null}
+
+      {rows.length === 0 && !error ? (
+        <p style={{ fontSize: 14, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 14, padding: 28, marginTop: 20, textAlign: 'center' }}>{t.noResults}</p>
+      ) : (
+        <div className="m-ra-grid" style={{ marginTop: 20 }}>
+          {rows.map((r) => <RegistryCard key={r.id} r={r} locale={locale} t={t} />)}
+        </div>
+      )}
+
+      {pages > 1 ? (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 28, alignItems: 'center', fontSize: 13 }}>
+          {page > 1 ? <Link href={qs({ page: String(page - 1) })} style={chip(false)}>← {t.prev}</Link> : null}
+          <span style={{ color: '#6a6a6a' }}>{page} / {pages}</span>
+          {page < pages ? <Link href={qs({ page: String(page + 1) })} style={chip(false)}>{t.next} →</Link> : null}
+        </div>
+      ) : null}
+
+      <p style={{ fontSize: 11, color: '#9c9c9c', marginTop: 28 }}>{t.dataSource}</p>
+    </section>
+  );
+}

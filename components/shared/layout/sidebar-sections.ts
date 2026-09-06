@@ -128,6 +128,7 @@ export const medicalSections: SidebarSection[] = [
       { href: '/medical/resources', label: '리소스 (의사·룸)', icon: Stethoscope },
       { href: '/medical/emr', label: 'EMR 연동', icon: FileText },
       { href: '/medical/glowup-listings', label: '글로우업 부가 상품', icon: Briefcase },
+      { href: '/medical/registry', label: '병원 공개 정보', icon: Stethoscope },
     ],
   },
   {

@@ -71,3 +71,6 @@ export * from './hospital-locale-content';
 // Non-medical marketplace inventory (hotel / restaurant / 맛집 /
 // personal_color / hair / makeup / photo / kpop_tour)
 export * from './partner-listings';
+
+// 전국 의료기관 레지스트리 (심평원 원천) — 공개 병원 찾기 / 흑백·컬러 / 클레임
+export * from './hospital-registry';

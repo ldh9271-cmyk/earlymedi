@@ -1,11 +1,12 @@
 'use server';
 
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '@/lib/db/client';
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/auth/supabase-server';
 import { organizations } from '@/drizzle/schema/organizations';
+import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
 import { users } from '@/drizzle/schema/users';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { billingAccounts, billingPlans } from '@/drizzle/schema/billing';
@@ -77,6 +78,8 @@ const QuickSignupSchema = z.object({
     .nullable()
     .optional(),
   orgName: z.string().min(2, '회사명은 2자 이상').max(120),
+  // 전국 병원 레지스트리의 암호화 요양기호 — '병원 정보 직접 등록' 으로 가입 시
+  claimYkiho: z.string().min(10).max(200).nullable().optional(),
   representativeName: z.string().min(2, '담당자명은 2자 이상').max(80),
   contactPhone: z.string().min(8, '연락처를 입력해 주세요').max(40),
   // Demographics — ALL optional ("선택 수집" per Kakao Channel PII policy).
@@ -244,6 +247,15 @@ export async function quickSignupAction(rawInput: QuickSignupInput): Promise<str
 
   // 6. pointer + cookie
   await db.update(users).set({ activeOrgId: org.id }).where(eq(users.id, auth.user.id));
+  // 6. 병원 직접 등록(클레임): 비계약 병원 관계자가 공개 병원 찾기에서 넘어온 경우
+  if (input.claimYkiho && input.accountType === 'medical') {
+    await db
+      .update(hospitalRegistry)
+      .set({ claimOrgId: org.id, claimStatus: 'pending', claimedAt: new Date(), updatedAt: new Date() })
+      .where(and(eq(hospitalRegistry.ykiho, input.claimYkiho), inArray(hospitalRegistry.claimStatus, ['none', 'rejected'])))
+      .catch(() => undefined);
+  }
+
   setActiveOrgCookie(org.id, input.accountType);
 
   return `${ACCOUNT_TYPE_TO_PREFIX[input.accountType]}/dashboard?welcome=1`;

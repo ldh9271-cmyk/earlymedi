@@ -244,6 +244,21 @@ export default async function MasterPage({
         </Link>
 
         <Link
+          href="/master/registry"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-care-100 text-care-700">
+            <Hospital className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold">전국 병원 레지스트리</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              심평원 전국 의료기관 동기화 · 외국인 진료 표기 · 계약 연결 · 직접 등록 승인
+            </p>
+          </div>
+        </Link>
+
+        <Link
           href="/master/landings"
           className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
         >

@@ -371,6 +371,17 @@ export default async function ClinicsListPage({
 
       <Chips locale={params.locale} dict={dict} active={null} />
 
+      {/* 전국 병원 찾기 진입 — 심평원 레지스트리 전체 (컬러 = 등록 병원, 흑백 = 공공정보) */}
+      <form action={`/${params.locale}/clinics/all`} method="get" className="m-cl-registry" style={{ marginTop: 18, border: '1px solid #ebebeb', borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: '#fafafa' }}>
+        <div style={{ flex: '1 1 220px' }}>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{dict.clinicsPage.registry.title}</div>
+          <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 2 }}>{dict.clinicsPage.registry.filterHospitalGrade} · {dict.clinicsPage.registry.filterForeign} · {dict.clinicsPage.registry.filterContracted}</div>
+        </div>
+        <input name="q" placeholder={dict.clinicsPage.registry.searchPlaceholder} style={{ flex: '2 1 240px', border: '1px solid #dddddd', borderRadius: 999, padding: '10px 14px', fontSize: 14, fontFamily: 'inherit', background: '#fff' }} />
+        <input type="hidden" name="type" value="all" />
+        <button type="submit" style={{ background: '#222', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{dict.clinicsPage.registry.search}</button>
+      </form>
+
       {dbError ? <ErrorBox message={dbError} /> : null}
 
       {sections.length === 0 ? (
