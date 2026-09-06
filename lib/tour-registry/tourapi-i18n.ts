@@ -68,7 +68,9 @@ export async function findLocalized(locale: I18nLocale, koTitle: string, content
     const ctid = str(it.contenttypeid);
     if (contentTypeIds && contentTypeIds.length && !contentTypeIds.includes(ctid)) continue;
     const exact = got === want;
-    const loose = got.length >= 3 && want.length >= 3 && (got.includes(want) || want.includes(got));
+    // 느슨 일치는 길이가 비슷할 때만 — '나주곰탕'(음식 사진) 이 '바우네나주곰탕순천연향'(식당) 에 붙는 오매칭 방지
+    const shorter = Math.min(got.length, want.length); const longer = Math.max(got.length, want.length);
+    const loose = shorter >= 4 && shorter / longer >= 0.6 && (got.includes(want) || want.includes(got));
     if (!exact && !loose) continue;
     const hit: LocalizedHit = { contentId: str(it.contentid), title: name, ko, addr: str(it.addr1), contentTypeId: ctid, mapx: str(it.mapx), mapy: str(it.mapy) };
     if (exact) return hit;
@@ -94,7 +96,7 @@ export async function localizeTourSpots(locale: I18nLocale, limit = 100): Promis
     try {
       const hit = await findLocalized(locale, r.title, ['76', '78', '85', '82', '39']);
       if (hit) {
-        await db.execute(sql`update tour_spots set i18n = i18n || ${JSON.stringify({ [locale]: { contentId: hit.contentId, title: hit.title, addr: hit.addr } })}::jsonb, updated_at = now() where id = ${r.id}`);
+        await db.execute(sql`update tour_spots set i18n = i18n || ${JSON.stringify({ [locale]: { contentId: hit.contentId, title: hit.title, addr: hit.addr, ko: hit.ko, contentTypeId: hit.contentTypeId } })}::jsonb, updated_at = now() where id = ${r.id}`);
         matched += 1;
       } else {
         await db.execute(sql`update tour_spots set i18n = jsonb_set(i18n, '{_tried}', coalesce(i18n->'_tried', '{}'::jsonb) || ${JSON.stringify({ [locale]: new Date().toISOString() })}::jsonb) where id = ${r.id}`);
