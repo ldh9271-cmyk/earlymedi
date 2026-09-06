@@ -52,6 +52,7 @@ export const PUBLIC_PREFIXES = [
   // 공개 지도 마커 API(공공데이터만 반환) · Vercel Cron(라우트 안에서 CRON_SECRET 검증)
   '/api/map',
   '/api/cron',
+  '/api/jobs',
   // QR 바우처: 공개 확인 랜딩(/v/<token>, 비PII 상태만) · 상태 폴링 API (체크인 API 는 라우트 안에서 조직 인증)
   '/v',
   '/api/voucher',

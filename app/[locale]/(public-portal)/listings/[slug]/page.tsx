@@ -613,7 +613,8 @@ export default async function ListingDetailPage({
                 </tbody>
               </table>
               <p style={{ fontSize: 12, color: '#9c9c9c', margin: '10px 0 0', lineHeight: 1.6 }}>
-                {ts.dataSource}{reg.syncedAt ? ` · ${tr.synced} ${reg.syncedAt}` : ''}{ta?.attribution ? ` · ${ta.attribution}` : ''} ·{' '}
+                {ts.dataSource}{reg.syncedAt ? ` · ${tr.synced} ${reg.syncedAt}` : ''}{ta?.attribution ? ` · ${ta.attribution}` : ''}
+                {(listing.details.imageSource as { found?: number } | undefined)?.found ? (ko ? ' · 이미지: 호텔 홈페이지·웹 공개 이미지' : ' · Images: hotel website and public web images') : ''} ·{' '}
                 <Link href={`/${params.locale}/stays/r/${encodeURIComponent(reg.mgtNo)}`} style={{ color: '#c2143c', fontWeight: 600 }}>{tr.publicBadge} →</Link>
               </p>
             </section>
