@@ -164,10 +164,11 @@ async function wikiImage(name: string): Promise<{ url: string; page: string } | 
       const s = (await (await fetch(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&format=json&srlimit=3&srsearch=${encodeURIComponent(q)}`, { headers: ua, cache: 'no-store' })).json()) as { query?: { search?: Array<{ pageid: number; title: string }> } };
       const hit = (s.query?.search ?? []).find((h) => (lang === 'ko' ? titleMentions(name, h.title) : norm(h.title).includes(norm(q).slice(0, 6))));
       if (!hit) continue;
-      const p = (await (await fetch(`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages&piprop=original&pageids=${hit.pageid}`, { headers: ua, cache: 'no-store' })).json()) as { query?: { pages?: Record<string, { original?: { source: string; width: number; height: number } }> } };
+      // 원본은 수 MB 라 다운로드 제한에 걸린다 → 1600px 썸네일(리사이즈본)을 받는다
+      const p = (await (await fetch(`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages&piprop=thumbnail|original&pithumbsize=1600&pageids=${hit.pageid}`, { headers: ua, cache: 'no-store' })).json()) as { query?: { pages?: Record<string, { original?: { source: string; width: number; height: number }; thumbnail?: { source: string; width: number; height: number } }> } };
       const pg = Object.values(p.query?.pages ?? {})[0];
-      const o = pg?.original;
-      if (o && o.width >= 800 && o.width / o.height >= 1.2 && o.width / o.height <= 2.4) return { url: o.source.split('?')[0] ?? o.source, page: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(hit.title)}` };
+      const o = pg?.original; const th = pg?.thumbnail;
+      if (o && o.width >= 800 && o.width / o.height >= 1.2 && o.width / o.height <= 2.4) return { url: (th?.source ?? o.source).split('?')[0] ?? o.source, page: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(hit.title)}` };
     } catch { /* next */ }
   }
   return null;
