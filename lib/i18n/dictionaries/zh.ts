@@ -650,6 +650,7 @@ const zh: Dictionary = {
       noResults: "没有符合条件的医院。",
       contractedBadge: "GlowUp登录医院",
       listedBadgeBiz: "GlowUp 认证",
+      noResultsBiz: "没有符合条件的结果。请更换搜索词或筛选。",
       foreignBadge: "可接诊外国人",
       foreignCountries: "接诊对象国家",
       dept: "科室",

@@ -122,7 +122,7 @@ export default async function ShopsListPage({ params, searchParams }: { params: 
 
       {error ? <p style={{ color: '#dc2626', fontSize: 13, marginTop: 16 }}>{error}</p> : null}
       {rows.length === 0 && !error ? (
-        <p style={{ fontSize: 14, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 14, padding: 28, marginTop: 20, textAlign: 'center' }}>{tr.noResults}</p>
+        <p style={{ fontSize: 14, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 14, padding: 28, marginTop: 20, textAlign: 'center' }}>{tr.noResultsBiz}</p>
       ) : (
         <div className="m-sh-grid" style={{ marginTop: 20 }}>
           {rows.map((r) => <ShopCard key={r.id} r={r} locale={locale} t={t} listedLabel={tr.listedBadgeBiz} publicLabel={tr.publicBadge} />)}

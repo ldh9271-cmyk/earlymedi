@@ -652,6 +652,7 @@ const ja: Dictionary = {
       noResults: "条件に合う病院がありません。",
       contractedBadge: "GlowUp登録病院",
       listedBadgeBiz: "グロウ認証",
+      noResultsBiz: "条件に合う店舗がありません。検索語やフィルターを変えてみてください。",
       foreignBadge: "外国人診療可",
       foreignCountries: "誘致対象国",
       dept: "診療科",

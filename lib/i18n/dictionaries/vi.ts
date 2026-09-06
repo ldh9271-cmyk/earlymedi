@@ -653,6 +653,7 @@ const vi: Dictionary = {
       noResults: "Không có bệnh viện phù hợp.",
       contractedBadge: "Có trên GlowUp",
       listedBadgeBiz: "GlowUp chứng nhận",
+      noResultsBiz: "Không có kết quả phù hợp. Hãy đổi từ khóa hoặc bộ lọc.",
       foreignBadge: "Nhận bệnh nhân nước ngoài",
       foreignCountries: "Đối tượng quốc gia",
       dept: "Khoa",

@@ -653,6 +653,7 @@ const en: Dictionary = {
       noResults: "No hospitals match these filters.",
       contractedBadge: "GlowUp listed",
       listedBadgeBiz: "GlowUp Certified",
+      noResultsBiz: "No places match. Try a different search or filter.",
       foreignBadge: "Foreign patients welcome",
       foreignCountries: "Serves patients from",
       dept: "Department",

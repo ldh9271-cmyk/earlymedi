@@ -669,6 +669,7 @@ const kr = {
       results: "검색 결과",
       countSuffix: "곳",
       noResults: "조건에 맞는 병원이 없습니다.",
+      noResultsBiz: "조건에 맞는 곳이 없습니다. 검색어나 필터를 바꿔 보세요.",
       contractedBadge: "글로우업 등록 병원",
       listedBadgeBiz: "글로우 인증",
       foreignBadge: "외국인 진료 가능",

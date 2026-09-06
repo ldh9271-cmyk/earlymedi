@@ -653,6 +653,7 @@ const ru: Dictionary = {
       noResults: "Нет больниц по заданным условиям.",
       contractedBadge: "Представлена на GlowUp",
       listedBadgeBiz: "GlowUp сертифицирован",
+      noResultsBiz: "Ничего не найдено. Измените запрос или фильтр.",
       foreignBadge: "Принимает иностранных пациентов",
       foreignCountries: "Принимает пациентов из",
       dept: "Отделение",
