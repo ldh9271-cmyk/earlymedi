@@ -182,7 +182,6 @@ export function MainHeader({
   // 통합 검색어 — 데스크톱 pill·모바일 pill 이 같은 상태를 공유하고
   // submit 시 /[locale]/search?q= 로 이동한다.
   const [searchQ, setSearchQ] = useState('');
-  const registryFinder = registryFinderFor(locale, activeKey, pathname ?? '', t);
   const accountRef = useRef<HTMLDivElement | null>(null);
   const filterRef = useRef<HTMLDivElement | null>(null);
   const langRef = useRef<HTMLDivElement | null>(null);
@@ -777,60 +776,10 @@ export function MainHeader({
             t={t}
           />
         </div>
-        {registryFinder ? (
-          <div className="m-mh-cat-sub">
-            <Link href={registryFinder.href} className="m-mh-quick-item">
-              <span aria-hidden="true">{registryFinder.icon}</span>
-              <span>{registryFinder.label}</span>
-              <span aria-hidden="true" style={{ color: '#6a6a6a' }}>›</span>
-            </Link>
-          </div>
-        ) : null}
+        {/* 2026-09-07: 카테고리 아래 '전국 … 찾기' 칩은 모두 제거 (사용자 요청 — 각 카테고리 페이지가 이미 레지스트리를 품음) */}
       </div>
     </header>
   );
-}
-
-/**
- * 카테고리 안의 공공데이터 찾기 — 현재 카테고리에 맞는 전국 레지스트리 하나만.
- * 병원 → 전국 병원, 숙박 → 전국 숙박, 맛집 → 전국 맛집, 뷰티 6종 → 전국 뷰티샵(해당 업종 선택),
- * 여행·K-팝 → 전국 관광지. (public-portal) 레이아웃은 activeKey='all' 로 오므로 경로로 보완한다.
- * 이미 그 레지스트리 안이면 숨긴다.
- */
-function registryFinderFor(
-  locale: PublicLocale,
-  activeKey: MainCategoryKey,
-  pathname: string,
-  t: Dictionary['header'],
-): { href: string; icon: string; label: string } | null {
-  const p = pathname.startsWith(`/${locale}/`) ? pathname.slice(locale.length + 1) : pathname;
-  const seg = p.split('/')[1] ?? '';
-  const key: MainCategoryKey | 'shops' | null = activeKey !== 'all'
-    ? activeKey
-    : seg === 'clinics' ? 'hospital'
-      : seg === 'stays' ? 'hotel'
-        : seg === 'eats' ? 'food'
-          : seg === 'shops' ? 'shops'
-            : seg === 'attractions' || seg === 'travel' ? 'travel'
-              : null;
-  if (!key) return null;
-  const shopCat: Partial<Record<MainCategoryKey, string>> = { hair: 'hair', makeup: 'makeup', nail: 'nail', pmu: 'pmu', color: 'personal_color', skin: 'skin' };
-  let target: { base: string; href: string; icon: string; label: string } | null = null;
-  switch (key) {
-    // 병원: /clinics 랜딩 자체가 '전국 병원 찾기'(검색·진료과 칩)라 칩이 중복 — 표시하지 않음 (2026-09-07)
-    case 'hospital': return null;
-    case 'hotel': target = { base: '/stays/all', href: '/stays/all', icon: '🏨', label: t.quickStays }; break;
-    case 'food': target = { base: '/eats/all', href: '/eats/all', icon: '🍽️', label: t.quickEats }; break;
-    case 'travel': case 'kpop': target = { base: '/attractions/all', href: '/attractions/all', icon: '📸', label: t.quickAttractions }; break;
-    case 'shops': case 'hair': case 'makeup': case 'nail': case 'pmu': case 'color': case 'skin': case 'photo': {
-      const cat = key === 'shops' || key === 'photo' ? '' : shopCat[key] ?? '';
-      target = { base: '/shops/all', href: cat ? `/shops/all?cat=${cat}` : '/shops/all', icon: '💇', label: t.quickShops };
-      break;
-    }
-    default: return null;
-  }
-  if (p.startsWith(target.base)) return null;
-  return { href: `/${locale}${target.href}`, icon: target.icon, label: target.label };
 }
 
 function TopTab({
