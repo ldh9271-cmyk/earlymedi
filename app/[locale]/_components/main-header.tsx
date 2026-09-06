@@ -817,7 +817,8 @@ function registryFinderFor(
   const shopCat: Partial<Record<MainCategoryKey, string>> = { hair: 'hair', makeup: 'makeup', nail: 'nail', pmu: 'pmu', color: 'personal_color', skin: 'skin' };
   let target: { base: string; href: string; icon: string; label: string } | null = null;
   switch (key) {
-    case 'hospital': target = { base: '/clinics/all', href: '/clinics/all', icon: '🏥', label: t.quickHospitals }; break;
+    // 병원: /clinics 랜딩 자체가 '전국 병원 찾기'(검색·진료과 칩)라 칩이 중복 — 표시하지 않음 (2026-09-07)
+    case 'hospital': return null;
     case 'hotel': target = { base: '/stays/all', href: '/stays/all', icon: '🏨', label: t.quickStays }; break;
     case 'food': target = { base: '/eats/all', href: '/eats/all', icon: '🍽️', label: t.quickEats }; break;
     case 'travel': case 'kpop': target = { base: '/attractions/all', href: '/attractions/all', icon: '📸', label: t.quickAttractions }; break;
