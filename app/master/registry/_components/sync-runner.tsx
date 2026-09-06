@@ -115,6 +115,24 @@ export default function SyncRunner({ hasKey }: { hasKey: boolean }): JSX.Element
     }
   }
 
+  async function runHotelMedia(): Promise<void> {
+    setRunning(true); setError(null);
+    try {
+      const res = await fetch('/api/master/registry/sync', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ hotelMedia: true }),
+      });
+      const j = (await res.json()) as { error?: string; matched?: number; unmatched?: number; skipped?: string; log?: string[] };
+      if (!res.ok || j.error) throw new Error(j.error ?? `HTTP ${res.status}`);
+      if (j.skipped) throw new Error(`TourAPI 미승인 (${j.skipped}) — data.go.kr 에서 "한국관광공사_국문 관광정보 서비스_GW" 활용신청 후 다시 누르세요`);
+      setLog((l) => [`호텔 사진·소개 채우기 · 매칭 ${j.matched}건 · 못 찾음 ${j.unmatched}건`, ...(j.log ?? []).slice(0, 6), ...l].slice(0, 14));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '호텔 사진 채우기 실패');
+    } finally {
+      setRunning(false);
+    }
+  }
+
   async function runFoodRecent(): Promise<void> {
     setRunning(true); setError(null);
     try {
@@ -170,6 +188,10 @@ export default function SyncRunner({ hasKey }: { hasKey: boolean }): JSX.Element
         <button type="button" onClick={runFoodRecent} disabled={running || !hasKey}
           style={{ background: '#b45309', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: running || !hasKey ? 0.6 : 1 }}>
           맛집 최근 갱신
+        </button>
+        <button type="button" onClick={runHotelMedia} disabled={running || !hasKey} title="글로우 인증 호텔 게시물에 한국관광공사 TourAPI 사진·소개·체크인·부대시설 채우기 (15건씩)"
+          style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: running || !hasKey ? 0.6 : 1 }}>
+          호텔 사진·소개 채우기
         </button>
       </div>
       {progress ? (

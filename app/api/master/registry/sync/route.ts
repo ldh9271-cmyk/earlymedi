@@ -77,11 +77,18 @@ export async function GET(): Promise<NextResponse> {
   return NextResponse.json({ ...row, beauty, lodging, food, tour, hasKey: Boolean(process.env.HIRA_SERVICE_KEY) });
 }
 
+import { enrichHotelListingsFromTourApi } from '@/lib/lodging-registry/tourapi-stay';
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const denied = await assertMaster();
   if (denied) return denied;
-  const body = (await req.json().catch(() => ({}))) as { pageNo?: number; clCd?: string; sidoCd?: string; details?: boolean; limit?: number; deptCode?: string; beautyPage?: number; beautyRecent?: boolean; lodgingPage?: number; lodgingRecent?: boolean; foodPage?: number; foodRecent?: boolean; tourPage?: number; tourRecent?: boolean };
+  const body = (await req.json().catch(() => ({}))) as { pageNo?: number; clCd?: string; sidoCd?: string; details?: boolean; limit?: number; deptCode?: string; beautyPage?: number; beautyRecent?: boolean; lodgingPage?: number; lodgingRecent?: boolean; foodPage?: number; foodRecent?: boolean; tourPage?: number; tourRecent?: boolean; hotelMedia?: boolean };
   try {
+    if (body.hotelMedia) {
+      // 글로우 인증 호텔 게시물 사진·소개 (TourAPI 숙박) — 15건씩, 버튼을 반복해 누르면 이어서 채움
+      const r = await enrichHotelListingsFromTourApi(15);
+      return NextResponse.json(r);
+    }
     if (body.tourRecent) {
       const r = await syncGalleryRecent(5);
       return NextResponse.json(r);

@@ -572,6 +572,18 @@ export default async function ListingDetailPage({
         if (reg.openedDate) rows.push([ts.opened, reg.openedDate]);
         if (reg.tel) rows.push([tr.phone, reg.tel]);
         if (reg.addrRoad) rows.push([tr.address, reg.addrRoad]);
+        // 한국관광공사 TourAPI 숙박 정보(주차·식음료·픽업·환불·홈페이지) — 매칭된 게시물만
+        const ta = listing.details.tourapi as
+          | { matched?: boolean; homepage?: string; parking?: string; food?: string; pickup?: string; refund?: string; scale?: string; attribution?: string }
+          | undefined;
+        const ko = params.locale === 'kr';
+        if (ta?.matched) {
+          if (ta.parking) rows.push([ko ? '주차' : 'Parking', ta.parking]);
+          if (ta.food) rows.push([ko ? '식음료' : 'Dining', ta.food]);
+          if (ta.pickup) rows.push([ko ? '픽업' : 'Pick-up', ta.pickup]);
+          if (ta.refund) rows.push([ko ? '환불 규정' : 'Refund policy', ta.refund.slice(0, 300)]);
+          if (ta.homepage) rows.push([ko ? '홈페이지' : 'Website', ta.homepage]);
+        }
         return (
           <>
             <Divider />
@@ -582,13 +594,15 @@ export default async function ListingDetailPage({
                   {rows.map(([k, v]) => (
                     <tr key={k} style={{ borderTop: '1px solid #f0f0f0' }}>
                       <td style={{ padding: '9px 0', color: '#6a6a6a', width: 120, verticalAlign: 'top' }}>{k}</td>
-                      <td style={{ padding: '9px 0', color: '#222', fontWeight: 600 }}>{v}</td>
+                      <td style={{ padding: '9px 0', color: '#222', fontWeight: 600, wordBreak: 'break-all' }}>
+                        {/^https?:\/\//.test(v) ? <a href={v} target="_blank" rel="noreferrer" style={{ color: '#c2143c' }}>{v}</a> : v}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               <p style={{ fontSize: 12, color: '#9c9c9c', margin: '10px 0 0', lineHeight: 1.6 }}>
-                {ts.dataSource}{reg.syncedAt ? ` · ${tr.synced} ${reg.syncedAt}` : ''} ·{' '}
+                {ts.dataSource}{reg.syncedAt ? ` · ${tr.synced} ${reg.syncedAt}` : ''}{ta?.attribution ? ` · ${ta.attribution}` : ''} ·{' '}
                 <Link href={`/${params.locale}/stays/r/${encodeURIComponent(reg.mgtNo)}`} style={{ color: '#c2143c', fontWeight: 600 }}>{tr.publicBadge} →</Link>
               </p>
             </section>

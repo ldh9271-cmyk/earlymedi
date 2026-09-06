@@ -8,6 +8,7 @@ import { syncLodgingRecent } from '@/lib/lodging-registry/localdata';
 import { syncFoodRecent } from '@/lib/food-registry/localdata';
 import { syncGalleryRecent, geocodeTourSpots } from '@/lib/tour-registry/tourapi';
 import { geocodeMissingPlatformPlaces } from '@/lib/geo/geocode';
+import { enrichHotelListingsFromTourApi } from '@/lib/lodging-registry/tourapi-stay';
 
 /**
  * Vercel Cron — 전국 병원 레지스트리 상세(진료과목·진료시간·교통) 순환 갱신.
@@ -36,7 +37,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const geo = await geocodeMissingPlatformPlaces(8).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'geo_failed' }));
     // 관광사진(좌표 없음): 새로 들어온 사진에 카카오 키워드 검색으로 실좌표 채우기
     const tourGeo = await geocodeTourSpots(30).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'tour_geo_failed' }));
-    return NextResponse.json({ refreshed: n, beauty, lodging, food, tour, geo, tourGeo });
+    // 글로우 인증 호텔 게시물 사진·소개 (TourAPI 숙박) — 키 미승인이면 skipped 로 조용히 넘어감
+    const hotelMedia = await enrichHotelListingsFromTourApi(10).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'hotel_media_failed' }));
+    return NextResponse.json({ refreshed: n, beauty, lodging, food, tour, geo, tourGeo, hotelMedia });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'failed' }, { status: 500 });
   }
