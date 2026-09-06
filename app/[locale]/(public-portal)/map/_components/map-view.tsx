@@ -159,6 +159,9 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
   };
   const [dept, setDept] = useState(initial.dept);
   const [cat, setCat] = useState(initial.cat);
+  // 진료과·카테고리 칩 줄 접힘 상태 — URL 로 이미 고른 값이 있으면 펼친 채로 시작
+  const [deptOpen, setDeptOpen] = useState(Boolean(initial.dept));
+  const [catOpen, setCatOpen] = useState(Boolean(initial.cat));
   const [foreign, setForeign] = useState(initial.foreign);
   const [listed, setListed] = useState(initial.listed);
   const [q, setQ] = useState(initial.q);
@@ -268,19 +271,18 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
             <button type="button" style={chip(foreign)} onClick={() => setForeign(!foreign)}>{labels.foreign}</button>
             <button type="button" style={chip(listed)} onClick={() => setListed(!listed)}>{labels.listed}</button>
           </div>
+          {/* 진료과·카테고리 칩은 접었다 펼칠 수 있게 — 기본 접힘, 접힌 상태에서는 현재 선택만 보여준다. */}
           {hasKind('hospital') ? (
-            <div className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, color: '#6a6a6a', alignSelf: 'center', flexShrink: 0 }}>{labels.dept}</span>
+            <FoldRow label={labels.dept} open={deptOpen} onToggle={() => setDeptOpen(!deptOpen)} current={dept ? (depts.find((d) => d.key === dept)?.label ?? dept) : labels.all} onClear={dept ? () => setDept('') : undefined}>
               <button type="button" style={chip(!dept)} onClick={() => setDept('')}>{labels.all}</button>
               {depts.map((d) => <button key={d.key} type="button" style={chip(dept === d.key)} onClick={() => setDept(d.key)}>{d.label}</button>)}
-            </div>
+            </FoldRow>
           ) : null}
           {hasKind('beauty') ? (
-            <div className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, color: '#6a6a6a', alignSelf: 'center', flexShrink: 0 }}>{labels.cat}</span>
+            <FoldRow label={labels.cat} open={catOpen} onToggle={() => setCatOpen(!catOpen)} current={cat ? (cats.find((c) => c.key === cat)?.label ?? cat) : labels.all} onClear={cat ? () => setCat('') : undefined}>
               <button type="button" style={chip(!cat)} onClick={() => setCat('')}>{labels.all}</button>
               {cats.map((c) => <button key={c.key} type="button" style={chip(cat === c.key)} onClick={() => setCat(c.key)}>{c.label}</button>)}
-            </div>
+            </FoldRow>
           ) : null}
         </div>
         <div style={{ padding: '8px 14px', fontSize: 12, color: '#6a6a6a', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
@@ -360,6 +362,33 @@ function hrefOf(m: Marker, locale: string): string {
   if (m.k === 'a') return `/${locale}/attractions/${encodeURIComponent(m.key)}`;
   return `/${locale}/shops/r/${encodeURIComponent(m.key)}`;
 }
+/**
+ * 접이식 칩 줄 — 머리줄(라벨 ▸/▾ + 현재 선택)을 누르면 펼쳐지고, 접힌 상태에서
+ * 선택이 있으면 × 로 바로 해제할 수 있다. 진료과 20여 개·카테고리 10여 개가
+ * 패널을 다 차지하던 문제(모바일) 해결.
+ */
+function FoldRow({ label, open, onToggle, current, onClear, children }: {
+  label: string; open: boolean; onToggle: () => void; current: string; onClear?: () => void; children: React.ReactNode;
+}): JSX.Element {
+  return (
+    <div style={{ marginTop: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button type="button" onClick={onToggle} aria-expanded={open}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: 'none', background: 'transparent', padding: '4px 0', fontSize: 12, color: '#222', cursor: 'pointer', fontFamily: 'inherit' }}>
+          <span style={{ fontSize: 10, color: '#6a6a6a', display: 'inline-block', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>▶</span>
+          <span style={{ color: '#6a6a6a' }}>{label}</span>
+          {!open ? <b style={{ fontWeight: 700 }}>{current}</b> : null}
+        </button>
+        {!open && onClear ? (
+          <button type="button" onClick={onClear} aria-label="clear"
+            style={{ border: '1px solid #dddddd', background: '#fff', borderRadius: 999, width: 20, height: 20, fontSize: 11, lineHeight: 1, cursor: 'pointer', color: '#6a6a6a', fontFamily: 'inherit', padding: 0 }}>×</button>
+        ) : null}
+      </div>
+      {open ? <div className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>{children}</div> : null}
+    </div>
+  );
+}
+
 function catLabelOf(key: string, cats: Array<{ key: string; label: string }>): string {
   return cats.find((c) => c.key === key)?.label ?? key;
 }
