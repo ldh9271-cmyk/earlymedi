@@ -59,3 +59,8 @@ Thumbs.db
 .q*.mjs
 .q*.txt
 .fit-*.mjs
+
+# 루트 임시 스크립트 (세션용) — 커밋 금지
+/.q-*.mjs
+/.*.mts
+/.backfill-*.ts
