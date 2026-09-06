@@ -178,7 +178,8 @@ export default async function RegistryListPage({ params, searchParams }: { param
       {/* 과별(진료과) 칩 — 심평원 진료과목 코드 기준 */}
       <div style={{ marginTop: 12 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: '#6a6a6a', marginBottom: 6 }}>{t.dept}</div>
-        <div className="m-cl-hscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+        {/* 가로 스크롤이면 오른쪽 칩이 잘려 보여(사용자 지적) 줄바꿈으로 전부 노출 */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingBottom: 4 }}>
           <Link href={qs({ dept: '', page: '' })} style={{ ...chip(!dept), flexShrink: 0 }}>{t.filterAll}</Link>
           {DEPT_GROUPS.map((g) => (
             <Link key={g.key} href={qs({ dept: g.key, type: 'all', page: '' })} style={{ ...chip(dept === g.key), flexShrink: 0 }}>

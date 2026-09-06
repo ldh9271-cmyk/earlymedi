@@ -1739,6 +1739,13 @@ export const KO_LABELS = {
     "ru": "Доктор Квак Но Хун",
     "vi": "Bác sĩ Kwak No-hoon"
   },
+  "관광호텔": {
+    "en": "Tourist Hotel",
+    "zh": "观光酒店",
+    "ja": "観光ホテル",
+    "ru": "Туристический отель",
+    "vi": "Khách sạn du lịch"
+  },
   "관리": {
     "en": "Care & Management",
     "zh": "护理·管理",
