@@ -222,7 +222,9 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
       const isActive = active === `${m.k}:${m.id}`;
       el.style.cssText = `display:inline-flex;align-items:center;gap:4px;max-width:180px;background:${bg};color:#fff;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:2px solid ${isActive ? '#fde047' : '#fff'};opacity:${m.listed ? 1 : 0.9};margin-bottom:6px;`;
       const dot = m.foreign ? '<span style="width:7px;height:7px;border-radius:50%;background:#60a5fa;display:inline-block"></span>' : '';
-      const tag = m.k === 'h' || m.k === 'l' || m.k === 'f' || m.k === 'a' ? (m.type ?? '') : (m.cats?.[0] ? catLabelOf(m.cats[0], cats) : (m.type ?? ''));
+      const tag = m.k === 'b'
+        ? (m.cats?.[0] ? catLabelOf(m.cats[0], cats) : (m.type ?? ''))
+        : (m.type ?? (m.cats?.[0] ? catLabelOf(m.cats[0], cats) : ''));
       el.innerHTML = `${dot}<span style="opacity:.85;font-weight:600">${escapeHtml(tag)}</span><span style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(m.name)}</span>`;
       el.onmouseenter = () => setActive(`${m.k}:${m.id}`);
       p.add({ lat: m.lat, lng: m.lng }, el, 'bottom', isActive ? 10 : 3);
@@ -239,7 +241,12 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
     display: 'inline-flex', alignItems: 'center', padding: '6px 11px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
     border: `1px solid ${on ? '#222' : '#dddddd'}`, background: on ? '#222' : '#fff', color: on ? '#fff' : '#222', fontFamily: 'inherit',
   });
-  const total = (hasKind('hospital') ? data.counts.hospital : 0) + (hasKind('beauty') ? data.counts.beauty : 0) + (hasKind('stays') ? data.counts.stays : 0) + (hasKind('eats') ? data.counts.eats : 0) + (hasKind('attraction') ? data.counts.attractions : 0);
+  // 서버가 요청한 종류만 집계해 주므로 그대로 합산 (종류 미선택 = 글로우 인증만 전 종류)
+  const total = data.counts.hospital + data.counts.beauty + data.counts.stays + data.counts.eats + data.counts.attractions;
+  // 종류 태그: 뷰티는 카테고리 라벨 우선, 나머지는 레지스트리 업종 → 없으면(직접 등록 업체) 카테고리 라벨
+  const tagOf = (m: Marker): string => (m.k === 'b'
+    ? (m.cats?.[0] ? catLabelOf(m.cats[0], cats) : (m.type ?? ''))
+    : (m.type ?? (m.cats?.[0] ? catLabelOf(m.cats[0], cats) : '')));
 
   return (
     <div className={`m-map-root${mobileView === 'list' ? ' is-list' : ''}`} style={{ display: 'grid', gridTemplateColumns: panelOpen ? '380px 1fr' : '0px 1fr', height: 'calc(100vh - 140px)', minHeight: 520, position: 'relative', borderTop: '1px solid #ebebeb' }}>
@@ -298,7 +305,7 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', background: m.listed ? '#ff385c' : '#6b7280', borderRadius: 5, padding: '1px 6px' }}>{m.listed ? labels.contractedBadge : labels.publicData}</span>
                   {m.foreign ? <span style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 5, padding: '1px 6px' }}>{labels.foreignBadge}</span> : null}
-                  <span style={{ fontSize: 11, color: '#6a6a6a' }}>{m.k === 'h' || m.k === 'l' || m.k === 'f' || m.k === 'a' ? (m.type ?? '') : (m.cats ?? []).slice(0, 2).map((c) => catLabelOf(c, cats)).join(' · ')}</span>
+                  <span style={{ fontSize: 11, color: '#6a6a6a' }}>{tagOf(m)}</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4 }}>{m.name}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>

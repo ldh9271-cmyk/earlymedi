@@ -8,6 +8,7 @@ import { db } from '@/lib/db/client';
 import { lodgingRegistry } from '@/drizzle/schema/lodging-registry';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { STAY_CATS, StayCard, type StayCardRow } from '../_registry/shared';
+import { CERTIFIED_LISTING_CATS, sidoMatches } from '@/lib/certified';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,6 +77,25 @@ export default async function StaysListPage({ params, searchParams }: { params: 
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE);
     rows = found as StayCardRow[];
+    // 첫 페이지: 글로우 인증(플랫폼 직접 등록) 호텔 중 숙박업 레지스트리에 아직 연결 안 된 것도 컬러 카드로 (정의 lib/certified)
+    if (page === 1 && (!cat || (CERTIFIED_LISTING_CATS.lodging as readonly string[]).includes(cat))) {
+      const plist = await db
+        .select({ id: partnerListings.id, title: partnerListings.title, slug: partnerListings.slug, cover: partnerListings.coverImageUrl, category: partnerListings.category, addressJson: partnerListings.addressJson, locationLabel: partnerListings.locationLabel })
+        .from(partnerListings)
+        .where(sql`${partnerListings.status} = 'approved' and ${partnerListings.category} in (${sql.raw(CERTIFIED_LISTING_CATS.lodging.map((c) => `'${c}'`).join(','))}) and not exists (select 1 from lodging_registry r where r.contracted_listing_id = ${partnerListings.id})`)
+        .limit(100);
+      const like = q.toLowerCase();
+      const extras: StayCardRow[] = plist
+        .filter((l) => sidoMatches(sido, l.addressJson) || (!!sido && (l.locationLabel ?? '').includes(sido.slice(0, 2))))
+        .filter((l) => !like || l.title.toLowerCase().includes(like))
+        .map((l) => ({
+          id: `plist:${l.id}`, mgtNo: l.slug, name: l.title, bizType: null, categoryKeys: [l.category],
+          sidoName: (l.addressJson as { city?: string } | null)?.city ?? null, sgguName: l.locationLabel, addrRoad: (l.addressJson as { line1?: string } | null)?.line1 ?? null, addrLot: null,
+          statusCode: '01', roomsKo: 0, roomsWe: 0, floors: 0, contractedListingId: l.id, claimStatus: 'approved', details: null,
+          partnerSlug: l.slug, partnerCover: l.cover,
+        }));
+      if (extras.length) { rows = [...extras, ...rows]; total += extras.length; }
+    }
     const sidos = await db.selectDistinct({ s: lodgingRegistry.sidoName }).from(lodgingRegistry).where(isNotNull(lodgingRegistry.sidoName)).orderBy(lodgingRegistry.sidoName);
     sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));
   } catch (err) {

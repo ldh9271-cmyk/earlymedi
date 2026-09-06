@@ -7,6 +7,7 @@ import { syncBeautyRecent } from '@/lib/beauty-registry/localdata';
 import { syncLodgingRecent } from '@/lib/lodging-registry/localdata';
 import { syncFoodRecent } from '@/lib/food-registry/localdata';
 import { syncGalleryRecent } from '@/lib/tour-registry/tourapi';
+import { geocodeMissingPlatformPlaces } from '@/lib/geo/geocode';
 
 /**
  * Vercel Cron — 전국 병원 레지스트리 상세(진료과목·진료시간·교통) 순환 갱신.
@@ -31,7 +32,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const food = await syncFoodRecent(new Date(Date.now() - 3 * 86_400_000), 20).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'food_failed' }));
     // 관광사진(관광지): 최신 앞 5페이지
     const tour = await syncGalleryRecent(5).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'tour_failed' }));
-    return NextResponse.json({ refreshed: n, beauty, lodging, food, tour });
+    // 글로우 인증(직접 등록) 병원·업체 중 좌표 없는 것 → 지도에 나오도록 조금씩 지오코딩
+    const geo = await geocodeMissingPlatformPlaces(8).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'geo_failed' }));
+    return NextResponse.json({ refreshed: n, beauty, lodging, food, tour, geo });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'failed' }, { status: 500 });
   }

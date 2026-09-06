@@ -8,6 +8,7 @@ import { db } from '@/lib/db/client';
 import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { SHOP_CATS, ShopCard, type ShopCardRow } from '../_registry/shared';
+import { CERTIFIED_LISTING_CATS, sidoMatches } from '@/lib/certified';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,20 +77,20 @@ export default async function ShopsListPage({ params, searchParams }: { params: 
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE);
     rows = found as ShopCardRow[];
-    // 첫 페이지: 메인메뉴에 등록된 글로우 인증 뷰티샵(퍼스널컬러·헤어·메이크업·네일·반영구) 중
-    // 아직 미용업 레지스트리에 연결 안 된 것도 컬러 카드로 함께 노출 (글로우 인증 필터에서도 보이도록).
+    // 첫 페이지: 글로우 인증(플랫폼 직접 등록) 뷰티샵 중 아직 미용업 레지스트리에 연결 안 된 것도
+    // 컬러 카드로 함께 노출 (글로우 인증 필터에서도 보이도록). 카테고리 정의는 lib/certified.
     if (page === 1) {
-      const BEAUTY_PLIST_CATS = ['personal_color', 'hair', 'makeup', 'nail', 'pmu'];
-      const catsToInclude = cat ? (BEAUTY_PLIST_CATS.includes(cat) ? [cat] : []) : BEAUTY_PLIST_CATS;
+      const BEAUTY_PLIST_CATS: readonly string[] = CERTIFIED_LISTING_CATS.beauty;
+      const catsToInclude = cat ? (BEAUTY_PLIST_CATS.includes(cat) ? [cat] : []) : [...BEAUTY_PLIST_CATS];
       if (catsToInclude.length > 0) {
         const plist = await db
           .select({ id: partnerListings.id, title: partnerListings.title, slug: partnerListings.slug, cover: partnerListings.coverImageUrl, category: partnerListings.category, addressJson: partnerListings.addressJson })
           .from(partnerListings)
-          .where(sql`${partnerListings.category} in ('personal_color','hair','makeup','nail','pmu') and not exists (select 1 from beauty_registry b where b.contracted_listing_id = ${partnerListings.id})`)
+          .where(sql`${partnerListings.status} = 'approved' and ${partnerListings.category} in (${sql.raw(BEAUTY_PLIST_CATS.map((c) => `'${c}'`).join(','))}) and not exists (select 1 from beauty_registry b where b.contracted_listing_id = ${partnerListings.id})`)
           .limit(200);
         const extras: ShopCardRow[] = plist
           .filter((l) => catsToInclude.includes(l.category as string))
-          .filter((l) => !sido || JSON.stringify(l.addressJson ?? {}).includes(sido))
+          .filter((l) => sidoMatches(sido, l.addressJson))
           .map((l) => ({
             id: `plist:${l.id}`, mgtNo: l.slug, name: l.title, bizType: null, categoryKeys: [l.category as string],
             sidoName: ((l.addressJson as { city?: string } | null)?.city ?? null), sgguName: null, addrRoad: null, addrLot: null,

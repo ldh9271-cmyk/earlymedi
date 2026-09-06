@@ -8,6 +8,7 @@ import { db } from '@/lib/db/client';
 import { foodRegistry } from '@/drizzle/schema/food-registry';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { EAT_CATS, EatCard, type EatCardRow } from '../_registry/shared';
+import { CERTIFIED_LISTING_CATS, sidoMatches } from '@/lib/certified';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +76,25 @@ export default async function EatsListPage({ params, searchParams }: { params: {
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE);
     rows = found as EatCardRow[];
+    // 첫 페이지(세부 카테고리 없을 때): 글로우 인증(플랫폼 직접 등록) 찐맛집 중 음식점 레지스트리에 아직 연결 안 된 것도 컬러 카드로 (정의 lib/certified)
+    if (page === 1 && !cat) {
+      const plist = await db
+        .select({ id: partnerListings.id, title: partnerListings.title, slug: partnerListings.slug, cover: partnerListings.coverImageUrl, category: partnerListings.category, addressJson: partnerListings.addressJson, locationLabel: partnerListings.locationLabel })
+        .from(partnerListings)
+        .where(sql`${partnerListings.status} = 'approved' and ${partnerListings.category} in (${sql.raw(CERTIFIED_LISTING_CATS.food.map((c) => `'${c}'`).join(','))}) and not exists (select 1 from food_registry r where r.contracted_listing_id = ${partnerListings.id})`)
+        .limit(100);
+      const like = q.toLowerCase();
+      const extras: EatCardRow[] = plist
+        .filter((l) => sidoMatches(sido, l.addressJson) || (!!sido && (l.locationLabel ?? '').includes(sido.slice(0, 2))))
+        .filter((l) => !like || l.title.toLowerCase().includes(like))
+        .map((l) => ({
+          id: `plist:${l.id}`, mgtNo: l.slug, name: l.title, bizType: null, categoryKeys: [],
+          sidoName: (l.addressJson as { city?: string } | null)?.city ?? null, sgguName: l.locationLabel, addrRoad: (l.addressJson as { line1?: string } | null)?.line1 ?? null, addrLot: null,
+          statusCode: '01', contractedListingId: l.id, claimStatus: 'approved', details: null,
+          partnerSlug: l.slug, partnerCover: l.cover,
+        }));
+      if (extras.length) { rows = [...extras, ...rows]; total += extras.length; }
+    }
     const sidos = await db.selectDistinct({ s: foodRegistry.sidoName }).from(foodRegistry).where(isNotNull(foodRegistry.sidoName)).orderBy(foodRegistry.sidoName);
     sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));
   } catch (err) {

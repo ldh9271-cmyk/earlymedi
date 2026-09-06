@@ -28,7 +28,13 @@ export default async function MapPage({ params, searchParams }: {
   const t = dict.mapPage;
   const tr = dict.clinicsPage.registry;
   const depts = DEPT_GROUPS.map((g) => ({ key: g.key, label: (dict.clinicsPage.depts as Record<string, string>)[g.key] ?? g.ko }));
-  const cats = SHOP_CATS.map((k) => ({ key: k, label: dict.shopsRegistry.cats[k] }));
+  const cats = [
+    ...SHOP_CATS.map((k) => ({ key: k, label: dict.shopsRegistry.cats[k] })),
+    // 글로우 인증(직접 등록) 업체의 카테고리 라벨 — 레지스트리 업종이 없는 마커의 태그용
+    { key: 'photo_studio', label: (dict.clinicsPage.categories as Record<string, string>).photo_studio ?? 'Photo studio' },
+    { key: 'hotel', label: dict.staysRegistry.cats.hotel },
+    { key: 'food', label: dict.mapPage.eats },
+  ];
   const num = (v: string | undefined, d: number): number => { const n = Number(v); return Number.isFinite(n) && v ? n : d; };
 
   return (
