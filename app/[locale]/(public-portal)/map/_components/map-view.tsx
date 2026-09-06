@@ -21,6 +21,7 @@ type Labels = {
   title: string; hospitals: string; shops: string; stays: string; eats: string; attractions: string; all: string; foreign: string; listed: string; searchPlaceholder: string; myLocation: string;
   zoomHint: string; inView: string; listTitle: string; empty: string; noKey: string; detail: string; publicData: string; dept: string; cat: string;
   contractedBadge: string; foreignBadge: string; viewList: string; viewMap: string;
+  showMore: string; showLess: string;
 };
 
 // ── 제공자 공통 인터페이스 ─────────────────────────────────────────
@@ -271,18 +272,18 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
             <button type="button" style={chip(foreign)} onClick={() => setForeign(!foreign)}>{labels.foreign}</button>
             <button type="button" style={chip(listed)} onClick={() => setListed(!listed)}>{labels.listed}</button>
           </div>
-          {/* 진료과·카테고리 칩은 접었다 펼칠 수 있게 — 기본 접힘, 접힌 상태에서는 현재 선택만 보여준다. */}
+          {/* 진료과·카테고리 칩은 기본 두 줄만 보이고 '더보기' 로 펼친다. */}
           {hasKind('hospital') ? (
-            <FoldRow label={labels.dept} open={deptOpen} onToggle={() => setDeptOpen(!deptOpen)} current={dept ? (depts.find((d) => d.key === dept)?.label ?? dept) : labels.all} onClear={dept ? () => setDept('') : undefined}>
+            <MoreRow label={labels.dept} open={deptOpen} onToggle={() => setDeptOpen(!deptOpen)} more={labels.showMore} less={labels.showLess}>
               <button type="button" style={chip(!dept)} onClick={() => setDept('')}>{labels.all}</button>
               {depts.map((d) => <button key={d.key} type="button" style={chip(dept === d.key)} onClick={() => setDept(d.key)}>{d.label}</button>)}
-            </FoldRow>
+            </MoreRow>
           ) : null}
           {hasKind('beauty') ? (
-            <FoldRow label={labels.cat} open={catOpen} onToggle={() => setCatOpen(!catOpen)} current={cat ? (cats.find((c) => c.key === cat)?.label ?? cat) : labels.all} onClear={cat ? () => setCat('') : undefined}>
+            <MoreRow label={labels.cat} open={catOpen} onToggle={() => setCatOpen(!catOpen)} more={labels.showMore} less={labels.showLess}>
               <button type="button" style={chip(!cat)} onClick={() => setCat('')}>{labels.all}</button>
               {cats.map((c) => <button key={c.key} type="button" style={chip(cat === c.key)} onClick={() => setCat(c.key)}>{c.label}</button>)}
-            </FoldRow>
+            </MoreRow>
           ) : null}
         </div>
         <div style={{ padding: '8px 14px', fontSize: 12, color: '#6a6a6a', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
@@ -363,28 +364,46 @@ function hrefOf(m: Marker, locale: string): string {
   return `/${locale}/shops/r/${encodeURIComponent(m.key)}`;
 }
 /**
- * 접이식 칩 줄 — 머리줄(라벨 ▸/▾ + 현재 선택)을 누르면 펼쳐지고, 접힌 상태에서
- * 선택이 있으면 × 로 바로 해제할 수 있다. 진료과 20여 개·카테고리 10여 개가
- * 패널을 다 차지하던 문제(모바일) 해결.
+ * 두 줄 칩 줄 — 기본은 칩 두 줄 높이까지만 보이고(넘치는 칩은 숨김), 오른쪽
+ * '더보기 ▾' 를 누르면 전부 펼쳐진다. 칩 높이를 실제로 재서 두 줄 한도를
+ * 정하므로 글꼴·언어가 달라도 정확히 두 줄이다. 두 줄 안에 다 들어가면
+ * 버튼을 숨긴다. 진료과 20여 개·카테고리 10여 개가 패널을 다 차지하던 문제(모바일) 해결.
  */
-function FoldRow({ label, open, onToggle, current, onClear, children }: {
-  label: string; open: boolean; onToggle: () => void; current: string; onClear?: () => void; children: React.ReactNode;
+function MoreRow({ label, open, onToggle, more, less, children }: {
+  label: string; open: boolean; onToggle: () => void; more: string; less: string; children: React.ReactNode;
 }): JSX.Element {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [cap, setCap] = useState<number>(70);
+  const [overflow, setOverflow] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = (): void => {
+      const first = el.firstElementChild as HTMLElement | null;
+      const h = first ? first.offsetHeight : 31;
+      const c = h * 2 + 6;
+      setCap(c);
+      setOverflow(el.scrollHeight > c + 2);
+    };
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [children]);
   return (
     <div style={{ marginTop: 6 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <button type="button" onClick={onToggle} aria-expanded={open}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: 'none', background: 'transparent', padding: '4px 0', fontSize: 12, color: '#222', cursor: 'pointer', fontFamily: 'inherit' }}>
-          <span style={{ fontSize: 10, color: '#6a6a6a', display: 'inline-block', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>▶</span>
-          <span style={{ color: '#6a6a6a' }}>{label}</span>
-          {!open ? <b style={{ fontWeight: 700 }}>{current}</b> : null}
-        </button>
-        {!open && onClear ? (
-          <button type="button" onClick={onClear} aria-label="clear"
-            style={{ border: '1px solid #dddddd', background: '#fff', borderRadius: 999, width: 20, height: 20, fontSize: 11, lineHeight: 1, cursor: 'pointer', color: '#6a6a6a', fontFamily: 'inherit', padding: 0 }}>×</button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+        <span style={{ fontSize: 11, color: '#6a6a6a' }}>{label}</span>
+        {overflow ? (
+          <button type="button" onClick={onToggle} aria-expanded={open}
+            style={{ border: 'none', background: 'transparent', padding: '2px 0', fontSize: 11, fontWeight: 700, color: '#1d4ed8', cursor: 'pointer', fontFamily: 'inherit' }}>
+            {open ? `${less} ▴` : `${more} ▾`}
+          </button>
         ) : null}
       </div>
-      {open ? <div className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>{children}</div> : null}
+      <div ref={ref} className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap', maxHeight: open ? undefined : cap, overflow: 'hidden' }}>
+        {children}
+      </div>
     </div>
   );
 }

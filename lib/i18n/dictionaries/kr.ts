@@ -610,6 +610,8 @@ const kr = {
     myLocation: "내 위치",
     zoomHint: "지도를 확대하면 개별 병원·매장이 표시됩니다",
     inView: "현재 지도 안",
+    showMore: "더보기",
+    showLess: "접기",
     listTitle: "목록",
     empty: "이 영역에 결과가 없습니다. 지도를 이동하거나 필터를 바꿔 보세요.",
     noKey: "카카오맵 키(NEXT_PUBLIC_KAKAO_MAP_KEY)가 아직 설정되지 않았습니다.",

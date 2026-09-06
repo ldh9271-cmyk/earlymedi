@@ -592,6 +592,8 @@ const ru: Dictionary = {
     myLocation: "Моё местоположение",
     zoomHint: "Приблизьте карту, чтобы увидеть отдельные места",
     inView: "В этой области",
+    showMore: "Ещё",
+    showLess: "Свернуть",
     listTitle: "Список",
     empty: "В этой области ничего нет. Сдвиньте карту или измените фильтры.",
     noKey: "Ключ Kakao Map (NEXT_PUBLIC_KAKAO_MAP_KEY) ещё не настроен.",

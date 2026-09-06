@@ -589,6 +589,8 @@ const zh: Dictionary = {
     myLocation: "我的位置",
     zoomHint: "放大地图可显示单个医院和门店",
     inView: "当前地图范围",
+    showMore: "更多",
+    showLess: "收起",
     listTitle: "列表",
     empty: "此范围内没有结果，请移动地图或更改筛选。",
     noKey: "尚未配置Kakao地图密钥(NEXT_PUBLIC_KAKAO_MAP_KEY)。",

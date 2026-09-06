@@ -592,6 +592,8 @@ const vi: Dictionary = {
     myLocation: "Vị trí của tôi",
     zoomHint: "Phóng to bản đồ để xem từng địa điểm",
     inView: "Trong vùng bản đồ",
+    showMore: "Xem thêm",
+    showLess: "Thu gọn",
     listTitle: "Danh sách",
     empty: "Không có kết quả trong vùng này. Di chuyển bản đồ hoặc đổi bộ lọc.",
     noKey: "Chưa cấu hình khóa Kakao Map (NEXT_PUBLIC_KAKAO_MAP_KEY).",

@@ -591,6 +591,8 @@ const ja: Dictionary = {
     myLocation: "現在地",
     zoomHint: "地図を拡大すると個別の病院・店舗が表示されます",
     inView: "表示中の範囲",
+    showMore: "もっと見る",
+    showLess: "閉じる",
     listTitle: "一覧",
     empty: "この範囲に結果がありません。地図を移動するかフィルターを変えてください。",
     noKey: "Kakaoマップのキー(NEXT_PUBLIC_KAKAO_MAP_KEY)が未設定です。",

@@ -592,6 +592,8 @@ const en: Dictionary = {
     myLocation: "My location",
     zoomHint: "Zoom in to see individual places",
     inView: "In this map area",
+    showMore: "More",
+    showLess: "Less",
     listTitle: "List",
     empty: "No results in this area. Move the map or change filters.",
     noKey: "Kakao Map key (NEXT_PUBLIC_KAKAO_MAP_KEY) is not configured yet.",
