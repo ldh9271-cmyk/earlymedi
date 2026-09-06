@@ -1,15 +1,14 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { headers } from 'next/headers';
 import { and, eq } from 'drizzle-orm';
+import { activeOrgId } from '@/lib/auth/active-org-server';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { checkIn, loadOrderByToken, orgName, summarize } from '@/lib/voucher/service';
 import { declareFinalAmount } from '@/lib/voucher/settlement';
-import { ACTIVE_ORG_HEADER } from '@/lib/auth/active-org-constants';
 
 /**
  * 가맹점 최종 결제금액 입력 (3자 검증 2단계) — 체크인과 같은 권한.
@@ -25,7 +24,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!token) return NextResponse.json({ ok: false, reason: 'invalid' }, { status: 400 });
 
   const isMaster = isMasterEmail(auth.user.email ?? '');
-  const orgId = body.orgId || headers().get(ACTIVE_ORG_HEADER) || '';
+  const orgId = body.orgId || activeOrgId();
   if (!isMaster) {
     if (!orgId) return NextResponse.json({ ok: false, reason: 'no_org' }, { status: 403 });
     const [m] = await db.select({ id: orgMemberships.id }).from(orgMemberships)

@@ -1,12 +1,11 @@
 'use server';
 
 import 'server-only';
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { and, eq } from 'drizzle-orm';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
-import { ACTIVE_ORG_HEADER } from '@/lib/auth/active-org-constants';
+import { activeOrgId } from '@/lib/auth/active-org-server';
 import { db } from '@/lib/db/client';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { checkIn, loadOrderByToken, orgName } from '@/lib/voucher/service';
@@ -21,7 +20,7 @@ async function resolveActor(token: string): Promise<Actor> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect(`/login?next=${encodeURIComponent(`/v/${token}`)}`);
   const isMaster = isMasterEmail(auth.user.email ?? '');
-  const orgId = headers().get(ACTIVE_ORG_HEADER) ?? '';
+  const orgId = activeOrgId();
   if (!isMaster) {
     if (!orgId) back({ error: '활성 조직이 없습니다. 사업자 콘솔에 로그인해 주세요.' });
     const [m] = await db.select({ id: orgMemberships.id }).from(orgMemberships)

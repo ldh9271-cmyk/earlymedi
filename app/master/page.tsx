@@ -304,6 +304,21 @@ export default async function MasterPage({
         </Link>
 
         <Link
+          href="/scan"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+            <QrCode className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold">QR 스캔 · 방문 확인</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              고객 결제 QR 스캔 → 방문 확인 · 최종 결제금액 입력 (마스터는 모든 주문 가능)
+            </p>
+          </div>
+        </Link>
+
+        <Link
           href="/master/ai-trips"
           className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
         >

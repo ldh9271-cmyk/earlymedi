@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import { and, eq } from 'drizzle-orm';
-import { headers } from 'next/headers';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
-import { ACTIVE_ORG_HEADER } from '@/lib/auth/active-org-constants';
+import { activeOrgId } from '@/lib/auth/active-org-server';
 import { db } from '@/lib/db/client';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { loadOrderByToken, orgCanCheckIn, summarize } from '@/lib/voucher/service';
@@ -24,7 +23,8 @@ export default async function VoucherLanding({ params, searchParams }: { params:
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   const isMaster = isMasterEmail(auth.user?.email ?? '');
-  const orgId = headers().get(ACTIVE_ORG_HEADER);
+  // /v 는 미들웨어 공개 경로라 헤더가 없다 — 쿠키에서 활성 조직을 읽는다
+  const orgId = activeOrgId() || null;
   let canCheckIn = false;
   if (o && auth.user) {
     if (isMaster) canCheckIn = true;

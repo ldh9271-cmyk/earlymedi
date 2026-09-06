@@ -1,15 +1,14 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { headers } from 'next/headers';
 import { and, eq } from 'drizzle-orm';
+import { activeOrgId } from '@/lib/auth/active-org-server';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { checkIn, orgName } from '@/lib/voucher/service';
 import { resolveMerchantFeeBp } from '@/lib/voucher/settlement';
-import { ACTIVE_ORG_HEADER } from '@/lib/auth/active-org-constants';
 
 /**
  * 사업자 체크인 — 로그인 + 활성 조직 멤버십 필요. 마스터는 모든 주문 가능.
@@ -24,7 +23,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!token) return NextResponse.json({ ok: false, reason: 'invalid' }, { status: 400 });
 
   const isMaster = isMasterEmail(auth.user.email ?? '');
-  const orgId = body.orgId || headers().get(ACTIVE_ORG_HEADER) || '';
+  const orgId = body.orgId || activeOrgId();
   if (!isMaster) {
     if (!orgId) return NextResponse.json({ ok: false, reason: 'no_org' }, { status: 403 });
     const [m] = await db.select({ id: orgMemberships.id }).from(orgMemberships)

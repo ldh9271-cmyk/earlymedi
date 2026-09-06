@@ -162,6 +162,16 @@ export async function recentCheckIns(orgId: string, limit = 20): Promise<Voucher
   return rows.map((r) => summarize(normalizeRow(r), { withPII: true, withFee: true }));
 }
 
+/** 마스터용 — 조직 구분 없이 최근 체크인 전체. */
+export async function recentCheckInsAll(limit = 30): Promise<VoucherSummary[]> {
+  const rows = (await db.execute(sql`
+    select * from checkout_orders
+     where meta->'voucher'->>'checkedInAt' is not null
+     order by (meta->'voucher'->>'checkedInAt') desc
+     limit ${limit}`)) as unknown as OrderRow[];
+  return rows.map((r) => summarize(normalizeRow(r), { withPII: true, withFee: true }));
+}
+
 export async function orgName(orgId: string): Promise<string> {
   const [o] = await db.select({ name: organizations.name }).from(organizations).where(eq(organizations.id, orgId)).limit(1);
   return o?.name ?? '사업자';
