@@ -130,21 +130,28 @@ export async function* streamGeminiText(system: string, messages: TripMsg[], max
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.glowuptour.com';
 
-export function buildTripEmailHtml(planMd: string, t: { title: string; emailIntro: string; disclaimer: string }, locale: PublicLocale): string {
+export function buildTripEmailHtml(
+  planMd: string,
+  t: { title: string; emailIntro: string; disclaimer: string },
+  locale: PublicLocale,
+  opts: { extraHtml?: string; ctaHref?: string; ctaLabel?: string } = {},
+): string {
   const body = mdToHtml(planMd)
     // 상대 링크는 절대 URL 로
     .replace(/href="\//g, `href="${SITE_URL}/`);
+  const cta = opts.ctaHref ?? `${SITE_URL}/${locale}/ai-trip`;
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f7f7f7;font-family:'Helvetica Neue',Arial,'Apple SD Gothic Neo',sans-serif;color:#222;">
   <div style="max-width:600px;margin:0 auto;padding:28px 16px;">
     <div style="text-align:center;padding:10px 0 18px;"><span style="font-size:22px;font-weight:800;color:#ff385c;letter-spacing:-0.5px;">glow-up</span></div>
     <div style="background:#fff;border:1px solid #ebebeb;border-radius:16px;padding:26px 24px;">
       <h1 style="font-size:19px;margin:0 0 6px;">${t.title}</h1>
       <p style="margin:0 0 16px;line-height:1.6;color:#3f3f3f;font-size:14px;">${t.emailIntro}</p>
+      ${opts.extraHtml ?? ''}
       <style>.plan h2{font-size:16px;margin:18px 0 6px;color:#222}.plan h3{font-size:14px;margin:14px 0 4px}.plan h4{font-size:13px;margin:12px 0 4px}.plan p{margin:6px 0;line-height:1.6;font-size:14px}.plan ul,.plan ol{margin:4px 0 8px;padding-left:20px}.plan li{margin:3px 0;line-height:1.55;font-size:14px}.plan a{color:#ff385c;text-decoration:none;font-weight:600}</style>
       <div class="plan">${body}</div>
       <hr style="border:none;border-top:1px solid #ebebeb;margin:18px 0;" />
       <p style="font-size:12px;color:#6a6a6a;line-height:1.6;margin:0;">${t.disclaimer}</p>
-      <div style="text-align:center;margin-top:24px;"><a href="${SITE_URL}/${locale}/ai-trip" style="display:inline-block;background:#ff385c;color:#fff;border-radius:10px;padding:12px 26px;font-weight:700;font-size:15px;text-decoration:none;">GlowUpTour</a></div>
+      <div style="text-align:center;margin-top:24px;"><a href="${cta}" style="display:inline-block;background:#ff385c;color:#fff;border-radius:10px;padding:12px 26px;font-weight:700;font-size:15px;text-decoration:none;">${opts.ctaLabel ?? 'GlowUpTour'}</a></div>
     </div>
     <p style="text-align:center;font-size:11px;color:#9a9a9a;margin:16px 0 0;">© GlowUpTour · glowuptour.com</p>
   </div></body></html>`;

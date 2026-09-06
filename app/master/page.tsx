@@ -304,6 +304,21 @@ export default async function MasterPage({
         </Link>
 
         <Link
+          href="/master/ai-trips"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
+            <Receipt className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold">AI 여행 일정 · 검증·견적</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              고객이 확정한 AI 일정 검증 → 견적 인보이스 발행 → 결제 시 스케줄 완성
+            </p>
+          </div>
+        </Link>
+
+        <Link
           href="/master/partners"
           className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
         >

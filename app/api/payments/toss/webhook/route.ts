@@ -5,6 +5,7 @@ import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { fetchTossPayment, tossConfigured } from '@/lib/payments/toss';
 import { accrueOrderTravelMargin, reverseOrder, stampOrderHospitalFee } from '@/lib/referral/service';
 import { notifyOrderEvent } from '@/lib/notify/admin-alert';
+import { onTripOrderPaid } from '@/lib/ai/trip-workflow';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -67,6 +68,8 @@ export async function POST(req: Request): Promise<NextResponse> {
         invoiceNo: payment.orderId, listingTitle: order.listingTitle, totalWon: order.totalWon,
         userEmail: order.userEmail, method: 'toss:' + (payment.method ?? 'card'),
       }).catch(() => false);
+      // AI 여행 견적 인보이스면 일정을 '스케줄 완성'으로
+      await onTripOrderPaid(order.id).catch(() => undefined);
     } else if (
       (payment.status === 'CANCELED' || payment.status === 'PARTIAL_CANCELED' || payment.status === 'ABORTED' || payment.status === 'EXPIRED')
       && order.status !== 'cancelled'

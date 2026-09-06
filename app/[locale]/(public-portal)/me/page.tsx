@@ -6,6 +6,7 @@ import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
+import { aiTripPlans } from '@/drizzle/schema/ai-trip-plans';
 import { cookies } from 'next/headers';
 import { attributeUser, patientPointsBalance, REF_COOKIE } from '@/lib/referral/service';
 
@@ -61,6 +62,17 @@ export default async function MyPage({
   if (refCode) await attributeUser(auth.user.id, refCode, 'me').catch(() => null);
   const points = await patientPointsBalance(auth.user.id).catch(() => 0);
 
+  // AI 여행 일정 (확정·견적·결제 상태)
+  let tripPlans: Array<{ id: string; status: string; quoteWon: number | null; updatedAt: Date }> = [];
+  try {
+    tripPlans = await db
+      .select({ id: aiTripPlans.id, status: aiTripPlans.status, quoteWon: aiTripPlans.quoteWon, updatedAt: aiTripPlans.updatedAt })
+      .from(aiTripPlans)
+      .where(eq(aiTripPlans.userId, auth.user.id))
+      .orderBy(desc(aiTripPlans.updatedAt))
+      .limit(20);
+  } catch { /* 표시 생략 */ }
+
   let rows: Array<typeof checkoutOrders.$inferSelect> = [];
   let dbError = false;
   try {
@@ -103,6 +115,25 @@ export default async function MyPage({
         <Link href={`/${locale}/me/referral`} style={{ color: '#c81e42', fontWeight: 600 }}>{dict.referral.menu} →</Link>
         <span style={{ color: '#9c9c9c', marginLeft: 8 }}>{dict.referral.pointsHint}</span>
       </p>
+
+      {/* AI 여행 일정 — 확정·견적·결제 진행 상태 */}
+      {tripPlans.length > 0 ? (
+        <div style={{ marginTop: 22, border: '1px solid #bfdbfe', background: '#eff6ff', borderRadius: 14, padding: '14px 16px' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#1d4ed8' }}>✈️ {dict.ai.trip.myPlansTitle}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+            {tripPlans.map((p) => (
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 13, background: '#fff', border: '1px solid #dbeafe', borderRadius: 10, padding: '9px 12px' }}>
+                <span style={{ background: p.status === 'paid' ? '#ecfdf5' : p.status === 'quoted' ? '#fff5f7' : '#f5f5f5', color: p.status === 'paid' ? '#047857' : p.status === 'quoted' ? '#c81e42' : '#6a6a6a', borderRadius: 9999, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+                  {(dict.ai.trip.statusLabels as Record<string, string>)[p.status] ?? p.status}
+                </span>
+                <span style={{ color: '#3f3f3f' }}>{new Date(p.updatedAt).toLocaleDateString(locale === 'kr' ? 'ko-KR' : 'en-US')}</span>
+                {p.quoteWon ? <span style={{ fontWeight: 700 }}>₩{p.quoteWon.toLocaleString('ko-KR')}</span> : null}
+                <Link href={`/${locale}/ai-trip?plan=${p.id}`} style={{ marginLeft: 'auto', color: '#c81e42', fontWeight: 700, textDecoration: 'none' }}>{dict.ai.trip.openPlan}</Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {dbError ? (
         <p style={{ fontSize: 14, color: '#dc2626', marginTop: 24 }}>{t.loadError}</p>
