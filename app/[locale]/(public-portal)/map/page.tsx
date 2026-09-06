@@ -45,7 +45,7 @@ export default async function MapPage({ params, searchParams }: {
         depts={depts}
         cats={cats}
         initial={{
-          lat: num(searchParams.lat, 37.4979), lng: num(searchParams.lng, 127.0276), level: Math.min(14, Math.max(1, num(searchParams.level, 4))),
+          lat: num(searchParams.lat, 37.4979), lng: num(searchParams.lng, 127.0276), level: Math.min(14, Math.max(1, num(searchParams.level, 3))),
           kinds: searchParams.kinds ?? 'all', dept: searchParams.dept ?? '', cat: searchParams.cat ?? '',
           foreign: searchParams.foreign === '1', listed: searchParams.listed !== '0', q: (searchParams.q ?? '').slice(0, 40),
         }}

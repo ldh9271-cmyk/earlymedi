@@ -40,6 +40,10 @@ type Provider = {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare global { interface Window { kakao?: any; google?: any } }
 
+const ALL_KINDS = ['hospital', 'beauty', 'stays', 'eats', 'attraction'] as const;
+type KindKey = (typeof ALL_KINDS)[number];
+const KIND_TO_API: Record<KindKey, string> = { hospital: 'hospital', beauty: 'beauty', stays: 'lodging', eats: 'food', attraction: 'attraction' };
+
 const KAKAO_MAX = 14;
 const toGoogleZoom = (level: number): number => Math.max(3, Math.min(20, 20 - level));
 const toKakaoLevel = (zoom: number): number => Math.max(1, Math.min(KAKAO_MAX, 20 - zoom));
@@ -131,7 +135,28 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
   const [data, setData] = useState<Payload>({ markers: [], clusters: [], counts: { hospital: 0, beauty: 0, stays: 0, eats: 0, attractions: 0 } });
   const [loading, setLoading] = useState(false);
   const [level, setLevel] = useState(initial.level);
-  const [kinds, setKinds] = useState<'all' | 'hospital' | 'beauty' | 'stays' | 'eats' | 'attraction'>(['hospital', 'beauty', 'stays', 'eats', 'attraction'].includes(initial.kinds) ? initial.kinds as 'hospital' | 'beauty' | 'stays' | 'eats' | 'attraction' : 'all');
+  // 종류(병원·뷰티샵·숙박·맛집·관광지)는 개별 토글 다중선택. '전체'는 전부 on/off.
+  const [kindSet, setKindSet] = useState<Set<KindKey>>(() =>
+    initial.kinds && initial.kinds !== 'all' && (ALL_KINDS as readonly string[]).includes(initial.kinds)
+      ? new Set([initial.kinds as KindKey])
+      : new Set(ALL_KINDS),
+  );
+  const hasKind = (k: KindKey): boolean => kindSet.has(k);
+  const allKindsOn = kindSet.size === ALL_KINDS.length;
+  const toggleKind = (k: KindKey | 'all'): void => {
+    if (k === 'all') {
+      const next = allKindsOn ? new Set<KindKey>() : new Set<KindKey>(ALL_KINDS);
+      setKindSet(next); setDept(''); setCat('');
+      return;
+    }
+    setKindSet((prev) => {
+      const n = new Set(prev);
+      if (n.has(k)) n.delete(k); else n.add(k);
+      if (!n.has('hospital')) setDept('');
+      if (!n.has('beauty')) setCat('');
+      return n;
+    });
+  };
   const [dept, setDept] = useState(initial.dept);
   const [cat, setCat] = useState(initial.cat);
   const [foreign, setForeign] = useState(initial.foreign);
@@ -169,12 +194,13 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
   const load = useCallback(async () => {
     const p = provRef.current; if (!p) return;
     const b = p.getBounds();
-    const qs = new URLSearchParams({ sw: `${b.sw.lat},${b.sw.lng}`, ne: `${b.ne.lat},${b.ne.lng}`, zoom: String(p.getLevel()), kinds: kinds === 'all' ? 'hospital,beauty,lodging,food,attraction' : kinds === 'stays' ? 'lodging' : kinds === 'eats' ? 'food' : kinds === 'attraction' ? 'attraction' : kinds });
+    const apiKinds = [...kindSet].map((k) => KIND_TO_API[k]).join(',');
+    const qs = new URLSearchParams({ sw: `${b.sw.lat},${b.sw.lng}`, ne: `${b.ne.lat},${b.ne.lng}`, zoom: String(p.getLevel()), kinds: apiKinds || 'none' });
     if (dept) qs.set('dept', dept); if (cat) qs.set('cat', cat); if (foreign) qs.set('foreign', '1'); if (listed) qs.set('listed', '1'); if (q) qs.set('q', q);
     setLoading(true);
     try { const res = await fetch(`/api/map/markers?${qs.toString()}`); if (res.ok) setData((await res.json()) as Payload); }
     finally { setLoading(false); }
-  }, [kinds, dept, cat, foreign, listed, q]);
+  }, [kindSet, dept, cat, foreign, listed, q]);
   useEffect(() => { if (ready) void load(); }, [ready, tick, load]);
 
   // ── 오버레이 ──────────────────────────────────────────────────
@@ -203,7 +229,8 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
     }
   }, [data, active, locale, cats]);
 
-  const listItems = useMemo(() => data.markers.slice(0, 80), [data]);
+  // 리스트는 글로우 인증(listed) 업체를 항상 먼저 노출
+  const listItems = useMemo(() => [...data.markers].sort((a, b) => Number(b.listed) - Number(a.listed)).slice(0, 80), [data]);
   const focus = (m: Marker): void => { setActive(`${m.k}:${m.id}`); provRef.current?.panTo({ lat: m.lat, lng: m.lng }); };
   const myLocation = (): void => {
     navigator.geolocation?.getCurrentPosition((pos) => { const p = provRef.current; if (!p) return; p.setLevel(5); p.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }); });
@@ -212,7 +239,7 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
     display: 'inline-flex', alignItems: 'center', padding: '6px 11px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
     border: `1px solid ${on ? '#222' : '#dddddd'}`, background: on ? '#222' : '#fff', color: on ? '#fff' : '#222', fontFamily: 'inherit',
   });
-  const total = (kinds === 'all' || kinds === 'hospital' ? data.counts.hospital : 0) + (kinds === 'all' || kinds === 'beauty' ? data.counts.beauty : 0) + (kinds === 'all' || kinds === 'stays' ? data.counts.stays : 0) + (kinds === 'all' || kinds === 'eats' ? data.counts.eats : 0) + (kinds === 'all' || kinds === 'attraction' ? data.counts.attractions : 0);
+  const total = (hasKind('hospital') ? data.counts.hospital : 0) + (hasKind('beauty') ? data.counts.beauty : 0) + (hasKind('stays') ? data.counts.stays : 0) + (hasKind('eats') ? data.counts.eats : 0) + (hasKind('attraction') ? data.counts.attractions : 0);
 
   return (
     <div className={`m-map-root${mobileView === 'list' ? ' is-list' : ''}`} style={{ display: 'grid', gridTemplateColumns: panelOpen ? '380px 1fr' : '0px 1fr', height: 'calc(100vh - 140px)', minHeight: 520, position: 'relative', borderTop: '1px solid #ebebeb' }}>
@@ -227,21 +254,21 @@ export default function MapView({ locale, kakaoKey, googleKey, labels, depts, ca
           </form>
           <div className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
             {(['all', 'hospital', 'beauty', 'stays', 'eats', 'attraction'] as const).map((k) => (
-              <button key={k} type="button" style={chip(kinds === k)} onClick={() => { setKinds(k); if (k !== 'hospital') setDept(''); if (k !== 'beauty') setCat(''); }}>
+              <button key={k} type="button" style={chip(k === 'all' ? allKindsOn : hasKind(k))} onClick={() => toggleKind(k)}>
                 {k === 'all' ? labels.all : k === 'hospital' ? labels.hospitals : k === 'beauty' ? labels.shops : k === 'stays' ? labels.stays : k === 'eats' ? labels.eats : labels.attractions}
               </button>
             ))}
             <button type="button" style={chip(foreign)} onClick={() => setForeign(!foreign)}>{labels.foreign}</button>
             <button type="button" style={chip(listed)} onClick={() => setListed(!listed)}>{labels.listed}</button>
           </div>
-          {kinds === 'all' || kinds === 'hospital' ? (
+          {hasKind('hospital') ? (
             <div className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, color: '#6a6a6a', alignSelf: 'center', flexShrink: 0 }}>{labels.dept}</span>
               <button type="button" style={chip(!dept)} onClick={() => setDept('')}>{labels.all}</button>
               {depts.map((d) => <button key={d.key} type="button" style={chip(dept === d.key)} onClick={() => setDept(d.key)}>{d.label}</button>)}
             </div>
           ) : null}
-          {kinds === 'all' || kinds === 'beauty' ? (
+          {hasKind('beauty') ? (
             <div className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, color: '#6a6a6a', alignSelf: 'center', flexShrink: 0 }}>{labels.cat}</span>
               <button type="button" style={chip(!cat)} onClick={() => setCat('')}>{labels.all}</button>
