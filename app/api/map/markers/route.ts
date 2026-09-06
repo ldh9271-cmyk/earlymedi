@@ -43,7 +43,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const locRaw = p.get('locale') ?? 'kr';
   const loc = ['kr', 'en', 'zh', 'ja', 'ru', 'vi'].includes(locRaw) ? locRaw : 'kr';
   const en = loc !== 'kr';
-  const hospName = sql.raw(en ? "coalesce(nullif(hlc.name,''), r.name)" : 'r.name');
+  const hospName = sql.raw(en ? `coalesce(nullif(hlc.name,''), nullif(r.details->'nameI18n'->>'${loc}',''), r.name)` : 'r.name');
   const hospJoin = sql.raw(en ? `left join hospital_locale_content hlc on hlc.hospital_id = h.id and hlc.locale = '${loc}'` : '');
   const listName = sql.raw(en ? "coalesce(nullif(plc.title,''), r.name)" : 'r.name');
   const listJoin = sql.raw(en ? `left join partner_listing_locale_content plc on plc.listing_id = l.id and plc.locale = '${loc}'` : '');
@@ -65,7 +65,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     if (foreign) conds.push('foreign_licensed');
     if (listed) conds.push(`(contracted_hospital_id is not null or claim_status = 'approved')`);
     const where = sql.raw(conds.join(' and '));
-    const qCond = q ? sql` and (name ilike ${'%' + q + '%'} or addr ilike ${'%' + q + '%'})` : sql``;
+    const kq = '%' + q + '%';
+    const i18nU = en ? sql` or details->'nameI18n'->>${loc} ilike ${kq}` : sql``;
+    const i18nR = en ? sql` or r.details->'nameI18n'->>${loc} ilike ${kq}` : sql``;
+    const qCond = q ? sql` and (name ilike ${kq} or addr ilike ${kq}${i18nU})` : sql``;
+    const qCondR = q ? sql` and (r.name ilike ${kq} or r.addr ilike ${kq}${i18nR})` : sql``;
     const [cnt] = (await db.execute(sql`select count(*)::int as n from hospital_registry where ${where}${qCond}`)) as unknown as Array<{ n: number }>;
     out.counts.hospital = cnt?.n ?? 0;
     if (cluster && out.counts.hospital > 300) {
@@ -80,7 +84,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         select r.id, r.ykiho as key, ${hospName} as name, r.lat, r.lng, r.cl_name as type, r.foreign_licensed as foreign, r.sggu_name as region,
                (r.contracted_hospital_id is not null or r.claim_status = 'approved') as listed, h.slug
           from hospital_registry r left join hospitals h on h.id = r.contracted_hospital_id ${hospJoin}
-         where ${where}${qCond}
+         where ${where}${qCondR}
          order by listed desc, r.foreign_licensed desc, r.dr_total desc
          limit 600`)) as unknown as Array<{ id: string; key: string; name: string; lat: number; lng: number; type: string | null; foreign: boolean; region: string | null; listed: boolean; slug: string | null }>;
       out.markers.push(...rows.map((r) => ({ k: 'h' as const, id: r.id, key: r.key, name: r.name, lat: r.lat, lng: r.lng, listed: r.listed, foreign: r.foreign, type: r.type, slug: r.slug, region: r.region })));
