@@ -70,8 +70,11 @@ function hostMatches(h: string, domains: string[]): boolean { return domains.som
 function titleMentions(hotel: string, docTitle: string): boolean {
   const c = norm(core(hotel)); const t = norm(docTitle.replace(/<[^>]+>/g, ''));
   if (!c || !t) return false;
-  const key = c.length <= 4 ? c : c.slice(0, 4);
-  return t.includes(key) || (c.length >= 6 && t.includes(c.slice(2, 6)));
+  if (c.length <= 4) return t.includes(c);
+  // 앞 4자만으로는 '메리어트 본보이 공식 블로그' 같은 브랜드 일반 글이 통과한다 → 이름이 길면 뒷부분(지점명)도 함께 요구
+  const head = t.includes(c.slice(0, 4)) || t.includes(c.slice(2, 6));
+  if (c.length < 8) return head;
+  return head && (t.includes(c.slice(4, 8)) || t.includes(c.slice(c.length - 4)));
 }
 
 /** JPEG/PNG/WebP 헤더에서 크기 읽기. */
@@ -152,7 +155,7 @@ const PROMO_TITLE = /뷔페|디저트|선물|케이크|프로모션|런칭|출�
 
 /** 위키백과(공용 라이선스) 문서 대표 사진 — 문서 제목이 이 호텔이어야 하고 가로 사진만. */
 async function wikiImage(name: string): Promise<{ url: string; page: string } | null> {
-  const ua = { 'User-Agent': 'GlowUpTour/1.0 (https://www.glowuptour.com)' };
+  const ua = { 'User-Agent': 'GlowUpTour/1.0 (https://www.glowuptour.com; contact: hello@glowuptour.com)' };
   const cleaned = core(name).replace(/호텔/g, ' ').replace(/\s+/g, ' ').trim();
   for (const lang of ['ko', 'en']) {
     try {
@@ -218,8 +221,9 @@ export async function POST(req: Request): Promise<NextResponse> {
       const p = await fetchHtml(page);
       if (p) for (const u of pageImages(p.html, p.url).slice(0, 12)) items.push({ url: u, src: 'official', from: p.url, docTitle: p.title });
     }
-    const wiki = await wikiImage(name).catch(() => null);
-    if (wiki) items.push({ url: wiki.url, src: 'wiki', from: wiki.page, site: 'Wikimedia Commons' });
+    let wikiNote = 'wiki:none';
+    const wiki = await wikiImage(name).catch((e: unknown) => { wikiNote = `wiki:err ${e instanceof Error ? e.message.slice(0, 40) : ''}`; return null; });
+    if (wiki) { items.push({ url: wiki.url, src: 'wiki', from: wiki.page, site: 'Wikimedia Commons' }); wikiNote = 'wiki:hit'; }
     // 검색 이미지 — 외관·로비 위주. 브랜드 도메인 글은 바로, 그 외는 글 제목에 호텔명 필수
     const wantSearch = items.length < 4;
     if (wantSearch) {
@@ -247,7 +251,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     got.sort((a, b) => rank(a) - rank(b) || b.w * b.h - a.w * a.h);
     if (got.length === 0) {
       await db.execute(sql`update partner_listings set details = details || ${JSON.stringify({ imageSource: { triedAt: new Date().toISOString(), page: page ?? undefined, found: 0 } })}::jsonb where id = ${r.id}`);
-      none += 1; log.push(`✘ ${name}${page ? ` (${pageHost})` : ''}`); return;
+      none += 1; log.push(`✘ ${name}${page ? ` (${pageHost})` : ''} ${wikiNote}`); return;
     }
     const first = got[0]!;
     const cover = await upload(r.id, 'cover', first.buf, first.type);
@@ -260,7 +264,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     await db.execute(sql`update partner_listings set cover_image_url = coalesce(nullif(cover_image_url, ''), ${cover}),
       gallery_image_urls = case when jsonb_typeof(gallery_image_urls) = 'array' and jsonb_array_length(gallery_image_urls) > 0 then gallery_image_urls else ${JSON.stringify(gallery)}::jsonb end,
       details = details || ${JSON.stringify({ imageSource: source })}::jsonb, updated_at = now() where id = ${r.id}`);
-    done += 1; log.push(`✔ ${name} · ${Math.min(got.length, 5)}장 (${got.filter((g) => g.src === 'official').length} 공식${pageHost ? ' ' + pageHost : ''}, ${got.filter((g) => g.src === 'wiki').length} 위키) ← ${first.src}:${host(first.from)}`);
+    done += 1; log.push(`✔ ${name} · ${Math.min(got.length, 5)}장 (${got.filter((g) => g.src === 'official').length} 공식${pageHost ? ' ' + pageHost : ''}, ${got.filter((g) => g.src === 'wiki').length} 위키) ← ${first.src}:${host(first.from)} ${wikiNote}`);
   };
   for (let i = 0; i < rows.length; i += 2) {
     await Promise.all(rows.slice(i, i + 2).map((r) => one(r).catch((e: unknown) => { log.push(`! ${r.title}: ${e instanceof Error ? e.message : String(e)}`); })));
