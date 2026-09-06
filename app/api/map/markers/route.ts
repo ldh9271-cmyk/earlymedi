@@ -42,9 +42,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const q = (p.get('q') ?? '').trim().slice(0, 40).replace(/[%_]/g, '');
   const [swLat, swLng] = sw; const [neLat, neLng] = ne;
   // 너무 넓은 영역은 클러스터로만
-  const cluster = zoom >= 6;
+  // 레벨 5 이상(서울 몇 개 구가 한 화면)부터는 격자 클러스터 — 개별 말풍선은 레벨 1~4
+  const cluster = zoom >= 5;
   // 격자 크기(도) — 줌에 따라
-  const cell = zoom >= 11 ? 0.5 : zoom >= 9 ? 0.15 : zoom >= 7 ? 0.05 : 0.02;
+  const cell = zoom >= 11 ? 0.5 : zoom >= 9 ? 0.15 : zoom >= 7 ? 0.05 : zoom >= 6 ? 0.02 : 0.008;
 
   const out: { markers: Marker[]; clusters: Cluster[]; counts: { hospital: number; beauty: number } } = { markers: [], clusters: [], counts: { hospital: 0, beauty: 0 } };
 
