@@ -12,6 +12,41 @@ import { fetchListingsForSurface, type ListingCard } from '@/lib/listings/query'
 import { parseSurfaceFilters } from '@/lib/listings/filters';
 import type { ListingCategory } from '@/lib/listings/categories';
 import { type PcCategoryKey } from '../../_components/pc-header';
+import { and, desc, eq, sql, type SQL } from 'drizzle-orm';
+import { db } from '@/lib/db/client';
+import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
+import { partnerListings } from '@/drizzle/schema/partner-listings';
+import { ShopCard, type ShopCardRow } from '@/app/[locale]/(public-portal)/shops/_registry/shared';
+
+/** 글로우업 뷰티 카테고리 → 미용업 레지스트리 카테고리 키 (전국 뷰티샵 찾기 리스트를 각 메인 카테고리에 노출). */
+const BEAUTY_KEY_TO_SHOP_CAT: Partial<Record<Exclude<PcCategoryKey, 'all'>, string>> = {
+  color: 'personal_color', skin: 'skin', hair: 'hair', makeup: 'makeup', nail: 'nail', pmu: 'pmu',
+};
+
+async function fetchBeautyRegistryForKey(key: Exclude<PcCategoryKey, 'all'>): Promise<ShopCardRow[]> {
+  const cat = BEAUTY_KEY_TO_SHOP_CAT[key];
+  if (!cat) return [];
+  const conds: SQL[] = [eq(beautyRegistry.statusCode, '01'), sql`${beautyRegistry.categoryKeys} @> ${sql.raw(`array['${cat}']::text[]`)}`];
+  const listedRank = sql`case when ${beautyRegistry.contractedListingId} is not null or ${beautyRegistry.claimStatus} = 'approved' then 0 else 1 end`;
+  try {
+    const rows = await db
+      .select({
+        id: beautyRegistry.id, mgtNo: beautyRegistry.mgtNo, name: beautyRegistry.name, bizType: beautyRegistry.bizType, categoryKeys: beautyRegistry.categoryKeys,
+        sidoName: beautyRegistry.sidoName, sgguName: beautyRegistry.sgguName, addrRoad: beautyRegistry.addrRoad, addrLot: beautyRegistry.addrLot,
+        statusCode: beautyRegistry.statusCode, chairs: beautyRegistry.chairs, beds: beautyRegistry.beds,
+        contractedListingId: beautyRegistry.contractedListingId, claimStatus: beautyRegistry.claimStatus, details: beautyRegistry.details,
+        partnerSlug: partnerListings.slug, partnerCover: partnerListings.coverImageUrl,
+      })
+      .from(beautyRegistry)
+      .leftJoin(partnerListings, eq(partnerListings.id, beautyRegistry.contractedListingId))
+      .where(and(...conds))
+      .orderBy(listedRank, desc(beautyRegistry.chairs), beautyRegistry.name)
+      .limit(12);
+    return rows as ShopCardRow[];
+  } catch {
+    return [];
+  }
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -161,9 +196,54 @@ export default async function CategoryListPage({
             ))}
           </div>
         )}
+
+        {/* 전국 뷰티샵 찾기(행안부 미용업) — 이 메인 카테고리에 맞는 등록 매장 리스트.
+            컬러 = 글로우업 등록, 흑백 = 공공정보. 더 보기는 /shops/all?cat= 로. */}
+        {BEAUTY_KEY_TO_SHOP_CAT[key] ? (
+          <RegistrySection locale={params.locale} pcKey={key} cat={BEAUTY_KEY_TO_SHOP_CAT[key] as string} title={meta.title} dict={dict} />
+        ) : null}
       </section>
 
       <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[params.locale].native} locale={params.locale} />
+    </div>
+  );
+}
+
+async function RegistrySection({
+  locale,
+  pcKey,
+  cat,
+  title,
+  dict,
+}: {
+  locale: PublicLocale;
+  pcKey: Exclude<PcCategoryKey, 'all'>;
+  cat: string;
+  title: string;
+  dict: Dictionary;
+}): Promise<JSX.Element | null> {
+  const rows = await fetchBeautyRegistryForKey(pcKey);
+  if (rows.length === 0) return null;
+  const t = dict.shopsRegistry;
+  const tr = dict.clinicsPage.registry;
+  const moreHref = `/${locale}/shops/all?cat=${cat}`;
+  return (
+    <div style={{ marginTop: 56 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.4px', margin: 0 }}>{title} · {t.title}</h2>
+          <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 0' }}>{t.subtitle}</p>
+        </div>
+        <Link href={moreHref} style={{ fontSize: 14, fontWeight: 700, color: '#c2143c', textDecoration: 'none', whiteSpace: 'nowrap' }}>{tr.results} →</Link>
+      </div>
+      <div className="m-cl-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginTop: 20 }}>
+        {rows.map((r) => (
+          <ShopCard key={r.id} r={r} locale={locale} t={t} listedLabel={tr.contractedBadge} publicLabel={tr.publicBadge} />
+        ))}
+      </div>
+      <div style={{ marginTop: 18 }}>
+        <Link href={moreHref} style={{ display: 'inline-block', border: '1px solid #dddddd', borderRadius: 9999, padding: '10px 20px', fontSize: 14, fontWeight: 600, color: '#222', textDecoration: 'none' }}>{title} {t.title} →</Link>
+      </div>
     </div>
   );
 }
