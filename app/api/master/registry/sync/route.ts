@@ -7,7 +7,7 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
-import { syncBasisPage, refreshStaleDetails } from '@/lib/hospital-registry/hira';
+import { syncBasisPage, refreshStaleDetails, syncDeptCode } from '@/lib/hospital-registry/hira';
 
 /**
  * 마스터 전용 — 심평원 병원정보 동기화.
@@ -45,8 +45,12 @@ export async function GET(): Promise<NextResponse> {
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const denied = await assertMaster();
   if (denied) return denied;
-  const body = (await req.json().catch(() => ({}))) as { pageNo?: number; clCd?: string; sidoCd?: string; details?: boolean; limit?: number };
+  const body = (await req.json().catch(() => ({}))) as { pageNo?: number; clCd?: string; sidoCd?: string; details?: boolean; limit?: number; deptCode?: string };
   try {
+    if (body.deptCode) {
+      const r = await syncDeptCode(String(body.deptCode).padStart(2, '0'));
+      return NextResponse.json(r);
+    }
     if (body.details) {
       const n = await refreshStaleDetails(Math.min(Math.max(body.limit ?? 30, 1), 80));
       return NextResponse.json({ refreshed: n });

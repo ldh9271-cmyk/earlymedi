@@ -3,6 +3,7 @@
 // 심평원 동기화 실행기 — 서버리스 시간 제한 때문에 1,000건 페이지 단위로
 // /api/master/registry/sync 를 done 까지 반복 호출하고 진행률을 보여준다.
 import { useState } from 'react';
+import { HIRA_DEPTS } from '@/lib/hospital-registry/departments';
 
 type Progress = { page: number; fetched: number; upserted: number; total: number; done: boolean };
 
@@ -61,6 +62,25 @@ export default function SyncRunner({ hasKey }: { hasKey: boolean }): JSX.Element
     }
   }
 
+  async function runDepts(): Promise<void> {
+    setRunning(true); setError(null);
+    try {
+      for (const d of HIRA_DEPTS) {
+        const res = await fetch('/api/master/registry/sync', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ deptCode: d.code }),
+        });
+        const j = (await res.json()) as { error?: string; hospitals?: number; updated?: number };
+        if (!res.ok || j.error) throw new Error(`${d.ko}: ${j.error ?? `HTTP ${res.status}`}`);
+        setLog((l) => [`진료과목 ${d.code} ${d.ko} · 기관 ${j.hospitals} · 신규 반영 ${j.updated}`, ...l].slice(0, 12));
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '진료과목 동기화 실패');
+    } finally {
+      setRunning(false);
+    }
+  }
+
   const pct = progress && progress.total > 0 ? Math.min(100, Math.round(((progress.page * 1000) / progress.total) * 100)) : 0;
 
   return (
@@ -83,6 +103,10 @@ export default function SyncRunner({ hasKey }: { hasKey: boolean }): JSX.Element
         <button type="button" onClick={runDetails} disabled={running || !hasKey}
           style={{ background: '#222', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: running || !hasKey ? 0.6 : 1 }}>
           상세 40건 갱신
+        </button>
+        <button type="button" onClick={runDepts} disabled={running || !hasKey}
+          style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: running || !hasKey ? 0.6 : 1 }}>
+          진료과목(과별) 동기화
         </button>
       </div>
       {progress ? (

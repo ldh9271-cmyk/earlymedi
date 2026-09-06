@@ -46,6 +46,7 @@ export type RegistryDetails = {
   hours?: RegistryHours;
   transport?: RegistryTransport[];
   specialtyDesignations?: string[]; // 전문병원 지정분야
+  foreignCountries?: string[]; // 외국인환자 유치 대상 국가 (복지부 등록 현황)
   equipment?: Array<{ name: string; count: number }>;
   // 병원이 직접 입력(클레임 승인 후)한 소개·사진 등
   intro?: string;
@@ -96,6 +97,9 @@ export const hospitalRegistry = pgTable(
     claimedAt: timestamp('claimed_at', { withTimezone: true }),
 
     details: jsonb('details').$type<RegistryDetails>().notNull().default(sql`'{}'::jsonb`),
+    // 심평원 진료과목 코드(dgsbjtCd) — 과별 카테고리 필터 (getHospBasisList?dgsbjtCd= 로 수집)
+    deptCodes: text('dept_codes').array().notNull().default(sql`'{}'::text[]`),
+    deptsSyncedAt: timestamp('depts_synced_at', { withTimezone: true }),
     detailsSyncedAt: timestamp('details_synced_at', { withTimezone: true }),
     source: text('source').notNull().default('hira_api'), // hira_api | hira_file
     syncedAt: timestamp('synced_at', { withTimezone: true }).notNull().defaultNow(),

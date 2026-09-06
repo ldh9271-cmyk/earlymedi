@@ -112,6 +112,11 @@ export default async function RegistryDetailPage({ params }: { params: { locale:
           {[row.clName, [row.sidoName, row.sgguName, row.emdongName].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}
           {row.drTotal > 0 ? ` · ${t.doctors} ${nf(row.drTotal)}` : ''}{estb ? ` · ${t.established} ${estb}` : ''}
         </p>
+        {row.foreignLicensed && details.foreignCountries?.length ? (
+          <p style={{ fontSize: 13, color: '#1d4ed8', margin: '6px 0 0' }}>
+            <b>{t.foreignCountries}</b> · {details.foreignCountries.join(' / ')}
+          </p>
+        ) : null}
       </div>
 
       <div className="m-rd-body" style={{ marginTop: 22 }}>

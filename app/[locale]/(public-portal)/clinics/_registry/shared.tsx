@@ -17,6 +17,8 @@ export type RegistryCardRow = {
   contractedHospitalId: string | null;
   claimStatus: string;
   details: { departments?: Array<{ name: string; doctors: number }>; photos?: string[] } | null;
+  /** dept_codes → 소비자 과별 라벨 (목록 페이지에서 계산해 전달) */
+  deptLabels?: string[];
   partnerSlug?: string | null;
   partnerCover?: string | null;
 };
@@ -80,7 +82,7 @@ export function RegistryCard({ r, locale, t }: { r: RegistryCardRow; locale: Pub
   const listed = isListed(r);
   const tone = clTone(r.clCd);
   const cover = listed ? (r.partnerCover || r.details?.photos?.[0] || null) : null;
-  const depts = (r.details?.departments ?? []).slice(0, 3).map((d) => d.name).filter(Boolean);
+  const depts = (r.deptLabels && r.deptLabels.length > 0 ? r.deptLabels : (r.details?.departments ?? []).map((d) => d.name)).slice(0, 3).filter(Boolean);
   return (
     <a
       href={registryHref(locale, r)}

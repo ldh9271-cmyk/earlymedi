@@ -273,3 +273,37 @@ export async function refreshStaleDetails(limit = 40): Promise<number> {
   }
   return n;
 }
+
+// ── 진료과목(dgsbjtCd) 수집 — 과별 카테고리 ─────────────────────────
+
+export type DeptSyncResult = { code: string; pages: number; hospitals: number; updated: number };
+
+/**
+ * 한 진료과목 코드의 전국 기관을 getHospBasisList?dgsbjtCd= 로 모두 받아
+ * hospital_registry.dept_codes 에 코드를 추가한다 (중복 없이). 기관 수만큼
+ * 상세 API 를 호출하지 않고 과목당 수십 회로 끝나 일일 트래픽 안에 든다.
+ */
+export async function syncDeptCode(code: string): Promise<DeptSyncResult> {
+  const ykihos: string[] = [];
+  let page = 1;
+  for (;;) {
+    const { items, totalCount } = await callApi(BASIS_PATH, { pageNo: page, numOfRows: REGISTRY_PAGE_SIZE, dgsbjtCd: code });
+    for (const it of items) { const y = str(it.ykiho); if (y) ykihos.push(y); }
+    if (items.length < REGISTRY_PAGE_SIZE || page * REGISTRY_PAGE_SIZE >= totalCount) break;
+    page += 1;
+  }
+  let updated = 0;
+  for (let i = 0; i < ykihos.length; i += 2000) {
+    const chunk = ykihos.slice(i, i + 2000);
+    // drizzle sql 템플릿은 JS 배열을 (a, b, c) 로 펼치므로 JSON 문자열로 넘겨 jsonb 로 푼다
+    const res = await db.execute(sql`
+      update hospital_registry
+         set dept_codes = (select array(select distinct x from unnest(dept_codes || ${code}::text) as x order by x)),
+             depts_synced_at = now()
+       where ykiho in (select jsonb_array_elements_text(${JSON.stringify(chunk)}::jsonb))
+         and not (dept_codes @> array[${code}::text])
+    `);
+    updated += Number((res as unknown as { count?: number }).count ?? 0);
+  }
+  return { code, pages: page, hospitals: ykihos.length, updated };
+}

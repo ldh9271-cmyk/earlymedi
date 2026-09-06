@@ -8,17 +8,19 @@ import { db } from '@/lib/db/client';
 import { hospitalRegistry, HOSPITAL_GRADE_CL_CODES } from '@/drizzle/schema/hospital-registry';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { RegistryCard, type RegistryCardRow } from '../_registry/shared';
+import { DEPT_GROUPS, DEPT_GROUP_BY_KEY, groupKeyOfCode } from '@/lib/hospital-registry/departments';
 
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 24;
 const CSS =
-  '.m-ra-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }'
+  '.m-cl-hscroll::-webkit-scrollbar { display: none; }'
+  + '.m-ra-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }'
   + '.m-ra-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }'
   + '@media (max-width: 1024px) { .m-ra-grid { grid-template-columns: repeat(3, 1fr); } }'
   + '@media (max-width: 768px) { .m-ra-page { padding: 20px 16px 80px !important; } .m-ra-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } .m-ra-title { font-size: 22px !important; } }';
 
-type Search = { q?: string; sido?: string; type?: string; foreign?: string; listed?: string; page?: string };
+type Search = { q?: string; sido?: string; type?: string; foreign?: string; listed?: string; page?: string; dept?: string };
 
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   if (!isPublicLocale(params.locale)) return {};
@@ -44,6 +46,8 @@ export default async function RegistryListPage({ params, searchParams }: { param
   const foreign = searchParams.foreign === '1';
   const listed = searchParams.listed === '1';
   const page = Math.max(1, Number(searchParams.page) || 1);
+  const dept = searchParams.dept && DEPT_GROUP_BY_KEY[searchParams.dept] ? searchParams.dept : '';
+  const deptCodes = dept ? DEPT_GROUP_BY_KEY[dept]!.codes : [];
 
   const conds: SQL[] = [];
   if (q) {
@@ -55,6 +59,12 @@ export default async function RegistryListPage({ params, searchParams }: { param
   else if (type && type !== 'all') conds.push(eq(hospitalRegistry.clCd, type));
   if (foreign) conds.push(eq(hospitalRegistry.foreignLicensed, true));
   if (listed) conds.push(or(isNotNull(hospitalRegistry.contractedHospitalId), eq(hospitalRegistry.claimStatus, 'approved')) as SQL);
+  // 과별: 심평원 진료과목 코드 배열과 교집합 (GIN 인덱스)
+  // (코드는 우리 상수라 raw 로 배열 리터럴을 만든다 — drizzle 은 JS 배열 파라미터를 튜플로 펼침)
+  if (deptCodes.length) {
+    const lit = deptCodes.filter((c) => /^\d{2}$/.test(c)).map((c) => `'${c}'`).join(',');
+    conds.push(sql`${hospitalRegistry.deptCodes} && ${sql.raw(`array[${lit}]::text[]`)}`);
+  }
   const where = conds.length ? and(...conds) : undefined;
 
   let rows: RegistryCardRow[] = [];
@@ -72,7 +82,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
         id: hospitalRegistry.id, ykiho: hospitalRegistry.ykiho, name: hospitalRegistry.name, clCd: hospitalRegistry.clCd, clName: hospitalRegistry.clName,
         sidoName: hospitalRegistry.sidoName, sgguName: hospitalRegistry.sgguName, addr: hospitalRegistry.addr, drTotal: hospitalRegistry.drTotal,
         foreignLicensed: hospitalRegistry.foreignLicensed, contractedHospitalId: hospitalRegistry.contractedHospitalId, claimStatus: hospitalRegistry.claimStatus,
-        details: hospitalRegistry.details, partnerSlug: hospitals.slug, partnerCover: hospitals.coverImageUrl,
+        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerCover: hospitals.coverImageUrl,
       })
       .from(hospitalRegistry)
       .leftJoin(hospitals, eq(hospitals.id, hospitalRegistry.contractedHospitalId))
@@ -80,7 +90,12 @@ export default async function RegistryListPage({ params, searchParams }: { param
       .orderBy(listedRank, foreignRank, gradeRank, desc(hospitalRegistry.drTotal), hospitalRegistry.name)
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE);
-    rows = found as RegistryCardRow[];
+    // 과목 코드 → 소비자 과별 라벨 (중복 그룹 제거, 최대 3개)
+    rows = found.map((f) => {
+      const keys = Array.from(new Set((f.deptCodes ?? []).map(groupKeyOfCode).filter((k): k is string => Boolean(k))));
+      const deptLabels = keys.map((k) => (dict.clinicsPage.depts as Record<string, string>)[k] ?? k);
+      return { ...f, deptLabels } as RegistryCardRow;
+    });
     const sidos = await db.selectDistinct({ s: hospitalRegistry.sidoName }).from(hospitalRegistry).where(isNotNull(hospitalRegistry.sidoName)).orderBy(hospitalRegistry.sidoName);
     sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));
   } catch (err) {
@@ -90,7 +105,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const qs = (patch: Partial<Search>): string => {
     const p = new URLSearchParams();
-    const merged: Search = { q, sido, type, foreign: foreign ? '1' : '', listed: listed ? '1' : '', ...patch };
+    const merged: Search = { q, sido, type, foreign: foreign ? '1' : '', listed: listed ? '1' : '', dept, ...patch };
     for (const [k, v] of Object.entries(merged)) if (v) p.set(k, String(v));
     const s = p.toString();
     return `/${locale}/clinics/all${s ? `?${s}` : ''}`;
@@ -112,6 +127,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
         <input type="hidden" name="type" value={type} />
         {foreign ? <input type="hidden" name="foreign" value="1" /> : null}
         {listed ? <input type="hidden" name="listed" value="1" /> : null}
+        {dept ? <input type="hidden" name="dept" value={dept} /> : null}
         <input name="q" defaultValue={q} placeholder={t.searchPlaceholder}
           style={{ flex: 1, minWidth: 220, border: '1px solid #dddddd', borderRadius: 999, padding: '11px 16px', fontSize: 14, fontFamily: 'inherit' }} />
         <select name="sido" defaultValue={sido} style={{ border: '1px solid #dddddd', borderRadius: 999, padding: '10px 14px', fontSize: 13, fontFamily: 'inherit', background: '#fff' }}>
@@ -128,6 +144,19 @@ export default async function RegistryListPage({ params, searchParams }: { param
         <Link href={qs({ foreign: foreign ? '' : '1', page: '' })} style={chip(foreign)}>{t.filterForeign}</Link>
         <Link href={qs({ listed: listed ? '' : '1', page: '' })} style={chip(listed)}>{t.filterContracted}</Link>
         <span style={{ fontSize: 13, color: '#6a6a6a', marginLeft: 'auto' }}>{t.results} <b style={{ color: '#222' }}>{total.toLocaleString(locale === 'kr' ? 'ko-KR' : 'en-US')}</b>{t.countSuffix}</span>
+      </div>
+
+      {/* 과별(진료과) 칩 — 심평원 진료과목 코드 기준 */}
+      <div style={{ marginTop: 12 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#6a6a6a', marginBottom: 6 }}>{t.dept}</div>
+        <div className="m-cl-hscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+          <Link href={qs({ dept: '', page: '' })} style={{ ...chip(!dept), flexShrink: 0 }}>{t.filterAll}</Link>
+          {DEPT_GROUPS.map((g) => (
+            <Link key={g.key} href={qs({ dept: g.key, type: 'all', page: '' })} style={{ ...chip(dept === g.key), flexShrink: 0 }}>
+              {(dict.clinicsPage.depts as Record<string, string>)[g.key] ?? g.ko}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {error ? <p style={{ color: '#dc2626', fontSize: 13, marginTop: 16 }}>{error}</p> : null}

@@ -10,6 +10,7 @@ import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { categoryListings } from '@/drizzle/schema/category-listings';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
+import { DEPT_GROUPS } from '@/lib/hospital-registry/departments';
 
 export const dynamic = 'force-dynamic';
 
@@ -381,6 +382,22 @@ export default async function ClinicsListPage({
         <input type="hidden" name="type" value="all" />
         <button type="submit" style={{ background: '#222', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{dict.clinicsPage.registry.search}</button>
       </form>
+
+      {/* 과별(진료과) 카테고리 — 심평원 진료과목 코드로 전국 병원을 정확히 나눈다 */}
+      <div style={{ marginTop: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 8 }}>{dict.clinicsPage.registry.deptsTitle}</div>
+        <div className="m-cl-hscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+          {DEPT_GROUPS.map((g) => (
+            <Link
+              key={g.key}
+              href={`/${params.locale}/clinics/all?dept=${g.key}&type=all`}
+              style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', padding: '8px 14px', borderRadius: 9999, border: '1px solid #dddddd', background: '#fff', color: '#222', fontSize: 13, fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}
+            >
+              {(dict.clinicsPage.depts as Record<string, string>)[g.key] ?? g.ko}
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {dbError ? <ErrorBox message={dbError} /> : null}
 
