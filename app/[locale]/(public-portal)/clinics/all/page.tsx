@@ -54,7 +54,8 @@ export default async function RegistryListPage({ params, searchParams }: { param
   const hasAny = Object.values(searchParams).some((v) => (v ?? '') !== '');
   const type = searchParams.type ?? (hasAny ? 'all' : 'hospital');
   const foreign = searchParams.foreign === '1';
-  const listed = searchParams.listed === '1';
+  // 기본값: 글로우 인증 선택(전국 병원 찾기 진입 시). 단 과별 전체보기(dept 지정)로 들어오면 공공정보도 함께 보이도록 off.
+  const listed = searchParams.listed != null ? searchParams.listed === '1' : !(searchParams.dept && DEPT_GROUP_BY_KEY[searchParams.dept]);
   const page = Math.max(1, Number(searchParams.page) || 1);
   const dept = searchParams.dept && DEPT_GROUP_BY_KEY[searchParams.dept] ? searchParams.dept : '';
   const deptCodes = dept ? (DEPT_GROUP_BY_KEY[dept]?.codes ?? []) : [];
@@ -134,7 +135,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const qs = (patch: Partial<Search>): string => {
     const p = new URLSearchParams();
-    const merged: Search = { q, sido, type, foreign: foreign ? '1' : '', listed: listed ? '1' : '', dept, ...patch };
+    const merged: Search = { q, sido, type, foreign: foreign ? '1' : '', listed: listed ? '1' : '0', dept, ...patch };
     for (const [k, v] of Object.entries(merged)) if (v) p.set(k, String(v));
     const s = p.toString();
     return `/${locale}/clinics/all${s ? `?${s}` : ''}`;
@@ -155,7 +156,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
       <form action={`/${locale}/clinics/all`} method="get" style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
         <input type="hidden" name="type" value={type} />
         {foreign ? <input type="hidden" name="foreign" value="1" /> : null}
-        {listed ? <input type="hidden" name="listed" value="1" /> : null}
+        <input type="hidden" name="listed" value={listed ? '1' : '0'} />
         {dept ? <input type="hidden" name="dept" value={dept} /> : null}
         <input name="q" defaultValue={q} placeholder={t.searchPlaceholder}
           style={{ flex: 1, minWidth: 220, border: '1px solid #dddddd', borderRadius: 999, padding: '11px 16px', fontSize: 14, fontFamily: 'inherit' }} />
@@ -171,7 +172,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
         <Link href={qs({ type: 'hospital', page: '' })} style={chip(type === 'hospital')}>{t.filterHospitalGrade}</Link>
         <Link href={qs({ type: 'all', page: '' })} style={chip(type === 'all')}>{t.filterAll}</Link>
         <Link href={qs({ foreign: foreign ? '' : '1', page: '' })} style={chip(foreign)}>{t.filterForeign}</Link>
-        <Link href={qs({ listed: listed ? '' : '1', page: '' })} style={chip(listed)}>{t.filterContracted}</Link>
+        <Link href={qs({ listed: listed ? '0' : '1', page: '' })} style={chip(listed)}>{t.filterContracted}</Link>
         <span style={{ fontSize: 13, color: '#6a6a6a', marginLeft: 'auto' }}>{t.results} <b style={{ color: '#222' }}>{total.toLocaleString(locale === 'kr' ? 'ko-KR' : 'en-US')}</b>{t.countSuffix}</span>
       </div>
 
