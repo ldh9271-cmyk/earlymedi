@@ -58,7 +58,7 @@ const BRAND_GENERIC = /hotel|hotels|stay|suites?|resort|inn\./i;
 const NOT_OFFICIAL = /namu\.wiki|wikipedia|wikimedia|daum\.net|naver\.com|tistory|blog|news|kakao\.com|google|tripadvisor|booking\.com|agoda|hotels\.com|expedia|yanolja|goodchoice|trip\.com|klook|instagram|facebook|youtube|myrealtrip|interpark|hotelscombined|trivago|kayak|traveloka|ctrip|jalan|rakuten|dailyhotel|yeogi|tourvis|modetour|hanatour|verygoodtour|priceline|stayfolio|airbnb|hostelworld|kkday|creatrip|visitkorea|visitseoul|jobkorea|saramin|dealbada|ppomppu|hotelpass|hotelscan|hotelrestaurant|hotelier|job|recruit|shop|mall|deal|coupon|cafe\.|brunch|teamblind|ezday|travelcoach|tripinfo/i;
 
 type Row = { id: string; title: string; details: Record<string, unknown> };
-type Item = { url: string; src: 'official' | 'search'; from: string; site?: string; docTitle?: string };
+type Item = { url: string; src: 'official' | 'wiki' | 'search'; from: string; site?: string; docTitle?: string };
 
 const core = (name: string): string => name.replace(/\(.*?\)/g, ' ').replace(/[A-Za-z&·,.\-]+/g, ' ').replace(/\s+/g, ' ').trim();
 const host = (u: string): string => { try { return new URL(u).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; } };
@@ -146,6 +146,29 @@ async function officialPage(name: string, hinted: string | null): Promise<string
   }
   return null;
 }
+
+/** 홍보성 기사(뷔페·디저트·선물·프로모션…) 제목은 사진이 호텔 외관과 무관해 제외. */
+const PROMO_TITLE = /뷔페|디저트|선물|케이크|프로모션|런칭|출시|이벤트|패키지|뷰티|레스토랑|애프터눈|메뉴|딸기|와인|시즌|한정|혜택|채용|공고|모집|할인|쿠폰|웨딩|결혼|맛집|요리|셰프|칵테일|브런치|콜라보|굿즈|크리스마스|추석|설 선물|빙수|음료|커피/;
+
+/** 위키백과(공용 라이선스) 문서 대표 사진 — 문서 제목이 이 호텔이어야 하고 가로 사진만. */
+async function wikiImage(name: string): Promise<{ url: string; page: string } | null> {
+  const ua = { 'User-Agent': 'GlowUpTour/1.0 (https://www.glowuptour.com)' };
+  const cleaned = core(name).replace(/호텔/g, ' ').replace(/\s+/g, ' ').trim();
+  for (const lang of ['ko', 'en']) {
+    try {
+      const q = lang === 'ko' ? cleaned : name.match(/\(([A-Za-z][^)]*)\)/)?.[1] ?? '';
+      if (!q) continue;
+      const s = (await (await fetch(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&format=json&srlimit=3&srsearch=${encodeURIComponent(q)}`, { headers: ua, cache: 'no-store' })).json()) as { query?: { search?: Array<{ pageid: number; title: string }> } };
+      const hit = (s.query?.search ?? []).find((h) => (lang === 'ko' ? titleMentions(name, h.title) : norm(h.title).includes(norm(q).slice(0, 6))));
+      if (!hit) continue;
+      const p = (await (await fetch(`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages&piprop=original&pageids=${hit.pageid}`, { headers: ua, cache: 'no-store' })).json()) as { query?: { pages?: Record<string, { original?: { source: string; width: number; height: number } }> } };
+      const pg = Object.values(p.query?.pages ?? {})[0];
+      const o = pg?.original;
+      if (o && o.width >= 800 && o.width / o.height >= 1.2 && o.width / o.height <= 2.4) return { url: o.source.split('?')[0] ?? o.source, page: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(hit.title)}` };
+    } catch { /* next */ }
+  }
+  return null;
+}
 async function download(url: string): Promise<{ buf: Buffer; type: string; w: number; h: number } | null> {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), 12000);
   try {
@@ -195,11 +218,13 @@ export async function POST(req: Request): Promise<NextResponse> {
       const p = await fetchHtml(page);
       if (p) for (const u of pageImages(p.html, p.url).slice(0, 12)) items.push({ url: u, src: 'official', from: p.url, docTitle: p.title });
     }
+    const wiki = await wikiImage(name).catch(() => null);
+    if (wiki) items.push({ url: wiki.url, src: 'wiki', from: wiki.page, site: 'Wikimedia Commons' });
     // 검색 이미지 — 외관·로비 위주. 브랜드 도메인 글은 바로, 그 외는 글 제목에 호텔명 필수
     const wantSearch = items.length < 4;
     if (wantSearch) {
       const seenDoc = new Map<string, string | null>();
-      for (const kw of ['외관', '로비', '전경']) {
+      for (const kw of ['외관 건물', '외관', '전경']) {
         if (items.length >= 10) break;
         const imgs = await kakao('image', `${core(name)} 호텔 ${kw}`, 20);
         for (const d of imgs) {
@@ -211,14 +236,15 @@ export async function POST(req: Request): Promise<NextResponse> {
           if (NOT_OFFICIAL.test(dh) && !/blog|tistory|brunch|news|daum/.test(dh)) continue;
           let title = seenDoc.get(doc);
           if (title === undefined) { const pg = await fetchHtml(doc, 6000); title = pg?.title ?? null; seenDoc.set(doc, title); }
-          if (title && titleMentions(name, title)) items.push({ url: u, src: 'search', from: doc, site: String(d.display_sitename ?? ''), docTitle: title });
+          if (title && titleMentions(name, title) && !PROMO_TITLE.test(title)) items.push({ url: u, src: 'search', from: doc, site: String(d.display_sitename ?? ''), docTitle: title });
         }
       }
     }
     // 다운로드·검증 — 공식 페이지 후보 먼저, 큰 사진 우선
     const got: Array<Item & { buf: Buffer; type: string; w: number; h: number }> = [];
     for (const it of items) { if (got.length >= 6) break; const d = await download(it.url); if (d) got.push({ ...it, ...d }); }
-    got.sort((a, b) => (a.src === 'official' ? 0 : 1) - (b.src === 'official' ? 0 : 1) || b.w * b.h - a.w * a.h);
+    const rank = (x: Item): number => (x.src === 'official' ? 0 : x.src === 'wiki' ? 1 : 2);
+    got.sort((a, b) => rank(a) - rank(b) || b.w * b.h - a.w * a.h);
     if (got.length === 0) {
       await db.execute(sql`update partner_listings set details = details || ${JSON.stringify({ imageSource: { triedAt: new Date().toISOString(), page: page ?? undefined, found: 0 } })}::jsonb where id = ${r.id}`);
       none += 1; log.push(`✘ ${name}${page ? ` (${pageHost})` : ''}`); return;
@@ -234,7 +260,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     await db.execute(sql`update partner_listings set cover_image_url = coalesce(nullif(cover_image_url, ''), ${cover}),
       gallery_image_urls = case when jsonb_typeof(gallery_image_urls) = 'array' and jsonb_array_length(gallery_image_urls) > 0 then gallery_image_urls else ${JSON.stringify(gallery)}::jsonb end,
       details = details || ${JSON.stringify({ imageSource: source })}::jsonb, updated_at = now() where id = ${r.id}`);
-    done += 1; log.push(`✔ ${name} · ${Math.min(got.length, 5)}장 (${got.filter((g) => g.src === 'official').length} 공식${pageHost ? ' ' + pageHost : ''}) ← ${first.src}:${host(first.from)}`);
+    done += 1; log.push(`✔ ${name} · ${Math.min(got.length, 5)}장 (${got.filter((g) => g.src === 'official').length} 공식${pageHost ? ' ' + pageHost : ''}, ${got.filter((g) => g.src === 'wiki').length} 위키) ← ${first.src}:${host(first.from)}`);
   };
   for (let i = 0; i < rows.length; i += 2) {
     await Promise.all(rows.slice(i, i + 2).map((r) => one(r).catch((e: unknown) => { log.push(`! ${r.title}: ${e instanceof Error ? e.message : String(e)}`); })));
