@@ -8,6 +8,7 @@ import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/a
 import { organizations } from '@/drizzle/schema/organizations';
 import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
 import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
+import { lodgingRegistry } from '@/drizzle/schema/lodging-registry';
 import { users } from '@/drizzle/schema/users';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { billingAccounts, billingPlans } from '@/drizzle/schema/billing';
@@ -83,6 +84,7 @@ const QuickSignupSchema = z.object({
   claimYkiho: z.string().min(10).max(200).nullable().optional(),
   // 미용업 레지스트리 관리번호 — '매장 정보 직접 등록' 으로 가입 시
   claimShopMgtNo: z.string().min(5).max(80).nullable().optional(),
+  claimStayMgtNo: z.string().min(5).max(80).nullable().optional(),
   representativeName: z.string().min(2, '담당자명은 2자 이상').max(80),
   contactPhone: z.string().min(8, '연락처를 입력해 주세요').max(40),
   // Demographics — ALL optional ("선택 수집" per Kakao Channel PII policy).
@@ -256,6 +258,14 @@ export async function quickSignupAction(rawInput: QuickSignupInput): Promise<str
       .update(beautyRegistry)
       .set({ claimOrgId: org.id, claimStatus: 'pending', claimedAt: new Date(), updatedAt: new Date() })
       .where(and(eq(beautyRegistry.mgtNo, input.claimShopMgtNo), inArray(beautyRegistry.claimStatus, ['none', 'rejected'])))
+      .catch(() => undefined);
+  }
+  // 6-c. 숙소 직접 등록(클레임): 공개 숙박 찾기에서 넘어온 비등록 숙소
+  if (input.claimStayMgtNo && input.accountType === 'non_medical') {
+    await db
+      .update(lodgingRegistry)
+      .set({ claimOrgId: org.id, claimStatus: 'pending', claimedAt: new Date(), updatedAt: new Date() })
+      .where(and(eq(lodgingRegistry.mgtNo, input.claimStayMgtNo), inArray(lodgingRegistry.claimStatus, ['none', 'rejected'])))
       .catch(() => undefined);
   }
   // 6. 병원 직접 등록(클레임): 비계약 병원 관계자가 공개 병원 찾기에서 넘어온 경우

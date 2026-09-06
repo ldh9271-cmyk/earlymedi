@@ -7,6 +7,7 @@ import { invites } from '@/drizzle/schema/invites';
 import { organizations } from '@/drizzle/schema/organizations';
 import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
 import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
+import { lodgingRegistry } from '@/drizzle/schema/lodging-registry';
 import { verifyInviteToken, hashToken } from '@/lib/auth/invite-tokens';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
@@ -31,7 +32,7 @@ export const dynamic = 'force-dynamic';
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: { next?: string; claim?: string; claimShop?: string };
+  searchParams: { next?: string; claim?: string; claimShop?: string; claimStay?: string };
 }): Promise<JSX.Element> {
   const next = searchParams.next ?? null;
 
@@ -47,6 +48,21 @@ export default async function SignupPage({
       if (r) claimShop = r;
     } catch {
       claimShop = null;
+    }
+  }
+
+  // 공개 숙박 찾기 → 숙소 정보 직접 등록
+  let claimStay: { mgtNo: string; name: string; addr: string | null } | null = null;
+  if (searchParams.claimStay) {
+    try {
+      const [r] = await db
+        .select({ mgtNo: lodgingRegistry.mgtNo, name: lodgingRegistry.name, addr: lodgingRegistry.addrRoad })
+        .from(lodgingRegistry)
+        .where(eq(lodgingRegistry.mgtNo, searchParams.claimStay))
+        .limit(1);
+      if (r) claimStay = r;
+    } catch {
+      claimStay = null;
     }
   }
 
@@ -188,7 +204,13 @@ export default async function SignupPage({
               <p className="mt-1 text-[13px] leading-relaxed text-rose-900/80"><b>{claimShop.name}</b>{claimShop.addr ? ` · ${claimShop.addr}` : ''} 의 관계자로 가입합니다. 가입 후 마스터 승인이 나면 공개 뷰티샵 찾기에서 컬러 카드로 노출되고 소개·사진·언어를 직접 입력할 수 있습니다.</p>
             </div>
           ) : null}
-          <QuickSignupForm email={presetEmail} alreadyAuthed={alreadyAuthed} claim={claim ? { ykiho: claim.ykiho, name: claim.name } : null} claimShop={claimShop ? { mgtNo: claimShop.mgtNo, name: claimShop.name } : null} />
+          {claimStay ? (
+            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm">
+              <p className="font-bold text-rose-700">숙소 정보 직접 등록</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-rose-900/80"><b>{claimStay.name}</b>{claimStay.addr ? ` · ${claimStay.addr}` : ''} 의 관계자로 가입합니다. 가입 후 마스터 승인이 나면 공개 전국 숙박 찾기에서 컬러 카드로 노출되고 소개·사진·언어를 직접 입력할 수 있습니다.</p>
+            </div>
+          ) : null}
+          <QuickSignupForm email={presetEmail} alreadyAuthed={alreadyAuthed} claim={claim ? { ykiho: claim.ykiho, name: claim.name } : null} claimShop={claimShop ? { mgtNo: claimShop.mgtNo, name: claimShop.name } : null} claimStay={claimStay ? { mgtNo: claimStay.mgtNo, name: claimStay.name } : null} />
         </CardContent>
       </Card>
 

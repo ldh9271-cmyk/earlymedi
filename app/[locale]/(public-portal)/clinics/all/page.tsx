@@ -91,7 +91,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
         id: hospitalRegistry.id, ykiho: hospitalRegistry.ykiho, name: hospitalRegistry.name, clCd: hospitalRegistry.clCd, clName: hospitalRegistry.clName,
         sidoName: hospitalRegistry.sidoName, sgguName: hospitalRegistry.sgguName, addr: hospitalRegistry.addr, drTotal: hospitalRegistry.drTotal,
         foreignLicensed: hospitalRegistry.foreignLicensed, contractedHospitalId: hospitalRegistry.contractedHospitalId, claimStatus: hospitalRegistry.claimStatus,
-        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerCover: hospitals.coverImageUrl,
+        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerCover: sql<string | null>`coalesce(${hospitals.coverImageUrl}, ${hospitals.landingImageUrl}, ${hospitals.galleryImageUrls}->>0)`,
       })
       .from(hospitalRegistry)
       .leftJoin(hospitals, eq(hospitals.id, hospitalRegistry.contractedHospitalId))
@@ -108,7 +108,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
     // 과별 필터 + 첫 페이지: 레지스트리 미연결 등록 병원도 해당 과에 포함 (컬러 카드, 글로우업 상세로 연결)
     if (dept && page === 1) {
       const unlinked = await db
-        .select({ id: hospitals.id, name: hospitals.name, slug: hospitals.slug, cover: hospitals.coverImageUrl, cats: hospitals.primaryCategories, addressJson: hospitals.addressJson })
+        .select({ id: hospitals.id, name: hospitals.name, slug: hospitals.slug, cover: sql<string | null>`coalesce(${hospitals.coverImageUrl}, ${hospitals.landingImageUrl}, ${hospitals.galleryImageUrls}->>0)`, cats: hospitals.primaryCategories, addressJson: hospitals.addressJson })
         .from(hospitals)
         .where(sql`${hospitals.countryCode} = 'KR' and ${hospitals.isActiveForMatching} = true and not exists (select 1 from hospital_registry r where r.contracted_hospital_id = ${hospitals.id})`)
         .limit(200);

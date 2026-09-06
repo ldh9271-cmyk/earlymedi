@@ -178,6 +178,7 @@ export function QuickSignupForm({
   alreadyAuthed,
   claim = null,
   claimShop = null,
+  claimStay = null,
 }: {
   email: string;
   alreadyAuthed: boolean;
@@ -185,6 +186,8 @@ export function QuickSignupForm({
   claim?: { ykiho: string; name: string } | null;
   /** 공개 뷰티샵 찾기 → '매장 정보 직접 등록' 으로 넘어온 매장 */
   claimShop?: { mgtNo: string; name: string } | null;
+  /** 공개 숙박 찾기 → '숙소 정보 직접 등록' 으로 넘어온 숙소 */
+  claimStay?: { mgtNo: string; name: string } | null;
 }): JSX.Element {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -204,7 +207,9 @@ export function QuickSignupForm({
       ? ({ orgName: claim.name, accountType: 'medical' } as Partial<FormValues>)
       : claimShop
         ? ({ orgName: claimShop.name, accountType: 'non_medical', partnerSubtype: 'salon' } as Partial<FormValues>)
-        : undefined,
+        : claimStay
+          ? ({ orgName: claimStay.name, accountType: 'non_medical', partnerSubtype: 'hotel' } as Partial<FormValues>)
+          : undefined,
   });
 
   const accountType = watch('accountType');
@@ -314,6 +319,7 @@ export function QuickSignupForm({
           orgName: values.orgName,
           claimYkiho: claim?.ykiho ?? null,
           claimShopMgtNo: claimShop?.mgtNo ?? null,
+          claimStayMgtNo: claimStay?.mgtNo ?? null,
           representativeName: values.representativeName,
           contactPhone: values.contactPhone,
           gender,

@@ -10,6 +10,7 @@ import { db } from '@/lib/db/client';
 import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
+import { lodgingRegistry } from '@/drizzle/schema/lodging-registry';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { findRegistryMatch } from '@/lib/hospital-registry/match';
 
@@ -214,4 +215,70 @@ export async function setShopContractAction(fd: FormData): Promise<void> {
   await db.update(beautyRegistry).set({ contractedListingId: listingId || null, updatedAt: new Date() }).where(eq(beautyRegistry.id, registryId));
   revalidatePath('/master/registry');
   back({ ok: listingId ? '글로우업 매장으로 연결했습니다' : '연결을 해제했습니다' });
+}
+
+// ── 숙박(숙박업 레지스트리) ─────────────────────────────────────────
+
+/** 숙소 직접 등록 승인/반려. */
+export async function decideStayClaimAction(fd: FormData): Promise<void> {
+  await assertMaster();
+  const id = String(fd.get('registryId') ?? '');
+  const decision = String(fd.get('decision') ?? '');
+  if (!id || !['approved', 'rejected'].includes(decision)) back({ error: 'bad_request' });
+  await db.update(lodgingRegistry).set({ claimStatus: decision, updatedAt: new Date() })
+    .where(and(eq(lodgingRegistry.id, id), or(eq(lodgingRegistry.claimStatus, 'pending'), eq(lodgingRegistry.claimStatus, 'approved'))));
+  revalidatePath('/master/registry');
+  back({ ok: decision === 'approved' ? '숙소 직접 등록을 승인했습니다' : '반려했습니다' });
+}
+
+/** 글로우업 호텔 상품(partner_listings.category = hotel) ↔ 숙박업 레지스트리 자동 연결 (상호 + 시도). */
+export async function autoMatchStaysAction(): Promise<void> {
+  await assertMaster();
+  const listings = await db
+    .select({ id: partnerListings.id, title: partnerListings.title, category: partnerListings.category, addressJson: partnerListings.addressJson })
+    .from(partnerListings)
+    .where(eq(partnerListings.category, 'hotel'));
+  const linked = new Set(
+    (await db.select({ lid: lodgingRegistry.contractedListingId }).from(lodgingRegistry).where(sql`${lodgingRegistry.contractedListingId} is not null`)).map((r) => r.lid as string),
+  );
+  let matched = 0; const misses: string[] = [];
+  for (const l of listings) {
+    if (linked.has(l.id)) continue;
+    const title = l.title.replace(/\s*[(（][^)）]*[)）]\s*/g, ' ').replace(/\s*(호텔|HOTEL|Hotel)\s*/g, ' ').trim();
+    if (!title) { misses.push(l.title); continue; }
+    const addr = l.addressJson as { city?: string; addressLine1?: string } | null;
+    const city = (addr?.city ?? '').trim();
+    const like = `%${title.replace(/[%_]/g, '').replace(/\s+/g, '%')}%`;
+    const cands = await db
+      .select({ id: lodgingRegistry.id, name: lodgingRegistry.name, addrRoad: lodgingRegistry.addrRoad, sido: lodgingRegistry.sidoName })
+      .from(lodgingRegistry)
+      .where(and(ilike(lodgingRegistry.name, like), eq(lodgingRegistry.statusCode, '01'), sql`${lodgingRegistry.contractedListingId} is null`))
+      .limit(30);
+    const strip = (v: string): string => norm(v.replace(/호텔|hotel/gi, ''));
+    const exact = cands.filter((c) => strip(c.name) === strip(title) || strip(c.name).startsWith(strip(title)));
+    let pick = exact.length === 1 ? exact[0] : null;
+    if (!pick && exact.length > 1 && city) {
+      const byCity = exact.filter((c) => (c.addrRoad ?? '').includes(city) || (c.sido ?? '') === city.slice(0, 2));
+      if (byCity.length === 1) pick = byCity[0];
+    }
+    if (pick) {
+      await db.update(lodgingRegistry).set({ contractedListingId: l.id, updatedAt: new Date() }).where(eq(lodgingRegistry.id, pick.id));
+      matched += 1;
+    } else {
+      misses.push(`${l.title}${exact.length > 1 ? ` (동명 ${exact.length}곳)` : ''}`);
+    }
+  }
+  revalidatePath('/master/registry');
+  back({ ok: `숙소 자동 연결 ${matched}곳 (미연결 ${misses.length})`, ...(misses.length ? { misses: misses.slice(0, 60).join('\n') } : {}) });
+}
+
+/** 숙소 개별 연결/해제 — 레지스트리 행에 partner_listings.id 지정. */
+export async function setStayContractAction(fd: FormData): Promise<void> {
+  await assertMaster();
+  const registryId = String(fd.get('registryId') ?? '');
+  const listingId = String(fd.get('listingId') ?? '').trim();
+  if (!registryId) back({ error: 'missing' });
+  await db.update(lodgingRegistry).set({ contractedListingId: listingId || null, updatedAt: new Date() }).where(eq(lodgingRegistry.id, registryId));
+  revalidatePath('/master/registry');
+  back({ ok: listingId ? '글로우업 숙소로 연결했습니다' : '연결을 해제했습니다' });
 }

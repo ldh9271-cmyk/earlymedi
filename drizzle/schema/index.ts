@@ -77,3 +77,6 @@ export * from './hospital-registry';
 
 // 전국 미용업소 레지스트리 (행안부 생활_미용업) — 헤어·메이크업·네일·피부 + 반영구/퍼스널컬러 태깅
 export * from './beauty-registry';
+
+// 전국 숙박업소 레지스트리 (행안부 문화_숙박업)
+export * from './lodging-registry';
