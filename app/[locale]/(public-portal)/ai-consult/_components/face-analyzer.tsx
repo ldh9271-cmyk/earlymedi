@@ -2,8 +2,11 @@
 
 // AI Glow-Up 얼굴 분석 업로더 — 사진을 캔버스로 1024px 로 줄여
 // /api/ai/glowup-analysis 에 보내고, 분석 코멘트 + 카테고리별 추천
-// 카드를 렌더한다. 이미지는 서버에 저장되지 않는다.
-import { useRef, useState } from 'react';
+// 카드를 렌더한다. 이미지는 서버에 저장되지 않는다(결과 텍스트만 저장).
+//
+// '결과를 이메일로 받기'는 회원 계정 이메일로만 보낸다:
+//   비로그인 → 회원가입/로그인 → ?analysis=<id>&send=1 로 복귀 → 저장된 결과를 다시 띄우고 자동 발송.
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
@@ -18,6 +21,7 @@ type Analysis = {
   browNote: string;
   overallNote: string;
 };
+export type FaceInitialResult = { id: string; analysis: Analysis; recs: RecSection[] };
 
 const leadInputStyle: React.CSSProperties = {
   height: 44, borderRadius: 10, border: '1px solid #dddddd',
@@ -38,28 +42,64 @@ export default function FaceAnalyzer({
   t,
   note,
   catTitles,
+  userEmail = null,
+  initialResult = null,
+  autoSend = false,
 }: {
   locale: PublicLocale;
   t: Dictionary['ai']['upload'];
   note: string;
   catTitles: Record<string, string>;
+  userEmail?: string | null;
+  initialResult?: FaceInitialResult | null;
+  autoSend?: boolean;
 }): JSX.Element {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [phase, setPhase] = useState<'idle' | 'ready' | 'loading' | 'done'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'ready' | 'loading' | 'done'>(initialResult ? 'done' : 'idle');
   const [error, setError] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState<Analysis | null>(null);
-  const [recs, setRecs] = useState<RecSection[]>([]);
-  // 결과 이메일 발송 리드 폼
-  const [leadPhase, setLeadPhase] = useState<'hidden' | 'form' | 'sending' | 'sent'>('hidden');
-  const [leadMsg, setLeadMsg] = useState<string | null>(null);
-  const [lead, setLead] = useState({ name: '', countryCode: '', contact: '', messenger: '', email: '', birthDate: '' });
+  const [analysis, setAnalysis] = useState<Analysis | null>(initialResult?.analysis ?? null);
+  const [recs, setRecs] = useState<RecSection[]>(initialResult?.recs ?? []);
+  const [analysisId, setAnalysisId] = useState<string | null>(initialResult?.id ?? null);
+  // 결과 이메일 발송 — 로그인 회원은 선택 연락처만 받고 계정 이메일로, 비회원은 회원가입/로그인으로
+  const [emailPhase, setEmailPhase] = useState<'hidden' | 'signup' | 'form' | 'sending' | 'sent' | 'failed'>('hidden');
+  const [sentMsg, setSentMsg] = useState<string | null>(null);
+  const [contact, setContact] = useState({ phone: '', messenger: '', birthDate: '' });
+  const autoSent = useRef(false);
+
+  async function sendReport(id: string, withContact: boolean): Promise<void> {
+    setEmailPhase('sending');
+    try {
+      const res = await fetch('/api/ai/glowup-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locale, analysisId: id,
+          contact: withContact ? { phone: contact.phone.trim(), messenger: contact.messenger.trim(), birthDate: contact.birthDate || '' } : undefined,
+        }),
+      });
+      if (!res.ok) { setEmailPhase('failed'); return; }
+      const j = (await res.json()) as { emailed?: boolean; email?: string };
+      setSentMsg(j.emailed ? t.sentTo.replace('{email}', j.email ?? userEmail ?? '') : t.sentNoEmail);
+      setEmailPhase('sent');
+    } catch {
+      setEmailPhase('failed');
+    }
+  }
+
+  // 회원가입/로그인 뒤 ?send=1 로 돌아온 경우 한 번만 자동 발송
+  useEffect(() => {
+    if (autoSend && userEmail && initialResult?.id && !autoSent.current) { autoSent.current = true; void sendReport(initialResult.id, false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function onPick(file: File | undefined): void {
     if (!file) return;
     setError(null);
     setAnalysis(null);
     setRecs([]);
+    setAnalysisId(null);
+    setEmailPhase('hidden');
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
@@ -97,6 +137,7 @@ export default function FaceAnalyzer({
       const j = await res.json();
       setAnalysis(j.analysis);
       setRecs(j.recs ?? []);
+      setAnalysisId(j.id ?? null);
       setPhase('done');
     } catch {
       setError(t.errorGeneric);
@@ -108,51 +149,18 @@ export default function FaceAnalyzer({
     setPreview(null);
     setAnalysis(null);
     setRecs([]);
+    setAnalysisId(null);
     setError(null);
     setPhase('idle');
-    setLeadPhase('hidden');
-    setLeadMsg(null);
+    setEmailPhase('hidden');
+    setSentMsg(null);
     if (fileRef.current) fileRef.current.value = '';
-  }
-
-  async function submitLead(e: React.FormEvent): Promise<void> {
-    e.preventDefault();
-    if (!analysis) return;
-    setLeadPhase('sending');
-    setLeadMsg(null);
-    try {
-      const res = await fetch('/api/ai/glowup-lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          locale,
-          name: lead.name.trim(),
-          countryCode: lead.countryCode.trim().toUpperCase().slice(0, 2),
-          contact: lead.contact.trim(),
-          messenger: lead.messenger.trim(),
-          email: lead.email.trim(),
-          birthDate: lead.birthDate || undefined,
-          analysis,
-          recs,
-        }),
-      });
-      if (!res.ok) {
-        setLeadMsg(t.sendError);
-        setLeadPhase('form');
-        return;
-      }
-      const j = await res.json();
-      setLeadMsg(j.emailed ? t.sentOk : t.sentNoEmail);
-      setLeadPhase('sent');
-    } catch {
-      setLeadMsg(t.sendError);
-      setLeadPhase('form');
-    }
   }
 
   const seasonColor = analysis
     ? SEASON_COLORS[analysis.personalColorSeason.toLowerCase()] ?? '#ff385c'
     : '#ff385c';
+  const returnTo = `/${locale}/ai-consult?analysis=${analysisId ?? ''}&send=1#ai-analyzer`;
 
   return (
     <div
@@ -347,25 +355,41 @@ export default function FaceAnalyzer({
             </>
           ) : null}
 
-          {/* 결과 이메일 발송 — 리드 폼 (국가·이름·연락처·메신저·이메일) */}
+          {/* 결과 이메일 발송 — 회원 계정 이메일로만. 비회원은 회원가입/로그인 뒤 복귀·자동 발송 */}
           <div style={{ marginTop: 30, textAlign: 'center' }}>
-            {leadPhase === 'hidden' ? (
-              <button
-                type="button"
-                onClick={() => setLeadPhase('form')}
-                style={{
-                  background: '#ff385c', color: '#fff',
-                  border: 'none', borderRadius: 10, padding: '13px 26px',
-                  fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >
-                {t.emailBtn}
-              </button>
+            {emailPhase === 'hidden' || emailPhase === 'failed' ? (
+              <>
+                {emailPhase === 'failed' ? (
+                  <p style={{ fontSize: 13, color: '#dc2626', margin: '0 0 10px' }}>{t.sendError}</p>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => { if (!analysisId) { setEmailPhase('failed'); return; } setEmailPhase(userEmail ? 'form' : 'signup'); }}
+                  style={{
+                    background: '#ff385c', color: '#fff',
+                    border: 'none', borderRadius: 10, padding: '13px 26px',
+                    fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  ✉️ {t.emailBtn}
+                </button>
+              </>
             ) : null}
 
-            {leadPhase === 'form' || leadPhase === 'sending' ? (
+            {emailPhase === 'signup' ? (
+              <div style={{ margin: '0 auto', maxWidth: 480, background: '#fff', border: '1px solid #ebebeb', borderRadius: 14, padding: '18px 20px' }}>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{t.emailTitle}</div>
+                <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 14px', lineHeight: 1.5 }}>{t.needSignup}</p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <Link href={`/${locale}/signup?next=${encodeURIComponent(returnTo)}`} style={{ background: '#ff385c', color: '#fff', borderRadius: 10, padding: '11px 16px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>{t.signupCta}</Link>
+                  <Link href={`/${locale}/login?next=${encodeURIComponent(returnTo)}`} style={{ border: '1px solid #dddddd', color: '#222', borderRadius: 10, padding: '11px 16px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>{t.loginCta}</Link>
+                </div>
+              </div>
+            ) : null}
+
+            {emailPhase === 'form' || emailPhase === 'sending' ? (
               <form
-                onSubmit={submitLead}
+                onSubmit={(e) => { e.preventDefault(); if (analysisId) void sendReport(analysisId, true); }}
                 style={{
                   margin: '0 auto', maxWidth: 480, textAlign: 'left',
                   background: '#fff', border: '1px solid #ebebeb', borderRadius: 14,
@@ -374,43 +398,19 @@ export default function FaceAnalyzer({
               >
                 <div style={{ fontSize: 16, fontWeight: 700 }}>{t.emailTitle}</div>
                 <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 14px', lineHeight: 1.5 }}>
-                  {t.emailBody}
+                  {t.emailBody} <b style={{ color: '#222' }}>{userEmail}</b>
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px', gap: 10 }}>
-                  <input
-                    required
-                    value={lead.name}
-                    onChange={(e) => setLead({ ...lead, name: e.target.value })}
-                    placeholder={t.fieldName}
-                    style={leadInputStyle}
-                  />
-                  <input
-                    required
-                    value={lead.countryCode}
-                    onChange={(e) => setLead({ ...lead, countryCode: e.target.value })}
-                    placeholder={`${t.fieldCountry} (US)`}
-                    maxLength={2}
-                    style={{ ...leadInputStyle, textTransform: 'uppercase' }}
-                  />
-                </div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#6a6a6a', marginBottom: 6 }}>{t.optionalContact}</div>
                 <input
-                  value={lead.contact}
-                  onChange={(e) => setLead({ ...lead, contact: e.target.value })}
+                  value={contact.phone}
+                  onChange={(e) => setContact({ ...contact, phone: e.target.value })}
                   placeholder={t.fieldContact}
-                  style={{ ...leadInputStyle, marginTop: 10, width: '100%' }}
+                  style={{ ...leadInputStyle, width: '100%' }}
                 />
                 <input
-                  value={lead.messenger}
-                  onChange={(e) => setLead({ ...lead, messenger: e.target.value })}
+                  value={contact.messenger}
+                  onChange={(e) => setContact({ ...contact, messenger: e.target.value })}
                   placeholder={t.fieldMessenger}
-                  style={{ ...leadInputStyle, marginTop: 10, width: '100%' }}
-                />
-                <input
-                  required
-                  type="email"
-                  value={lead.email}
-                  onChange={(e) => setLead({ ...lead, email: e.target.value })}
-                  placeholder={t.fieldEmail}
                   style={{ ...leadInputStyle, marginTop: 10, width: '100%' }}
                 />
                 <label style={{ display: 'block', marginTop: 10 }}>
@@ -419,34 +419,31 @@ export default function FaceAnalyzer({
                   </span>
                   <input
                     type="date"
-                    value={lead.birthDate}
-                    onChange={(e) => setLead({ ...lead, birthDate: e.target.value })}
+                    value={contact.birthDate}
+                    onChange={(e) => setContact({ ...contact, birthDate: e.target.value })}
                     max={new Date().toISOString().slice(0, 10)}
                     style={{ ...leadInputStyle, width: '100%' }}
                   />
                 </label>
-                {leadMsg ? (
-                  <p style={{ fontSize: 13, color: '#dc2626', margin: '10px 0 0' }}>{leadMsg}</p>
-                ) : null}
                 <button
                   type="submit"
-                  disabled={leadPhase === 'sending'}
+                  disabled={emailPhase === 'sending'}
                   style={{
                     width: '100%', marginTop: 14,
                     background: '#ff385c', color: '#fff',
                     border: 'none', borderRadius: 10, padding: '13px 0',
                     fontWeight: 700, fontSize: 15,
-                    cursor: leadPhase === 'sending' ? 'wait' : 'pointer',
-                    opacity: leadPhase === 'sending' ? 0.7 : 1,
+                    cursor: emailPhase === 'sending' ? 'wait' : 'pointer',
+                    opacity: emailPhase === 'sending' ? 0.7 : 1,
                     fontFamily: 'inherit',
                   }}
                 >
-                  {leadPhase === 'sending' ? t.sending : t.send}
+                  {emailPhase === 'sending' ? t.sending : t.send}
                 </button>
               </form>
             ) : null}
 
-            {leadPhase === 'sent' ? (
+            {emailPhase === 'sent' ? (
               <div
                 style={{
                   margin: '0 auto', maxWidth: 480,
@@ -455,7 +452,7 @@ export default function FaceAnalyzer({
                   fontSize: 14, fontWeight: 600, lineHeight: 1.5,
                 }}
               >
-                {leadMsg}
+                {sentMsg}
               </div>
             ) : null}
           </div>

@@ -112,6 +112,11 @@ const vi: Dictionary = {
       sentOk: 'Hoàn tất! Kết quả đã được gửi qua email. Concierge sẽ sớm liên hệ với bạn.',
       sentNoEmail: 'Hoàn tất! Concierge sẽ sớm liên hệ với bạn. (Báo cáo email sắp được kích hoạt)',
       sendError: 'Gửi thất bại. Vui lòng thử lại sau.',
+      needSignup: 'Báo cáo sẽ được gửi tới email tài khoản của bạn. Đăng ký (hoặc đăng nhập) xong bạn sẽ quay lại đây và báo cáo được gửi tự động.',
+      signupCta: 'Đăng ký và nhận qua email',
+      loginCta: 'Đã là thành viên? Đăng nhập',
+      sentTo: 'Đã gửi tới {email}. Bộ phận hỗ trợ có thể tư vấn riêng cho bạn.',
+      optionalContact: 'Liên hệ (tuỳ chọn) — để lại nếu bạn muốn được tư vấn',
     },
     note: 'Ảnh của bạn được xoá ngay sau khi phân tích. Không bao giờ lưu trữ hoặc chia sẻ khi chưa có sự đồng ý.',
     trip: {

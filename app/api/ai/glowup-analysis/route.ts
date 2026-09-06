@@ -5,6 +5,7 @@ import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { categoryListings } from '@/drizzle/schema/category-listings';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
+import { aiFaceAnalyses } from '@/drizzle/schema/ai-face-analyses';
 import { fetchFeaturedListings } from '@/lib/listings/query';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
@@ -221,14 +222,21 @@ export async function POST(req: Request): Promise<NextResponse> {
     promo: l.promoLabel ? localizeKoLabel(l.promoLabel, locale) : null,
   });
 
-  return NextResponse.json({
-    analysis,
-    recs: [
-      { key: 'clinic', items: clinics },
-      { key: 'personal_color', items: colors.map(toItem) },
-      { key: 'hair', items: hairs.map(toItem) },
-      { key: 'nail', items: nails.map(toItem) },
-      { key: 'pmu', items: pmus.map(toItem) },
-    ].filter((r) => r.items.length > 0),
-  });
+  const recs = [
+    { key: 'clinic', items: clinics },
+    { key: 'personal_color', items: colors.map(toItem) },
+    { key: 'hair', items: hairs.map(toItem) },
+    { key: 'nail', items: nails.map(toItem) },
+    { key: 'pmu', items: pmus.map(toItem) },
+  ].filter((r) => r.items.length > 0);
+
+  // 결과만 저장(사진 제외) — '이메일로 받기' 가 회원가입/로그인을 거쳐 돌아와도 결과를 다시 띄우고 보낼 수 있게.
+  let id: string | null = null;
+  try {
+    const { faceDetected: _fd, ...saved } = analysis;
+    const [row] = await db.insert(aiFaceAnalyses).values({ locale, analysis: saved, recs }).returning({ id: aiFaceAnalyses.id });
+    id = row?.id ?? null;
+  } catch { /* 저장 실패해도 결과는 보여준다 */ }
+
+  return NextResponse.json({ id, analysis, recs });
 }

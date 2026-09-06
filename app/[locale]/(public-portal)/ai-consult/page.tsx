@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
-import FaceAnalyzer from './_components/face-analyzer';
+import { eq } from 'drizzle-orm';
+import { db } from '@/lib/db/client';
+import { aiFaceAnalyses } from '@/drizzle/schema/ai-face-analyses';
+import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
+import FaceAnalyzer, { type FaceInitialResult } from './_components/face-analyzer';
 import AiChat from './_components/ai-chat';
 
 export const dynamic = 'force-dynamic';
@@ -37,11 +41,28 @@ const AI_CSS =
 
 export default async function AiConsultPage({
   params,
+  searchParams,
 }: {
   params: { locale: PublicLocale };
+  searchParams: { analysis?: string; send?: string };
 }): Promise<JSX.Element> {
   const dict = await getDictionary(params.locale);
   const f = dict.ai.features;
+
+  // 얼굴 분석 결과 이메일 발송은 회원 계정 이메일로만 — 로그인 상태와, 회원가입 뒤 복귀한 저장 결과(?analysis=)를 읽는다.
+  let userEmail: string | null = null; let userId: string | null = null;
+  try {
+    const { data: auth } = await createSupabaseServerClient().auth.getUser();
+    userEmail = auth.user?.email ?? null; userId = auth.user?.id ?? null;
+  } catch { /* 비로그인 취급 */ }
+  let initialResult: FaceInitialResult | null = null;
+  const aid = searchParams.analysis ?? '';
+  if (/^[0-9a-f-]{36}$/i.test(aid)) {
+    try {
+      const [row] = await db.select().from(aiFaceAnalyses).where(eq(aiFaceAnalyses.id, aid)).limit(1);
+      if (row && (!row.userId || row.userId === userId)) initialResult = { id: row.id, analysis: row.analysis, recs: row.recs };
+    } catch { /* 없으면 새 분석 */ }
+  }
 
   return (
     <section className="m-ai-section" style={{ maxWidth: 1080, margin: '0 auto', padding: '48px 40px 80px' }}>
@@ -129,6 +150,9 @@ export default async function AiConsultPage({
             locale={params.locale}
             t={dict.ai.upload}
             note={dict.ai.note}
+            userEmail={userEmail}
+            initialResult={initialResult}
+            autoSend={searchParams.send === '1'}
             catTitles={{
               clinic: dict.header.catHospital,
               personal_color: dict.pcCategory.color.title,

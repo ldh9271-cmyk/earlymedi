@@ -112,6 +112,11 @@ const en: Dictionary = {
       sentOk: 'Done! Your analysis has been emailed. A concierge will reach out soon.',
       sentNoEmail: 'Done! A concierge will reach out soon. (Email reports are activating shortly)',
       sendError: 'Failed to send. Please try again in a moment.',
+      needSignup: 'The report goes to your account email. Sign up (or log in) and you will return here — it is sent automatically.',
+      signupCta: 'Sign up & get it by email',
+      loginCta: 'Already a member? Log in',
+      sentTo: 'Sent to {email}. Our concierge can follow up with a personal consultation.',
+      optionalContact: 'Contact (optional) — leave it if you want a concierge consultation',
     },
     note: 'Your photo is deleted immediately after analysis. Never stored or shared without consent.',
     trip: {
