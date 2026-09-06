@@ -5,10 +5,12 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
+import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { organizations } from '@/drizzle/schema/organizations';
 import SyncRunner from './_components/sync-runner';
-import { autoMatchContractsAction, decideClaimAction, markForeignAction, setContractAction } from './_actions';
+import { autoMatchContractsAction, autoMatchShopsAction, decideClaimAction, decideShopClaimAction, markForeignAction, setContractAction, setShopContractAction } from './_actions';
+import { partnerListings } from '@/drizzle/schema/partner-listings';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +24,7 @@ const btn = (bg: string): React.CSSProperties => ({ background: bg, color: '#fff
  *  1) 심평원 동기화 실행   2) 외국인환자 유치기관 명단 반영
  *  3) 계약 병원 연결(자동/수동)   4) 병원 직접 등록(클레임) 승인
  */
-export default async function RegistryAdminPage({ searchParams }: { searchParams: { ok?: string; error?: string; misses?: string; q?: string } }): Promise<JSX.Element> {
+export default async function RegistryAdminPage({ searchParams }: { searchParams: { ok?: string; error?: string; misses?: string; q?: string; sq?: string } }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
@@ -40,6 +42,22 @@ export default async function RegistryAdminPage({ searchParams }: { searchParams
       lastSync: sql<Date | null>`max(${hospitalRegistry.syncedAt})`,
     })
     .from(hospitalRegistry);
+
+  const [beauty] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+      active: sql<number>`count(*) filter (where ${beautyRegistry.statusCode} = '01')::int`,
+      hair: sql<number>`count(*) filter (where ${beautyRegistry.statusCode} = '01' and ${beautyRegistry.categoryKeys} @> array['hair']::text[])::int`,
+      nail: sql<number>`count(*) filter (where ${beautyRegistry.statusCode} = '01' and ${beautyRegistry.categoryKeys} @> array['nail']::text[])::int`,
+      makeup: sql<number>`count(*) filter (where ${beautyRegistry.statusCode} = '01' and ${beautyRegistry.categoryKeys} @> array['makeup']::text[])::int`,
+      skin: sql<number>`count(*) filter (where ${beautyRegistry.statusCode} = '01' and ${beautyRegistry.categoryKeys} @> array['skin']::text[])::int`,
+      pmu: sql<number>`count(*) filter (where ${beautyRegistry.statusCode} = '01' and ${beautyRegistry.categoryKeys} @> array['pmu']::text[])::int`,
+      pcolor: sql<number>`count(*) filter (where ${beautyRegistry.statusCode} = '01' and ${beautyRegistry.categoryKeys} @> array['personal_color']::text[])::int`,
+      listed: sql<number>`count(*) filter (where ${beautyRegistry.contractedListingId} is not null or ${beautyRegistry.claimStatus} = 'approved')::int`,
+      pending: sql<number>`count(*) filter (where ${beautyRegistry.claimStatus} = 'pending')::int`,
+      lastSync: sql<Date | null>`max(${beautyRegistry.syncedAt})`,
+    })
+    .from(beautyRegistry);
 
   const byType = await db
     .select({ clName: hospitalRegistry.clName, n: sql<number>`count(*)::int` })
@@ -65,6 +83,29 @@ export default async function RegistryAdminPage({ searchParams }: { searchParams
     .where(sql`${hospitals.countryCode} = 'KR' and not exists (select 1 from hospital_registry r where r.contracted_hospital_id = ${hospitals.id})`)
     .orderBy(hospitals.name)
     .limit(200);
+
+  // 뷰티샵: 직접 등록 대기 + 미연결 글로우업 매장 + 검색(수동 연결)
+  const shopPending = await db
+    .select({ id: beautyRegistry.id, name: beautyRegistry.name, addr: beautyRegistry.addrRoad, bizType: beautyRegistry.bizType, claimedAt: beautyRegistry.claimedAt, orgName: organizations.name })
+    .from(beautyRegistry)
+    .leftJoin(organizations, eq(organizations.id, beautyRegistry.claimOrgId))
+    .where(eq(beautyRegistry.claimStatus, 'pending'))
+    .orderBy(desc(beautyRegistry.claimedAt))
+    .limit(50);
+  const unlinkedShops = await db
+    .select({ id: partnerListings.id, title: partnerListings.title, category: partnerListings.category })
+    .from(partnerListings)
+    .where(sql`${partnerListings.category} in ('hair','makeup','nail','pmu','personal_color') and not exists (select 1 from beauty_registry b where b.contracted_listing_id = ${partnerListings.id})`)
+    .orderBy(partnerListings.title)
+    .limit(200);
+  const sq = (searchParams.sq ?? '').trim();
+  const shopFound = sq
+    ? await db
+      .select({ id: beautyRegistry.id, mgtNo: beautyRegistry.mgtNo, name: beautyRegistry.name, bizType: beautyRegistry.bizType, addr: beautyRegistry.addrRoad, status: beautyRegistry.statusName, contractedListingId: beautyRegistry.contractedListingId })
+      .from(beautyRegistry)
+      .where(sql`${beautyRegistry.name} ilike ${'%' + sq.replace(/[%_]/g, '') + '%'} and ${beautyRegistry.statusCode} = '01'`)
+      .limit(30)
+    : [];
 
   // 검색(수동 연결용)
   const q = (searchParams.q ?? '').trim();
@@ -116,6 +157,29 @@ export default async function RegistryAdminPage({ searchParams }: { searchParams
         {byType.length ? ` · ${byType.slice(0, 8).map((t) => `${t.clName ?? '기타'} ${t.n.toLocaleString('ko-KR')}`).join(' · ')}` : ''}</p>
 
       <SyncRunner hasKey={Boolean(process.env.HIRA_SERVICE_KEY)} />
+
+      {/* 미용업(뷰티샵) 레지스트리 현황 */}
+      <div style={card}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline', flexWrap: 'wrap' }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>미용업(뷰티샵) 레지스트리 — 행안부 생활_미용업</h2>
+          <Link href="/kr/shops/all" style={{ fontSize: 12, color: '#1d4ed8' }}>공개 뷰티샵 찾기 →</Link>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginTop: 12 }}>
+          {[
+            ['전체(폐업 포함)', beauty?.total ?? 0], ['영업 중', beauty?.active ?? 0], ['헤어', beauty?.hair ?? 0], ['네일', beauty?.nail ?? 0],
+            ['메이크업', beauty?.makeup ?? 0], ['피부관리', beauty?.skin ?? 0], ['반영구(키워드)', beauty?.pmu ?? 0], ['퍼스널컬러(키워드)', beauty?.pcolor ?? 0],
+            ['글로우업 등록', beauty?.listed ?? 0], ['직접 등록 대기', beauty?.pending ?? 0],
+          ].map(([l, v]) => (
+            <div key={String(l)} style={{ border: '1px solid #f0f0f0', borderRadius: 10, padding: '10px 12px' }}>
+              <div style={{ fontSize: 11, color: '#6a6a6a' }}>{l}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, marginTop: 2 }}>{Number(v).toLocaleString('ko-KR')}</div>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontSize: 11, color: '#9c9c9c', margin: '8px 0 0' }}>마지막 동기화 {fmtDate(beauty?.lastSync)} · 전체 적재는 로컬 스크립트, 이후 매일 크론이 최근 변경분만 갱신합니다. 반영구·퍼스널컬러는 법정 업태가 없어 상호 키워드로 태깅.</p>
+      </div>
+
+
 
       {/* 외국인환자 유치기관 명단 */}
       <form action={markForeignAction} style={card}>
@@ -182,6 +246,63 @@ export default async function RegistryAdminPage({ searchParams }: { searchParams
             </table>
           </div>
         ) : q ? <p style={{ fontSize: 12, color: '#6a6a6a', marginTop: 8 }}>검색 결과 없음</p> : null}
+      </div>
+
+      {/* 뷰티샵: 글로우업 매장 연결 + 직접 등록 승인 */}
+      <div style={card}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div>
+            <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>뷰티샵 — 글로우업 매장 연결</h2>
+            <p style={{ fontSize: 12, color: '#6a6a6a', margin: '4px 0 0' }}>글로우업 부가상품(헤어·메이크업·네일·반영구·퍼스널컬러) {unlinkedShops.length}곳이 아직 미용업 레지스트리와 연결되지 않았습니다. 연결되면 공개 뷰티샵 찾기와 지도에서 컬러로 보입니다.</p>
+          </div>
+          <form action={autoMatchShopsAction}><button type="submit" style={btn('#222')}>상호로 자동 연결</button></form>
+        </div>
+        {unlinkedShops.length > 0 ? <p style={{ fontSize: 12, color: '#6a6a6a', margin: '10px 0 0', lineHeight: 1.7 }}>미연결: {unlinkedShops.slice(0, 30).map((l) => l.title).join(' · ')}{unlinkedShops.length > 30 ? ` 외 ${unlinkedShops.length - 30}곳` : ''}</p> : null}
+        <form style={{ display: 'flex', gap: 8, marginTop: 14, alignItems: 'end' }}>
+          <div style={{ flex: 1 }}><span style={label}>미용업 레지스트리에서 매장 검색 (수동 연결)</span><input name="sq" defaultValue={sq} placeholder="상호" style={input} /></div>
+          <button type="submit" style={btn('#6a6a6a')}>검색</button>
+        </form>
+        {shopFound.length > 0 ? (
+          <div style={{ overflowX: 'auto', marginTop: 10 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <tbody>
+                {shopFound.map((r) => (
+                  <tr key={r.id} style={{ borderTop: '1px solid #f0f0f0' }}>
+                    <td style={{ padding: '8px 10px', fontWeight: 600 }}><Link href={`/kr/shops/r/${encodeURIComponent(r.mgtNo)}`} style={{ color: '#222' }}>{r.name}</Link><div style={{ fontSize: 11, color: '#9c9c9c' }}>{r.bizType} · {r.addr}</div></td>
+                    <td style={{ padding: '8px 10px' }}>
+                      <form action={setShopContractAction} style={{ display: 'flex', gap: 6 }}>
+                        <input type="hidden" name="registryId" value={r.id} />
+                        <select name="listingId" defaultValue={r.contractedListingId ?? ''} style={{ ...input, width: 260, padding: '4px 8px' }}>
+                          <option value="">— 연결 없음 (흑백) —</option>
+                          {(r.contractedListingId ? [{ id: r.contractedListingId, title: '(현재 연결됨)', category: '' }] : []).concat(unlinkedShops).map((l) => <option key={l.id} value={l.id}>{l.title}{l.category ? ` · ${l.category}` : ''}</option>)}
+                        </select>
+                        <button type="submit" style={{ ...btn('#1d4ed8'), padding: '4px 10px', fontSize: 12 }}>저장</button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : sq ? <p style={{ fontSize: 12, color: '#6a6a6a', marginTop: 8 }}>검색 결과 없음</p> : null}
+
+        <h3 style={{ fontSize: 14, fontWeight: 700, margin: '18px 0 6px' }}>매장 직접 등록 요청 ({shopPending.length})</h3>
+        {shopPending.length === 0 ? <p style={{ fontSize: 13, color: '#9c9c9c', margin: 0 }}>대기 중인 요청이 없습니다.</p> : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <tbody>
+              {shopPending.map((p) => (
+                <tr key={p.id} style={{ borderTop: '1px solid #f0f0f0' }}>
+                  <td style={{ padding: '8px 10px' }}><b>{p.name}</b><div style={{ fontSize: 11, color: '#6a6a6a' }}>{p.bizType} · {p.addr}</div></td>
+                  <td style={{ padding: '8px 10px', fontSize: 12 }}>요청 조직: <b>{p.orgName ?? '—'}</b><div style={{ fontSize: 11, color: '#9c9c9c' }}>{fmtDate(p.claimedAt)}</div></td>
+                  <td style={{ padding: '8px 10px', whiteSpace: 'nowrap', textAlign: 'right' }}>
+                    <form action={decideShopClaimAction} style={{ display: 'inline' }}><input type="hidden" name="registryId" value={p.id} /><input type="hidden" name="decision" value="approved" /><button type="submit" style={{ ...btn('#047857'), padding: '5px 12px', fontSize: 12 }}>승인</button></form>
+                    <form action={decideShopClaimAction} style={{ display: 'inline', marginLeft: 6 }}><input type="hidden" name="registryId" value={p.id} /><input type="hidden" name="decision" value="rejected" /><button type="submit" style={{ ...btn('#6a6a6a'), padding: '5px 12px', fontSize: 12 }}>반려</button></form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* 클레임 승인 */}

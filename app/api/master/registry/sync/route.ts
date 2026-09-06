@@ -8,6 +8,8 @@ import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
 import { syncBasisPage, refreshStaleDetails, syncDeptCode } from '@/lib/hospital-registry/hira';
+import { syncBeautyPage, syncBeautyRecent } from '@/lib/beauty-registry/localdata';
+import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 
 /**
  * 마스터 전용 — 심평원 병원정보 동기화.
@@ -39,14 +41,30 @@ export async function GET(): Promise<NextResponse> {
       lastSync: sql<string | null>`max(${hospitalRegistry.syncedAt})`,
     })
     .from(hospitalRegistry);
-  return NextResponse.json({ ...row, hasKey: Boolean(process.env.HIRA_SERVICE_KEY) });
+  const [beauty] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+      active: sql<number>`count(*) filter (where ${beautyRegistry.statusCode} = '01')::int`,
+      contracted: sql<number>`count(*) filter (where ${beautyRegistry.contractedListingId} is not null or ${beautyRegistry.claimStatus} = 'approved')::int`,
+      lastSync: sql<string | null>`max(${beautyRegistry.syncedAt})`,
+    })
+    .from(beautyRegistry);
+  return NextResponse.json({ ...row, beauty, hasKey: Boolean(process.env.HIRA_SERVICE_KEY) });
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const denied = await assertMaster();
   if (denied) return denied;
-  const body = (await req.json().catch(() => ({}))) as { pageNo?: number; clCd?: string; sidoCd?: string; details?: boolean; limit?: number; deptCode?: string };
+  const body = (await req.json().catch(() => ({}))) as { pageNo?: number; clCd?: string; sidoCd?: string; details?: boolean; limit?: number; deptCode?: string; beautyPage?: number; beautyRecent?: boolean };
   try {
+    if (body.beautyRecent) {
+      const r = await syncBeautyRecent(new Date(Date.now() - 3 * 86_400_000), 40);
+      return NextResponse.json(r);
+    }
+    if (body.beautyPage) {
+      const r = await syncBeautyPage(Math.max(1, Number(body.beautyPage) || 1));
+      return NextResponse.json(r);
+    }
     if (body.deptCode) {
       const r = await syncDeptCode(String(body.deptCode).padStart(2, '0'));
       return NextResponse.json(r);

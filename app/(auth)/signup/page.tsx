@@ -6,6 +6,7 @@ import { db } from '@/lib/db/client';
 import { invites } from '@/drizzle/schema/invites';
 import { organizations } from '@/drizzle/schema/organizations';
 import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
+import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { verifyInviteToken, hashToken } from '@/lib/auth/invite-tokens';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
@@ -30,9 +31,24 @@ export const dynamic = 'force-dynamic';
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: { next?: string; claim?: string };
+  searchParams: { next?: string; claim?: string; claimShop?: string };
 }): Promise<JSX.Element> {
   const next = searchParams.next ?? null;
+
+  // 공개 뷰티샵 찾기 → 매장 정보 직접 등록: 매장명을 회사명으로 미리 채운다
+  let claimShop: { mgtNo: string; name: string; addr: string | null } | null = null;
+  if (searchParams.claimShop) {
+    try {
+      const [r] = await db
+        .select({ mgtNo: beautyRegistry.mgtNo, name: beautyRegistry.name, addr: beautyRegistry.addrRoad })
+        .from(beautyRegistry)
+        .where(eq(beautyRegistry.mgtNo, searchParams.claimShop))
+        .limit(1);
+      if (r) claimShop = r;
+    } catch {
+      claimShop = null;
+    }
+  }
 
   // 공개 병원 찾기 → 병원 정보 직접 등록: 레지스트리 병원명을 회사명으로 미리 채운다
   let claim: { ykiho: string; name: string; addr: string | null } | null = null;
@@ -166,7 +182,13 @@ export default async function SignupPage({
               <p className="mt-1 text-[13px] leading-relaxed text-rose-900/80"><b>{claim.name}</b>{claim.addr ? ` · ${claim.addr}` : ''} 의 관계자로 가입합니다. 가입 후 마스터 승인이 나면 공개 병원 찾기에서 컬러 카드로 노출되고 소개·사진·언어를 직접 입력할 수 있습니다.</p>
             </div>
           ) : null}
-          <QuickSignupForm email={presetEmail} alreadyAuthed={alreadyAuthed} claim={claim ? { ykiho: claim.ykiho, name: claim.name } : null} />
+          {claimShop ? (
+            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm">
+              <p className="font-bold text-rose-700">매장 정보 직접 등록</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-rose-900/80"><b>{claimShop.name}</b>{claimShop.addr ? ` · ${claimShop.addr}` : ''} 의 관계자로 가입합니다. 가입 후 마스터 승인이 나면 공개 뷰티샵 찾기에서 컬러 카드로 노출되고 소개·사진·언어를 직접 입력할 수 있습니다.</p>
+            </div>
+          ) : null}
+          <QuickSignupForm email={presetEmail} alreadyAuthed={alreadyAuthed} claim={claim ? { ykiho: claim.ykiho, name: claim.name } : null} claimShop={claimShop ? { mgtNo: claimShop.mgtNo, name: claimShop.name } : null} />
         </CardContent>
       </Card>
 

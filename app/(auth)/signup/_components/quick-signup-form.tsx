@@ -177,11 +177,14 @@ export function QuickSignupForm({
   email,
   alreadyAuthed,
   claim = null,
+  claimShop = null,
 }: {
   email: string;
   alreadyAuthed: boolean;
   /** 공개 병원 찾기 → '병원 정보 직접 등록' 으로 넘어온 병원 */
   claim?: { ykiho: string; name: string } | null;
+  /** 공개 뷰티샵 찾기 → '매장 정보 직접 등록' 으로 넘어온 매장 */
+  claimShop?: { mgtNo: string; name: string } | null;
 }): JSX.Element {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -197,7 +200,11 @@ export function QuickSignupForm({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as ReturnType<typeof zodResolver>,
-    defaultValues: claim ? ({ orgName: claim.name, accountType: 'medical' } as Partial<FormValues>) : undefined,
+    defaultValues: claim
+      ? ({ orgName: claim.name, accountType: 'medical' } as Partial<FormValues>)
+      : claimShop
+        ? ({ orgName: claimShop.name, accountType: 'non_medical', partnerSubtype: 'salon' } as Partial<FormValues>)
+        : undefined,
   });
 
   const accountType = watch('accountType');
@@ -306,6 +313,7 @@ export function QuickSignupForm({
           partnerSubtype: showPartnerSubtype ? values.partnerSubtype ?? 'other' : null,
           orgName: values.orgName,
           claimYkiho: claim?.ykiho ?? null,
+          claimShopMgtNo: claimShop?.mgtNo ?? null,
           representativeName: values.representativeName,
           contactPhone: values.contactPhone,
           gender,

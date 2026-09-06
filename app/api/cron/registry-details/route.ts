@@ -3,6 +3,7 @@ export const maxDuration = 60;
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { refreshStaleDetails } from '@/lib/hospital-registry/hira';
+import { syncBeautyRecent } from '@/lib/beauty-registry/localdata';
 
 /**
  * Vercel Cron — 전국 병원 레지스트리 상세(진료과목·진료시간·교통) 순환 갱신.
@@ -19,7 +20,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   if (!process.env.HIRA_SERVICE_KEY) return NextResponse.json({ skipped: 'no HIRA_SERVICE_KEY' });
   try {
     const n = await refreshStaleDetails(40);
-    return NextResponse.json({ refreshed: n });
+    // 미용업: 최근 3일 갱신분만 앞 페이지부터 (최근 갱신 순 정렬)
+    const beauty = await syncBeautyRecent(new Date(Date.now() - 3 * 86_400_000), 40).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'beauty_failed' }));
+    return NextResponse.json({ refreshed: n, beauty });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'failed' }, { status: 500 });
   }

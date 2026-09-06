@@ -74,3 +74,6 @@ export * from './partner-listings';
 
 // 전국 의료기관 레지스트리 (심평원 원천) — 공개 병원 찾기 / 흑백·컬러 / 클레임
 export * from './hospital-registry';
+
+// 전국 미용업소 레지스트리 (행안부 생활_미용업) — 헤어·메이크업·네일·피부 + 반영구/퍼스널컬러 태깅
+export * from './beauty-registry';

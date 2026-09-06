@@ -162,6 +162,7 @@ export const partnerSections: SidebarSection[] = [
     title: '운영',
     items: [
       { href: '/partner/listings', label: '내 글로우업 상품', icon: Briefcase },
+      { href: '/partner/registry', label: '매장 공개 정보', icon: Briefcase },
       { href: '/partner/menu', label: '메뉴 · 가격표', icon: Utensils },
       { href: '/partner/constraints', label: '시술 후 제약', icon: Truck },
       { href: '/partner/contracts', label: '계약', icon: TicketCheck },

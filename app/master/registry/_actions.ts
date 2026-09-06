@@ -9,6 +9,8 @@ import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
 import { hospitals } from '@/drizzle/schema/hospitals';
+import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
+import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { findRegistryMatch } from '@/lib/hospital-registry/match';
 
 async function assertMaster(): Promise<void> {
@@ -148,4 +150,68 @@ export async function decideClaimAction(fd: FormData): Promise<void> {
     .where(and(eq(hospitalRegistry.id, registryId), or(eq(hospitalRegistry.claimStatus, 'pending'), eq(hospitalRegistry.claimStatus, 'approved'))));
   revalidatePath('/master/registry');
   back({ ok: decision === 'approved' ? '병원 직접 등록을 승인했습니다' : '반려했습니다' });
+}
+
+// ── 뷰티샵(미용업 레지스트리) ─────────────────────────────────────
+
+/** 뷰티샵 직접 등록 승인/반려. */
+export async function decideShopClaimAction(fd: FormData): Promise<void> {
+  await assertMaster();
+  const id = String(fd.get('registryId') ?? '');
+  const decision = String(fd.get('decision') ?? '');
+  if (!id || !['approved', 'rejected'].includes(decision)) back({ error: 'bad_request' });
+  await db.update(beautyRegistry).set({ claimStatus: decision, updatedAt: new Date() })
+    .where(and(eq(beautyRegistry.id, id), or(eq(beautyRegistry.claimStatus, 'pending'), eq(beautyRegistry.claimStatus, 'approved'))));
+  revalidatePath('/master/registry');
+  back({ ok: decision === 'approved' ? '매장 직접 등록을 승인했습니다' : '반려했습니다' });
+}
+
+/** 글로우업 부가상품(partner_listings: hair/makeup/nail/pmu/personal_color) ↔ 미용업 레지스트리 자동 연결 (상호 + 시도). */
+export async function autoMatchShopsAction(): Promise<void> {
+  await assertMaster();
+  const listings = await db
+    .select({ id: partnerListings.id, title: partnerListings.title, category: partnerListings.category, addressJson: partnerListings.addressJson })
+    .from(partnerListings)
+    .where(inArray(partnerListings.category, ['hair', 'makeup', 'nail', 'pmu', 'personal_color']));
+  const linked = new Set(
+    (await db.select({ lid: beautyRegistry.contractedListingId }).from(beautyRegistry).where(sql`${beautyRegistry.contractedListingId} is not null`)).map((r) => r.lid as string),
+  );
+  let matched = 0; const misses: string[] = [];
+  for (const l of listings) {
+    if (linked.has(l.id)) continue;
+    const title = l.title.replace(/\s*[(（][^)）]*[)）]\s*/g, ' ').replace(/\s*(강남|명동|압구정|홍대|청담|신사|역삼|서초|잠실|본점)(점|본점)?\s*$/, '').trim();
+    const addr = l.addressJson as { city?: string; addressLine1?: string } | null;
+    const city = (addr?.city ?? '').trim();
+    const like = `%${title.replace(/[%_]/g, '').replace(/\s+/g, '%')}%`;
+    const cands = await db
+      .select({ id: beautyRegistry.id, name: beautyRegistry.name, addrRoad: beautyRegistry.addrRoad, sido: beautyRegistry.sidoName })
+      .from(beautyRegistry)
+      .where(and(ilike(beautyRegistry.name, like), eq(beautyRegistry.statusCode, '01'), sql`${beautyRegistry.contractedListingId} is null`))
+      .limit(30);
+    const exact = cands.filter((c) => norm(c.name) === norm(title) || norm(c.name).startsWith(norm(title)));
+    let pick = exact.length === 1 ? exact[0] : null;
+    if (!pick && exact.length > 1 && city) {
+      const byCity = exact.filter((c) => (c.addrRoad ?? '').includes(city) || (c.sido ?? '') === city.slice(0, 2));
+      if (byCity.length === 1) pick = byCity[0];
+    }
+    if (pick) {
+      await db.update(beautyRegistry).set({ contractedListingId: l.id, updatedAt: new Date() }).where(eq(beautyRegistry.id, pick.id));
+      matched += 1;
+    } else {
+      misses.push(`${l.title} (${l.category}${exact.length > 1 ? ` · 동명 ${exact.length}곳` : ''})`);
+    }
+  }
+  revalidatePath('/master/registry');
+  back({ ok: `뷰티샵 자동 연결 ${matched}곳 (미연결 ${misses.length})`, ...(misses.length ? { misses: misses.slice(0, 60).join('\n') } : {}) });
+}
+
+/** 뷰티샵 개별 연결/해제 — 레지스트리 행에 partner_listings.id 지정. */
+export async function setShopContractAction(fd: FormData): Promise<void> {
+  await assertMaster();
+  const registryId = String(fd.get('registryId') ?? '');
+  const listingId = String(fd.get('listingId') ?? '').trim();
+  if (!registryId) back({ error: 'missing' });
+  await db.update(beautyRegistry).set({ contractedListingId: listingId || null, updatedAt: new Date() }).where(eq(beautyRegistry.id, registryId));
+  revalidatePath('/master/registry');
+  back({ ok: listingId ? '글로우업 매장으로 연결했습니다' : '연결을 해제했습니다' });
 }
