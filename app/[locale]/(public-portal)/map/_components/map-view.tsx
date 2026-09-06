@@ -392,18 +392,19 @@ function MoreRow({ label, open, onToggle, more, less, children }: {
   }, [children]);
   return (
     <div style={{ marginTop: 6 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-        <span style={{ fontSize: 11, color: '#6a6a6a' }}>{label}</span>
-        {overflow ? (
-          <button type="button" onClick={onToggle} aria-expanded={open}
-            style={{ border: 'none', background: 'transparent', padding: '2px 0', fontSize: 11, fontWeight: 700, color: '#1d4ed8', cursor: 'pointer', fontFamily: 'inherit' }}>
-            {open ? `${less} ▴` : `${more} ▾`}
-          </button>
-        ) : null}
-      </div>
+      <div style={{ fontSize: 11, color: '#6a6a6a' }}>{label}</div>
       <div ref={ref} className="m-map-hs" style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap', maxHeight: open ? undefined : cap, overflow: 'hidden' }}>
         {children}
       </div>
+      {/* 더보기/접기 — 두 줄 바로 아래 가운데 */}
+      {overflow ? (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
+          <button type="button" onClick={onToggle} aria-expanded={open}
+            style={{ border: '1px solid #e5e5e5', background: '#fafafa', borderRadius: 999, padding: '3px 14px', fontSize: 11, fontWeight: 700, color: '#1d4ed8', cursor: 'pointer', fontFamily: 'inherit' }}>
+            {open ? `${less} ▴` : `${more} ▾`}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
