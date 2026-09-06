@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
+import { startGoogleSignIn } from '@/lib/auth/google-signin';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 
@@ -89,6 +90,8 @@ export function PatientLoginForm({
         setError('Supabase not connected (demo mode).');
         return;
       }
+      // 우리 도메인 구글 OAuth (동의 화면에 glowuptour.com 표시) — 미설정이면 Supabase OAuth 폴백
+      if (startGoogleSignIn(returnTo)) return;
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', returnTo);
       const { error: e } = await supabase.auth.signInWithOAuth({

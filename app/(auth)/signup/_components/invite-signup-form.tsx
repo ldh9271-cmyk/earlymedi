@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
+import { startGoogleSignIn } from '@/lib/auth/google-signin';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
@@ -69,6 +70,8 @@ export function InviteSignupForm({
         setServerError('Supabase가 연결되지 않았습니다.');
         return;
       }
+      // 우리 도메인 구글 OAuth (동의 화면에 glowuptour.com 표시) — 미설정이면 Supabase OAuth 폴백
+      if (startGoogleSignIn(`/invite/${token}`)) return;
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', `/invite/${token}`);
       const { error: oauthError } = await supabase.auth.signInWithOAuth({

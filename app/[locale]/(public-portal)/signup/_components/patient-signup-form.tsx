@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
+import { startGoogleSignIn } from '@/lib/auth/google-signin';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import type { PublicLocale } from '@/lib/i18n/locales';
@@ -153,6 +154,8 @@ export function PatientSignupForm({
         setError('Supabase not connected (demo mode).');
         return;
       }
+      // 우리 도메인 구글 OAuth (동의 화면에 glowuptour.com 표시) — 미설정이면 Supabase OAuth 폴백
+      if (startGoogleSignIn(returnTo)) return;
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', returnTo);
       const { error: e } = await supabase.auth.signInWithOAuth({
