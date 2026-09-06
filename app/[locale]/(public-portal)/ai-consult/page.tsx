@@ -82,11 +82,28 @@ export default async function AiConsultPage({
         </p>
       </header>
 
+      {/* AI 여행하기 — 자유·패키지·연수 일정 추천 + 회원가입 후 이메일 발송 (전폭 배너) */}
+      <Link
+        href={`/${params.locale}/ai-trip`}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap',
+          marginTop: 32, padding: '20px 24px', borderRadius: 16, border: '1px solid #bfdbfe',
+          background: 'linear-gradient(120deg,#eff6ff,#f0fdfa)', color: 'inherit', textDecoration: 'none',
+          boxShadow: 'rgba(0,0,0,0.02) 0 1px 2px, rgba(0,0,0,0.06) 0 4px 12px',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.3px' }}>✈️ {dict.ai.trip.hubTitle}</div>
+          <p style={{ fontSize: 14, color: '#3f3f3f', lineHeight: 1.55, margin: '6px 0 0', maxWidth: 640 }}>{dict.ai.trip.hubDesc}</p>
+        </div>
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#1d4ed8', whiteSpace: 'nowrap' }}>{dict.ai.trip.hubCta}</span>
+      </Link>
+
       <div
         className="m-ai-grid"
         style={{
           display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20,
-          marginTop: 40,
+          marginTop: 24,
         }}
       >
         <FeatureCard

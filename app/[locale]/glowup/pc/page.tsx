@@ -111,6 +111,24 @@ export default async function GlowupPcPage({
         >
           {dict.travel.sectionSubtitle}
         </p>
+        {/* AI 여행하기 — 자유·패키지·연수 무엇이든 질문하면 하루 단위 일정 추천, 회원가입 후 이메일 발송 */}
+        <Link
+          href={`/${params.locale}/ai-trip`}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20,
+            marginTop: 28, padding: '22px 26px', borderRadius: 18,
+            border: '1px solid #bfdbfe', background: 'linear-gradient(120deg,#eff6ff,#fdf2f8)',
+            color: 'inherit', textDecoration: 'none', flexWrap: 'wrap',
+            boxShadow: 'rgba(0,0,0,0.02) 0 1px 2px, rgba(0,0,0,0.06) 0 4px 12px',
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.3px' }}>✈️ {dict.ai.trip.hubTitle}</div>
+            <p style={{ fontSize: 15, color: '#3f3f3f', lineHeight: 1.6, margin: '10px 0 0', maxWidth: 620 }}>{dict.ai.trip.hubDesc}</p>
+          </div>
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#1d4ed8', whiteSpace: 'nowrap' }}>{dict.ai.trip.hubCta}</span>
+        </Link>
+
         {/* 관광지 — 한국관광공사 관광사진 기반 전국 관광지 둘러보기 (지도·리스트) */}
         <Link
           href={`/${params.locale}/attractions/all`}

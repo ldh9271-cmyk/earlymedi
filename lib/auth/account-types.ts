@@ -69,6 +69,7 @@ export const PUBLIC_PREFIXES = [
   '/api/ai/glowup-lead',
   '/api/ai/chat',
   '/api/ai/chat-lead',
+  '/api/ai/trip',
   // 공개 예약 팝업의 인보이스 발행 — 로그인 없이 결제 단계로 넘어간다
   '/api/checkout/order',
   // 총판·추천인 QR 랜딩 (쿠키 귀속) + 귀속 기록 API
