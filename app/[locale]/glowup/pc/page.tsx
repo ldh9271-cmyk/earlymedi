@@ -111,6 +111,24 @@ export default async function GlowupPcPage({
         >
           {dict.travel.sectionSubtitle}
         </p>
+        {/* 관광지 — 한국관광공사 관광사진 기반 전국 관광지 둘러보기 (지도·리스트) */}
+        <Link
+          href={`/${params.locale}/attractions/all`}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20,
+            marginTop: 28, padding: '22px 26px', borderRadius: 18,
+            border: '1px solid #ebebeb', background: 'linear-gradient(120deg,#f0fbf5,#e3f5ff)',
+            color: 'inherit', textDecoration: 'none', flexWrap: 'wrap',
+            boxShadow: 'rgba(0,0,0,0.02) 0 1px 2px, rgba(0,0,0,0.06) 0 4px 12px',
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.3px' }}>📸 {dict.attractionsPage.title}</div>
+            <p style={{ fontSize: 15, color: '#3f3f3f', lineHeight: 1.6, margin: '10px 0 0', maxWidth: 620 }}>{dict.attractionsPage.subtitle}</p>
+          </div>
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#0f766e', whiteSpace: 'nowrap' }}>{dict.attractionsPage.mapLink} →</span>
+        </Link>
+
         <div
           className="m-tt-grid"
           style={{
@@ -202,23 +220,6 @@ export default async function GlowupPcPage({
           })}
         </div>
 
-        {/* 관광지 — 한국관광공사 관광사진 기반 전국 관광지 둘러보기 (지도·리스트) */}
-        <Link
-          href={`/${params.locale}/attractions/all`}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20,
-            marginTop: 28, padding: '22px 26px', borderRadius: 18,
-            border: '1px solid #ebebeb', background: 'linear-gradient(120deg,#f0fbf5,#e3f5ff)',
-            color: 'inherit', textDecoration: 'none', flexWrap: 'wrap',
-            boxShadow: 'rgba(0,0,0,0.02) 0 1px 2px, rgba(0,0,0,0.06) 0 4px 12px',
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.3px' }}>📸 {dict.attractionsPage.title}</div>
-            <p style={{ fontSize: 15, color: '#3f3f3f', lineHeight: 1.6, margin: '10px 0 0', maxWidth: 620 }}>{dict.attractionsPage.subtitle}</p>
-          </div>
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#0f766e', whiteSpace: 'nowrap' }}>{dict.attractionsPage.mapLink} →</span>
-        </Link>
       </section>
 
       <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[params.locale].native} locale={params.locale} />

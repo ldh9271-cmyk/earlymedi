@@ -7,6 +7,9 @@ import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { db } from '@/lib/db/client';
 import { tourSpots } from '@/drizzle/schema/tour-spots';
 import { TOUR_CATS, TourCard, type TourCardRow } from '../_registry/shared';
+import MapView from '../../map/_components/map-view';
+import { DEPT_GROUPS } from '@/lib/hospital-registry/departments';
+import { SHOP_CATS } from '../../shops/_registry/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +34,8 @@ export default async function AttractionsListPage({ params, searchParams }: { pa
   const dict = await getDictionary(locale);
   const t = dict.attractionsPage;
   const tr = dict.clinicsPage.registry;
+  const mapDepts = DEPT_GROUPS.map((g) => ({ key: g.key, label: (dict.clinicsPage.depts as Record<string, string>)[g.key] ?? g.ko }));
+  const mapCats = SHOP_CATS.map((k) => ({ key: k, label: dict.shopsRegistry.cats[k] }));
 
   const q = (searchParams.q ?? '').trim().slice(0, 60);
   const sido = (searchParams.sido ?? '').trim();
@@ -92,7 +97,20 @@ export default async function AttractionsListPage({ params, searchParams }: { pa
       </div>
       <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0', lineHeight: 1.6 }}>{t.subtitle}</p>
 
-      <form action={`/${locale}/attractions/all`} method="get" style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
+      {/* 관광지 지도 — 시·도 중심 근사 좌표 기준. 검색창 바로 아래에 바로 노출 */}
+      <div style={{ marginTop: 18, border: '1px solid #ebebeb', borderRadius: 16, overflow: 'hidden' }}>
+        <MapView
+          locale={locale}
+          kakaoKey={process.env.NEXT_PUBLIC_KAKAO_MAP_KEY?.trim() || null}
+          googleKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY?.trim() || null}
+          labels={{ ...dict.mapPage, contractedBadge: tr.listedBadgeBiz, foreignBadge: tr.foreignBadge }}
+          depts={mapDepts}
+          cats={mapCats}
+          initial={{ lat: 36.2, lng: 127.9, level: 12, kinds: 'attraction', dept: '', cat: '', foreign: false, listed: false, q: '' }}
+        />
+      </div>
+
+      <form action={`/${locale}/attractions/all`} method="get" style={{ display: 'flex', gap: 8, marginTop: 22, flexWrap: 'wrap' }}>
         {cat ? <input type="hidden" name="cat" value={cat} /> : null}
         <input name="q" defaultValue={q} placeholder={t.searchPlaceholder}
           style={{ flex: 1, minWidth: 220, border: '1px solid #dddddd', borderRadius: 999, padding: '11px 16px', fontSize: 14, fontFamily: 'inherit' }} />
