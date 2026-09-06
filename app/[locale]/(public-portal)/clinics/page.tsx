@@ -53,6 +53,16 @@ const SUB_CHIP_KEYS: ReadonlyArray<CategoryLabelKey> = [
   'health_checkup', 'stem_cell', 'oriental', 'partner',
 ];
 
+/**
+ * 카테고리 섹션 → 전국 병원 찾기(/clinics/all) 진료과 그룹 키.
+ * '전체 보기'를 눌렀을 때 글로우 인증 병원(컬러) + 오픈API 전국 병원(흑백)을
+ * 과별로 함께 보여주기 위한 매핑. 매핑이 없는 키(줄기세포·파트너)는 큐레이션 전용 뷰 유지.
+ */
+const SECTION_TO_DEPT: Partial<Record<CategoryLabelKey, string>> = {
+  plastic_surgery: 'plastic_surgery', dermatology: 'dermatology', dental: 'dental',
+  ophthalmology: 'ophthalmology', hair: 'dermatology', health_checkup: 'family', oriental: 'oriental',
+};
+
 type CategoryLabelKey = keyof Dictionary['clinicsPage']['categories'];
 
 function categoryLabel(
@@ -411,7 +421,7 @@ export default async function ClinicsListPage({
                 {categoryLabel(s.key, dict.clinicsPage.categories)}
               </h2>
               <Link
-                href={`/${params.locale}/clinics?category=${s.key}`}
+                href={SECTION_TO_DEPT[s.key] ? `/${params.locale}/clinics/all?dept=${SECTION_TO_DEPT[s.key]}&type=all` : `/${params.locale}/clinics?category=${s.key}`}
                 style={{ fontSize: 13, fontWeight: 600, color: '#222', textDecoration: 'underline', whiteSpace: 'nowrap' }}
               >
                 {dict.categories.viewAll} →
