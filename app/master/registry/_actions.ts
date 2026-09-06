@@ -3,12 +3,13 @@
 import 'server-only';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { and, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
 import { hospitals } from '@/drizzle/schema/hospitals';
+import { findRegistryMatch } from '@/lib/hospital-registry/match';
 
 async function assertMaster(): Promise<void> {
   const supabase = createSupabaseServerClient();
@@ -84,8 +85,9 @@ export async function markForeignAction(fd: FormData): Promise<void> {
 }
 
 /**
- * 계약 병원 자동 연결 — hospitals(플랫폼 등록 병원) 이름으로 레지스트리를
- * 찾아 contracted_hospital_id 를 채운다. 이미 연결된 건은 건너뛴다.
+ * 계약 병원 자동 연결 — hospitals(플랫폼 등록 병원) 이름을 레지스트리 개설명과
+ * 매칭해 contracted_hospital_id 를 채운다 (규칙: lib/hospital-registry/match.ts).
+ * 이미 연결된 건은 건너뛴다.
  */
 export async function autoMatchContractsAction(): Promise<void> {
   await assertMaster();
@@ -100,27 +102,14 @@ export async function autoMatchContractsAction(): Promise<void> {
   let matched = 0; const ambiguous: string[] = []; const missing: string[] = [];
   for (const p of partnerRows) {
     if (linked.has(p.id)) continue;
-    const names = [p.name, p.legalName].filter((s): s is string => Boolean(s));
-    let pick: { id: string } | null = null;
-    for (const nm of names) {
-      const cands = await db
-        .select({ id: hospitalRegistry.id, name: hospitalRegistry.name, addr: hospitalRegistry.addr })
-        .from(hospitalRegistry)
-        .where(and(ilike(hospitalRegistry.name, `%${nm.replace(/[%_]/g, '')}%`), isNull(hospitalRegistry.contractedHospitalId)))
-        .limit(20);
-      const exact = cands.filter((c) => norm(c.name) === norm(nm));
-      if (exact.length === 1) { pick = exact[0] as { id: string }; break; }
-      if (exact.length > 1) {
-        const city = ((p.addressJson as { city?: string } | null)?.city ?? '').trim();
-        const byCity = city ? exact.filter((c) => (c.addr ?? '').includes(city)) : [];
-        if (byCity.length === 1) { pick = byCity[0] as { id: string }; break; }
-        ambiguous.push(`${nm} (${exact.length}곳)`);
-      }
-    }
-    if (pick) {
-      await db.update(hospitalRegistry).set({ contractedHospitalId: p.id, updatedAt: new Date() }).where(eq(hospitalRegistry.id, pick.id));
+    const city = ((p.addressJson as { city?: string } | null)?.city ?? '').trim() || null;
+    const r = await findRegistryMatch([p.name, p.legalName].filter((s): s is string => Boolean(s)), city);
+    if (r.kind === 'match') {
+      await db.update(hospitalRegistry).set({ contractedHospitalId: p.id, updatedAt: new Date() }).where(eq(hospitalRegistry.id, r.id));
       matched += 1;
-    } else if (!ambiguous.some((a) => a.startsWith(p.name))) {
+    } else if (r.kind === 'ambiguous') {
+      ambiguous.push(`${p.name} → ${r.count}곳: ${r.sample.join(' / ')}`);
+    } else {
       missing.push(p.name);
     }
   }
