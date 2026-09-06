@@ -613,6 +613,7 @@ const en: Dictionary = {
     "full": "Full refund",
     "pct": "{pct}% refund",
     "none": "No refund",
+    "pctProportional": "Proportional to days left (days ÷ {n} · e.g. {example} days before = {examplePct}%)",
     "notes": [
       "If the platform or the business cancels (booking cannot be confirmed, closure, schedule change request), you receive a full refund regardless of timing.",
       "Refunds go back to your original payment method. Cards and wallets such as KakaoPay take 3–5 business days; Alipay takes 3–7 business days.",

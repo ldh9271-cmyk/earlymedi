@@ -613,6 +613,7 @@ const vi: Dictionary = {
     "full": "Hoàn toàn bộ",
     "pct": "Hoàn {pct}%",
     "none": "Không hoàn",
+    "pctProportional": "Theo tỷ lệ số ngày còn lại (số ngày ÷ {n} · ví dụ: trước {example} ngày = {examplePct}%)",
     "notes": [
       "Nếu nền tảng hoặc đối tác hủy (không xác nhận được, nghỉ, yêu cầu đổi lịch), bạn được hoàn toàn bộ bất kể thời điểm.",
       "Tiền hoàn về phương thức thanh toán ban đầu. Thẻ và ví như KakaoPay mất 3–5 ngày làm việc, Alipay 3–7 ngày làm việc.",

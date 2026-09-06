@@ -13,25 +13,40 @@ export const REFUND_CATEGORIES: readonly RefundCategory[] = ['travel', 'medical'
 export type RefundTier = {
   /** 이 단계가 적용되는 최소 "며칠 전" (0 = 당일) */
   minDays: number;
-  /** 환불 비율 % */
+  /** 환불 비율 % (proportionalDays 가 있으면 무시하고 남은 일수 비례) */
   pct: number;
   /** 당일 단계에서 이용 시각 N시간 전까지만 이 비율, 이후는 0 */
   sameDayHoursBefore?: number;
+  /** 남은 일수 ÷ N × 100 % 로 비례 환불 (예: 14 → 7일 전 50%) */
+  proportionalDays?: number;
 };
 
+/**
+ * 2026-09-07 사용자 확정:
+ *  여행 14일 전 전액, 그 안은 남은 일수에 비례(÷14), 당일·이용 후 0
+ *  병원 7일 전 전액 · 1~6일 전 50% · 당일 0
+ *  숙박 7일 전 전액 · 3~6일 70% · 1~2일 50% · 당일 0
+ *  맛집 1일 전 전액 · 당일 3시간 전까지 50%
+ *  뷰티 3일 전 전액 · 1~2일 전 50% · 당일 0
+ */
 export const REFUND_POLICIES: Record<RefundCategory, RefundTier[]> = {
-  travel: [{ minDays: 3, pct: 100 }, { minDays: 2, pct: 90 }, { minDays: 1, pct: 80 }, { minDays: 0, pct: 70 }],
-  medical: [{ minDays: 3, pct: 100 }, { minDays: 1, pct: 50 }, { minDays: 0, pct: 0 }],
+  travel: [{ minDays: 14, pct: 100 }, { minDays: 1, pct: 0, proportionalDays: 14 }, { minDays: 0, pct: 0 }],
+  medical: [{ minDays: 7, pct: 100 }, { minDays: 1, pct: 50 }, { minDays: 0, pct: 0 }],
   stay: [{ minDays: 7, pct: 100 }, { minDays: 3, pct: 70 }, { minDays: 1, pct: 50 }, { minDays: 0, pct: 0 }],
   food: [{ minDays: 1, pct: 100 }, { minDays: 0, pct: 50, sameDayHoursBefore: 3 }],
-  beauty: [{ minDays: 2, pct: 100 }, { minDays: 1, pct: 50 }, { minDays: 0, pct: 0 }],
+  beauty: [{ minDays: 3, pct: 100 }, { minDays: 1, pct: 50 }, { minDays: 0, pct: 0 }],
 };
 
+export function tierPct(tier: RefundTier, daysBefore: number): number {
+  if (tier.proportionalDays) return Math.max(0, Math.min(100, Math.round((daysBefore / tier.proportionalDays) * 100)));
+  return tier.pct;
+}
+
 /** 표 표시용 구간: from..to 일 전 (to = null 이면 "이상") */
-export type RefundTierRange = { from: number; to: number | null; pct: number; sameDayHoursBefore?: number };
+export type RefundTierRange = { from: number; to: number | null; pct: number; sameDayHoursBefore?: number; proportionalDays?: number };
 export function tierRanges(category: RefundCategory): RefundTierRange[] {
   const tiers = REFUND_POLICIES[category];
-  return tiers.map((t, i) => ({ from: t.minDays, to: i === 0 ? null : (tiers[i - 1]?.minDays ?? t.minDays) - 1, pct: t.pct, sameDayHoursBefore: t.sameDayHoursBefore }));
+  return tiers.map((t, i) => ({ from: t.minDays, to: i === 0 ? null : (tiers[i - 1]?.minDays ?? t.minDays) - 1, pct: t.pct, sameDayHoursBefore: t.sameDayHoursBefore, proportionalDays: t.proportionalDays }));
 }
 
 const seoulYmd = (d: Date): string => {
@@ -76,7 +91,7 @@ export function estimateRefund(input: { category: RefundCategory; reserveYmd: st
     return { ...base, daysBefore, pct: 0, refundWon: 0, afterStart: true };
   }
   const tier = REFUND_POLICIES[input.category].find((t) => daysBefore >= t.minDays) ?? { minDays: 0, pct: 0 };
-  let pct = tier.pct;
+  let pct = tierPct(tier, daysBefore);
   let sameDayCutoff = false;
   if (daysBefore === 0 && tier.sameDayHoursBefore != null && reserveMin != null && reserveMin - nowMin < tier.sameDayHoursBefore * 60) {
     pct = 0; sameDayCutoff = true;
@@ -85,12 +100,14 @@ export function estimateRefund(input: { category: RefundCategory; reserveYmd: st
 }
 
 /** 표·다이얼로그 공용 라벨 (dict.refund 의 일부) */
-export type TierLabels = { tierUntil: string; tierRange: string; tierDay: string; tierSameDay: string; tierSameDayBefore: string; tierAfter: string; full: string; pct: string; none: string };
+export type TierLabels = { tierUntil: string; tierRange: string; tierDay: string; tierSameDay: string; tierSameDayBefore: string; tierAfter: string; full: string; pct: string; none: string; pctProportional?: string };
 const fill = (tpl: string, v: Record<string, string | number>): string => tpl.replace(/\{(\w+)\}/g, (_m, k: string) => String(v[k] ?? ''));
 
 /** 표 한 줄: [시점 라벨, 환불 라벨]. 마지막에 "이용 시작 후·노쇼 → 환불 불가" 줄을 붙여 쓴다. */
 export function describeTier(r: RefundTierRange, index: number, t: TierLabels): { when: string; refund: string } {
-  const refund = r.pct >= 100 ? t.full : r.pct <= 0 ? t.none : fill(t.pct, { pct: r.pct });
+  const refund = r.proportionalDays
+    ? fill(t.pctProportional ?? '{n}', { n: r.proportionalDays, example: Math.round(r.proportionalDays / 2), examplePct: 50 })
+    : r.pct >= 100 ? t.full : r.pct <= 0 ? t.none : fill(t.pct, { pct: r.pct });
   if (r.from === 0) return { when: r.sameDayHoursBefore ? fill(t.tierSameDayBefore, { h: r.sameDayHoursBefore }) : t.tierSameDay, refund };
   if (index === 0) return { when: fill(t.tierUntil, { n: r.from }), refund };
   if (r.to == null || r.to === r.from) return { when: fill(t.tierDay, { n: r.from }), refund };

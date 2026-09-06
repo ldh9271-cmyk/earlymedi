@@ -610,6 +610,7 @@ const zh: Dictionary = {
     "full": "全额退款",
     "pct": "退款 {pct}%",
     "none": "不可退款",
+    "pctProportional": "按剩余天数比例退款（剩余天数 ÷ {n} · 例：提前 {example} 天退 {examplePct}%）",
     "notes": [
       "因平台或商家原因（无法确认预约、停业、要求改期等）取消时，无论时间均全额退款。",
       "退款原路返回支付方式。银行卡及 KakaoPay 等电子钱包需 3~5 个工作日，支付宝需 3~7 个工作日。",
