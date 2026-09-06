@@ -22,7 +22,6 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   // left, separate circular filter button on the right. Both link
   // to /clinics for v1; richer search modal lands in a follow-up.
   + '.m-mh-search-row { display: flex !important; align-items: center; gap: 8px; padding: 8px 12px 6px; }'
-  + '.m-mh-quick { justify-content: center; padding: 2px 12px 6px; }'
   + '.m-mh-cat-sub { padding: 4px 12px 8px; }'
   + '.m-mh-search-pill { flex: 1 1 auto; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 18px; border-radius: 9999px; border: 1px solid #ebebeb; background: #fff; box-shadow: rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.06) 0 1px 2px; color: #222; text-decoration: none; }'
   + '.m-mh-search-main { font-size: 14px; font-weight: 600; line-height: 1.2; }'
@@ -51,8 +50,10 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   // the @media block above. AI 분석 스트립 항목도 모바일 전용 (데스크톱은
   // 상단 AI 상담 탭이 있음).
   + '.m-mh-search-row { display: none; }'
-  + '.m-mh-quick { display: flex; justify-content: center; gap: 8px; padding: 6px 16px 2px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }'
-  + '.m-mh-quick::-webkit-scrollbar { display: none; }'
+  // 데스크톱 검색 pill + 지도로 찾기 버튼 한 줄 (같은 높이 50px)
+  + '.m-mh-search-bar-wrap { display: flex; justify-content: center; align-items: center; gap: 10px; max-width: 760px; margin: 0 auto; }'
+  + '.m-mh-map-btn { flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px; height: 50px; padding: 0 20px; border-radius: 9999px; border: 1px solid #dddddd; background: #fff; color: #222; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; box-shadow: rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.04) 0 1px 2px; }'
+  + '.m-mh-map-btn:hover { border-color: #222; }'
   + '.m-mh-cat-sub { display: flex; justify-content: center; padding: 0 16px 10px; }'
   + '.m-mh-quick-item { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 9999px; border: 1px solid #ebebeb; background: #fff; color: #222; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; box-shadow: rgba(0,0,0,0.04) 0 1px 3px; }'
   + '.m-mh-quick-item:hover { border-color: #222; }'
@@ -606,11 +607,12 @@ export function MainHeader({
           영역에 끼워 넣으니 탭·로그인과 자리다툼이 나서 별도 행으로
           분리했다. 모바일은 아래 m-mh-search-row 가 대신한다. */}
       <div className="m-mh-search-bar-row" style={{ borderTop: '1px solid #f2f2f2' }}>
+        <div className="m-mh-search-bar-wrap">
         <form
           onSubmit={onSearchSubmit}
           className="m-mh-search-bar"
           style={{
-            maxWidth: 560, margin: '0 auto',
+            flex: '1 1 560px', maxWidth: 560, minWidth: 0,
             display: 'flex', alignItems: 'center', gap: 10,
             border: '1px solid #dddddd', borderRadius: 9999,
             padding: '6px 6px 6px 20px',
@@ -648,6 +650,12 @@ export function MainHeader({
             </svg>
           </button>
         </form>
+        {/* 검색창과 같은 줄·같은 높이의 지도로 찾기 버튼 (2026-09-07) */}
+        <Link href={`/${locale}/map`} className="m-mh-map-btn" aria-label={t.quickMap}>
+          <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1 }}>🗺️</span>
+          <span>{t.quickMap}</span>
+        </Link>
+        </div>
       </div>
 
       {/* Mobile search-pill row — between top utilities and the
@@ -685,16 +693,14 @@ export function MainHeader({
             <path d="M3 6h18M6 12h12M10 18h4" />
           </svg>
         </Link>
-      </div>
-
-      {/* 검색창 바로 아래 — 지도로 찾기만 가운데 하나. 전국 병원·뷰티샵·숙박·맛집·관광지 찾기(공공데이터)는
-          2026-09-07 부터 각 카테고리 안(카테고리 스트립 아래 registryFinder)으로 옮김 — 모바일에서 6개가 잘려 보이던 문제. */}
-      <div className="m-mh-quick">
-        <Link href={`/${locale}/map`} className="m-mh-quick-item">
-          <span aria-hidden="true">🗺️</span>
-          <span>{t.quickMap}</span>
+        {/* 모바일도 검색 pill 과 같은 줄 — 필터 원형 옆에 지도로 찾기 원형 버튼 */}
+        <Link href={`/${locale}/map`} className="m-mh-search-filter" aria-label={t.quickMap} title={t.quickMap}>
+          <span aria-hidden="true" style={{ fontSize: 20, lineHeight: 1 }}>🗺️</span>
         </Link>
       </div>
+
+      {/* 전국 병원·뷰티샵·숙박·맛집·관광지 찾기(공공데이터)는 2026-09-07 부터 각 카테고리 안
+          (카테고리 스트립 아래 registryFinder)으로, 지도로 찾기는 검색창 줄의 버튼으로 옮김. */}
 
       {/* Category strip — 8 lifestyle entries (전체/병원 dropdown + travel/lifestyle). */}
       <div className="m-mh-cat-strip-row" style={{ borderTop: '1px solid #ebebeb', background: '#ffffff' }}>
