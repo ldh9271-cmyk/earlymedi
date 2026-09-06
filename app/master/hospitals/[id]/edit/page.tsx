@@ -21,7 +21,9 @@ import {
   uploadLocaleLanding,
   removeLocaleLanding,
   copyLocaleContent,
+  updateHospitalHours,
 } from './_action';
+import { fmtHM, parseRange, type WeeklyHours } from '@/lib/hours/status';
 
 export const metadata = { title: '병원 다국어 콘텐츠 편집 · 마스터' };
 export const dynamic = 'force-dynamic';
@@ -201,6 +203,14 @@ export default async function MasterHospitalEditPage({
   const fallbackName = base.name;
   const fallbackIntro = base.notes;
   const fallbackCover = base.coverImageUrl;
+  // 진료시간 (요일별) — 언어와 무관한 기본 행 details.hoursWeekly / hours
+  const [dRow] = await db.select({ details: hospitals.details }).from(hospitals).where(eq(hospitals.id, params.id)).limit(1);
+  const hd = (dRow?.details ?? {}) as { hours?: string; hoursWeekly?: WeeklyHours; hoursWeeklySource?: string };
+  const hw = hd.hoursWeekly ?? {};
+  const toHM = (v?: string): string => (v && /^\d{4}$/.test(v) ? `${v.slice(0, 2)}:${v.slice(2)}` : '');
+  const lunchRange = parseRange(hw.lunchWeek);
+  const lunchHM = (i: 0 | 1): string => (lunchRange ? fmtHM(lunchRange[i]) : '');
+  const timeInput = 'h-9 w-full rounded-md border border-input bg-background px-2 text-sm';
   const fallbackLanding = base.landingImageUrl;
 
   return (
@@ -412,6 +422,66 @@ export default async function MasterHospitalEditPage({
             <Button type="submit" variant="brand">
               저장
             </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* ─── 진료시간 (요일별) — 진료 중/종료 배지 계산용 ───────────── */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">진료시간 (요일별) — 진료 중 / 진료 종료 배지</CardTitle>
+          <CardDescription>
+            상세 페이지의 &quot;진료 중 · 19:30까지&quot; 같은 배지는 여기 요일별 시간을 서울 현재 시각과 비교해 계산합니다 (별도 API 없음, 공휴일은 자동 보정).
+            비워 두면 아래 자유 문장을 자동으로 읽어 계산하고, 요일별 값을 넣으면 그 값이 우선합니다.
+            {hd.hoursWeeklySource === 'parsed' ? ' 현재 값은 자유 문장에서 자동으로 읽은 것입니다 — 확인 후 저장하면 수동 입력으로 고정됩니다.' : hd.hoursWeeklySource === 'manual' ? ' 현재 값은 수동 입력입니다.' : ''}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={updateHospitalHours} className="space-y-4">
+            <input type="hidden" name="id" value={base.id} />
+            <input type="hidden" name="lng" value={activeLocale} />
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const).map((d, i) => (
+                <div key={d} className="flex items-center gap-2">
+                  <span className="w-8 shrink-0 text-sm font-semibold">{['월', '화', '수', '목', '금', '토', '일'][i]}</span>
+                  <input type="time" name={`${d}_s`} defaultValue={toHM(hw[d]?.[0])} className={timeInput} />
+                  <span className="text-muted-foreground">~</span>
+                  <input type="time" name={`${d}_e`} defaultValue={toHM(hw[d]?.[1])} className={timeInput} />
+                </div>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">비워 둔 요일은 휴진으로 처리됩니다.</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>점심시간</Label>
+                <div className="flex items-center gap-2">
+                  <input type="time" name="lunch_s" defaultValue={lunchHM(0)} className={timeInput} />
+                  <span className="text-muted-foreground">~</span>
+                  <input type="time" name="lunch_e" defaultValue={lunchHM(1)} className={timeInput} />
+                </div>
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <input type="checkbox" name="lunchSatToo" defaultChecked={Boolean(hw.lunchSat) || !hw.lunchWeek} /> 토요일에도 점심시간 적용
+                </label>
+              </div>
+              <div className="space-y-1.5">
+                <Label>공휴일</Label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="closedHoliday" defaultChecked={!hw.holidayHours && (hw.closedHoliday ?? 'Y') !== 'N'} /> 공휴일 휴진
+                </label>
+                <div className="flex items-center gap-2">
+                  <input type="time" name="hol_s" defaultValue={toHM(hw.holidayHours?.[0])} className={timeInput} />
+                  <span className="text-muted-foreground">~</span>
+                  <input type="time" name="hol_e" defaultValue={toHM(hw.holidayHours?.[1])} className={timeInput} />
+                </div>
+                <p className="text-[11px] text-muted-foreground">공휴일에 진료하면 시간을 넣으세요 (넣으면 휴진 체크는 무시).</p>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="hoursText">진료시간 안내 문장 (상세 페이지에 그대로 표시)</Label>
+              <textarea id="hoursText" name="hoursText" rows={2} defaultValue={hd.hours ?? ''} placeholder="예) 평일 10:00~19:00 · 토요일 10:00~16:00 · 점심 13:00~14:00 · 일요일·공휴일 휴진"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            </div>
+            <Button type="submit" variant="brand">진료시간 저장</Button>
           </form>
         </CardContent>
       </Card>

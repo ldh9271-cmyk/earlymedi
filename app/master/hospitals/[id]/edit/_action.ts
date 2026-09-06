@@ -505,6 +505,66 @@ export async function copyLocaleContent(formData: FormData): Promise<void> {
 }
 
 // ─────────────────────────────────────────────────────────────────────
+// 진료시간 (요일별) — hospitals.details.hoursWeekly / hours
+// 진료 중·종료 배지는 이 값으로 계산한다. 언어와 무관한 기본 행 필드.
+// ─────────────────────────────────────────────────────────────────────
+
+const HOUR_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
+
+/** "HH:MM" → "HHMM" (빈 값·형식 오류는 null) */
+function hhmmOf(v: unknown): string | null {
+  const s = typeof v === 'string' ? v.trim() : '';
+  const m = /^(\d{1,2}):(\d{2})$/.exec(s);
+  if (!m) return null;
+  const h = Number(m[1]); const mi = Number(m[2]);
+  if (h > 24 || mi > 59) return null;
+  return `${String(h).padStart(2, '0')}${m[2]}`;
+}
+
+export async function updateHospitalHours(formData: FormData): Promise<void> {
+  const master = await requireMaster();
+  if (!master) redirect('/select-org');
+  const id = String(formData.get('id') ?? '');
+  const locale = parseLocale(formData.get('lng'));
+  if (!id) redirect('/master/hospitals?error=missing_id');
+
+  const weekly: Record<string, unknown> = {};
+  let anyDay = false;
+  for (const d of HOUR_DAYS) {
+    const s = hhmmOf(formData.get(`${d}_s`)); const e = hhmmOf(formData.get(`${d}_e`));
+    if (s && e && s < e) { weekly[d] = [s, e]; anyDay = true; }
+  }
+  const lunchS = hhmmOf(formData.get('lunch_s')); const lunchE = hhmmOf(formData.get('lunch_e'));
+  if (lunchS && lunchE && lunchS < lunchE) {
+    weekly.lunchWeek = `${lunchS}~${lunchE}`;
+    if (formData.get('lunchSatToo') === 'on') weekly.lunchSat = `${lunchS}~${lunchE}`;
+  }
+  const holS = hhmmOf(formData.get('hol_s')); const holE = hhmmOf(formData.get('hol_e'));
+  if (holS && holE && holS < holE) { weekly.holidayHours = [holS, holE]; weekly.closedHoliday = 'N'; }
+  else weekly.closedHoliday = formData.get('closedHoliday') === 'on' ? 'Y' : 'N';
+  const hoursText = String(formData.get('hoursText') ?? '').trim();
+
+  const patch: Record<string, unknown> = { hours: hoursText || null };
+  if (anyDay) { patch.hoursWeekly = weekly; patch.hoursWeeklySource = 'manual'; }
+  await db.execute(sql`
+    update hospitals
+       set details = (coalesce(details, '{}'::jsonb) || ${JSON.stringify(patch)}::jsonb) ${anyDay ? sql`` : sql`- 'hoursWeekly' - 'hoursWeeklySource'`},
+           updated_at = now()
+     where id = ${id}`);
+
+  const orgId = await getHospitalOrgId(id);
+  if (orgId) {
+    await db.insert(auditLogs).values({
+      organizationId: orgId, actorUserId: master.userId, action: 'update', entityType: 'hospital', entityId: id,
+      diff: { hoursWeekly: anyDay ? weekly : null, hoursText },
+      metadata: { isMaster: true, source: 'master_console', kind: 'hospital_hours' },
+    }).catch(() => {});
+  }
+  revalidateClinicSurfaces();
+  backToEdit(id, locale, 'saved=1');
+}
+
+// ─────────────────────────────────────────────────────────────────────
 // LEGACY (base hospital) actions — kept for backward compat with any
 // callers still posting to them. New UI uses the locale-aware actions
 // above exclusively.

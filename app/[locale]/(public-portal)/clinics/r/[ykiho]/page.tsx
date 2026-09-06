@@ -9,6 +9,8 @@ import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { ensureDetails } from '@/lib/hospital-registry/hira';
 import { Badge, clTone, hoursRows, isListed, type RegistryCardRow } from '../../_registry/shared';
+import OpenStatusBadge from '@/components/shared/open-status-badge';
+import { loadHolidayYmds } from '@/lib/hours/holidays';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +66,8 @@ export default async function RegistryDetailPage({ params }: { params: { locale:
   if (!row) notFound();
 
   const details = await ensureDetails({ id: row.id, ykiho: row.ykiho, details: row.details, detailsSyncedAt: row.detailsSyncedAt });
+  // 진료 중/종료 배지 — 심평원 요일별 진료시간 + 공휴일 (클라이언트에서 서울 시각으로 계산)
+  const holidays = await loadHolidayYmds().catch(() => [] as string[]);
   const listed = isListed(row);
   const tone = clTone(row.clCd);
   const photos = listed ? (details.photos ?? []) : [];
@@ -107,7 +111,10 @@ export default async function RegistryDetailPage({ params }: { params: { locale:
           {row.foreignLicensed ? <Badge tone="blue">{t.foreignBadge}</Badge> : null}
           {row.claimStatus === 'pending' ? <Badge tone="gray">{t.claimPending}</Badge> : null}
         </div>
-        <h1 className="m-rd-title" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: '8px 0 0' }}>{row.name}</h1>
+        <h1 className="m-rd-title" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: '8px 0 0', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
+          {row.name}
+          <OpenStatusBadge hours={details.hours ?? null} holidays={holidays} labels={dict.openStatus} />
+        </h1>
         <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
           {[row.clName, [row.sidoName, row.sgguName, row.emdongName].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}
           {row.drTotal > 0 ? ` · ${t.doctors} ${nf(row.drTotal)}` : ''}{estb ? ` · ${t.established} ${estb}` : ''}
@@ -157,7 +164,10 @@ export default async function RegistryDetailPage({ params }: { params: { locale:
           {/* 진료시간 */}
           {hasHours || h?.lunchWeek || h?.closedHoliday ? (
             <div style={section}>
-              <h2 style={h2}>{t.hours}</h2>
+              <h2 style={{ ...h2, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                {t.hours}
+                <OpenStatusBadge hours={details.hours ?? null} holidays={holidays} labels={dict.openStatus} size="sm" />
+              </h2>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
                 <tbody>
                   {hours.map((r) => (

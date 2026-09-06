@@ -10,6 +10,10 @@ import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content';
+import OpenStatusBadge from '@/components/shared/open-status-badge';
+import { loadHolidayYmds } from '@/lib/hours/holidays';
+import { parseKoHours } from '@/lib/hours/parse-ko';
+import type { WeeklyHours } from '@/lib/hours/status';
 
 export const dynamic = 'force-dynamic';
 
@@ -264,6 +268,9 @@ export default async function ClinicDetailPage({
   const displayName = lc?.name?.trim() || row.name;
   const aboutText = lc?.intro?.trim() || row.notes?.trim() || null;
   const detailData = (row.details ?? {}) as ClinicDetails;
+  // 진료 중/종료 배지 — 관리자 입력(hoursWeekly) 우선, 없으면 자유 문장 진료시간을 파싱. 공휴일은 kr_holidays.
+  const weeklyHours: WeeklyHours | null = detailData.hoursWeekly ?? parseKoHours(detailData.hours);
+  const holidays = weeklyHours ? await loadHolidayYmds().catch(() => [] as string[]) : [];
   const coverUrl = lc?.coverImageUrl || row.coverImageUrl;
   const galleryRaw = lc?.galleryImageUrls && lc.galleryImageUrls.length > 0
     ? lc.galleryImageUrls
@@ -294,6 +301,7 @@ export default async function ClinicDetailPage({
         }}
       >
         {displayName}
+        {weeklyHours ? <OpenStatusBadge hours={weeklyHours} holidays={holidays} labels={dict.openStatus} /> : null}
         {isKoiha ? (
           <span
             style={{
@@ -423,7 +431,7 @@ export default async function ClinicDetailPage({
           </div>
 
           {/* 구조화 콘텐츠 — hospitals.details (병원 홈페이지 기반). */}
-          <ClinicDetailSections d={detailData} t={dict.clinicsPage} locale={params.locale} />
+          <ClinicDetailSections d={detailData} t={dict.clinicsPage} locale={params.locale} hoursBadge={weeklyHours ? <OpenStatusBadge hours={weeklyHours} holidays={holidays} labels={dict.openStatus} size="sm" /> : null} />
 
           {landingUrl ? (
             <div
@@ -556,6 +564,8 @@ type ClinicDetails = {
   phone?: string;
   clinicPhone?: string;
   hours?: string;
+  /** 관리자 입력 요일별 진료시간 — 진료 중/종료 배지 계산용 (없으면 hours 문장을 파싱) */
+  hoursWeekly?: WeeklyHours;
   website?: string;
   station?: string;
   signatureProcedures?: string[];
@@ -572,10 +582,12 @@ function ClinicDetailSections({
   d,
   t,
   locale,
+  hoursBadge,
 }: {
   d: ClinicDetails;
   t: Dictionary['clinicsPage'];
   locale: PublicLocale;
+  hoursBadge?: React.ReactNode;
 }): JSX.Element | null {
   // details 안의 한국어 라벨은 생성된 번역 맵으로 치환 (kr 은 원문 유지).
   const L = (v: string): string => localizeKoLabel(v, locale);
@@ -702,7 +714,7 @@ function ClinicDetailSections({
                 </a>
               </InfoRow>
             ) : null}
-            {d.hours ? <InfoRow label={t.detailHours}>{L(d.hours)}</InfoRow> : null}
+            {d.hours ? <InfoRow label={t.detailHours}>{hoursBadge ? <span style={{ display: 'inline-block', marginRight: 8, verticalAlign: 'middle' }}>{hoursBadge}</span> : null}{L(d.hours)}</InfoRow> : null}
             {d.station ? <InfoRow label={t.detailStation}>{L(d.station)}</InfoRow> : null}
             {d.website ? (
               <InfoRow label={t.detailWebsite}>
