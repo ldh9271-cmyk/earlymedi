@@ -47,7 +47,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
   const listed = searchParams.listed === '1';
   const page = Math.max(1, Number(searchParams.page) || 1);
   const dept = searchParams.dept && DEPT_GROUP_BY_KEY[searchParams.dept] ? searchParams.dept : '';
-  const deptCodes = dept ? DEPT_GROUP_BY_KEY[dept]!.codes : [];
+  const deptCodes = dept ? (DEPT_GROUP_BY_KEY[dept]?.codes ?? []) : [];
 
   const conds: SQL[] = [];
   if (q) {
