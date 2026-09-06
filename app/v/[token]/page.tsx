@@ -7,7 +7,8 @@ import { ACTIVE_ORG_HEADER } from '@/lib/auth/active-org-constants';
 import { db } from '@/lib/db/client';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { loadOrderByToken, orgCanCheckIn, summarize } from '@/lib/voucher/service';
-import { checkInAction } from './_actions';
+import { resolveMerchantFeeBp, SETTLEMENT_STATUS_KO } from '@/lib/voucher/settlement';
+import { checkInAction, settleAction } from './_actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,8 +35,12 @@ export default async function VoucherLanding({ params, searchParams }: { params:
     }
   }
   const isOwner = Boolean(o && auth.user && o.userId === auth.user.id);
-  const s = o ? summarize(o, { withPII: canCheckIn || isOwner }) : null;
+  const s = o ? summarize(o, { withPII: canCheckIn || isOwner, withFee: canCheckIn }) : null;
+  const feeBp = canCheckIn ? (s?.settlement?.feeBp ?? (await resolveMerchantFeeBp(isMaster && !orgId ? null : orgId))) : 0;
   const won = (n: number | null | undefined): string => (n == null ? '—' : `₩${n.toLocaleString('ko-KR')}`);
+  const pct = (bp: number): string => `${(bp / 100).toFixed(bp % 100 === 0 ? 0 : 2)}%`;
+  const st = s?.settlement ?? null;
+  const settleEditable = canCheckIn && Boolean(s?.checkedInAt) && (!st || st.status === 'declared' || st.status === 'disputed' || (isMaster && st.status === 'confirmed'));
   const status = !s ? null : s.status === 'cancelled' ? { t: '취소됨 · Cancelled', c: '#6a6a6a', bg: '#f5f5f5' }
     : s.checkedInAt ? { t: '방문 확인 완료 · Checked in', c: '#047857', bg: '#ecfdf5' }
       : s.status === 'paid' ? { t: '결제 완료 · Paid — 스캔 대기', c: '#1d4ed8', bg: '#eff6ff' }
@@ -62,12 +67,42 @@ export default async function VoucherLanding({ params, searchParams }: { params:
                 {s.payOnSiteWon ? <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>현장 결제 예정 · Pay on site</td><td style={{ fontWeight: 700, textAlign: 'right', color: '#c2143c' }}>{won(s.payOnSiteWon)}</td></tr> : null}
                 {s.guestName ? <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>예약자 · Guest</td><td style={{ fontWeight: 700, textAlign: 'right' }}>{s.guestName}{s.guestContact ? ` · ${s.guestContact}` : ''}</td></tr> : null}
                 {s.checkedInAt ? <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>방문 확인 · Checked in</td><td style={{ fontWeight: 700, textAlign: 'right' }}>{new Date(s.checkedInAt).toLocaleString('ko-KR')}{s.checkedInByName ? ` · ${s.checkedInByName}` : ''}</td></tr> : null}
+                {st ? (
+                  <tr>
+                    <td style={{ color: '#6a6a6a', padding: '6px 0' }}>최종 결제 · Final amount</td>
+                    <td style={{ fontWeight: 800, textAlign: 'right' }}>
+                      {won(st.finalAmountWon)}
+                      <div style={{ fontSize: 12, fontWeight: 600, color: st.status === 'disputed' ? '#c2143c' : st.status === 'declared' ? '#b45309' : '#047857' }}>
+                        {SETTLEMENT_STATUS_KO[st.status]}{st.feeWon != null ? ` · 수수료 ${won(st.feeWon)} (${pct(st.feeBp ?? 0)})` : ''}
+                      </div>
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
 
-          {searchParams.ok ? <p style={{ color: '#047857', fontSize: 13, marginTop: 12, fontWeight: 700 }}>방문 확인이 기록되었습니다. 소비자·플랫폼 화면에 즉시 반영됩니다.</p> : null}
+          {searchParams.ok === 'settled' ? <p style={{ color: '#047857', fontSize: 13, marginTop: 12, fontWeight: 700 }}>최종 결제금액이 기록되었습니다. 소비자가 확인하면 수수료가 확정됩니다 (72시간 무응답 시 자동 확정).</p>
+            : searchParams.ok ? <p style={{ color: '#047857', fontSize: 13, marginTop: 12, fontWeight: 700 }}>방문 확인이 기록되었습니다. 소비자·플랫폼 화면에 즉시 반영됩니다.</p> : null}
           {searchParams.error ? <p style={{ color: '#dc2626', fontSize: 13, marginTop: 12 }}>{searchParams.error}</p> : null}
+
+          {settleEditable ? (
+            <form action={settleAction} style={{ marginTop: 16, border: '1px solid #d1fae5', background: '#f0fdf9', borderRadius: 14, padding: 16 }}>
+              <input type="hidden" name="token" value={token} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#065f46' }}>💳 최종 결제금액 (3자 검증)</div>
+              <p style={{ fontSize: 12, color: '#3f6f5a', margin: '4px 0 10px', lineHeight: 1.55 }}>
+                온라인 결제분을 포함해 이 고객에게 실제로 받은 총액입니다. 소비자가 확인하면 플랫폼 수수료 {pct(feeBp)} 가 이 금액 기준으로 확정됩니다.
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input name="finalAmountWon" inputMode="numeric" required defaultValue={st ? st.finalAmountWon : s.totalWon + (s.payOnSiteWon ?? 0)}
+                  style={{ flex: 1, border: '1px solid #dddddd', borderRadius: 10, padding: '10px 12px', fontSize: 15, fontWeight: 700, fontFamily: 'inherit' }} />
+                <button type="submit" style={{ background: '#047857', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                  {st ? '금액 정정' : '기록'}
+                </button>
+              </div>
+              <input name="note" placeholder="메모 (선택 — 추가 시술·할인 등)" style={{ width: '100%', boxSizing: 'border-box', marginTop: 8, border: '1px solid #dddddd', borderRadius: 10, padding: '9px 12px', fontSize: 13, fontFamily: 'inherit' }} />
+            </form>
+          ) : null}
 
           {canCheckIn && !s.checkedInAt && s.status === 'paid' ? (
             <form action={checkInAction} style={{ marginTop: 16 }}>

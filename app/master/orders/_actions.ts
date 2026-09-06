@@ -10,6 +10,7 @@ import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 import { onTripOrderPaid } from '@/lib/ai/trip-workflow';
+import { declareFinalAmount, masterSetSettlementStatus, type SettlementStatus } from '@/lib/voucher/settlement';
 import {
   accrueOrderTravelMargin,
   reverseOrder,
@@ -29,6 +30,36 @@ async function assertMaster(): Promise<void> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
   if (!isMasterEmail(auth.user.email ?? '')) redirect('/select-org');
+}
+
+/** QR 3자 검증 정산 상태 전환 — 이의 조정 후 확정, 수수료 청구/입금 표시, 되돌리기. */
+export async function setMerchantSettlementStatusAction(formData: FormData): Promise<void> {
+  await assertMaster();
+  const id = String(formData.get('id') ?? '');
+  const status = String(formData.get('status') ?? '') as SettlementStatus;
+  if (!id || !['declared', 'confirmed', 'disputed', 'invoiced', 'paid'].includes(status)) redirect('/master/orders?error=bad_settlement_status');
+  const row = await masterSetSettlementStatus(id, status);
+  if (!row) redirect(`/master/orders?error=${encodeURIComponent('정산 기록이 없는 주문입니다')}`);
+  revalidatePath('/master/orders');
+  redirect('/master/orders');
+}
+
+/** 가맹점이 금액을 안 넣었을 때 운영자가 대신 최종 결제금액을 기록/정정. */
+export async function masterDeclareSettlementAction(formData: FormData): Promise<void> {
+  await assertMaster();
+  const id = String(formData.get('id') ?? '');
+  const amount = Math.round(Number(String(formData.get('finalAmountWon') ?? '').replace(/[^\d]/g, '')));
+  if (!id) redirect('/master/orders?error=missing_id');
+  if (!Number.isFinite(amount) || amount < 0) redirect(`/master/orders?error=${encodeURIComponent('최종 결제금액을 입력해 주세요')}`);
+  const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, id)).limit(1);
+  if (!order) redirect('/master/orders?error=not_found');
+  const r = await declareFinalAmount(order, { id: 'master', name: '글로우업투어 운영', isMaster: true }, { finalAmountWon: amount, note: String(formData.get('note') ?? '') || null });
+  if (!r.ok) {
+    const msg: Record<string, string> = { not_checked_in: '방문 확인(QR 스캔)이 먼저 필요합니다', locked: '이미 청구·입금된 건입니다', not_paid: '결제 완료 주문만 가능합니다', cancelled: '취소된 주문입니다', bad_amount: '금액이 올바르지 않습니다', forbidden: '권한이 없습니다' };
+    redirect(`/master/orders?error=${encodeURIComponent(msg[r.reason] ?? r.reason)}`);
+  }
+  revalidatePath('/master/orders');
+  redirect('/master/orders');
 }
 
 export async function markOrderPaidAction(formData: FormData): Promise<void> {

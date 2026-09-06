@@ -6,7 +6,7 @@ import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { organizations } from '@/drizzle/schema/organizations';
 import { sendAdminTelegram } from '@/lib/notify/admin-alert';
-import { signVoucher, verifyVoucher, type VoucherMeta } from './token';
+import { signVoucher, verifyVoucher, type VoucherMeta, type VoucherSettlementMeta } from './token';
 
 /**
  * QR 바우처 — 소비자·사업자·플랫폼 3자가 같은 주문 레코드를 보는 흐름.
@@ -39,6 +39,23 @@ export type VoucherSummary = {
   userEmail?: string | null;
   locale: string;
   paidAt: string | null;
+  /** 3자 검증 정산 — 가맹점이 입력한 최종 결제금액. 수수료(feeBp/feeWon)는 사업자·마스터 화면(withFee)에만. */
+  settlement: VoucherSettlementView | null;
+};
+
+export type VoucherSettlementView = {
+  finalAmountWon: number;
+  onlinePaidWon: number;
+  status: VoucherSettlementMeta['status'];
+  declaredAt: string;
+  declaredBy: string | null;
+  consumerConfirmedAt: string | null;
+  disputedAt: string | null;
+  disputeNote: string | null;
+  confirmedAt: string | null;
+  confirmedBy: string | null;
+  feeBp?: number;
+  feeWon?: number;
 };
 
 type OrderRow = typeof checkoutOrders.$inferSelect;
@@ -55,10 +72,20 @@ export async function loadOrderByInvoice(invoiceNo: string): Promise<OrderRow | 
   return o ?? null;
 }
 
-export function summarize(o: OrderRow, opts: { withPII: boolean }): VoucherSummary {
+export function summarize(o: OrderRow, opts: { withPII: boolean; withFee?: boolean }): VoucherSummary {
   const meta = (o.meta ?? {}) as { depositWon?: number; payOnSiteWon?: number; reserveConfirmedAt?: string; voucher?: VoucherMeta };
   const v = meta.voucher ?? {};
+  const st = v.settlement;
+  const settlement: VoucherSettlementView | null = st
+    ? {
+      finalAmountWon: st.finalAmountWon, onlinePaidWon: st.onlinePaidWon, status: st.status, declaredAt: st.declaredAt,
+      declaredBy: st.declaredBy ?? null, consumerConfirmedAt: st.consumerConfirmedAt ?? null, disputedAt: st.disputedAt ?? null,
+      disputeNote: opts.withPII ? (st.disputeNote ?? null) : null, confirmedAt: st.confirmedAt ?? null, confirmedBy: st.confirmedBy ?? null,
+      ...(opts.withFee ? { feeBp: st.feeBp, feeWon: st.feeWon } : {}),
+    }
+    : null;
   return {
+    settlement,
     orderId: o.id,
     token: signVoucher(o.id),
     invoiceNo: o.invoiceNo,
@@ -108,7 +135,7 @@ export async function checkIn(token: string, org: { id: string; name: string; is
   if (!org.isMaster && !(await orgCanCheckIn(o, org.id))) return { ok: false, reason: 'forbidden' };
 
   const meta = (o.meta ?? {}) as { voucher?: VoucherMeta };
-  if (meta.voucher?.checkedInAt) return { ok: true, already: true, summary: summarize(o, { withPII: true }) };
+  if (meta.voucher?.checkedInAt) return { ok: true, already: true, summary: summarize(o, { withPII: true, withFee: true }) };
 
   const now = new Date().toISOString();
   const voucher: VoucherMeta = {
@@ -122,7 +149,7 @@ export async function checkIn(token: string, org: { id: string; name: string; is
     `<b>✅ 방문 확인 (QR 체크인)</b>\n<code>${o.invoiceNo}</code> · ${escapeHtml(o.listingTitle)}\n사업자: ${escapeHtml(org.name)}\n예약: ${o.reserveDate} ${o.reserveTime} · ${o.guests}명\n결제: ₩${o.totalWon.toLocaleString('ko-KR')}${(o.meta as { payOnSiteWon?: number })?.payOnSiteWon ? ` · 현장결제 예정 ₩${Number((o.meta as { payOnSiteWon?: number }).payOnSiteWon).toLocaleString('ko-KR')}` : ''}`,
   ).catch(() => false);
 
-  return { ok: true, already: false, summary: summarize(fresh ?? o, { withPII: true }) };
+  return { ok: true, already: false, summary: summarize(fresh ?? o, { withPII: true, withFee: true }) };
 }
 
 /** 조직의 최근 체크인 목록 (스캔 화면 하단). */
@@ -132,7 +159,7 @@ export async function recentCheckIns(orgId: string, limit = 20): Promise<Voucher
      where meta->'voucher'->>'checkedInByOrgId' = ${orgId}
      order by (meta->'voucher'->>'checkedInAt') desc
      limit ${limit}`)) as unknown as OrderRow[];
-  return rows.map((r) => summarize(normalizeRow(r), { withPII: true }));
+  return rows.map((r) => summarize(normalizeRow(r), { withPII: true, withFee: true }));
 }
 
 export async function orgName(orgId: string): Promise<string> {

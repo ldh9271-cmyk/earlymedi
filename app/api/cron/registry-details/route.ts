@@ -10,6 +10,7 @@ import { syncGalleryRecent, geocodeTourSpots } from '@/lib/tour-registry/tourapi
 import { geocodeMissingPlatformPlaces } from '@/lib/geo/geocode';
 import { enrichHotelListingsFromTourApi } from '@/lib/lodging-registry/tourapi-stay';
 import { localizeHotelListings, localizeTourSpots } from '@/lib/tour-registry/tourapi-i18n';
+import { AUTO_CONFIRM_HOURS, autoConfirmStaleSettlements } from '@/lib/voucher/settlement';
 
 /**
  * Vercel Cron — 전국 병원 레지스트리 상세(진료과목·진료시간·교통) 순환 갱신.
@@ -23,7 +24,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   if (!secret || auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
-  if (!process.env.HIRA_SERVICE_KEY) return NextResponse.json({ skipped: 'no HIRA_SERVICE_KEY' });
+  // QR 3자 검증: 가맹점이 입력한 최종 결제금액에 소비자가 72시간 응답 없으면 자동 확정 (레지스트리 키와 무관하게 항상)
+  const settlements = await autoConfirmStaleSettlements(AUTO_CONFIRM_HOURS).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'settle_failed' }));
+  if (!process.env.HIRA_SERVICE_KEY) return NextResponse.json({ skipped: 'no HIRA_SERVICE_KEY', settlements });
   try {
     const n = await refreshStaleDetails(40);
     // 미용업: 최근 3일 갱신분만 앞 페이지부터 (최근 갱신 순 정렬)
@@ -48,7 +51,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         spots: await localizeTourSpots(lang, 120).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'failed' })),
       };
     }
-    return NextResponse.json({ refreshed: n, beauty, lodging, food, tour, geo, tourGeo, hotelMedia, i18n });
+    return NextResponse.json({ refreshed: n, beauty, lodging, food, tour, geo, tourGeo, hotelMedia, i18n, settlements });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'failed' }, { status: 500 });
   }

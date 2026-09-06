@@ -41,10 +41,27 @@ export function voucherUrl(orderId: string): string {
   return `${base}/v/${signVoucher(orderId)}`;
 }
 
-/** 주문 meta 안의 바우처 상태 (체크인 기록). */
+/** merchant_settlements 미러 — 가맹점이 입력한 최종 결제금액과 플랫폼 수수료(3자 검증). */
+export type VoucherSettlementMeta = {
+  finalAmountWon: number;
+  onlinePaidWon: number;
+  feeBp: number;
+  feeWon: number;
+  status: 'declared' | 'confirmed' | 'disputed' | 'invoiced' | 'paid';
+  declaredAt: string;
+  declaredBy?: string;
+  consumerConfirmedAt?: string | null;
+  disputedAt?: string | null;
+  disputeNote?: string | null;
+  confirmedAt?: string | null;
+  confirmedBy?: string | null;
+};
+
+/** 주문 meta 안의 바우처 상태 (체크인 기록 + 정산 미러). */
 export type VoucherMeta = {
   checkedInAt?: string;
   checkedInByOrgId?: string;
   checkedInByName?: string;
   checkins?: Array<{ at: string; orgId: string; orgName: string }>;
+  settlement?: VoucherSettlementMeta;
 };

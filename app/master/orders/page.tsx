@@ -5,7 +5,9 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
-import { markOrderPaidAction, cancelOrderAction, confirmReservationAction, settleHospitalActualAction } from './_actions';
+import { markOrderPaidAction, cancelOrderAction, confirmReservationAction, settleHospitalActualAction, setMerchantSettlementStatusAction, masterDeclareSettlementAction } from './_actions';
+import { SETTLEMENT_STATUS_KO } from '@/lib/voucher/settlement';
+import type { VoucherMeta } from '@/lib/voucher/token';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '예약 인보이스 — 마스터 관리자' };
@@ -232,6 +234,7 @@ export default async function MasterOrdersPage({
                           ) : null}
                         </div>
                         <HospitalSettleBox order={r} />
+                        <MerchantSettleBox order={r} />
                       </Td>
                     </tr>
                   );
@@ -301,6 +304,73 @@ function HospitalSettleBox({ order: r }: { order: typeof checkoutOrders.$inferSe
           {settled ? '금액 정정' : '실결제 정산'}
         </button>
       </form>
+    </div>
+  );
+}
+
+/**
+ * QR 3자 검증 정산 박스 — 방문 확인(체크인)된 주문에만. 가맹점이 입력한 최종
+ * 결제금액(meta.voucher.settlement 미러)과 플랫폼 수수료, 소비자 확인 상태를
+ * 보여주고 운영자가 확정 · 청구 · 입금 표시를 옮긴다. 가맹점이 금액을 안 넣었으면
+ * 여기서 대신 기록할 수 있다.
+ */
+function MerchantSettleBox({ order: r }: { order: typeof checkoutOrders.$inferSelect }): JSX.Element | null {
+  if (r.status !== 'paid') return null;
+  const v = (r.meta as { voucher?: VoucherMeta; payOnSiteWon?: number } | null)?.voucher;
+  if (!v?.checkedInAt) return null;
+  const st = v.settlement ?? null;
+  const won = (n: number): string => `₩${n.toLocaleString('ko-KR')}`;
+  const pct = (bp: number): string => `${(bp / 100).toFixed(bp % 100 === 0 ? 0 : 2)}%`;
+  const tone = !st ? { b: '#fde68a', bg: '#fffbeb', c: '#b45309' }
+    : st.status === 'disputed' ? { b: '#fecdd3', bg: '#fff5f7', c: '#c2143c' }
+      : st.status === 'declared' ? { b: '#bfdbfe', bg: '#eff6ff', c: '#1d4ed8' }
+        : { b: '#d1fae5', bg: '#f0fdf9', c: '#047857' };
+  const who = st?.confirmedBy === 'consumer' ? '소비자 확인' : st?.confirmedBy === 'auto' ? '72시간 자동 확정' : st?.confirmedBy === 'master' ? '운영 확정' : '';
+  const editable = !st || st.status === 'declared' || st.status === 'disputed' || st.status === 'confirmed';
+  return (
+    <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 10, border: `1px solid ${tone.b}`, background: tone.bg }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: tone.c }}>
+        {!st
+          ? 'QR 방문 확인됨 · 가맹점 최종 결제금액 입력 대기'
+          : `최종 ${won(st.finalAmountWon)} · 수수료 ${won(st.feeWon)} (${pct(st.feeBp)}) · ${SETTLEMENT_STATUS_KO[st.status]}${who ? ` (${who})` : ''}`}
+      </div>
+      {st?.status === 'disputed' && st.disputeNote ? <div style={{ fontSize: 11, color: '#c2143c', marginTop: 2 }}>이의 사유: {st.disputeNote}</div> : null}
+      {st?.declaredBy ? <div style={{ fontSize: 11, color: '#6a6a6a', marginTop: 2 }}>입력: {st.declaredBy} · {new Date(st.declaredAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div> : null}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
+        {st && (st.status === 'declared' || st.status === 'disputed') ? (
+          <form action={setMerchantSettlementStatusAction}>
+            <input type="hidden" name="id" value={r.id} /><input type="hidden" name="status" value="confirmed" />
+            <button type="submit" style={btnStyle('#047857')} title="소비자 응답과 무관하게 운영자가 금액 확정">금액 확정</button>
+          </form>
+        ) : null}
+        {st?.status === 'confirmed' ? (
+          <form action={setMerchantSettlementStatusAction}>
+            <input type="hidden" name="id" value={r.id} /><input type="hidden" name="status" value="invoiced" />
+            <button type="submit" style={btnStyle('#1d4ed8')}>수수료 청구됨</button>
+          </form>
+        ) : null}
+        {st?.status === 'invoiced' ? (
+          <form action={setMerchantSettlementStatusAction}>
+            <input type="hidden" name="id" value={r.id} /><input type="hidden" name="status" value="paid" />
+            <button type="submit" style={btnStyle('#047857')}>수수료 입금 완료</button>
+          </form>
+        ) : null}
+        {st && st.status !== 'declared' ? (
+          <form action={setMerchantSettlementStatusAction}>
+            <input type="hidden" name="id" value={r.id} /><input type="hidden" name="status" value="declared" />
+            <button type="submit" style={btnStyle('#6a6a6a')} title="소비자 확인 대기 상태로 되돌리기">되돌리기</button>
+          </form>
+        ) : null}
+      </div>
+      {editable ? (
+        <form action={masterDeclareSettlementAction} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
+          <input type="hidden" name="id" value={r.id} />
+          <input name="finalAmountWon" inputMode="numeric" required placeholder="최종 결제금액 (원)"
+            defaultValue={st ? st.finalAmountWon : r.totalWon + Number((r.meta as { payOnSiteWon?: number } | null)?.payOnSiteWon ?? 0)}
+            style={{ width: 140, border: '1px solid #dddddd', borderRadius: 8, padding: '4px 8px', fontSize: 12, fontFamily: 'inherit' }} />
+          <button type="submit" style={btnStyle(st ? '#6a6a6a' : '#b45309')}>{st ? '금액 정정' : '운영자가 기록'}</button>
+        </form>
+      ) : null}
     </div>
   );
 }

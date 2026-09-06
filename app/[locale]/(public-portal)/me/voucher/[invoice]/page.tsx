@@ -45,8 +45,15 @@ export default async function VoucherPage({ params }: { params: { locale: string
         </div>
         <VoucherLive
           token={s.token}
-          initial={{ status: s.status, checkedInAt: s.checkedInAt, checkedInByName: s.checkedInByName }}
-          labels={{ paid: t.voucherPaid, checkedIn: t.voucherCheckedIn, cancelled: t.voucherCancelled, waiting: t.voucherWaiting, checkedInAt: t.voucherCheckedInAt, by: t.voucherBy, live: t.voucherLive }}
+          initial={{
+            status: s.status, checkedInAt: s.checkedInAt, checkedInByName: s.checkedInByName,
+            settlement: s.settlement ? { finalAmountWon: s.settlement.finalAmountWon, status: s.settlement.status, declaredAt: s.settlement.declaredAt } : null,
+          }}
+          labels={{
+            paid: t.voucherPaid, checkedIn: t.voucherCheckedIn, cancelled: t.voucherCancelled, waiting: t.voucherWaiting, checkedInAt: t.voucherCheckedInAt, by: t.voucherBy, live: t.voucherLive,
+            finalAmount: t.voucherFinalAmount, amountHint: t.voucherAmountHint, confirmAmount: t.voucherConfirmAmount, dispute: t.voucherDispute,
+            disputeNote: t.voucherDisputeNote, disputeSend: t.voucherDisputeSend, amountConfirmed: t.voucherAmountConfirmed, disputed: t.voucherDisputed, amountWaiting: t.voucherAmountWaiting,
+          }}
         />
       </div>
     </section>

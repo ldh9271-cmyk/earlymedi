@@ -10,6 +10,7 @@ import { billingAccounts, billingPlans } from '@/drizzle/schema/billing';
 import { Badge } from '@/components/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { EmptyState } from '@/components/shared/empty-state';
+import { listOrgSettlements, SETTLEMENT_STATUS_KO } from '@/lib/voucher/settlement';
 
 export const metadata = { title: '정산' };
 export const dynamic = 'force-dynamic';
@@ -85,6 +86,11 @@ export default async function PartnerSettlementsPage(): Promise<JSX.Element> {
 
     return { bookings, orders, account: account ?? null };
   });
+  // QR 3자 검증 정산 — 가맹점(우리 조직)이 입력한 최종 결제금액과 플랫폼 수수료
+  const merchantFees = await listOrgSettlements(ctx.orgId).catch(() => []);
+  const feeDue = merchantFees.filter((m) => m.status === 'confirmed' || m.status === 'invoiced').reduce((s, m) => s + m.feeWon, 0);
+  const feePaid = merchantFees.filter((m) => m.status === 'paid').reduce((s, m) => s + m.feeWon, 0);
+  const feePending = merchantFees.filter((m) => m.status === 'declared' || m.status === 'disputed').reduce((s, m) => s + m.feeWon, 0);
 
   const completed = bookings.filter((b) => b.status === 'completed');
   const confirmed = bookings.filter((b) => b.status === 'confirmed');
@@ -210,6 +216,39 @@ export default async function PartnerSettlementsPage(): Promise<JSX.Element> {
                   <span className="flex-1 truncate">{o.listingTitle}</span>
                   <span className="text-xs text-muted-foreground">{o.reserveYmd ?? ''}</span>
                   <span className="w-32 text-right font-semibold">{money(o.subtotalWon)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">플랫폼 수수료 — QR 방문 확인 기준 (3자 검증)</CardTitle>
+          <CardDescription className="text-xs">
+            고객의 결제완료 QR 을 스캔한 뒤 입력한 <b>최종 결제금액</b>에 요율을 곱한 수수료입니다. 고객이 금액을 확인하면(72시간 무응답 시 자동) 확정되고, 글로우업투어가 청구합니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="grid grid-cols-3 gap-3 border-b px-4 py-3 text-sm">
+            <div><div className="text-xs text-muted-foreground">확정 · 납부 예정</div><div className="font-bold">{money(feeDue)}</div></div>
+            <div><div className="text-xs text-muted-foreground">고객 확인 대기</div><div className="font-bold">{money(feePending)}</div></div>
+            <div><div className="text-xs text-muted-foreground">납부 완료</div><div className="font-bold">{money(feePaid)}</div></div>
+          </div>
+          {merchantFees.length === 0 ? (
+            <p className="px-6 pb-6 pt-4 text-sm text-muted-foreground">아직 QR 방문 확인 뒤 입력된 최종 결제금액이 없습니다. 고객 QR 을 스캔하면 스캔 화면에서 바로 입력할 수 있습니다.</p>
+          ) : (
+            <div className="divide-y">
+              {merchantFees.slice(0, 50).map((m) => (
+                <div key={m.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm">
+                  <span className="font-mono text-xs text-muted-foreground">{m.invoiceNo}</span>
+                  <span className="text-xs text-muted-foreground">{m.declaredAt.toISOString().slice(0, 10)}</span>
+                  <span className="flex-1 text-right">최종 {money(m.finalAmountWon)}</span>
+                  <span className="w-28 text-right font-semibold">{money(m.feeWon)} <span className="text-xs font-normal text-muted-foreground">({(m.feeBp / 100).toFixed(m.feeBp % 100 === 0 ? 0 : 2)}%)</span></span>
+                  <Badge variant={m.status === 'paid' ? 'secondary' : 'outline'} className="w-32 justify-center">
+                    {SETTLEMENT_STATUS_KO[m.status as keyof typeof SETTLEMENT_STATUS_KO] ?? m.status}
+                  </Badge>
                 </div>
               ))}
             </div>
