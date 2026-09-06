@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 }
 
 /**
- * 지도로 찾기 — 카카오맵 위에 전국 병원(심평원)·뷰티샵(행안부) + 글로우업 등록(컬러) 표시.
+ * 지도로 찾기 — 한국어는 카카오맵, 그 외 5개 언어는 구글맵(라벨 현지어) 위에 전국 병원(심평원)·뷰티샵(행안부) + 글로우업 등록(컬러) 표시.
  * ?lat&lng&level&kinds&dept&cat&foreign&listed&q 로 초기 상태 지정 (기본: 강남역, 레벨 5).
  */
 export default async function MapPage({ params, searchParams }: {
@@ -39,7 +39,8 @@ export default async function MapPage({ params, searchParams }: {
       </div>
       <MapView
         locale={locale}
-        appKey={process.env.NEXT_PUBLIC_KAKAO_MAP_KEY?.trim() || null}
+        kakaoKey={process.env.NEXT_PUBLIC_KAKAO_MAP_KEY?.trim() || null}
+        googleKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY?.trim() || null}
         labels={{ ...t, contractedBadge: tr.contractedBadge, foreignBadge: tr.foreignBadge }}
         depts={depts}
         cats={cats}
