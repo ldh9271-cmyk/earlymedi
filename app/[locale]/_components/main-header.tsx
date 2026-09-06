@@ -684,7 +684,7 @@ export function MainHeader({
         </Link>
       </div>
 
-      {/* 검색창 바로 아래 — 공공데이터 기반 찾기 5종 (지도 · 전국 병원 · 전국 뷰티샵 · 전국 숙박 · 전국 맛집). 모든 화면 공통 */}
+      {/* 검색창 바로 아래 — 공공데이터 기반 찾기 6종 (지도 · 전국 병원 · 전국 뷰티샵 · 전국 숙박 · 전국 맛집 · 전국 관광지). 모든 화면 공통 */}
       <div className="m-mh-quick">
         {([
           [`/${locale}/map`, '🗺️', t.quickMap],
@@ -692,6 +692,7 @@ export function MainHeader({
           [`/${locale}/shops/all`, '💇', t.quickShops],
           [`/${locale}/stays/all`, '🏨', t.quickStays],
           [`/${locale}/eats/all`, '🍽️', t.quickEats],
+          [`/${locale}/attractions/all`, '📸', t.quickAttractions],
         ] as Array<[string, string, string]>).map(([href, icon, label]) => (
           <Link key={href} href={href} className="m-mh-quick-item">
             <span aria-hidden="true">{icon}</span>

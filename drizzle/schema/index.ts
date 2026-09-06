@@ -83,3 +83,6 @@ export * from './lodging-registry';
 
 // 전국 일반음식점 레지스트리 (행안부 식품_일반음식점)
 export * from './food-registry';
+
+// 전국 관광지(관광사진) 레지스트리 (한국관광공사 포토코리아)
+export * from './tour-spots';

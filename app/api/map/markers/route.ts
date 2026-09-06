@@ -18,10 +18,10 @@ import { DEPT_GROUP_BY_KEY } from '@/lib/hospital-registry/departments';
  *  카카오맵 줌 레벨은 숫자가 작을수록 확대(1=최대 확대). 레벨 6 이상은 클러스터.
  */
 type Marker = {
-  k: 'h' | 'b' | 'l' | 'f'; id: string; key: string; name: string; lat: number; lng: number;
+  k: 'h' | 'b' | 'l' | 'f' | 'a'; id: string; key: string; name: string; lat: number; lng: number;
   listed: boolean; foreign?: boolean; type?: string | null; cats?: string[]; slug?: string | null; region?: string | null;
 };
-type Cluster = { lat: number; lng: number; count: number; listed: number; k: 'h' | 'b' | 'l' | 'f' };
+type Cluster = { lat: number; lng: number; count: number; listed: number; k: 'h' | 'b' | 'l' | 'f' | 'a' };
 
 function parseLatLng(v: string | null): [number, number] | null {
   if (!v) return null;
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // 격자 크기(도) — 줌에 따라
   const cell = zoom >= 11 ? 0.5 : zoom >= 9 ? 0.15 : zoom >= 7 ? 0.05 : zoom >= 6 ? 0.02 : 0.008;
 
-  const out: { markers: Marker[]; clusters: Cluster[]; counts: { hospital: number; beauty: number; stays: number; eats: number } } = { markers: [], clusters: [], counts: { hospital: 0, beauty: 0, stays: 0, eats: 0 } };
+  const out: { markers: Marker[]; clusters: Cluster[]; counts: { hospital: number; beauty: number; stays: number; eats: number; attractions: number } } = { markers: [], clusters: [], counts: { hospital: 0, beauty: 0, stays: 0, eats: 0, attractions: 0 } };
 
   if (kinds.includes('hospital')) {
     const conds: string[] = [
@@ -160,6 +160,31 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
          order by listed desc, r.name
          limit 600`)) as unknown as Array<{ id: string; key: string; name: string; lat: number; lng: number; type: string | null; cats: string[]; region: string | null; listed: boolean; slug: string | null }>;
       out.markers.push(...rows.map((r) => ({ k: 'f' as const, id: r.id, key: r.key, name: r.name, lat: r.lat, lng: r.lng, listed: r.listed, type: r.type, cats: r.cats, slug: r.slug, region: r.region })));
+    }
+  }
+
+  if (kinds.includes('attraction')) {
+    const conds: string[] = [`lat between ${swLat} and ${neLat}`, `lng between ${swLng} and ${neLng}`];
+    const acat = p.get('acat') ?? '';
+    if (acat && /^[a-z_]+$/.test(acat)) conds.push(`category_keys @> array['${acat}']::text[]`);
+    const where = sql.raw(conds.join(' and '));
+    const qCond = q ? sql` and (title ilike ${'%' + q + '%'} or location ilike ${'%' + q + '%'})` : sql``;
+    const [cnt] = (await db.execute(sql`select count(*)::int as n from tour_spots where ${where}${qCond}`)) as unknown as Array<{ n: number }>;
+    out.counts.attractions = cnt?.n ?? 0;
+    // 관광사진은 좌표가 시도 중심(근사)이라 항상 격자 클러스터로 노출
+    if (out.counts.attractions > 60) {
+      const rows = (await db.execute(sql`
+        select avg(lat)::float as lat, avg(lng)::float as lng, count(*)::int as count, 0 as listed
+          from tour_spots where ${where}${qCond}
+         group by floor(lat / ${cell}), floor(lng / ${cell})`)) as unknown as Array<{ lat: number; lng: number; count: number; listed: number }>;
+      out.clusters.push(...rows.map((r) => ({ ...r, k: 'a' as const })));
+    } else {
+      const rows = (await db.execute(sql`
+        select r.id, r.content_id as key, r.title as name, r.lat, r.lng, r.keyword as type, r.category_keys as cats, r.sggu_name as region
+          from tour_spots r where ${where}${qCond}
+         order by r.modified_time desc nulls last
+         limit 400`)) as unknown as Array<{ id: string; key: string; name: string; lat: number; lng: number; type: string | null; cats: string[]; region: string | null }>;
+      out.markers.push(...rows.map((r) => ({ k: 'a' as const, id: r.id, key: r.key, name: r.name, lat: r.lat, lng: r.lng, listed: false, type: r.type, cats: r.cats, slug: null, region: r.region })));
     }
   }
 

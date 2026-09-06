@@ -14,6 +14,8 @@ import { syncLodgingPage, syncLodgingRecent } from '@/lib/lodging-registry/local
 import { lodgingRegistry } from '@/drizzle/schema/lodging-registry';
 import { syncFoodPage, syncFoodRecent } from '@/lib/food-registry/localdata';
 import { foodRegistry } from '@/drizzle/schema/food-registry';
+import { syncGalleryPage, syncGalleryRecent } from '@/lib/tour-registry/tourapi';
+import { tourSpots } from '@/drizzle/schema/tour-spots';
 
 /**
  * 마스터 전용 — 심평원 병원정보 동기화.
@@ -69,14 +71,25 @@ export async function GET(): Promise<NextResponse> {
       lastSync: sql<string | null>`max(${foodRegistry.syncedAt})`,
     })
     .from(foodRegistry);
-  return NextResponse.json({ ...row, beauty, lodging, food, hasKey: Boolean(process.env.HIRA_SERVICE_KEY) });
+  const [tour] = await db
+    .select({ total: sql<number>`count(*)::int`, lastSync: sql<string | null>`max(${tourSpots.syncedAt})` })
+    .from(tourSpots);
+  return NextResponse.json({ ...row, beauty, lodging, food, tour, hasKey: Boolean(process.env.HIRA_SERVICE_KEY) });
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const denied = await assertMaster();
   if (denied) return denied;
-  const body = (await req.json().catch(() => ({}))) as { pageNo?: number; clCd?: string; sidoCd?: string; details?: boolean; limit?: number; deptCode?: string; beautyPage?: number; beautyRecent?: boolean; lodgingPage?: number; lodgingRecent?: boolean; foodPage?: number; foodRecent?: boolean };
+  const body = (await req.json().catch(() => ({}))) as { pageNo?: number; clCd?: string; sidoCd?: string; details?: boolean; limit?: number; deptCode?: string; beautyPage?: number; beautyRecent?: boolean; lodgingPage?: number; lodgingRecent?: boolean; foodPage?: number; foodRecent?: boolean; tourPage?: number; tourRecent?: boolean };
   try {
+    if (body.tourRecent) {
+      const r = await syncGalleryRecent(5);
+      return NextResponse.json(r);
+    }
+    if (body.tourPage) {
+      const r = await syncGalleryPage(Math.max(1, Number(body.tourPage) || 1));
+      return NextResponse.json(r);
+    }
     if (body.foodRecent) {
       const r = await syncFoodRecent(new Date(Date.now() - 3 * 86_400_000), 20);
       return NextResponse.json(r);
