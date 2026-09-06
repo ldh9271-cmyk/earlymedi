@@ -828,7 +828,7 @@ const en: Dictionary = {
     },
     countSubtitle: '{n} verified hospitals · reviews · price guides',
     productsWord: 'Programs',
-    recommended: 'Recommended',
+    recommended: 'Recommended clinics',
     productsSubtitle: 'Pick a program and send an inquiry — the clinic contacts you directly. Start with a consultation, no payment needed.',
     all: 'All',
     backToAll: 'All hospitals',

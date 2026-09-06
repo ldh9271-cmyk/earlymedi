@@ -374,21 +374,13 @@ export default async function ClinicsListPage({
   return (
     <section className="m-cl-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px 80px' }}>
       <style dangerouslySetInnerHTML={{ __html: CLINICS_MOBILE_CSS }} />
-      <h1 className="m-cl-title" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
-        {dict.clinicsPage.recommended}
+      {/* 2026-09-07: '추천상품' 제목·설명·칩 제거 — 모바일에서 너무 길어져 아래 과별 칩 줄에 '추천 병원' 으로 합침 */}
+      <h1 className="m-cl-title" style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
+        {dict.clinicsPage.registry.title}
       </h1>
-      <p className="m-cl-subtitle" style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
-        {dict.clinicsPage.productsSubtitle}
-      </p>
-
-      <Chips locale={params.locale} dict={dict} active={null} />
 
       {/* 전국 병원 찾기 진입 — 심평원 레지스트리 전체 (컬러 = 등록 병원, 흑백 = 공공정보) */}
-      <form action={`/${params.locale}/clinics/all`} method="get" className="m-cl-registry" style={{ marginTop: 18, border: '1px solid #ebebeb', borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: '#fafafa' }}>
-        <div style={{ flex: '1 1 220px' }}>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>{dict.clinicsPage.registry.title}</div>
-          <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 2 }}>{dict.clinicsPage.registry.filterHospitalGrade} · {dict.clinicsPage.registry.filterForeign} · {dict.clinicsPage.registry.filterContracted}</div>
-        </div>
+      <form action={`/${params.locale}/clinics/all`} method="get" className="m-cl-registry" style={{ marginTop: 12, border: '1px solid #ebebeb', borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: '#fafafa' }}>
         <input name="q" placeholder={dict.clinicsPage.registry.searchPlaceholder} style={{ flex: '2 1 240px', border: '1px solid #dddddd', borderRadius: 999, padding: '10px 14px', fontSize: 14, fontFamily: 'inherit', background: '#fff' }} />
         <input type="hidden" name="type" value="all" />
         <button type="submit" style={{ background: '#222', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{dict.clinicsPage.registry.search}</button>
@@ -399,6 +391,13 @@ export default async function ClinicsListPage({
         <div style={{ fontSize: 13, fontWeight: 700, color: '#222', marginBottom: 8 }}>{dict.clinicsPage.registry.deptsTitle}</div>
         {/* 모바일은 두 줄만 보이고 가운데 '더보기'로 펼침 (데스크톱은 전부) */}
         <MoreRow mobileOnly gap={8} more={dict.mapPage.showMore} less={dict.mapPage.showLess} style={{ paddingBottom: 4 }}>
+          {/* 첫 칩 = 추천 병원 (이 페이지, 활성) → 성형외과 · 피부과 · 치과 … 순 */}
+          <Link
+            href={`/${params.locale}/clinics`}
+            style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', padding: '8px 14px', borderRadius: 9999, border: '1px solid #222', background: '#222', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}
+          >
+            {dict.clinicsPage.recommended}
+          </Link>
           {DEPT_GROUPS.map((g) => (
             <Link
               key={g.key}

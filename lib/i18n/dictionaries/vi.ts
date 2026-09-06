@@ -828,7 +828,7 @@ const vi: Dictionary = {
     },
     countSubtitle: '{n} bệnh viện đã xác minh · đánh giá · chi phí dự kiến',
     productsWord: 'Sản phẩm',
-    recommended: 'Đề xuất',
+    recommended: 'Bệnh viện đề xuất',
     productsSubtitle: 'Chọn sản phẩm bạn quan tâm và gửi yêu cầu — bệnh viện sẽ liên hệ trực tiếp. Bắt đầu bằng tư vấn, không cần thanh toán.',
     all: 'Tất cả',
     backToAll: 'Tất cả bệnh viện',
