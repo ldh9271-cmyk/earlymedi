@@ -6,7 +6,7 @@ import { refreshStaleDetails } from '@/lib/hospital-registry/hira';
 import { syncBeautyRecent } from '@/lib/beauty-registry/localdata';
 import { syncLodgingRecent } from '@/lib/lodging-registry/localdata';
 import { syncFoodRecent } from '@/lib/food-registry/localdata';
-import { syncGalleryRecent } from '@/lib/tour-registry/tourapi';
+import { syncGalleryRecent, geocodeTourSpots } from '@/lib/tour-registry/tourapi';
 import { geocodeMissingPlatformPlaces } from '@/lib/geo/geocode';
 
 /**
@@ -34,7 +34,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const tour = await syncGalleryRecent(5).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'tour_failed' }));
     // 글로우 인증(직접 등록) 병원·업체 중 좌표 없는 것 → 지도에 나오도록 조금씩 지오코딩
     const geo = await geocodeMissingPlatformPlaces(8).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'geo_failed' }));
-    return NextResponse.json({ refreshed: n, beauty, lodging, food, tour, geo });
+    // 관광사진(좌표 없음): 새로 들어온 사진에 카카오 키워드 검색으로 실좌표 채우기
+    const tourGeo = await geocodeTourSpots(30).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'tour_geo_failed' }));
+    return NextResponse.json({ refreshed: n, beauty, lodging, food, tour, geo, tourGeo });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'failed' }, { status: 500 });
   }

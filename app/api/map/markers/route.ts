@@ -203,9 +203,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const where = sql.raw(conds.join(' and '));
     const qCond = q ? sql` and (title ilike ${kq} or location ilike ${kq})` : sql``;
     const [cnt] = (await db.execute(sql`select count(*)::int as n from tour_spots where ${where}${qCond}`)) as unknown as Array<{ n: number }>;
-    out.counts.attractions = cnt?.n ?? 0;
-    // 관광사진은 좌표가 시도 중심(근사)이라 항상 격자 클러스터로 노출
-    if (out.counts.attractions > 60) {
+    const all = cnt?.n ?? 0;
+    // 광역 줌: 격자 클러스터(시도 중심 근사 좌표 사진도 포함해 지역별 수를 보여줌).
+    // 확대 줌: 카카오로 실좌표를 찾은 사진만 개별 마커 — 근사 좌표 사진이 시청 앞에 몰려 찍히는 가짜 핀 방지.
+    if (cluster && all > 60) {
+      out.counts.attractions = all;
       const rows = (await db.execute(sql`
         select avg(lat)::float as lat, avg(lng)::float as lng, count(*)::int as count, 0 as listed
           from tour_spots where ${where}${qCond}
@@ -213,10 +215,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       out.clusters.push(...rows.map((r) => ({ ...r, k: 'a' as const })));
     } else {
       const rows = (await db.execute(sql`
-        select r.id, r.content_id as key, r.title as name, r.lat, r.lng, r.keyword as type, r.category_keys as cats, r.sggu_name as region
-          from tour_spots r where ${where}${qCond}
+        select r.id, r.content_id as key, r.title as name, r.lat, r.lng, r.keyword as type, r.category_keys as cats,
+               concat_ws(' ', r.sido_name, r.sggu_name) as region
+          from tour_spots r where ${where}${qCond} and r.geo_source = 'kakao_kw'
          order by r.modified_time desc nulls last
          limit 400`)) as unknown as Array<{ id: string; key: string; name: string; lat: number; lng: number; type: string | null; cats: string[]; region: string | null }>;
+      out.counts.attractions = rows.length;
       out.markers.push(...rows.map((r) => ({ k: 'a' as const, id: r.id, key: r.key, name: r.name, lat: r.lat, lng: r.lng, listed: false, type: r.type, cats: r.cats, slug: null, region: r.region })));
     }
   }

@@ -63,6 +63,18 @@ async function kakaoLocal(path: 'address' | 'keyword', query: string, key: strin
   return { lat: Number(d.y), lng: Number(d.x), source: path === 'address' ? 'kakao_addr' : 'kakao_kw', matched: [d.place_name, d.address_name].filter(Boolean).join(' | ') };
 }
 
+/** 카카오 키워드(장소) 검색 — 관광지처럼 주소 없이 이름만 있는 곳을 찾을 때. 키가 없으면 빈 배열. */
+export async function kakaoPlaces(query: string, size = 5): Promise<Array<{ lat: number; lng: number; name: string; address: string }>> {
+  const key = process.env.KAKAO_REST_API_KEY?.trim();
+  if (!key || !query.trim()) return [];
+  const res = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?size=${size}&query=${encodeURIComponent(query)}`, {
+    headers: { Authorization: `KakaoAK ${key}` }, cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  const j = (await res.json()) as { documents?: Array<{ x: string; y: string; place_name: string; address_name?: string; road_address_name?: string }> };
+  return (j.documents ?? []).map((d) => ({ lat: Number(d.y), lng: Number(d.x), name: d.place_name, address: d.address_name || d.road_address_name || '' }));
+}
+
 let lastOsm = 0;
 async function osm(query: string): Promise<GeoHit | null> {
   const wait = 1100 - (Date.now() - lastOsm);

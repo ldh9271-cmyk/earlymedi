@@ -22,8 +22,10 @@ export const tourSpots = pgTable(
     categoryKeys: text('category_keys').array().notNull().default(sql`'{}'::text[]`), // nature · heritage · city · coast · theme · night · other
     photographer: text('photographer'),
     photoMonth: text('photo_month'),
-    lat: doublePrecision('lat'), // 시도 중심 좌표(근사)
+    lat: doublePrecision('lat'), // geo_source 'kakao_kw' 면 실좌표, 아니면 시도 중심 좌표(근사)
     lng: doublePrecision('lng'),
+    geoSource: text('geo_source'), // null = 미시도 · 'kakao_kw' = 카카오 키워드 검색 실좌표 · 'centroid' = 못 찾아 시도 중심 유지
+    geoMatched: text('geo_matched'), // 카카오가 찾은 장소명 | 주소 (검증용)
     createdTime: text('created_time'),
     modifiedTime: text('modified_time'),
     syncedAt: timestamp('synced_at', { withTimezone: true }).notNull().defaultNow(),

@@ -103,7 +103,7 @@ export default async function AttractionsListPage({ params, searchParams }: { pa
           locale={locale}
           kakaoKey={process.env.NEXT_PUBLIC_KAKAO_MAP_KEY?.trim() || null}
           googleKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY?.trim() || null}
-          labels={{ ...dict.mapPage, searchPlaceholder: t.searchPlaceholder, zoomHint: t.subtitle, contractedBadge: tr.listedBadgeBiz, foreignBadge: tr.foreignBadge }}
+          labels={{ ...dict.mapPage, searchPlaceholder: t.searchPlaceholder, contractedBadge: tr.listedBadgeBiz, foreignBadge: tr.foreignBadge }}
           depts={mapDepts}
           cats={mapCats}
           initial={{ lat: 36.2, lng: 127.9, level: 12, kinds: 'attraction', dept: '', cat: '', foreign: false, listed: false, q: '' }}
