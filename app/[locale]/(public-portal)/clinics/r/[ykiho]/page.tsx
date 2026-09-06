@@ -5,7 +5,8 @@ import { eq } from 'drizzle-orm';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { db } from '@/lib/db/client';
-import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
+import { hospitalRegistry, type RegistryProfile } from '@/drizzle/schema/hospital-registry';
+import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { ensureDetails } from '@/lib/hospital-registry/hira';
 import { Badge, clTone, hoursRows, isListed, type RegistryCardRow } from '../../_registry/shared';
@@ -57,6 +58,62 @@ export async function generateMetadata({ params }: { params: { locale: string; y
  * → 진료과목 → 진료시간표 → 위치·교통 → 소개(직접 등록 병원) → 직접 등록 CTA.
  * 상세(진료과목·시간·교통)는 열람 시 TTL 이 지났으면 심평원 API 로 즉시 갱신.
  */
+function ProfileBlocks({ p, cp, section, h2, languages, langLabel }: {
+  p: RegistryProfile; cp: Dictionary['clinicsPage']; section: React.CSSProperties; h2: React.CSSProperties; languages: string[]; langLabel: string;
+}): JSX.Element {
+  const chip: React.CSSProperties = { display: 'inline-block', border: '1px solid #ffd7de', background: '#fff5f7', color: '#c81e42', borderRadius: 9999, padding: '6px 13px', fontSize: 13, fontWeight: 600 };
+  const rows: Array<[string, React.ReactNode]> = [];
+  if (p.hoursText) rows.push([cp.detailHours, p.hoursText]);
+  if (p.station) rows.push([cp.detailStation, p.station]);
+  if (p.website) rows.push([cp.detailWebsite, <a key="w" href={p.website.startsWith('http') ? p.website : `https://${p.website}`} target="_blank" rel="noopener noreferrer" style={{ color: '#ff385c', fontWeight: 600, textDecoration: 'none' }}>{p.website.replace(/^https?:\/\//, '')}</a>]);
+  return (
+    <>
+      {p.signatureProcedures?.length ? (
+        <div style={section}><h2 style={h2}>{cp.detailProcedures}</h2><div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{p.signatureProcedures.map((s) => <span key={s} style={chip}>{s}</span>)}</div></div>
+      ) : null}
+      {p.departments?.length ? (
+        <div style={section}><h2 style={h2}>{cp.detailDepartments}</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+            {p.departments.map((d) => (
+              <div key={d.title} style={{ border: '1px solid #ebebeb', borderRadius: 12, padding: '12px 14px' }}>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{d.title}</div>
+                {d.items.length ? <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 4, lineHeight: 1.6 }}>{d.items.join(' · ')}</div> : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {p.doctors?.length ? (
+        <div style={section}><h2 style={h2}>{cp.detailDoctors}</h2>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {p.doctors.map((d) => <li key={`${d.name}-${d.role}`} style={{ display: 'flex', gap: 10, alignItems: 'baseline', fontSize: 14 }}><span style={{ fontWeight: 700 }}>{d.name}</span><span style={{ color: '#6a6a6a' }}>{d.role}</span></li>)}
+          </ul>
+        </div>
+      ) : null}
+      {p.facilities?.length ? (
+        <div style={section}><h2 style={h2}>{cp.detailFacilities}</h2><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{p.facilities.map((f) => <span key={f} style={{ fontSize: 13, border: '1px solid #e5e5e5', borderRadius: 999, padding: '5px 11px', background: '#fafafa' }}>{f}</span>)}</div></div>
+      ) : null}
+      {languages.length || p.foreignNote ? (
+        <div style={section}><h2 style={h2}>{cp.detailForeign}</h2>
+          {languages.length ? <p style={{ fontSize: 13, color: '#3f3f3f', margin: 0 }}><b>{langLabel}</b> · {languages.join(', ')}</p> : null}
+          {p.foreignNote ? <p style={{ fontSize: 14, color: '#3f3f3f', margin: languages.length ? '8px 0 0' : 0, lineHeight: 1.6 }}>{p.foreignNote}</p> : null}
+        </div>
+      ) : null}
+      {p.trust?.length ? (
+        <div style={section}><ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, color: '#3f3f3f', lineHeight: 1.8 }}>{p.trust.map((x) => <li key={x}>{x}</li>)}</ul></div>
+      ) : null}
+      {rows.length ? (
+        <div style={section}><h2 style={h2}>{cp.detailInfo}</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14 }}>
+            {rows.map(([k, v]) => <div key={k} style={{ display: 'flex', gap: 12 }}><span style={{ width: 92, flexShrink: 0, color: '#6a6a6a' }}>{k}</span><span style={{ color: '#222', lineHeight: 1.5 }}>{v}</span></div>)}
+          </div>
+        </div>
+      ) : null}
+      {p.notice ? <p style={{ padding: '12px 14px', background: '#fafafa', border: '1px solid #ebebeb', borderRadius: 10, fontSize: 12, color: '#6a6a6a', lineHeight: 1.6, margin: 0 }}>{p.notice}</p> : null}
+    </>
+  );
+}
+
 export default async function RegistryDetailPage({ params }: { params: { locale: string; ykiho: string } }): Promise<JSX.Element> {
   if (!isPublicLocale(params.locale)) notFound();
   const locale = params.locale as PublicLocale;
@@ -70,7 +127,12 @@ export default async function RegistryDetailPage({ params }: { params: { locale:
   const holidays = await loadHolidayYmds().catch(() => [] as string[]);
   const listed = isListed(row);
   const tone = clTone(row.clCd);
-  const photos = listed ? (details.photos ?? []) : [];
+  // 병원 자체 등록 프로필 — 관리자 검수 승인 뒤에만 공개 (글로우 인증 상세와 같은 구성)
+  const profile = details.submission?.status === 'approved' ? details.profile : undefined;
+  const photos = listed
+    ? (profile ? [profile.cover, ...(profile.photos ?? [])].filter((x): x is string => Boolean(x)) : (details.photos ?? []))
+    : [];
+  const badgeHours = profile?.hoursWeekly ?? details.hours ?? null;
   const cover = row.partnerCover || photos[0] || null;
   const hours = hoursRows(details.hours, t.days as unknown as string[]);
   const hasHours = hours.some((h) => h.text);
@@ -113,7 +175,7 @@ export default async function RegistryDetailPage({ params }: { params: { locale:
         </div>
         <h1 className="m-rd-title" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px', margin: '8px 0 0', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
           {row.name}
-          <OpenStatusBadge hours={details.hours ?? null} holidays={holidays} labels={dict.openStatus} />
+          <OpenStatusBadge hours={badgeHours} holidays={holidays} labels={dict.openStatus} />
         </h1>
         <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
           {[row.clName, [row.sidoName, row.sgguName, row.emdongName].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}
@@ -124,6 +186,7 @@ export default async function RegistryDetailPage({ params }: { params: { locale:
             <b>{t.foreignCountries}</b> · {details.foreignCountries.join(' / ')}
           </p>
         ) : null}
+        {profile?.tagline ? <p style={{ fontSize: 15, color: '#c81e42', fontWeight: 600, margin: '8px 0 0', lineHeight: 1.5 }}>{profile.tagline}</p> : null}
       </div>
 
       <div className="m-rd-body" style={{ marginTop: 22 }}>
@@ -147,6 +210,9 @@ export default async function RegistryDetailPage({ params }: { params: { locale:
             </div>
           ) : null}
 
+          {/* 자체 등록 프로필 (검수 승인) — 대표 시술 · 진료 분야 · 의료진 · 시설 · 외국인 안내 · 신뢰 포인트 · 안내 */}
+          {profile ? <ProfileBlocks p={profile} cp={dict.clinicsPage} section={section} h2={h2} languages={details.languages ?? []} langLabel={t.languages} /> : null}
+
           {/* 진료과목 */}
           {details.departments?.length ? (
             <div style={section}>
@@ -166,7 +232,7 @@ export default async function RegistryDetailPage({ params }: { params: { locale:
             <div style={section}>
               <h2 style={{ ...h2, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 {t.hours}
-                <OpenStatusBadge hours={details.hours ?? null} holidays={holidays} labels={dict.openStatus} size="sm" />
+                <OpenStatusBadge hours={badgeHours} holidays={holidays} labels={dict.openStatus} size="sm" />
               </h2>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
                 <tbody>

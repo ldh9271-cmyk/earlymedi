@@ -141,7 +141,7 @@ const en: Dictionary = {
       disclaimer: 'AI itineraries are suggestions based on registered information. Treatment availability, prices and bookings are confirmed with each clinic or business.',
       error: 'Could not build the itinerary. Please try again shortly.',
       hubTitle: 'AI Trip Planner',
-      hubDesc: 'Tell the AI your style, dates and interests — it drafts a day-by-day schedule and emails it after sign-up.',
+      hubDesc: 'Tell the AI your style, dates and interests — it drafts a day-by-day schedule and emails it to you.',
       hubCta: 'Build my itinerary →',
       confirmBtn: 'Confirm this itinerary',
       confirmHint: 'Once confirmed, we will ask whether you want GlowUpTour to help — verification, a quote and payment can follow.',

@@ -1,4 +1,9 @@
 import { requireAccess } from '@/lib/auth/route-guards';
+import { redirect } from 'next/navigation';
+import { eq, sql } from 'drizzle-orm';
+import { db } from '@/lib/db/client';
+import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
+import { hospitals } from '@/drizzle/schema/hospitals';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
 import { EmptyState } from '@/components/shared/empty-state';
@@ -8,6 +13,15 @@ export const metadata = { title: '의료기관 대시보드' };
 
 export default async function MedicalDashboardPage(): Promise<JSX.Element> {
   const ctx = await requireAccess({ allowedAccountTypes: ['medical'] });
+  // 병원 정보 등록(검수 승인)이 끝나기 전에는 '병원 공개 정보' 를 첫 화면으로 — 가입 직후 등록 방식 선택부터
+  const [reg] = await db
+    .select({ status: sql<string | null>`${hospitalRegistry.details}->'submission'->>'status'` })
+    .from(hospitalRegistry).where(eq(hospitalRegistry.claimOrgId, ctx.orgId)).limit(1);
+  if (reg && reg.status !== 'approved') redirect('/medical/registry');
+  if (!reg) {
+    const [h] = await db.select({ id: hospitals.id }).from(hospitals).where(eq(hospitals.organizationId, ctx.orgId)).limit(1);
+    if (!h) redirect('/medical/registry');
+  }
   return (
     <div className="space-y-6">
       <div>

@@ -138,7 +138,7 @@ const zh: Dictionary = {
       disclaimer: 'AI 行程为基于登记信息的建议，项目可行性、价格与预约需经医院或商家确认。',
       error: '无法生成行程，请稍后再试。',
       hubTitle: 'AI 旅行规划',
-      hubDesc: '只需说出旅行方式、天数和兴趣，AI 就会安排逐日行程，注册后发送到您的邮箱。',
+      hubDesc: '只需说出旅行方式、天数和兴趣，AI 就会安排逐日行程，并发送到您的邮箱。',
       hubCta: '生成我的行程 →',
       confirmBtn: '确认此行程',
       confirmHint: '确认后我们会询问您是否需要 GlowUpTour 协助，如需要则进入核验、报价与付款。',

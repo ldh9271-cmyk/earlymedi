@@ -12,6 +12,7 @@ import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 import { onTripOrderPaid } from '@/lib/ai/trip-workflow';
 import { declareFinalAmount, masterSetSettlementStatus, type SettlementStatus } from '@/lib/voucher/settlement';
 import { refundAndCancel } from '@/lib/refund/service';
+import { onRegistryAgencyPaid } from '@/lib/registry/agency';
 import {
   accrueOrderTravelMargin,
   reverseOrder,
@@ -107,6 +108,7 @@ export async function markOrderPaidAction(formData: FormData): Promise<void> {
     }
     // AI 여행 견적 인보이스면 일정을 '스케줄 완성'으로 올리고 고객에게 안내 메일
     await onTripOrderPaid(id).catch(() => undefined);
+    await onRegistryAgencyPaid(id).catch(() => undefined);
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'update_failed';
     if (msg.includes('NEXT_REDIRECT')) throw err;

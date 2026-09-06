@@ -11,7 +11,11 @@ import { foodRegistry } from '@/drizzle/schema/food-registry';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { organizations } from '@/drizzle/schema/organizations';
 import SyncRunner from './_components/sync-runner';
-import { autoMatchContractsAction, autoMatchShopsAction, autoMatchStaysAction, autoMatchEatsAction, decideClaimAction, decideShopClaimAction, decideStayClaimAction, decideEatClaimAction, markForeignAction, setContractAction, setShopContractAction, setStayContractAction, setEatContractAction } from './_actions';
+import { autoMatchContractsAction, autoMatchShopsAction, autoMatchStaysAction, autoMatchEatsAction, decideClaimAction, decideShopClaimAction, decideStayClaimAction, decideEatClaimAction, markForeignAction, setContractAction, setShopContractAction, setStayContractAction, setEatContractAction, reviewSubmissionAction } from './_actions';
+import type { RegistryDetails } from '@/drizzle/schema/hospital-registry';
+import { signedDocUrl } from '@/lib/storage/registry-files';
+import { profileCompleteness } from '@/lib/registry/submission';
+import { REGISTRY_AGENCY_FEE_WON } from '@/lib/registry/agency';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 
 export const dynamic = 'force-dynamic';
@@ -106,6 +110,27 @@ export default async function RegistryAdminPage({ searchParams }: { searchParams
     .where(eq(hospitalRegistry.claimStatus, 'pending'))
     .orderBy(desc(hospitalRegistry.claimedAt))
     .limit(50);
+
+  // 병원 자체 등록 검수 큐 — 콘솔 양식(직접/대행)으로 검수 요청된 건 + 보완 요청 상태
+  const submissionsRaw = await db
+    .select({
+      id: hospitalRegistry.id, name: hospitalRegistry.name, ykiho: hospitalRegistry.ykiho, clName: hospitalRegistry.clName, addr: hospitalRegistry.addr,
+      foreignLicensed: hospitalRegistry.foreignLicensed, claimStatus: hospitalRegistry.claimStatus, details: hospitalRegistry.details, orgName: organizations.name,
+    })
+    .from(hospitalRegistry)
+    .leftJoin(organizations, eq(organizations.id, hospitalRegistry.claimOrgId))
+    .where(sql`${hospitalRegistry.details}->'submission'->>'status' in ('submitted', 'rejected')`)
+    .orderBy(desc(sql`${hospitalRegistry.details}->'submission'->>'submittedAt'`))
+    .limit(50);
+  const submissions = await Promise.all(submissionsRaw.map(async (s) => {
+    const d = s.details as RegistryDetails;
+    return {
+      ...s, d,
+      bizUrl: d.docs?.businessLicense ? await signedDocUrl(d.docs.businessLicense.path) : null,
+      foreignUrl: d.docs?.foreignPatientCert ? await signedDocUrl(d.docs.foreignPatientCert.path) : null,
+      completeness: profileCompleteness(d),
+    };
+  }));
 
   // 계약 병원(hospitals) 중 레지스트리 연결이 없는 것
   const unlinked = await db
@@ -534,6 +559,58 @@ export default async function RegistryAdminPage({ searchParams }: { searchParams
               ))}
             </tbody>
           </table>
+        )}
+      </div>
+
+      {/* 병원 자체 등록 검수 (콘솔 양식 · 대행) */}
+      <div style={card}>
+        <h2 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px' }}>병원 등록 검수 ({submissions.filter((s) => s.d.submission?.status === 'submitted').length})</h2>
+        <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 10px' }}>
+          의료기관 콘솔 &quot;병원 공개 정보&quot; 에서 검수 요청한 건입니다. 서류(사업자등록증·유치기관 등록증)와 프로필을 확인해 1~2 영업일 내 승인하면 클레임 승인과 함께 공개 상세에 그대로 게시됩니다.
+          대행(₩{REGISTRY_AGENCY_FEE_WON.toLocaleString('ko-KR')}) 결제 건은 자료를 바탕으로 운영팀이 콘솔 양식을 대신 채운 뒤 승인합니다.
+        </p>
+        {submissions.length === 0 ? <p style={{ fontSize: 13, color: '#9c9c9c', margin: 0 }}>검수 대기 건이 없습니다.</p> : (
+          <div style={{ display: 'grid', gap: 10 }}>
+            {submissions.map((s) => {
+              const sub = s.d.submission; const p = s.d.profile ?? {}; const ag = s.d.agency;
+              return (
+                <div key={s.id} style={{ border: `1px solid ${sub?.status === 'rejected' ? '#fecdd3' : '#e5e7eb'}`, borderRadius: 12, padding: '12px 14px', background: sub?.status === 'rejected' ? '#fff5f7' : '#fafafa' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                    <b style={{ fontSize: 14 }}>{s.name}</b>
+                    <span style={{ fontSize: 11, color: '#6a6a6a' }}>{s.clName} · {s.addr}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: sub?.mode === 'agency' ? '#c2143c' : '#1d4ed8', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 999, padding: '2px 8px' }}>
+                      {sub?.mode === 'agency' ? `대행 · ${ag?.paidAt ? '결제 완료' : '미결제'}${ag?.invoiceNo ? ` · ${ag.invoiceNo}` : ''}` : '직접 등록'}
+                    </span>
+                    <span style={{ fontSize: 11, color: sub?.status === 'rejected' ? '#c2143c' : '#b45309', fontWeight: 700 }}>{sub?.status === 'rejected' ? '보완 요청 중' : '검수 대기'}</span>
+                    <span style={{ fontSize: 11, color: '#9c9c9c' }}>{sub?.submittedAt ? new Date(sub.submittedAt).toLocaleString('ko-KR') : ''} · {sub?.contactEmail ?? s.orgName ?? ''}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8, fontSize: 12 }}>
+                    <span>소개 {(p.intro ?? '').length}자</span>
+                    <span>대표 사진 {p.cover ? '있음' : <b style={{ color: '#c2143c' }}>없음</b>}</span>
+                    <span>추가 사진 {(p.photos ?? []).length}장</span>
+                    <span>대표 시술 {(p.signatureProcedures ?? []).length} · 의료진 {(p.doctors ?? []).length}</span>
+                    <span>사업자등록증 {s.bizUrl ? <a href={s.bizUrl} target="_blank" rel="noreferrer" style={{ color: '#1d4ed8', fontWeight: 700 }}>열기 (10분)</a> : <b style={{ color: '#c2143c' }}>없음</b>}</span>
+                    <span>유치기관 등록증 {s.foreignUrl ? <a href={s.foreignUrl} target="_blank" rel="noreferrer" style={{ color: '#1d4ed8', fontWeight: 700 }}>열기</a> : (s.foreignLicensed ? <b style={{ color: '#b45309' }}>미첨부</b> : '해당 없음')}</span>
+                    <Link href={`/kr/clinics/r/${encodeURIComponent(s.ykiho)}`} target="_blank" style={{ color: '#222', textDecoration: 'underline' }}>공개 페이지</Link>
+                  </div>
+                  {p.tagline || p.intro ? <p style={{ fontSize: 12, color: '#3f3f3f', margin: '6px 0 0', lineHeight: 1.5 }}>{p.tagline ? <b>{p.tagline} — </b> : null}{(p.intro ?? '').slice(0, 160)}{(p.intro ?? '').length > 160 ? '…' : ''}</p> : null}
+                  {p.cover || (p.photos ?? []).length ? (
+                    <div style={{ display: 'flex', gap: 6, marginTop: 8, overflowX: 'auto' }}>
+                      {[p.cover, ...(p.photos ?? [])].filter(Boolean).slice(0, 8).map((u) => <div key={u} style={{ width: 96, height: 64, flexShrink: 0, borderRadius: 8, background: `#eee url(${u}) center / cover` }} />)}
+                    </div>
+                  ) : null}
+                  {!s.completeness.ok ? <p style={{ fontSize: 11, color: '#c2143c', margin: '6px 0 0' }}>미비: {s.completeness.missing.join(', ')}</p> : null}
+                  {sub?.status === 'rejected' && sub.reviewNote ? <p style={{ fontSize: 11, color: '#c2143c', margin: '6px 0 0' }}>보완 요청 사유: {sub.reviewNote}</p> : null}
+                  <form action={reviewSubmissionAction} style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginTop: 8 }}>
+                    <input type="hidden" name="registryId" value={s.id} />
+                    <input name="note" placeholder="메모 / 반려 사유 (병원 이메일로 전달)" style={{ flex: '1 1 260px', border: '1px solid #dddddd', borderRadius: 8, padding: '6px 10px', fontSize: 12, fontFamily: 'inherit' }} />
+                    <button type="submit" name="decision" value="approved" style={{ ...btn('#047857'), padding: '6px 14px', fontSize: 12 }}>승인 · 게시</button>
+                    <button type="submit" name="decision" value="rejected" style={{ ...btn('#c2143c'), padding: '6px 14px', fontSize: 12 }}>보완 요청</button>
+                  </form>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 

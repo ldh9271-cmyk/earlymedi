@@ -141,7 +141,7 @@ const vi: Dictionary = {
       disclaimer: 'Lịch trình AI chỉ là gợi ý dựa trên thông tin đã đăng ký. Khả năng thực hiện dịch vụ, giá và đặt chỗ được xác nhận với từng phòng khám hoặc cơ sở.',
       error: 'Không tạo được lịch trình. Vui lòng thử lại sau.',
       hubTitle: 'Lên lịch trình với AI',
-      hubDesc: 'Chỉ cần nói kiểu chuyến đi, số ngày và sở thích — AI soạn lịch trình từng ngày và gửi email sau khi bạn đăng ký.',
+      hubDesc: 'Chỉ cần nói kiểu chuyến đi, số ngày và sở thích — AI soạn lịch trình từng ngày và gửi qua email cho bạn.',
       hubCta: 'Tạo lịch trình →',
       confirmBtn: 'Chốt lịch trình này',
       confirmHint: 'Sau khi chốt, chúng tôi sẽ hỏi bạn có muốn GlowUpTour hỗ trợ không — kiểm tra, báo giá và thanh toán.',

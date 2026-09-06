@@ -52,6 +52,47 @@ export type RegistryDetails = {
   intro?: string;
   photos?: string[];
   languages?: string[];
+  // ── 병원 자체 등록(콘솔) — 글로우 인증 상세와 같은 구조. submission.status 가 approved 일 때만 공개 ──
+  profile?: RegistryProfile;
+  docs?: { businessLicense?: RegistryDoc; foreignPatientCert?: RegistryDoc };
+  submission?: RegistrySubmission;
+  agency?: RegistryAgency;
+};
+
+export type RegistryProfile = {
+  tagline?: string;
+  intro?: string;
+  website?: string;
+  station?: string;
+  hoursText?: string;
+  /** 요일별 진료시간 — 진료 중/종료 배지 (lib/hours WeeklyHours 와 같은 모양) */
+  hoursWeekly?: RegistryHours;
+  signatureProcedures?: string[];
+  departments?: Array<{ title: string; items: string[] }>;
+  doctors?: Array<{ name: string; role: string }>;
+  facilities?: string[];
+  foreignNote?: string;
+  trust?: string[];
+  notice?: string;
+  cover?: string;
+  photos?: string[];
+};
+export type RegistryDoc = { path: string; name: string; size: number; uploadedAt: string };
+export type RegistrySubmission = {
+  status: 'draft' | 'submitted' | 'approved' | 'rejected';
+  mode?: 'self' | 'agency';
+  submittedAt?: string;
+  contactEmail?: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+};
+export type RegistryAgency = {
+  requestedAt: string;
+  orderId: string;
+  invoiceNo: string;
+  amountWon: number;
+  paidAt?: string;
+  status: 'requested' | 'paid' | 'done';
 };
 
 export const hospitalRegistry = pgTable(

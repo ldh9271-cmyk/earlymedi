@@ -14,6 +14,7 @@ import { lodgingRegistry } from '@/drizzle/schema/lodging-registry';
 import { foodRegistry } from '@/drizzle/schema/food-registry';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { findRegistryMatch } from '@/lib/hospital-registry/match';
+import { approveSubmission, rejectSubmission } from '@/lib/registry/submission';
 
 async function assertMaster(): Promise<void> {
   const supabase = createSupabaseServerClient();
@@ -139,6 +140,21 @@ export async function setContractAction(fd: FormData): Promise<void> {
     .where(eq(hospitalRegistry.id, registryId));
   revalidatePath('/master/registry');
   back({ ok: hospitalId ? '계약 병원으로 연결했습니다' : '연결을 해제했습니다' });
+}
+
+/** 병원 자체 등록(콘솔 양식·대행) 검수 — 승인하면 클레임도 승인되고 profile 이 공개 상세에 게시된다. */
+export async function reviewSubmissionAction(fd: FormData): Promise<void> {
+  await assertMaster();
+  const registryId = String(fd.get('registryId') ?? '');
+  const decision = String(fd.get('decision') ?? '');
+  const note = String(fd.get('note') ?? '').trim();
+  if (!registryId || !['approved', 'rejected'].includes(decision)) back({ error: 'bad_request' });
+  if (decision === 'rejected' && !note) back({ error: '반려 사유를 적어 주세요 (병원에 이메일로 전달됩니다)' });
+  const r = decision === 'approved' ? await approveSubmission(registryId, note || null) : await rejectSubmission(registryId, note);
+  if (!r.ok) back({ error: r.error ?? 'failed' });
+  revalidatePath('/master/registry');
+  revalidatePath('/kr/clinics', 'layout');
+  back({ ok: decision === 'approved' ? '등록을 승인해 게시했습니다 (병원에 이메일 발송)' : '보완 요청을 보냈습니다' });
 }
 
 /** 클레임(병원 직접 등록) 승인/반려. 승인되면 공개 목록에서 컬러 카드로 전환. */
