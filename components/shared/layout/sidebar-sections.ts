@@ -35,6 +35,7 @@ export const agencySections: SidebarSection[] = [
   {
     items: [
       { href: '/agency/dashboard', label: '대시보드', icon: BarChart3 },
+      { href: '/scan', label: 'QR 스캔 · 방문 확인', icon: QrCode },
       { href: '/agency/inbox', label: '통합 인박스', icon: Inbox },
       { href: '/agency/channels', label: '채널 연결', icon: Plug },
       { href: '/agency/leads', label: '리드', icon: Sparkles },
@@ -108,6 +109,7 @@ export const medicalSections: SidebarSection[] = [
   {
     items: [
       { href: '/medical/dashboard', label: '대시보드', icon: BarChart3 },
+      { href: '/scan', label: 'QR 스캔 · 방문 확인', icon: QrCode },
       // 병원도 환자가 직접 KakaoTalk·WhatsApp·LINE 등으로 문의해오는
       // 케이스가 많아 통합 인박스 + 채널 연결을 agency와 동일하게 제공.
       // API 라우트는 /api/agency/inbox/* 그대로 공유하지만 권한 가드를
@@ -147,6 +149,7 @@ export const partnerSections: SidebarSection[] = [
   {
     items: [
       { href: '/partner/dashboard', label: '대시보드', icon: BarChart3 },
+      { href: '/scan', label: 'QR 스캔 · 방문 확인', icon: QrCode },
       // 호텔·스파·식당도 외국인 게스트가 KakaoTalk·WhatsApp으로 직접
       // 예약·문의해오는 채널이 많아 agency/medical과 동일하게 통합
       // 인박스 + 채널 연결 제공. API 권한도 ['agency','medical','non_medical']로
@@ -178,3 +181,23 @@ export const partnerSections: SidebarSection[] = [
     ],
   },
 ];
+
+/**
+ * 단순 모드 — 사업자(BIZ) 콘솔에는 당장 쓰는 메뉴만 보이고, ERP·CRM 성격의
+ * 고급 메뉴(차트·EMR·케이스·캘린더·컴플라이언스 등)는 라우트는 살려둔 채
+ * 메뉴에서 감춘다(추후 공개). NEXT_PUBLIC_BIZ_FULL_MENU=1 이면 전체 노출.
+ */
+const SIMPLE_ALLOW: Record<'agency' | 'medical' | 'partner' | 'freelancer', string[]> = {
+  medical: ['/medical/dashboard', '/scan', '/medical/registry', '/medical/inbox', '/medical/leads', '/medical/glowup-listings', '/medical/settlements', '/medical/settings'],
+  partner: ['/partner/dashboard', '/scan', '/partner/registry', '/partner/listings', '/partner/bookings', '/partner/inbox', '/partner/settlements', '/partner/settings'],
+  agency: ['/agency/dashboard', '/scan', '/agency/inbox', '/agency/hospitals', '/agency/listings', '/agency/partners', '/agency/visa', '/agency/payments', '/agency/settings'],
+  freelancer: ['/freelancer/dashboard', '/freelancer/inbox', '/freelancer/referral-codes', '/freelancer/commissions', '/freelancer/disputes', '/freelancer/settings'],
+};
+
+export function simplifySections(sections: SidebarSection[], kind: keyof typeof SIMPLE_ALLOW): SidebarSection[] {
+  if (process.env.NEXT_PUBLIC_BIZ_FULL_MENU === '1') return sections;
+  const allow = new Set(SIMPLE_ALLOW[kind]);
+  return sections
+    .map((sec) => ({ ...sec, items: sec.items.filter((it) => allow.has(it.href)) }))
+    .filter((sec) => sec.items.length > 0);
+}

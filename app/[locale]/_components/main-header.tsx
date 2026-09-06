@@ -22,6 +22,7 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   // left, separate circular filter button on the right. Both link
   // to /clinics for v1; richer search modal lands in a follow-up.
   + '.m-mh-search-row { display: flex !important; align-items: center; gap: 8px; padding: 8px 12px 6px; }'
+  + '.m-mh-quick { justify-content: flex-start; padding: 2px 12px 6px; }'
   + '.m-mh-search-pill { flex: 1 1 auto; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 18px; border-radius: 9999px; border: 1px solid #ebebeb; background: #fff; box-shadow: rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.06) 0 1px 2px; color: #222; text-decoration: none; }'
   + '.m-mh-search-main { font-size: 14px; font-weight: 600; line-height: 1.2; }'
   + '.m-mh-search-sub { font-size: 12px; color: #6a6a6a; line-height: 1.2; margin-top: 2px; }'
@@ -49,6 +50,10 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   // the @media block above. AI 분석 스트립 항목도 모바일 전용 (데스크톱은
   // 상단 AI 상담 탭이 있음).
   + '.m-mh-search-row { display: none; }'
+  + '.m-mh-quick { display: flex; justify-content: center; gap: 8px; padding: 6px 16px 2px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }'
+  + '.m-mh-quick::-webkit-scrollbar { display: none; }'
+  + '.m-mh-quick-item { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 9999px; border: 1px solid #ebebeb; background: #fff; color: #222; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; box-shadow: rgba(0,0,0,0.04) 0 1px 3px; }'
+  + '.m-mh-quick-item:hover { border-color: #222; }'
   + '.m-mh-cat-ai { display: none !important; }'
 
   // 태블릿~좁은 데스크톱 (769~1279px) — 상단 탭(여행 패키지·AI 상담·
@@ -677,6 +682,20 @@ export function MainHeader({
             <path d="M3 6h18M6 12h12M10 18h4" />
           </svg>
         </Link>
+      </div>
+
+      {/* 검색창 바로 아래 — 공공데이터 기반 찾기 3종 (지도 · 전국 병원 · 전국 뷰티샵). 모든 화면 공통 */}
+      <div className="m-mh-quick">
+        {([
+          [`/${locale}/map`, '🗺️', t.quickMap],
+          [`/${locale}/clinics/all`, '🏥', t.quickHospitals],
+          [`/${locale}/shops/all`, '💇', t.quickShops],
+        ] as Array<[string, string, string]>).map(([href, icon, label]) => (
+          <Link key={href} href={href} className="m-mh-quick-item">
+            <span aria-hidden="true">{icon}</span>
+            <span>{label}</span>
+          </Link>
+        ))}
       </div>
 
       {/* Category strip — 8 lifestyle entries (전체/병원 dropdown + travel/lifestyle). */}

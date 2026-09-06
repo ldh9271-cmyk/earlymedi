@@ -4,7 +4,7 @@ import { requireAccess } from '@/lib/auth/route-guards';
 import { db } from '@/lib/db/client';
 import { organizations } from '@/drizzle/schema/organizations';
 import { AppShell } from '@/components/shared/layout/app-shell';
-import { freelancerSections } from '@/components/shared/layout/sidebar-sections';
+import { freelancerSections, simplifySections } from '@/components/shared/layout/sidebar-sections';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +18,7 @@ export default async function FreelancerLayout({ children }: { children: React.R
       orgName={org?.name ?? '— 조직 —'}
       organizationId={ctx.orgId}
       userEmail={ctx.email}
-      sections={freelancerSections}
+      sections={simplifySections(freelancerSections, 'freelancer')}
       currentPath={pathname}
       isMaster={ctx.isMaster}
     >

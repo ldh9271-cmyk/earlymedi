@@ -216,6 +216,14 @@ export default async function MasterOrdersPage({
                               </form>
                             )
                           ) : null}
+                          {(r.meta as { voucher?: { checkedInAt?: string; checkedInByName?: string } } | null)?.voucher?.checkedInAt ? (
+                            <span
+                              title={(r.meta as { voucher?: { checkedInByName?: string } }).voucher?.checkedInByName ?? ''}
+                              style={{ background: '#eff6ff', color: '#1d4ed8', borderRadius: 9999, padding: '4px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}
+                            >
+                              방문 확인 {new Date((r.meta as { voucher: { checkedInAt: string } }).voucher.checkedInAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          ) : null}
                           {r.status !== 'cancelled' && r.status !== 'paid' ? (
                             <form action={cancelOrderAction}>
                               <input type="hidden" name="id" value={r.id} />

@@ -159,6 +159,14 @@ export default async function MyPage({
                   <span style={{ fontSize: 12, color: '#6a6a6a', fontWeight: 600 }}>
                     {t.invoiceLabel} {r.invoiceNo}
                   </span>
+                  {r.status === 'paid' ? (
+                    <Link
+                      href={`/${locale}/me/voucher/${encodeURIComponent(r.invoiceNo)}`}
+                      style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: '#fff', background: '#222', borderRadius: 999, padding: '5px 12px', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                    >
+                      {t.voucherShow}
+                    </Link>
+                  ) : null}
                   {r.status === 'paid' && isDeposit && !orderMeta.reserveConfirmedAt ? (
                     <span style={{ fontSize: 11, color: '#b45309', fontWeight: 600 }}>
                       {t.confirmWait}

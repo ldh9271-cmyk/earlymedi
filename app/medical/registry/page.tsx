@@ -6,7 +6,8 @@ import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
-import { saveRegistryProfileAction } from './_actions';
+import { claimHospitalFromConsoleAction, saveRegistryProfileAction } from './_actions';
+import { ilike } from 'drizzle-orm';
 import { REGISTRY_LANGS } from './langs';
 
 export const metadata = { title: '병원 공개 정보' };
@@ -16,13 +17,18 @@ export const dynamic = 'force-dynamic';
  * 의료기관 콘솔 — 공개 병원 찾기에 노출되는 내 병원 정보.
  * 심평원 공공정보(주소·전화·진료시간)는 자동, 소개·언어·사진만 직접 입력.
  */
-export default async function MedicalRegistryPage({ searchParams }: { searchParams: { ok?: string; error?: string } }): Promise<JSX.Element> {
+export default async function MedicalRegistryPage({ searchParams }: { searchParams: { ok?: string; error?: string; q?: string } }): Promise<JSX.Element> {
   const ctx = await requireAccess({ allowedAccountTypes: ['medical'] });
   const [row] = await db
     .select()
     .from(hospitalRegistry)
     .where(eq(hospitalRegistry.claimOrgId, ctx.orgId))
     .limit(1);
+  const q = (searchParams.q ?? '').trim();
+  const found = !row && q
+    ? await db.select({ id: hospitalRegistry.id, name: hospitalRegistry.name, clName: hospitalRegistry.clName, addr: hospitalRegistry.addr, claimStatus: hospitalRegistry.claimStatus, tel: hospitalRegistry.tel })
+      .from(hospitalRegistry).where(ilike(hospitalRegistry.name, `%${q.replace(/[%_]/g, '')}%`)).limit(20)
+    : [];
 
   return (
     <div className="space-y-6">
@@ -35,7 +41,7 @@ export default async function MedicalRegistryPage({ searchParams }: { searchPara
       </div>
 
       {searchParams.error ? <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm text-destructive">{searchParams.error}</p> : null}
-      {searchParams.ok ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">저장했습니다. 공개 페이지에 바로 반영됩니다.</p> : null}
+      {searchParams.ok ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">{searchParams.ok === 'claimed' ? '연결 요청을 보냈습니다. 마스터 승인 후 편집할 수 있습니다.' : '저장했습니다. 공개 페이지에 바로 반영됩니다.'}</p> : null}
 
       {!row ? (
         <Card>
@@ -46,8 +52,33 @@ export default async function MedicalRegistryPage({ searchParams }: { searchPara
               이미 가입한 상태라면 그 화면에서 같은 이메일로 다시 진행해 주세요.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Link href="/kr/clinics/all"><Button variant="brand">전국 병원 찾기 →</Button></Link>
+          <CardContent className="space-y-4">
+            <form className="flex gap-2">
+              <input name="q" defaultValue={q} placeholder="병원명으로 검색 (심평원 등록 명칭)" className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm" />
+              <Button type="submit" variant="outline">검색</Button>
+            </form>
+            {found.length > 0 ? (
+              <ul className="divide-y rounded-md border text-sm">
+                {found.map((h) => (
+                  <li key={h.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                    <div className="min-w-0">
+                      <div className="font-medium">{h.name} <span className="text-xs text-muted-foreground">{h.clName}</span></div>
+                      <div className="truncate text-xs text-muted-foreground">{h.addr} {h.tel ? `· ${h.tel}` : ''}</div>
+                    </div>
+                    {h.claimStatus === 'pending' || h.claimStatus === 'approved' ? (
+                      <span className="text-xs text-muted-foreground">다른 조직이 연결</span>
+                    ) : (
+                      <form action={claimHospitalFromConsoleAction}>
+                        <input type="hidden" name="registryId" value={h.id} />
+                        <Button type="submit" size="sm" variant="brand">우리 병원으로 연결</Button>
+                      </form>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : q ? <p className="text-xs text-muted-foreground">검색 결과가 없습니다. 개설 신고 명칭(예: ○○의원)으로 검색해 보세요.</p> : null}
+            <p className="text-xs text-muted-foreground">연결하면 심평원 기본정보(주소·전화·진료과목·진료시간)가 자동으로 채워지고, 마스터 승인 후 소개·사진·언어를 입력해 상세 페이지를 구성할 수 있습니다.</p>
+            <Link href="/kr/clinics/all" className="text-xs underline">전국 병원 찾기에서 찾기 →</Link>
           </CardContent>
         </Card>
       ) : (

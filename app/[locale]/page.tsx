@@ -201,22 +201,6 @@ export default async function PublicLandingPage({
 
       <main className="m-main" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
         <Hero locale={params.locale} t={dict.landing} />
-        {/* 전국 공공데이터 기반 찾기 — 지도 · 병원(심평원) · 뷰티샵(행안부) */}
-        <div className="m-quick-find" style={{ display: 'flex', gap: 10, margin: '18px 0 6px', overflowX: 'auto', paddingBottom: 4 }}>
-          {([
-            [`/${locale}/map`, '🗺️', dict.mapPage.title, dict.mapPage.subtitle],
-            [`/${locale}/clinics/all`, '🏥', dict.clinicsPage.registry.title, dict.clinicsPage.registry.filterHospitalGrade + ' · ' + dict.clinicsPage.registry.filterForeign],
-            [`/${locale}/shops/all`, '💇', dict.shopsRegistry.title, dict.shopsRegistry.cats.hair + ' · ' + dict.shopsRegistry.cats.nail + ' · ' + dict.shopsRegistry.cats.makeup],
-          ] as Array<[string, string, string, string]>).map(([href, icon, title, sub]) => (
-            <Link key={href} href={href} style={{ flex: '1 0 220px', display: 'flex', gap: 10, alignItems: 'center', border: '1px solid #ebebeb', borderRadius: 14, padding: '12px 14px', textDecoration: 'none', color: 'inherit', background: '#fff' }}>
-              <span style={{ fontSize: 22 }}>{icon}</span>
-              <span style={{ minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 14, fontWeight: 700 }}>{title}</span>
-                <span style={{ display: 'block', fontSize: 12, color: '#6a6a6a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</span>
-              </span>
-            </Link>
-          ))}
-        </div>
         {rows.map((row) =>
           row.cards.length > 0 ? (
             <CategoryRow

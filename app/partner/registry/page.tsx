@@ -7,15 +7,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
 import { REGISTRY_LANGS } from '@/app/medical/registry/langs';
-import { saveShopProfileAction } from './_actions';
+import { claimShopFromConsoleAction, saveShopProfileAction } from './_actions';
+import { and, ilike } from 'drizzle-orm';
 
 export const metadata = { title: '매장 공개 정보' };
 export const dynamic = 'force-dynamic';
 
 /** 파트너 콘솔 — 공개 뷰티샵 찾기에 노출되는 내 매장(행안부 미용업 레지스트리) 정보. */
-export default async function PartnerRegistryPage({ searchParams }: { searchParams: { ok?: string; error?: string } }): Promise<JSX.Element> {
+export default async function PartnerRegistryPage({ searchParams }: { searchParams: { ok?: string; error?: string; q?: string } }): Promise<JSX.Element> {
   const ctx = await requireAccess({ allowedAccountTypes: ['non_medical'] });
   const [row] = await db.select().from(beautyRegistry).where(eq(beautyRegistry.claimOrgId, ctx.orgId)).limit(1);
+  const q = (searchParams.q ?? '').trim();
+  const found = !row && q
+    ? await db.select({ id: beautyRegistry.id, name: beautyRegistry.name, bizType: beautyRegistry.bizType, addr: beautyRegistry.addrRoad, claimStatus: beautyRegistry.claimStatus, tel: beautyRegistry.tel })
+      .from(beautyRegistry).where(and(ilike(beautyRegistry.name, `%${q.replace(/[%_]/g, '')}%`), eq(beautyRegistry.statusCode, '01'))).limit(20)
+    : [];
   const editable = row?.claimStatus === 'approved';
 
   return (
@@ -29,7 +35,7 @@ export default async function PartnerRegistryPage({ searchParams }: { searchPara
       </div>
 
       {searchParams.error ? <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm text-destructive">{searchParams.error}</p> : null}
-      {searchParams.ok ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">저장했습니다. 공개 페이지에 바로 반영됩니다.</p> : null}
+      {searchParams.ok ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">{searchParams.ok === 'claimed' ? '연결 요청을 보냈습니다. 마스터 승인 후 편집할 수 있습니다.' : '저장했습니다. 공개 페이지에 바로 반영됩니다.'}</p> : null}
 
       {!row ? (
         <Card>
@@ -37,7 +43,34 @@ export default async function PartnerRegistryPage({ searchParams }: { searchPara
             <CardTitle className="text-base">연결된 매장이 없습니다</CardTitle>
             <CardDescription className="text-xs">전국 뷰티샵 찾기에서 우리 매장을 찾아 상세 화면의 <b>매장 정보 직접 등록</b>을 누르면 이 조직에 연결됩니다.</CardDescription>
           </CardHeader>
-          <CardContent><Link href="/kr/shops/all"><Button variant="brand">전국 뷰티샵 찾기 →</Button></Link></CardContent>
+          <CardContent className="space-y-4">
+            <form className="flex gap-2">
+              <input name="q" defaultValue={q} placeholder="매장 상호로 검색 (인허가 상호)" className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm" />
+              <Button type="submit" variant="outline">검색</Button>
+            </form>
+            {found.length > 0 ? (
+              <ul className="divide-y rounded-md border text-sm">
+                {found.map((h) => (
+                  <li key={h.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                    <div className="min-w-0">
+                      <div className="font-medium">{h.name} <span className="text-xs text-muted-foreground">{h.bizType}</span></div>
+                      <div className="truncate text-xs text-muted-foreground">{h.addr} {h.tel ? `· ${h.tel}` : ''}</div>
+                    </div>
+                    {h.claimStatus === 'pending' || h.claimStatus === 'approved' ? (
+                      <span className="text-xs text-muted-foreground">다른 조직이 연결</span>
+                    ) : (
+                      <form action={claimShopFromConsoleAction}>
+                        <input type="hidden" name="registryId" value={h.id} />
+                        <Button type="submit" size="sm" variant="brand">우리 매장으로 연결</Button>
+                      </form>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : q ? <p className="text-xs text-muted-foreground">검색 결과가 없습니다. 인허가 상호(사업자등록 상호)로 검색해 보세요.</p> : null}
+            <p className="text-xs text-muted-foreground">연결하면 지자체 인허가 기본정보(상호·주소·업태·전화)가 자동으로 채워지고, 마스터 승인 후 소개·영업시간·사진·언어를 입력해 상세 페이지를 구성할 수 있습니다.</p>
+            <Link href="/kr/shops/all" className="text-xs underline">전국 뷰티샵 찾기에서 찾기 →</Link>
+          </CardContent>
         </Card>
       ) : (
         <>

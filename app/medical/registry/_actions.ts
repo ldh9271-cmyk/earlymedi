@@ -3,7 +3,7 @@
 import 'server-only';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { requireAccess } from '@/lib/auth/route-guards';
 import { db } from '@/lib/db/client';
 import { hospitalRegistry, type RegistryDetails } from '@/drizzle/schema/hospital-registry';
@@ -39,3 +39,17 @@ export async function saveRegistryProfileAction(fd: FormData): Promise<void> {
   redirect('/medical/registry?ok=1');
 }
 
+
+/** 콘솔에서 레지스트리 병원을 '우리 병원' 으로 연결 요청 (마스터 승인 대기). 조직당 1곳. */
+export async function claimHospitalFromConsoleAction(fd: FormData): Promise<void> {
+  const ctx = await requireAccess({ allowedAccountTypes: ['medical'] });
+  const registryId = String(fd.get('registryId') ?? '');
+  if (!registryId) redirect('/medical/registry?error=' + encodeURIComponent('선택이 필요합니다'));
+  const [mine] = await db.select({ id: hospitalRegistry.id }).from(hospitalRegistry).where(eq(hospitalRegistry.claimOrgId, ctx.orgId)).limit(1);
+  if (mine) redirect('/medical/registry?error=' + encodeURIComponent('이미 연결(요청)된 병원이 있습니다'));
+  await db.update(hospitalRegistry)
+    .set({ claimOrgId: ctx.orgId, claimStatus: 'pending', claimedAt: new Date(), updatedAt: new Date() })
+    .where(and(eq(hospitalRegistry.id, registryId), inArray(hospitalRegistry.claimStatus, ['none', 'rejected'])));
+  revalidatePath('/medical/registry');
+  redirect('/medical/registry?ok=claimed');
+}

@@ -4,7 +4,7 @@ import { requireAccess } from '@/lib/auth/route-guards';
 import { db } from '@/lib/db/client';
 import { organizations } from '@/drizzle/schema/organizations';
 import { AppShell } from '@/components/shared/layout/app-shell';
-import { partnerSections } from '@/components/shared/layout/sidebar-sections';
+import { partnerSections, simplifySections } from '@/components/shared/layout/sidebar-sections';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +18,7 @@ export default async function PartnerLayout({ children }: { children: React.Reac
       orgName={org?.name ?? '— 파트너 —'}
       organizationId={ctx.orgId}
       userEmail={ctx.email}
-      sections={partnerSections}
+      sections={simplifySections(partnerSections, 'partner')}
       currentPath={pathname}
       isMaster={ctx.isMaster}
     >

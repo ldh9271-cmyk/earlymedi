@@ -3,7 +3,7 @@
 import 'server-only';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { requireAccess } from '@/lib/auth/route-guards';
 import { db } from '@/lib/db/client';
 import { beautyRegistry, type BeautyDetails } from '@/drizzle/schema/beauty-registry';
@@ -32,4 +32,18 @@ export async function saveShopProfileAction(fd: FormData): Promise<void> {
     .where(and(eq(beautyRegistry.id, row.id), eq(beautyRegistry.claimOrgId, ctx.orgId)));
   revalidatePath('/partner/registry');
   redirect('/partner/registry?ok=1');
+}
+
+/** 콘솔에서 미용업 레지스트리 매장을 '우리 매장' 으로 연결 요청 (마스터 승인 대기). */
+export async function claimShopFromConsoleAction(fd: FormData): Promise<void> {
+  const ctx = await requireAccess({ allowedAccountTypes: ['non_medical'] });
+  const registryId = String(fd.get('registryId') ?? '');
+  if (!registryId) redirect('/partner/registry?error=' + encodeURIComponent('선택이 필요합니다'));
+  const [mine] = await db.select({ id: beautyRegistry.id }).from(beautyRegistry).where(eq(beautyRegistry.claimOrgId, ctx.orgId)).limit(1);
+  if (mine) redirect('/partner/registry?error=' + encodeURIComponent('이미 연결(요청)된 매장이 있습니다'));
+  await db.update(beautyRegistry)
+    .set({ claimOrgId: ctx.orgId, claimStatus: 'pending', claimedAt: new Date(), updatedAt: new Date() })
+    .where(and(eq(beautyRegistry.id, registryId), inArray(beautyRegistry.claimStatus, ['none', 'rejected'])));
+  revalidatePath('/partner/registry');
+  redirect('/partner/registry?ok=claimed');
 }

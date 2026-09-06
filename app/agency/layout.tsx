@@ -6,7 +6,7 @@ import { requireAccess } from '@/lib/auth/route-guards';
 import { db } from '@/lib/db/client';
 import { organizations } from '@/drizzle/schema/organizations';
 import { AppShell } from '@/components/shared/layout/app-shell';
-import { agencySections } from '@/components/shared/layout/sidebar-sections';
+import { agencySections, simplifySections } from '@/components/shared/layout/sidebar-sections';
 
 export default async function AgencyLayout({ children }: { children: React.ReactNode }): Promise<JSX.Element> {
   const ctx = await requireAccess({ allowedAccountTypes: ['agency'] });
@@ -18,7 +18,7 @@ export default async function AgencyLayout({ children }: { children: React.React
       orgName={org?.name ?? '— 조직 —'}
       organizationId={ctx.orgId}
       userEmail={ctx.email}
-      sections={agencySections}
+      sections={simplifySections(agencySections, 'agency')}
       currentPath={pathname}
       isMaster={ctx.isMaster}
     >

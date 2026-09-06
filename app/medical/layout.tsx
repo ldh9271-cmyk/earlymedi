@@ -4,7 +4,7 @@ import { requireAccess } from '@/lib/auth/route-guards';
 import { db } from '@/lib/db/client';
 import { organizations } from '@/drizzle/schema/organizations';
 import { AppShell } from '@/components/shared/layout/app-shell';
-import { medicalSections } from '@/components/shared/layout/sidebar-sections';
+import { medicalSections, simplifySections } from '@/components/shared/layout/sidebar-sections';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +18,7 @@ export default async function MedicalLayout({ children }: { children: React.Reac
       orgName={org?.name ?? '— 병원 —'}
       organizationId={ctx.orgId}
       userEmail={ctx.email}
-      sections={medicalSections}
+      sections={simplifySections(medicalSections, 'medical')}
       currentPath={pathname}
       isMaster={ctx.isMaster}
     >
