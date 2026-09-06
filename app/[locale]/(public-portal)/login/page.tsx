@@ -35,7 +35,7 @@ export default async function PatientLoginPage({
   searchParams,
 }: {
   params: { locale: string };
-  searchParams: { next?: string };
+  searchParams: { next?: string; error?: string };
 }): Promise<JSX.Element> {
   if (!isPublicLocale(params.locale)) notFound();
   const locale = params.locale as PublicLocale;
@@ -44,6 +44,8 @@ export default async function PatientLoginPage({
     searchParams.next && searchParams.next.startsWith('/') && !searchParams.next.startsWith('//')
       ? searchParams.next
       : undefined;
+  // 소셜 로그인 콜백이 실패하면 ?error= 로 돌아온다 — 조용히 로그인 화면만 다시 뜨면 원인을 알 수 없어 표시한다.
+  const loginError = (searchParams.error ?? '').slice(0, 300);
 
   return (
     <section
@@ -67,6 +69,11 @@ export default async function PatientLoginPage({
           </svg>
           {dict.login.badge}
         </span>
+        {loginError ? (
+          <p style={{ marginTop: 14, background: '#fff5f7', border: '1px solid #fecdd3', color: '#c2143c', borderRadius: 10, padding: '10px 12px', fontSize: 13, lineHeight: 1.5, textAlign: 'left', wordBreak: 'break-word' }}>
+            {loginError}
+          </p>
+        ) : null}
         <h1
           style={{
             fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px',
