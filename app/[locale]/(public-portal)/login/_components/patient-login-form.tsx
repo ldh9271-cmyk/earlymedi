@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
+import KakaoLoginButton from '@/components/shared/kakao-login-button';
 import { startGoogleSignIn } from '@/lib/auth/google-signin';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
@@ -180,6 +181,9 @@ export function PatientLoginForm({
         <GoogleIcon />
         {googleLoading ? '…' : dict.googleCta}
       </button>
+      <div style={{ marginTop: 10 }}>
+        <KakaoLoginButton next={returnTo} label={dict.kakaoCta} disabled={anyLoading} onError={setError} />
+      </div>
 
       {/* "or" divider */}
       <div style={{ position: 'relative', textAlign: 'center', height: 16 }}>

@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
+import KakaoLoginButton from '@/components/shared/kakao-login-button';
 import { startGoogleSignIn } from '@/lib/auth/google-signin';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
@@ -390,6 +391,9 @@ export function PatientSignupForm({
         <GoogleIcon className="h-4 w-4" />
         {googleLoading ? '…' : dict.googleCta}
       </button>
+      <div style={{ marginTop: 10 }}>
+        <KakaoLoginButton next={returnTo} label={dict.kakaoCta} disabled={!agreed || googleLoading || submitting} onError={setError} />
+      </div>
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
