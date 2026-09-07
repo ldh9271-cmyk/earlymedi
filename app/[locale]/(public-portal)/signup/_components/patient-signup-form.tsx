@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import KakaoLoginButton from '@/components/shared/kakao-login-button';
+import LineLoginButton from '@/components/shared/line-login-button';
 import { startGoogleSignIn } from '@/lib/auth/google-signin';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
@@ -393,6 +394,9 @@ export function PatientSignupForm({
       </button>
       <div style={{ marginTop: 10 }}>
         <KakaoLoginButton next={returnTo} label={dict.kakaoCta} disabled={!agreed || googleLoading || submitting} onError={setError} />
+        <div style={{ marginTop: 10 }}>
+          <LineLoginButton next={returnTo} label={dict.lineCta} disabled={!agreed || googleLoading || submitting} />
+        </div>
       </div>
 
       <div className="relative">
