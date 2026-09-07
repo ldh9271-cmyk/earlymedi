@@ -10,6 +10,7 @@ import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import KakaoLoginButton from '@/components/shared/kakao-login-button';
 import LineLoginButton from '@/components/shared/line-login-button';
 import WhatsAppLogin from '@/components/shared/whatsapp-login';
+import FacebookLoginButton from '@/components/shared/facebook-login-button';
 import { startGoogleSignIn } from '@/lib/auth/google-signin';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
@@ -192,6 +193,9 @@ export function PatientLoginForm({
         </div>
         <div style={{ marginTop: 10 }}>
           <WhatsAppLogin next={returnTo} label={dict.whatsappCta} dict={waDict} disabled={anyLoading} />
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <FacebookLoginButton next={returnTo} label={dict.facebookCta} disabled={anyLoading} onError={setError} />
         </div>
       </div>
 
