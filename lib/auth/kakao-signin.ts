@@ -21,7 +21,12 @@ export async function startKakaoSignIn(next: string): Promise<string | null> {
   redirectTo.searchParams.set('next', next);
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
-    options: { redirectTo: redirectTo.toString() },
+    options: {
+      redirectTo: redirectTo.toString(),
+      // 카카오 앱에 설정된 동의항목만 요청한다. Supabase 기본값은 account_email 까지 요청하는데
+      // 이메일은 비즈 앱 전환 전에는 '권한 없음' 이라 그대로 두면 카카오가 동의 화면에서 막는다.
+      scopes: process.env.NEXT_PUBLIC_KAKAO_SCOPES || 'profile_nickname',
+    },
   });
   return error ? error.message : null;
 }
