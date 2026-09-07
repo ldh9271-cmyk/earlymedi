@@ -94,7 +94,7 @@ export default async function PatientLoginPage({
           boxShadow: 'rgba(0,0,0,0.04) 0 2px 8px',
         }}
       >
-        <PatientLoginForm locale={locale} dict={dict.login} nextPath={nextPath} />
+        <PatientLoginForm locale={locale} dict={dict.login} waDict={dict.whatsapp} nextPath={nextPath} />
       </div>
 
       <div

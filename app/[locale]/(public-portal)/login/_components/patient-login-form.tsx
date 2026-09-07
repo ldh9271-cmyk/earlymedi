@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import KakaoLoginButton from '@/components/shared/kakao-login-button';
 import LineLoginButton from '@/components/shared/line-login-button';
+import WhatsAppLogin from '@/components/shared/whatsapp-login';
 import { startGoogleSignIn } from '@/lib/auth/google-signin';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
@@ -67,10 +68,12 @@ const labelStyle: React.CSSProperties = {
 export function PatientLoginForm({
   locale,
   dict,
+  waDict,
   nextPath,
 }: {
   locale: PublicLocale;
   dict: Dictionary['login'];
+  waDict: Dictionary['whatsapp'];
   /** 로그인 후 돌아갈 경로. */
   nextPath?: string;
 }): JSX.Element {
@@ -186,6 +189,9 @@ export function PatientLoginForm({
         <KakaoLoginButton next={returnTo} label={dict.kakaoCta} disabled={anyLoading} onError={setError} />
         <div style={{ marginTop: 10 }}>
           <LineLoginButton next={returnTo} label={dict.lineCta} disabled={anyLoading} />
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <WhatsAppLogin next={returnTo} label={dict.whatsappCta} dict={waDict} disabled={anyLoading} />
         </div>
       </div>
 

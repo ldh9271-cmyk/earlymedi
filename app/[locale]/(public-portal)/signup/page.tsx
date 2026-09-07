@@ -83,7 +83,7 @@ export default async function PatientSignupPage({
           boxShadow: 'rgba(0,0,0,0.04) 0 2px 8px',
         }}
       >
-        <PatientSignupForm locale={locale} dict={dict.signup} nextPath={nextPath} />
+        <PatientSignupForm locale={locale} dict={dict.signup} waDict={dict.whatsapp} nextPath={nextPath} />
       </div>
 
       <div

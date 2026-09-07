@@ -8,6 +8,8 @@ import { Eye, EyeOff } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import KakaoLoginButton from '@/components/shared/kakao-login-button';
 import LineLoginButton from '@/components/shared/line-login-button';
+import WhatsAppLogin from '@/components/shared/whatsapp-login';
+import { PHONE_COUNTRIES } from '@/lib/phone/countries';
 import { startGoogleSignIn } from '@/lib/auth/google-signin';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
@@ -41,31 +43,9 @@ import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
  *     is the actual realtime contact route).
  */
 
-// 가장 자주 오는 송출국 위주. 'OTHER'는 자유 입력 대체 안 하고
-// "기타"로 분류 — agency-side에서 후속 보완.
-const COUNTRIES: Array<{ code: string; name: string; dial: string }> = [
-  { code: 'KR', name: 'Korea (한국)', dial: '+82' },
-  { code: 'CN', name: 'China (中国)', dial: '+86' },
-  { code: 'JP', name: 'Japan (日本)', dial: '+81' },
-  { code: 'US', name: 'United States', dial: '+1' },
-  { code: 'RU', name: 'Russia (Россия)', dial: '+7' },
-  { code: 'VN', name: 'Vietnam (Việt Nam)', dial: '+84' },
-  { code: 'TH', name: 'Thailand (ไทย)', dial: '+66' },
-  { code: 'MY', name: 'Malaysia', dial: '+60' },
-  { code: 'ID', name: 'Indonesia', dial: '+62' },
-  { code: 'PH', name: 'Philippines', dial: '+63' },
-  { code: 'SG', name: 'Singapore', dial: '+65' },
-  { code: 'TW', name: 'Taiwan (台灣)', dial: '+886' },
-  { code: 'HK', name: 'Hong Kong', dial: '+852' },
-  { code: 'AE', name: 'UAE', dial: '+971' },
-  { code: 'SA', name: 'Saudi Arabia', dial: '+966' },
-  { code: 'KZ', name: 'Kazakhstan', dial: '+7' },
-  { code: 'MN', name: 'Mongolia', dial: '+976' },
-  { code: 'IN', name: 'India', dial: '+91' },
-  { code: 'AU', name: 'Australia', dial: '+61' },
-  { code: 'GB', name: 'United Kingdom', dial: '+44' },
-  { code: 'OTHER', name: 'Other / 기타', dial: '' },
-];
+// 국가 목록은 왓츠앱 OTP 로그인 화면과 공유한다 — 한쪽만 늘어나면
+// "가입할 땐 있던 나라가 로그인할 땐 없다"는 상황이 생긴다.
+const COUNTRIES = PHONE_COUNTRIES;
 
 // 8 messenger channels matching components/shared/channels/registry.
 // We list them in the same priority as the inbox so patient familiarity
@@ -120,10 +100,12 @@ type Values = z.infer<typeof schema>;
 export function PatientSignupForm({
   locale,
   dict,
+  waDict,
   nextPath,
 }: {
   locale: PublicLocale;
   dict: Dictionary['signup'];
+  waDict: Dictionary['whatsapp'];
   /** 가입 완료 후 돌아갈 경로 (예약 도중 가입한 경우 예약 페이지). */
   nextPath?: string;
 }): JSX.Element {
@@ -396,6 +378,9 @@ export function PatientSignupForm({
         <KakaoLoginButton next={returnTo} label={dict.kakaoCta} disabled={!agreed || googleLoading || submitting} onError={setError} />
         <div style={{ marginTop: 10 }}>
           <LineLoginButton next={returnTo} label={dict.lineCta} disabled={!agreed || googleLoading || submitting} />
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <WhatsAppLogin next={returnTo} label={dict.whatsappCta} dict={waDict} disabled={!agreed || googleLoading || submitting} />
         </div>
       </div>
 
