@@ -67,7 +67,7 @@ export default function WhatsAppLogin({ next, label, dict, disabled, compact }: 
     setBusy(true);
     const { error } = await supabase.auth.signInWithOtp({ phone: normalized, options: { channel: 'whatsapp' } });
     setBusy(false);
-    if (error) { setErr(explain(error.message, dict)); return; }
+    if (error) { setErr(explain(error, dict)); return; }
     setE164(normalized);
     setCode('');
     setNotice(dict.codeSent.replace('{phone}', normalized));
@@ -82,7 +82,7 @@ export default function WhatsAppLogin({ next, label, dict, disabled, compact }: 
     if (!supabase) { setErr(dict.errFailed); return; }
     setBusy(true);
     const { data, error } = await supabase.auth.verifyOtp({ phone: e164, token, type: 'sms' });
-    if (error || !data.user) { setBusy(false); setErr(explain(error?.message ?? '', dict)); return; }
+    if (error || !data.user) { setBusy(false); setErr(explain(error, dict)); return; }
     // 추천인 귀속·총판 연결·가입 알림은 서버에서 (다른 로그인 경로와 같은 함수)
     await fetch('/api/auth/phone/complete', {
       method: 'POST',
@@ -108,7 +108,7 @@ export default function WhatsAppLogin({ next, label, dict, disabled, compact }: 
       { emailRedirectTo: redirectTo.toString() },
     );
     setBusy(false);
-    if (error) { setErr(explain(error.message, dict)); return; }
+    if (error) { setErr(explain(error, dict)); return; }
     setNotice(dict.emailSent.replace('{email}', email));
   }
 
@@ -214,13 +214,40 @@ export default function WhatsAppLogin({ next, label, dict, disabled, compact }: 
   );
 }
 
-/** Supabase 원문 오류를 사용자가 읽을 만한 문장으로 */
-function explain(message: string, dict: Dictionary['whatsapp']): string {
-  const m = message.toLowerCase();
-  if (m.includes('expired') || m.includes('invalid') || m.includes('token')) return dict.errInvalidCode;
+/**
+ * Supabase 원문 오류를 사용자가 읽을 만한 문장으로.
+ *
+ * error_code 를 먼저 본다 — 메시지 문자열은 버전에 따라 바뀌고,
+ * 무엇보다 "Unsupported phone provider"(= 게이트웨이 미설정)에 'phone' 이
+ * 들어 있어서 문자열만 보면 "전화번호 형식이 틀렸다"고 잘못 안내하게 된다.
+ */
+function explain(error: { code?: string; message?: string } | null, dict: Dictionary['whatsapp']): string {
+  switch (error?.code) {
+    case 'phone_provider_disabled':
+    case 'sms_send_failed':
+    case 'phone_not_confirmed':
+      return dict.errUnavailable;
+    case 'otp_expired':
+    case 'otp_disabled':
+      return dict.errInvalidCode;
+    case 'over_sms_send_rate_limit':
+    case 'over_request_rate_limit':
+    case 'over_email_send_rate_limit':
+      return dict.errTooMany;
+    case 'email_exists':
+    case 'user_already_exists':
+      return dict.errEmailTaken;
+    case 'validation_failed':
+      return dict.errInvalidPhone;
+    default:
+      break;
+  }
+  const m = (error?.message ?? '').toLowerCase();
+  if (m.includes('unsupported phone provider') || m.includes('not enabled')) return dict.errUnavailable;
+  if (m.includes('expired') || m.includes('token')) return dict.errInvalidCode;
   if (m.includes('rate') || m.includes('too many') || m.includes('security purposes')) return dict.errTooMany;
   if (m.includes('already been registered') || m.includes('already registered') || m.includes('already exists')) return dict.errEmailTaken;
-  if (m.includes('phone')) return dict.errInvalidPhone;
+  if (m.includes('invalid phone') || m.includes('phone number')) return dict.errInvalidPhone;
   return dict.errFailed;
 }
 

@@ -612,6 +612,7 @@ const zh: Dictionary = {
     errTooMany: "请求过于频繁，请稍后再试。",
     errEmailTaken: "该邮箱已注册，请使用该账号登录。",
     errInvalidEmail: "请输入有效的邮箱地址。",
+    errUnavailable: "WhatsApp 验证尚未开放，请使用其他方式登录。",
     errFailed: "WhatsApp 验证失败，请稍后再试。",
   },
   refund: {

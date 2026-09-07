@@ -614,6 +614,7 @@ const ja: Dictionary = {
     errTooMany: "リクエストが多すぎます。しばらくしてからお試しください。",
     errEmailTaken: "すでに登録済みのメールアドレスです。そのアカウントでログインしてください。",
     errInvalidEmail: "正しいメールアドレスを入力してください。",
+    errUnavailable: "WhatsApp認証はまだご利用いただけません。他の方法でログインしてください。",
     errFailed: "WhatsApp認証に失敗しました。しばらくしてからお試しください。",
   },
   refund: {

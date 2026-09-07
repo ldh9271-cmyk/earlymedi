@@ -615,6 +615,7 @@ const ru: Dictionary = {
     errTooMany: "Слишком много попыток. Повторите чуть позже.",
     errEmailTaken: "Этот email уже зарегистрирован. Войдите в тот аккаунт.",
     errInvalidEmail: "Введите корректный адрес email.",
+    errUnavailable: "Вход через WhatsApp пока недоступен. Воспользуйтесь другим способом.",
     errFailed: "Не удалось подтвердить через WhatsApp. Повторите чуть позже.",
   },
   refund: {

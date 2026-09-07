@@ -615,6 +615,7 @@ const en: Dictionary = {
     errTooMany: "Too many attempts. Please try again shortly.",
     errEmailTaken: "That email is already registered. Please sign in with that account.",
     errInvalidEmail: "Please enter a valid email address.",
+    errUnavailable: "WhatsApp verification is not available yet. Please use another sign-in method.",
     errFailed: "WhatsApp verification failed. Please try again shortly.",
   },
   refund: {

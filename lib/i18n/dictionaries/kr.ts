@@ -633,6 +633,7 @@ const kr = {
     errTooMany: "요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.",
     errEmailTaken: "이미 가입된 이메일입니다. 그 계정으로 로그인해 주세요.",
     errInvalidEmail: "올바른 이메일 주소를 입력해 주세요.",
+    errUnavailable: "왓츠앱 인증이 아직 준비되지 않았습니다. 다른 방법으로 로그인해 주세요.",
     errFailed: "왓츠앱 인증에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   },
   refund: {

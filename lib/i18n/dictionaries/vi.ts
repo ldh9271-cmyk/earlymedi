@@ -615,6 +615,7 @@ const vi: Dictionary = {
     errTooMany: "Quá nhiều yêu cầu. Vui lòng thử lại sau ít phút.",
     errEmailTaken: "Email này đã được đăng ký. Vui lòng đăng nhập bằng tài khoản đó.",
     errInvalidEmail: "Vui lòng nhập địa chỉ email hợp lệ.",
+    errUnavailable: "Xác minh qua WhatsApp chưa khả dụng. Vui lòng dùng cách đăng nhập khác.",
     errFailed: "Xác minh WhatsApp thất bại. Vui lòng thử lại sau.",
   },
   refund: {
