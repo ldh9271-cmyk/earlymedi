@@ -1,7 +1,12 @@
 'use client';
 
-/** 라인 로그인 버튼 — 라인 브랜드 초록(#06C755). NEXT_PUBLIC_LINE_LOGIN=1 일 때만 노출. */
-import { useState } from 'react';
+/**
+ * 라인 로그인 버튼 — 라인 브랜드 초록(#06C755).
+ * NEXT_PUBLIC_LINE_LOGIN=1 이면 모두에게, 그 전이라도 주소에 ?ltest=1 을 붙이면
+ * 테스터에게만 보인다(구글 자체 OAuth 때 쓴 것과 같은 방식 — 전체 공개 전에
+ * 실제 계정으로 끝까지 돌려보기 위한 안전장치).
+ */
+import { useEffect, useState } from 'react';
 
 export function lineLoginEnabled(): boolean {
   return process.env.NEXT_PUBLIC_LINE_LOGIN === '1';
@@ -11,7 +16,12 @@ export default function LineLoginButton({ next, label, disabled, compact }: {
   next: string; label: string; disabled?: boolean; compact?: boolean;
 }): JSX.Element | null {
   const [loading, setLoading] = useState(false);
-  if (!lineLoginEnabled()) return null;
+  const [forced, setForced] = useState(false);
+  useEffect(() => {
+    // 서버 렌더와 어긋나지 않게 마운트 뒤에만 본다
+    if (new URLSearchParams(window.location.search).get('ltest') === '1') setForced(true);
+  }, []);
+  if (!lineLoginEnabled() && !forced) return null;
   const busy = loading || disabled;
   return (
     <button
