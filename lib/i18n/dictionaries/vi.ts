@@ -322,7 +322,7 @@ const vi: Dictionary = {
     brand2: 'Hướng dẫn quán ngon bản xứ',
     brand3: 'Thánh địa K-pop',
     brand4: 'Đăng ký doanh nghiệp',
-    business: "Shareart · Người đại diện: DongHee Lee · Số ĐKKD 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
+    business: "Shareart · Người đại diện: Seokho Moon · Số ĐKKD 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
     copy: '© 2026 Korea Glow-up Challenge · Chính sách bảo mật · Điều khoản sử dụng',
   },
   header: {

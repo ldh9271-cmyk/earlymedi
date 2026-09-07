@@ -322,7 +322,7 @@ const ru: Dictionary = {
     brand2: 'Гид по местной еде',
     brand3: 'K-pop места',
     brand4: 'Регистрация для бизнеса',
-    business: "Shareart · Представитель: DongHee Lee · Рег. номер 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
+    business: "Shareart · Представитель: Seokho Moon · Рег. номер 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
     copy: '© 2026 Korea Glow-up Challenge · Политика конфиденциальности · Условия использования',
   },
   header: {
