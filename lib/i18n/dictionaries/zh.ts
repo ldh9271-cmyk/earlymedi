@@ -319,6 +319,7 @@ const zh: Dictionary = {
     brand2: '本地美食指南',
     brand3: 'K-pop 圣地',
     brand4: '商家注册',
+    business: "Shareart · 代表人 DongHee Lee · 营业执照号 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
     copy: '© 2026 Korea Glow-up Challenge · 隐私政策 · 使用条款',
   },
   header: {

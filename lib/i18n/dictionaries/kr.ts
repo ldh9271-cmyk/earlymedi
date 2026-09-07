@@ -345,6 +345,7 @@ const kr = {
     brand2: '찐맛집 가이드',
     brand3: 'K-팝 성지',
     brand4: '비즈니스 회원가입',
+    business: "쉐어아트(Shareart) · 대표 이동희 · 사업자등록번호 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
     copy: '© 2026 Korea Glow-up Challenge · 개인정보처리방침 · 이용약관',
   },
   header: {

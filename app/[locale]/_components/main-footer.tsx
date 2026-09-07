@@ -120,9 +120,14 @@ export function MainFooter({
             fontSize: 13, color: '#6a6a6a', flexWrap: 'wrap', gap: 12,
           }}
         >
+          <p style={{ margin: 0, flexBasis: '100%', fontSize: 12, color: '#8a8a8a', lineHeight: 1.6 }}>
+            {t.business}
+          </p>
           {/* 저작권 줄 — 개인정보처리방침 / 이용약관을 실제 법적 고지
               페이지로 연결. dict.copy 는 "… · A · B" 형태라 마지막 두
-              토큰만 링크로 치환한다. */}
+              토큰만 링크로 치환한다. 그 위에 사업자 정보 한 줄 —
+              전자상거래법상 표기 의무이고, 왓츠앱 발신자 심사에서
+              "Shareart(사업자) ↔ GlowUpTour(브랜드)" 연결 근거가 된다. */}
           <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
             {(() => {
               const parts = t.copy.split('·').map((s) => s.trim());
