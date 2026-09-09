@@ -44,6 +44,26 @@ const SEOUL = sql.raw(`at time zone 'Asia/Seoul'`);
  */
 const ts = (d: Date): ReturnType<typeof sql> => sql`${d.toISOString()}::timestamptz`;
 
+/**
+ * 쿼리를 한꺼번에 다 던지지 않고 몇 개씩만 동시에 돌린다.
+ *
+ * 리포트 한 화면이 쿼리 20개인데 Promise.all 로 전부 쏘면 람다 하나가 커넥션
+ * 풀(10개)을 즉시 다 잡고, 기간 버튼을 연달아 누르면 람다가 여러 개 떠서
+ * Supabase 풀러 한도를 넘긴다 → 대기 → 30초 타임아웃("Connection closed").
+ * 운영에서 실제로 났다. 4개씩이면 한 요청이 커넥션 4개 이상 쓰지 않는다.
+ */
+export async function runLimited<T extends readonly (() => Promise<unknown>)[]>(
+  tasks: T,
+  size = 4,
+): Promise<{ [K in keyof T]: Awaited<ReturnType<T[K]>> }> {
+  const out: unknown[] = [];
+  for (let i = 0; i < tasks.length; i += size) {
+    const chunk = tasks.slice(i, i + size);
+    out.push(...(await Promise.all(chunk.map((t) => t()))));
+  }
+  return out as { [K in keyof T]: Awaited<ReturnType<T[K]>> };
+}
+
 // ─── 트래픽 ──────────────────────────────────────────────────────────
 
 export type Bucket = { label: string; views: number; sessions: number };

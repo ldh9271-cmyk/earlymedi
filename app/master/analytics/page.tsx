@@ -7,7 +7,7 @@ import {
   classifyPath, firstViewAt, orderSummary, PROVIDER_KO, recentSignups, resolveRange,
   signupsByDay, signupsByLocale, signupsByMonth, signupsByProvider, signupTotals,
   topPages, topReferrers, trafficByCountry, trafficByDay, trafficByDevice, trafficByHour,
-  trafficByLocale, trafficByMonth, trafficTotals, type RangePreset,
+  trafficByLocale, trafficByMonth, trafficTotals, runLimited, type RangePreset,
 } from '@/lib/analytics/report';
 import BarChart from './_components/bar-chart';
 
@@ -27,6 +27,8 @@ const PRESETS: Array<{ key: RangePreset; label: string }> = [
   { key: '7d', label: '최근 7일' }, { key: '30d', label: '최근 30일' }, { key: '90d', label: '최근 90일' }, { key: '12m', label: '최근 12개월' },
 ];
 
+const DETAIL_KINDS = new Set(['병원 (레지스트리)', '병원 (인증)', '글로우업 상품', '글로우업 코스', '퍼스널 컬러', '맛집', '숙박', '뷰티샵', '관광지', '여행']);
+
 const COUNTRY_KO: Record<string, string> = {
   KR: '한국', JP: '일본', CN: '중국', US: '미국', TW: '대만', HK: '홍콩', VN: '베트남', TH: '태국', RU: '러시아', SG: '싱가포르',
   MY: '말레이시아', ID: '인도네시아', PH: '필리핀', AU: '호주', GB: '영국', CA: '캐나다', DE: '독일', FR: '프랑스', AE: 'UAE', SA: '사우디',
@@ -41,18 +43,27 @@ export default async function MasterAnalyticsPage({ searchParams }: { searchPara
 
   const r = resolveRange(searchParams.range);
 
-  const [
-    cur, prev, byMonth, byDay, byHour, byCountry, byDevice, byLocale, referrers, pages, posts, firstAt,
-    signupsCur, signupsPrev, signupsDay, signupsMonth, signupsProv, signupsLoc, recent, orders, ordersPrev,
-  ] = await Promise.all([
-    trafficTotals(r.from, r.to), trafficTotals(r.prevFrom, r.prevTo),
-    trafficByMonth(), trafficByDay(r.from, r.to), trafficByHour(r.from, r.to),
-    trafficByCountry(r.from, r.to), trafficByDevice(r.from, r.to), trafficByLocale(r.from, r.to),
-    topReferrers(r.from, r.to), topPages(r.from, r.to, 15), topPages(r.from, r.to, 15, true), firstViewAt(),
-    signupTotals(r.from, r.to), signupTotals(r.prevFrom, r.prevTo),
-    signupsByDay(r.from, r.to), signupsByMonth(), signupsByProvider(r.from, r.to), signupsByLocale(r.from, r.to),
-    recentSignups(20), orderSummary(r.from, r.to), orderSummary(r.prevFrom, r.prevTo),
-  ]);
+  // 쿼리 20개를 한꺼번에 쏘면 커넥션 풀이 말라 타임아웃이 난다 — 4개씩 나눠 돌린다 (runLimited 주석 참고)
+  const [cur, prev, byMonth, byDay] = await runLimited([
+    () => trafficTotals(r.from, r.to), () => trafficTotals(r.prevFrom, r.prevTo),
+    () => trafficByMonth(), () => trafficByDay(r.from, r.to),
+  ] as const);
+  const [byHour, byCountry, byDevice, byLocale] = await runLimited([
+    () => trafficByHour(r.from, r.to), () => trafficByCountry(r.from, r.to),
+    () => trafficByDevice(r.from, r.to), () => trafficByLocale(r.from, r.to),
+  ] as const);
+  const [referrers, pagesAll, firstAt, signupsCur] = await runLimited([
+    () => topReferrers(r.from, r.to), () => topPages(r.from, r.to, 60), () => firstViewAt(), () => signupTotals(r.from, r.to),
+  ] as const);
+  const [signupsPrev, signupsDay, signupsMonth, signupsProv] = await runLimited([
+    () => signupTotals(r.prevFrom, r.prevTo), () => signupsByDay(r.from, r.to), () => signupsByMonth(), () => signupsByProvider(r.from, r.to),
+  ] as const);
+  const [signupsLoc, recent, orders, ordersPrev] = await runLimited([
+    () => signupsByLocale(r.from, r.to), () => recentSignups(20), () => orderSummary(r.from, r.to), () => orderSummary(r.prevFrom, r.prevTo),
+  ] as const);
+  // 인기 페이지 전체 / 게시물만 — 한 번 조회해서 둘로 나눈다
+  const pages = pagesAll.slice(0, 15);
+  const posts = pagesAll.filter((p) => DETAIL_KINDS.has(p.kind)).slice(0, 15);
 
   const rangeLabel = PRESETS.find((p) => p.key === r.preset)?.label ?? '';
   const collecting = firstAt ? `${fmtDate(firstAt)}부터 수집` : '아직 수집된 방문이 없습니다 — 배포 직후부터 쌓입니다';
