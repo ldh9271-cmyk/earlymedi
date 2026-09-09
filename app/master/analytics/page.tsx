@@ -12,6 +12,8 @@ import {
 import BarChart from './_components/bar-chart';
 
 export const dynamic = 'force-dynamic';
+// 쿼리 20개를 한 번에 돌리므로 콜드 스타트까지 겹치면 기본 10초를 넘길 수 있다
+export const maxDuration = 30;
 export const metadata = { title: '통계 리포트 — 마스터 관리자' };
 
 /**
