@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { asc, eq, count } from 'drizzle-orm';
-import { ShieldAlert, Building2, Users, Stethoscope, Briefcase, UserCheck, Plus, Hospital, Globe2, Receipt, QrCode, ContactRound } from 'lucide-react';
+import { ShieldAlert, Building2, Users, Stethoscope, Briefcase, UserCheck, Plus, Hospital, Globe2, Receipt, QrCode, ContactRound, BarChart3 } from 'lucide-react';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
@@ -359,6 +359,21 @@ export default async function MasterPage({
             <div className="text-xs font-semibold">회원 리스트</div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               사이트 가입 전체 계정 — 일반 회원 · BIZ 회원 구분 조회
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/master/analytics"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
+            <BarChart3 className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold">통계 리포트</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              월별·일별·시간대별·나라별 트래픽 · 신규 가입 · 인기 게시물 · 결제
             </p>
           </div>
         </Link>

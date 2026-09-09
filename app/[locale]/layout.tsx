@@ -8,6 +8,7 @@ import {
 } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { BRAND_ALIASES, BRAND_NAME, brandJsonLd, withBrandSuffix } from '@/lib/seo/brand';
+import TrackView from '@/components/shared/track-view';
 
 /**
  * Per-locale metadata (title / description / openGraph). Overrides the
@@ -91,6 +92,8 @@ export default function PublicLocaleRootLayout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: brandJsonLd(params.locale) }}
       />
+      {/* 방문 비콘 — 마스터 통계 리포트(트래픽·인기 게시물)의 원천. 개인정보 없음. */}
+      <TrackView />
       {children}
     </>
   );

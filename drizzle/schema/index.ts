@@ -86,3 +86,6 @@ export * from './food-registry';
 
 // 전국 관광지(관광사진) 레지스트리 (한국관광공사 포토코리아)
 export * from './tour-spots';
+
+// 공개 포털 방문 기록 — 마스터 통계 리포트 원천
+export * from './page-views';
