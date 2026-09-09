@@ -7,7 +7,7 @@ import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { commissionLedger, DEFAULT_DISTRIBUTOR_CONFIG } from '@/drizzle/schema/referral-program';
-import { getPartnerById, getRegionAdmin, listReferrers } from '@/lib/referral/service';
+import { getPartnerById, getRegionAdminCountries, listReferrers } from '@/lib/referral/service';
 import {
   confirmDueAction, createReferrerAction, createResultAction, linkPartnerUserAction,
   renameDistributorAction, reverseOrderAction, saveConfigAction, settleAction, togglePartnerAction,
@@ -56,11 +56,11 @@ export default async function DistributorDetailPage({
   if (!auth.user) redirect('/login');
   const email = (auth.user.email ?? '').toLowerCase();
   if (!isMasterEmail(email)) {
-    // 지역 마스터는 자기 국가 총판만 열 수 있다
-    const region = await getRegionAdmin(email);
-    if (!region) redirect('/select-org');
+    // 지역 마스터는 자기가 맡은 국가의 총판만 열 수 있다
+    const regions = await getRegionAdminCountries(email);
+    if (regions.length === 0) redirect('/select-org');
     const scoped = await getPartnerById(params.id);
-    if (!scoped || scoped.countryCode !== region) redirect('/master/partners?error=scope');
+    if (!scoped || !regions.includes(scoped.countryCode)) redirect('/master/partners?error=scope');
   }
 
   const d = await getPartnerById(params.id);

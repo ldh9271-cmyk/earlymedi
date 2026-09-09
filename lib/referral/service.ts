@@ -629,30 +629,35 @@ export async function markSettled(distributorId: string, period: string): Promis
   return { rows: updated.length, amount: updated.reduce((a, r) => a + r.amountWon, 0) };
 }
 
-export async function listDistributors(countryCode?: string): Promise<Partner[]> {
-  const where = countryCode
-    ? and(eq(referralPartners.role, 'distributor'), eq(referralPartners.countryCode, countryCode))
+/** 국가 목록을 주면 그 나라들의 총판만, 안 주면 전체. */
+export async function listDistributors(countryCodes?: string[]): Promise<Partner[]> {
+  const where = countryCodes && countryCodes.length > 0
+    ? and(eq(referralPartners.role, 'distributor'), inArray(referralPartners.countryCode, countryCodes))
     : eq(referralPartners.role, 'distributor');
   return db.select().from(referralPartners).where(where).orderBy(desc(referralPartners.createdAt));
 }
 
-export type AdminScope = { isMaster: true; region: null } | { isMaster: false; region: string };
+export type AdminScope = { isMaster: true; regions: null } | { isMaster: false; regions: string[] };
 
 /**
- * 관리 권한 계층: 총괄 마스터(전체) > 지역 마스터(자기 국가의 총판만).
- * 지역 마스터가 아니면 null.
+ * 관리 권한 계층: 총괄 마스터(전체) > 지역 마스터(자기가 맡은 국가들의 총판만).
+ *
+ * 한 사람이 여러 나라를 맡을 수 있다(일본 마스터가 영어권·중국어권·한국까지).
+ * 지역 마스터가 아니면 빈 배열.
  */
-export async function getRegionAdmin(email: string): Promise<string | null> {
-  const [row] = await db
+export async function getRegionAdminCountries(email: string): Promise<string[]> {
+  const rows = await db
     .select({ countryCode: regionAdmins.countryCode })
     .from(regionAdmins)
-    .where(eq(regionAdmins.email, email.toLowerCase()))
-    .limit(1);
-  return row?.countryCode ?? null;
+    .where(eq(regionAdmins.email, email.toLowerCase()));
+  return rows.map((r) => r.countryCode);
 }
 
 export async function listRegionAdmins(): Promise<Array<{ email: string; countryCode: string; note: string | null }>> {
-  return db.select({ email: regionAdmins.email, countryCode: regionAdmins.countryCode, note: regionAdmins.note }).from(regionAdmins);
+  return db
+    .select({ email: regionAdmins.email, countryCode: regionAdmins.countryCode, note: regionAdmins.note })
+    .from(regionAdmins)
+    .orderBy(regionAdmins.email, regionAdmins.countryCode);
 }
 
 export async function listReferrers(distributorId: string): Promise<Partner[]> {

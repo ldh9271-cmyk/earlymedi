@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
-import { getRegionAdmin } from '@/lib/referral/service';
+import { getRegionAdminCountries } from '@/lib/referral/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  * 직접 판별할 수 없으므로 세션 기준으로 서버가 답한다.
  *
  *   총괄 마스터  → { admin: true, master: true,  href: '/master' }
- *   지역 마스터  → { admin: true, master: false, region, href: '/master/partners' }
+ *   지역 마스터  → { admin: true, master: false, regions, href: '/master/partners' }
  *   그 외        → { admin: false }
  */
 export async function GET(): Promise<NextResponse> {
@@ -23,9 +23,10 @@ export async function GET(): Promise<NextResponse> {
     if (isMasterEmail(email)) {
       return NextResponse.json({ admin: true, master: true, href: '/master' });
     }
-    const region = await getRegionAdmin(email);
-    if (region) {
-      return NextResponse.json({ admin: true, master: false, region, href: '/master/partners' });
+    const regions = await getRegionAdminCountries(email);
+    if (regions.length > 0) {
+      // region 은 예전 클라이언트 호환용 (첫 국가)
+      return NextResponse.json({ admin: true, master: false, regions, region: regions[0], href: '/master/partners' });
     }
     return NextResponse.json({ admin: false });
   } catch {

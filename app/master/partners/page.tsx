@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { commissionLedger, referralPartners } from '@/drizzle/schema/referral-program';
-import { getRegionAdmin, listDistributors, listRegionAdmins } from '@/lib/referral/service';
+import { getRegionAdminCountries, listDistributors, listRegionAdmins } from '@/lib/referral/service';
 import { addRegionAdminAction, createDistributorAction, deleteDistributorAction, removeRegionAdminAction } from './_actions';
 
 export const dynamic = 'force-dynamic';
@@ -24,12 +24,20 @@ export default async function MasterPartnersPage({
   if (!auth.user) redirect('/login');
   const email = (auth.user.email ?? '').toLowerCase();
   const isMaster = isMasterEmail(email);
-  // 지역 마스터(예: 일본 마스터)는 자기 국가 총판만 본다
-  const region = isMaster ? null : await getRegionAdmin(email);
-  if (!isMaster && !region) redirect('/select-org');
+  // 지역 마스터(예: 일본 마스터)는 자기가 맡은 국가의 총판만 본다 — 여러 나라 가능
+  const regions = isMaster ? null : await getRegionAdminCountries(email);
+  if (!isMaster && (!regions || regions.length === 0)) redirect('/select-org');
 
-  const distributors = await listDistributors(region ?? undefined);
+  const distributors = await listDistributors(regions ?? undefined);
   const admins = isMaster ? await listRegionAdmins() : [];
+  // 같은 사람이 여러 나라를 맡으므로 이메일 기준으로 묶어서 보여준다
+  const grouped = [...admins.reduce((m, a) => {
+    const g = m.get(a.email) ?? { email: a.email, countries: [] as string[], note: a.note };
+    g.countries.push(a.countryCode);
+    if (!g.note) g.note = a.note;
+    m.set(a.email, g);
+    return m;
+  }, new Map<string, { email: string; countries: string[]; note: string | null }>()).values()];
   const stats = await Promise.all(distributors.map(async (d) => {
     const [ref] = await db.select({ n: sql<number>`count(*)::int` }).from(referralPartners)
       .where(eq(referralPartners.distributorId, d.id));
@@ -46,7 +54,7 @@ export default async function MasterPartnersPage({
       <style dangerouslySetInnerHTML={{ __html: MP_CSS }} />
       <div className="m-mp-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>총판 · 추천인 프로그램{region ? ` — ${region} 지역` : ''}</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>총판 · 추천인 프로그램{regions ? ` — ${regions.join(' · ')} 지역` : ''}</h1>
           <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 0' }}>
             해외 총판과 그 아래 추천인 네트워크. 수당은 시술·여행상품 실적에서만 발생하고 2단계까지 배분됩니다.
           </p>
@@ -131,7 +139,17 @@ export default async function MasterPartnersPage({
         <div className="m-mp-grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div><span style={label}>총판 이름 (법인명) *</span><input name="name" required style={input} placeholder="예: 株式会社○○ / Tokyo Beauty Partners" /></div>
           <div><span style={label}>담당자 연락처</span><input name="contact" style={input} placeholder="이름 · 전화 · LINE" /></div>
-          <div><span style={label}>국가 코드{region ? ' (지역 고정)' : ''}</span><input name="countryCode" defaultValue={region ?? 'JP'} readOnly={!!region} maxLength={2} style={{ ...input, background: region ? '#f5f5f5' : '#fff' }} /></div>
+          <div>
+            <span style={label}>국가 코드{regions ? ' (내 담당 지역)' : ''}</span>
+            {/* 지역 마스터는 자기가 맡은 나라 중에서만 고를 수 있다 */}
+            {regions ? (
+              <select name="countryCode" defaultValue={regions[0]} style={input}>
+                {regions.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            ) : (
+              <input name="countryCode" defaultValue="JP" maxLength={2} style={input} />
+            )}
+          </div>
           <div>
             <span style={label}>QR 랜딩 언어</span>
             <select name="landingLocale" defaultValue="ja" style={input}>
@@ -150,22 +168,40 @@ export default async function MasterPartnersPage({
         <div className="m-mp-card" style={{ marginTop: 28, border: '1px solid #ebebeb', borderRadius: 12, padding: 20, maxWidth: 760 }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>지역 마스터 계정</h2>
           <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
-            총괄 마스터 아래의 국가별 관리자입니다. 등록된 이메일로 로그인하면 /master/partners 에서 자기 국가의 총판만 보고 생성·정산할 수 있습니다.
+            총괄 마스터 아래의 국가별 관리자입니다. 등록된 이메일로 로그인하면 /master/partners 에서 자기가 맡은 국가의 총판만 보고 생성·정산할 수 있습니다.
+            한 사람이 여러 나라를 맡을 수 있습니다 — 국가 칸에 쉼표로 나열하세요 (예: JP, US, CN, KR).
             (해당 이메일이 사이트에 가입돼 있어야 합니다)
           </p>
-          {admins.length > 0 ? (
+          {grouped.length > 0 ? (
             <div style={{ overflowX: 'auto', marginBottom: 14 }}>
               <table style={{ width: '100%', minWidth: 360, borderCollapse: 'collapse', fontSize: 13 }}>
                 <tbody>
-                  {admins.map((a) => (
-                    <tr key={a.email} style={{ borderTop: '1px solid #f0f0f0' }}>
-                      <td style={{ padding: '8px 10px', fontWeight: 600, wordBreak: 'break-all' }}>{a.email}</td>
-                      <td style={{ padding: '8px 10px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{a.countryCode}</td>
-                      <td style={{ padding: '8px 10px', color: '#9c9c9c' }}>{a.note ?? ''}</td>
+                  {grouped.map((g) => (
+                    <tr key={g.email} style={{ borderTop: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '8px 10px', fontWeight: 600, wordBreak: 'break-all' }}>{g.email}</td>
+                      <td style={{ padding: '8px 10px' }}>
+                        {/* 나라별로 개별 해제 — 배지의 × 하나가 그 나라 권한만 뗀다 */}
+                        <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 6 }}>
+                          {g.countries.map((c) => (
+                            <form key={c} action={removeRegionAdminAction} style={{ display: 'inline' }}>
+                              <input type="hidden" name="email" value={g.email} />
+                              <input type="hidden" name="countryCode" value={c} />
+                              <button
+                                type="submit"
+                                title={`${c} 권한 해제`}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: '1px solid #ddd', background: '#fafafa', color: '#222', borderRadius: 999, padding: '2px 8px', fontSize: 11, fontFamily: 'monospace', cursor: 'pointer' }}
+                              >
+                                {c}<span style={{ color: '#c1121f' }}>×</span>
+                              </button>
+                            </form>
+                          ))}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 10px', color: '#9c9c9c' }}>{g.note ?? ''}</td>
                       <td style={{ padding: '8px 10px', textAlign: 'right' }}>
                         <form action={removeRegionAdminAction} style={{ display: 'inline' }}>
-                          <input type="hidden" name="email" value={a.email} />
-                          <button type="submit" style={{ border: '1px solid #dc2626', color: '#dc2626', background: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>해제</button>
+                          <input type="hidden" name="email" value={g.email} />
+                          <button type="submit" style={{ border: '1px solid #dc2626', color: '#dc2626', background: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>전체 해제</button>
                         </form>
                       </td>
                     </tr>
@@ -174,9 +210,9 @@ export default async function MasterPartnersPage({
               </table>
             </div>
           ) : null}
-          <form action={addRegionAdminAction} className="m-mp-region-form" style={{ display: 'grid', gridTemplateColumns: '2fr 100px 1.5fr auto', gap: 8, alignItems: 'end' }}>
+          <form action={addRegionAdminAction} className="m-mp-region-form" style={{ display: 'grid', gridTemplateColumns: '2fr 160px 1.5fr auto', gap: 8, alignItems: 'end' }}>
             <div><span style={label}>이메일 *</span><input name="email" type="email" required style={input} placeholder="jp-master@example.com" /></div>
-            <div><span style={label}>국가</span><input name="countryCode" defaultValue="JP" maxLength={2} style={input} /></div>
+            <div><span style={label}>국가 (쉼표로 여러 개)</span><input name="countryCode" defaultValue="JP" style={input} placeholder="JP, US, CN, KR" /></div>
             <div><span style={label}>메모</span><input name="note" style={input} placeholder="일본 마스터" /></div>
             <button type="submit" style={{ background: '#222', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>등록</button>
           </form>

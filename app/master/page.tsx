@@ -45,9 +45,9 @@ export default async function MasterPage({
   const email = auth.user.email ?? '';
   if (!isMasterEmail(email)) {
     // 지역 마스터(일본 등)는 총판 관리로, 그 외는 일반 랜딩으로.
-    const { getRegionAdmin } = await import('@/lib/referral/service');
-    const region = await getRegionAdmin(email);
-    if (region) redirect('/master/partners');
+    const { getRegionAdminCountries } = await import('@/lib/referral/service');
+    const regions = await getRegionAdminCountries(email);
+    if (regions.length > 0) redirect('/master/partners');
     redirect('/select-org');
   }
 

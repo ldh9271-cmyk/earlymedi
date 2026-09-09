@@ -3,14 +3,14 @@
 import 'server-only';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { referralPartners, DEFAULT_DISTRIBUTOR_CONFIG } from '@/drizzle/schema/referral-program';
 import {
   confirmDueLedger, createResultOrderWithLedger, findAuthUserIdByEmail, generateCode, getPartnerById,
-  getRegionAdmin, markSettled, nextDistributorCode, reverseOrder,
+  getRegionAdminCountries, markSettled, nextDistributorCode, reverseOrder,
 } from '@/lib/referral/service';
 import { regionAdmins } from '@/drizzle/schema/referral-program';
 
@@ -22,25 +22,25 @@ async function assertMaster(): Promise<void> {
 }
 
 /**
- * 관리 권한: 총괄 마스터는 전체, 지역 마스터(region_admins)는 자기 국가만.
- * region 이 null 이면 마스터.
+ * 관리 권한: 총괄 마스터는 전체, 지역 마스터(region_admins)는 자기가 맡은 국가들만.
+ * regions 가 null 이면 마스터. 지역 마스터는 여러 나라를 맡을 수 있다.
  */
-async function assertScope(): Promise<{ email: string; region: string | null }> {
+async function assertScope(): Promise<{ email: string; regions: string[] | null }> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
   const email = (auth.user.email ?? '').toLowerCase();
-  if (isMasterEmail(email)) return { email, region: null };
-  const region = await getRegionAdmin(email);
-  if (!region) redirect('/select-org');
-  return { email, region };
+  if (isMasterEmail(email)) return { email, regions: null };
+  const regions = await getRegionAdminCountries(email);
+  if (regions.length === 0) redirect('/select-org');
+  return { email, regions };
 }
 
 /** 지역 마스터가 자기 국가 밖의 총판을 만지는 것을 막는다. */
-async function assertDistributorInScope(distributorId: string, region: string | null): Promise<void> {
-  if (!region) return;
+async function assertDistributorInScope(distributorId: string, regions: string[] | null): Promise<void> {
+  if (!regions) return;
   const d = await getPartnerById(distributorId);
-  if (!d || d.role !== 'distributor' || d.countryCode !== region) redirect('/master/partners?error=scope');
+  if (!d || d.role !== 'distributor' || !regions.includes(d.countryCode)) redirect('/master/partners?error=scope');
 }
 
 function back(path: string, q: Record<string, string>): never {
@@ -61,8 +61,11 @@ export async function createDistributorAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const name = str(fd, 'name');
   if (!name) back('/master/partners', { error: '총판 이름은 필수입니다' });
-  // 지역 마스터는 자기 국가로 강제
-  const countryCode = (scope.region ?? (str(fd, 'countryCode') || 'JP')).toUpperCase().slice(0, 2);
+  // 지역 마스터는 자기가 맡은 국가 안에서만 — 고른 국가가 범위 밖이면 첫 국가로 되돌린다
+  const typed = (str(fd, 'countryCode') || 'JP').toUpperCase().slice(0, 2);
+  const countryCode = scope.regions
+    ? (scope.regions.includes(typed) ? typed : (scope.regions[0] ?? typed))
+    : typed;
   const landingLocale = str(fd, 'landingLocale') || 'ja';
   for (let i = 0; i < 5; i += 1) {
     try {
@@ -91,7 +94,7 @@ export async function createDistributorAction(fd: FormData): Promise<void> {
 export async function createReferrerAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const distributorId = str(fd, 'distributorId');
-  await assertDistributorInScope(distributorId, scope.region);
+  await assertDistributorInScope(distributorId, scope.regions);
   const name = str(fd, 'name');
   if (!distributorId || !name) back(`/master/partners/${distributorId}`, { error: '이름은 필수입니다' });
   // 2단계 고정: 추천인은 항상 총판 직속 (총판 → 추천인 → 고객).
@@ -129,7 +132,7 @@ export async function deleteDistributorAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const id = str(fd, 'partnerId');
   if (!id) back('/master/partners', { error: 'missing_id' });
-  await assertDistributorInScope(id, scope.region);
+  await assertDistributorInScope(id, scope.regions);
   const d = await getPartnerById(id);
   if (!d || d.role !== 'distributor') back('/master/partners', { error: '총판을 찾을 수 없습니다' });
 
@@ -150,7 +153,7 @@ export async function renameDistributorAction(fd: FormData): Promise<void> {
   const id = str(fd, 'partnerId');
   const name = str(fd, 'name');
   if (!id || !name || name.length > 120) back(`/master/partners/${id}`, { error: '이름을 확인해 주세요' });
-  await assertDistributorInScope(id, scope.region);
+  await assertDistributorInScope(id, scope.regions);
   await db.update(referralPartners).set({ name, updatedAt: new Date() }).where(eq(referralPartners.id, id));
   revalidatePath(`/master/partners/${id}`);
   revalidatePath('/master/partners');
@@ -175,7 +178,7 @@ export async function linkPartnerUserAction(fd: FormData): Promise<void> {
   // 스코프 검증 — 파트너가 총판이면 그 자신, 추천인이면 소속 총판으로 확인
   const target = await getPartnerById(partnerId);
   if (!target) back(`/master/partners/${distributorId}`, { error: '대상을 찾을 수 없습니다' });
-  await assertDistributorInScope(target.role === 'distributor' ? partnerId : (target.distributorId ?? partnerId), scope.region);
+  await assertDistributorInScope(target.role === 'distributor' ? partnerId : (target.distributorId ?? partnerId), scope.regions);
   const uid = await findAuthUserIdByEmail(email);
   await db
     .update(referralPartners)
@@ -198,7 +201,7 @@ export async function linkPartnerUserAction(fd: FormData): Promise<void> {
 export async function saveConfigAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const distributorId = str(fd, 'distributorId');
-  await assertDistributorInScope(distributorId, scope.region);
+  await assertDistributorInScope(distributorId, scope.regions);
   const existing = await getPartnerById(distributorId);
   const prev = { ...DEFAULT_DISTRIBUTOR_CONFIG, ...(existing?.config ?? {}) };
   const feeSharePct = Math.max(0, Math.min(100, num(fd, 'feeSharePct') || (prev.feeShare?.distributorPct ?? 70)));
@@ -218,7 +221,7 @@ export async function saveConfigAction(fd: FormData): Promise<void> {
 export async function createResultAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const distributorId = str(fd, 'distributorId');
-  await assertDistributorInScope(distributorId, scope.region);
+  await assertDistributorInScope(distributorId, scope.regions);
   const kind = str(fd, 'kind') === 'travel' ? 'travel' : 'procedure';
   const partnerCode = str(fd, 'partnerCode').toUpperCase();
   let partnerId = distributorId;
@@ -270,7 +273,7 @@ export async function createResultAction(fd: FormData): Promise<void> {
 export async function confirmDueAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const distributorId = str(fd, 'distributorId');
-  await assertDistributorInScope(distributorId, scope.region);
+  await assertDistributorInScope(distributorId, scope.regions);
   const n = await confirmDueLedger(distributorId);
   revalidatePath(`/master/partners/${distributorId}`);
   back(`/master/partners/${distributorId}`, { ok: `${n}행 확정` });
@@ -279,7 +282,7 @@ export async function confirmDueAction(fd: FormData): Promise<void> {
 export async function settleAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const distributorId = str(fd, 'distributorId');
-  await assertDistributorInScope(distributorId, scope.region);
+  await assertDistributorInScope(distributorId, scope.regions);
   const period = str(fd, 'period') || new Date().toISOString().slice(0, 7);
   const r = await markSettled(distributorId, period);
   revalidatePath(`/master/partners/${distributorId}`);
@@ -289,7 +292,7 @@ export async function settleAction(fd: FormData): Promise<void> {
 export async function reverseOrderAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const distributorId = str(fd, 'distributorId');
-  await assertDistributorInScope(distributorId, scope.region);
+  await assertDistributorInScope(distributorId, scope.regions);
   const orderId = str(fd, 'orderId');
   const n = await reverseOrder(orderId, str(fd, 'note') || '운영자 취소');
   revalidatePath(`/master/partners/${distributorId}`);
@@ -299,7 +302,7 @@ export async function reverseOrderAction(fd: FormData): Promise<void> {
 export async function togglePartnerAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const distributorId = str(fd, 'distributorId');
-  await assertDistributorInScope(distributorId, scope.region);
+  await assertDistributorInScope(distributorId, scope.regions);
   const partnerId = str(fd, 'partnerId');
   const active = str(fd, 'active') === '1';
   await db.update(referralPartners).set({ isActive: active, updatedAt: new Date() }).where(eq(referralPartners.id, partnerId));
@@ -308,23 +311,42 @@ export async function togglePartnerAction(fd: FormData): Promise<void> {
 }
 
 
-/** 지역 마스터 등록 — 총괄 마스터 전용. 해당 이메일이 사이트에 가입돼 있어야 로그인해서 쓸 수 있다. */
+/**
+ * 지역 마스터 등록 — 총괄 마스터 전용.
+ *
+ * 국가는 쉼표로 여러 개 받는다(예: `JP, US, CN, KR`). 한 사람이 여러 나라를
+ * 맡을 수 있고, 나라마다 한 행으로 들어간다. 이미 있는 나라는 메모만 갱신한다.
+ * 해당 이메일이 사이트에 가입돼 있어야 로그인해서 쓸 수 있다.
+ */
 export async function addRegionAdminAction(fd: FormData): Promise<void> {
   await assertMaster();
   const email = str(fd, 'email').toLowerCase();
-  const countryCode = (str(fd, 'countryCode') || 'JP').toUpperCase().slice(0, 2);
   if (!email) back('/master/partners', { error: '이메일이 필요합니다' });
+  const codes = [...new Set(
+    str(fd, 'countryCode')
+      .split(/[,\s]+/)
+      .map((c) => c.toUpperCase().slice(0, 2))
+      .filter((c) => /^[A-Z]{2}$/.test(c)),
+  )];
+  if (codes.length === 0) back('/master/partners', { error: '국가 코드를 두 자리로 입력하세요 (예: JP, US)' });
+  const note = str(fd, 'note') || null;
   await db.insert(regionAdmins)
-    .values({ email, countryCode, note: str(fd, 'note') || null })
-    .onConflictDoUpdate({ target: regionAdmins.email, set: { countryCode, note: str(fd, 'note') || null } });
+    .values(codes.map((countryCode) => ({ email, countryCode, note })))
+    .onConflictDoUpdate({ target: [regionAdmins.email, regionAdmins.countryCode], set: { note } });
   revalidatePath('/master/partners');
-  back('/master/partners', { ok: `${email} → ${countryCode} 지역 마스터 등록` });
+  back('/master/partners', { ok: `${email} → ${codes.join(', ')} 지역 마스터 등록` });
 }
 
+/** 국가 코드를 주면 그 나라만, 안 주면 그 이메일의 지역 마스터 권한 전체를 해제한다. */
 export async function removeRegionAdminAction(fd: FormData): Promise<void> {
   await assertMaster();
   const email = str(fd, 'email').toLowerCase();
-  await db.delete(regionAdmins).where(eq(regionAdmins.email, email));
+  const countryCode = str(fd, 'countryCode').toUpperCase().slice(0, 2);
+  await db.delete(regionAdmins).where(
+    countryCode
+      ? and(eq(regionAdmins.email, email), eq(regionAdmins.countryCode, countryCode))
+      : eq(regionAdmins.email, email),
+  );
   revalidatePath('/master/partners');
-  back('/master/partners', { ok: `${email} 지역 마스터 해제` });
+  back('/master/partners', { ok: countryCode ? `${email} · ${countryCode} 해제` : `${email} 지역 마스터 전체 해제` });
 }

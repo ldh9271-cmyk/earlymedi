@@ -12,7 +12,7 @@ import { commissionLedger, referralAttributions } from '@/drizzle/schema/referra
 import { isMasterEmail } from '@/lib/auth/master';
 import {
   attributeUser, claimPartnerByEmail, confirmDueLedger, getPartnerByCode, getPartnerById, getPartnerByUserId,
-  getRegionAdmin, listReferrers, partnerTotals, REF_COOKIE, REF_JOIN_COOKIE,
+  getRegionAdminCountries, listReferrers, partnerTotals, REF_COOKIE, REF_JOIN_COOKIE,
 } from '@/lib/referral/service';
 import { joinReferrerAction } from './_actions';
 import { PrintButton } from './print-button';
@@ -56,8 +56,8 @@ export default async function ReferralPage({
     const email = (user.email ?? '').toLowerCase();
     const target = await getPartnerById(searchParams.as).catch(() => null);
     if (target) {
-      const region = isMasterEmail(email) ? null : await getRegionAdmin(email).catch(() => null);
-      const allowed = isMasterEmail(email) || (!!region && region === target.countryCode);
+      const regions = isMasterEmail(email) ? null : await getRegionAdminCountries(email).catch(() => []);
+      const allowed = isMasterEmail(email) || (!!regions && regions.includes(target.countryCode));
       if (allowed) previewOf = target;
     }
   }

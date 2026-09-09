@@ -5,6 +5,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -131,14 +132,25 @@ export const referralAttributions = pgTable(
  * 있다. 등록은 총괄 마스터가 이메일로 한다 (해당 이메일이 사이트에
  * 가입돼 있어야 로그인 가능).
  */
+/**
+ * 지역 마스터 — (이메일, 국가) 쌍이 키다.
+ *
+ * 한 사람이 여러 나라를 맡을 수 있어야 해서 복합키로 둔다. 일본 마스터가
+ * 영어권·중국어권·한국까지 함께 관리하는 식. 나라마다 한 행이고, 권한
+ * 판정은 그 이메일의 국가 목록에 대상 총판의 국가가 있는지로 한다.
+ */
 export const regionAdmins = pgTable(
   'region_admins',
   {
-    email: text('email').primaryKey(),
+    email: text('email').notNull(),
     countryCode: text('country_code').notNull(),
     note: text('note'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
+  (t) => ({
+    pk: primaryKey({ columns: [t.email, t.countryCode] }),
+    emailIdx: index('region_admins_email_idx').on(t.email),
+  }),
 );
 
 export const ledgerBeneficiaryEnum = pgEnum('ledger_beneficiary', [
