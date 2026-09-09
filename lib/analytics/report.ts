@@ -37,6 +37,13 @@ async function q<T extends Row>(query: ReturnType<typeof sql>): Promise<T[]> {
 
 const SEOUL = sql.raw(`at time zone 'Asia/Seoul'`);
 
+/**
+ * Date 를 raw sql 템플릿에 그대로 넣으면 postgres.js 가 Buffer.byteLength(Date) 를
+ * 호출하다 터진다(ERR_INVALID_ARG_TYPE — 운영에서 실제로 났다). 드리즐의 컬럼
+ * 매핑을 거치지 않는 raw 쿼리에서는 ISO 문자열로 넘기고 캐스팅한다.
+ */
+const ts = (d: Date): ReturnType<typeof sql> => sql`${d.toISOString()}::timestamptz`;
+
 // ─── 트래픽 ──────────────────────────────────────────────────────────
 
 export type Bucket = { label: string; views: number; sessions: number };
@@ -44,7 +51,7 @@ export type Bucket = { label: string; views: number; sessions: number };
 export async function trafficTotals(from: Date, to: Date): Promise<{ views: number; sessions: number }> {
   const [r] = await q<{ views: number; sessions: number }>(sql`
     select count(*)::int as views, count(distinct session_id)::int as sessions
-    from page_views where ts >= ${from} and ts < ${to}`);
+    from page_views where ts >= ${ts(from)} and ts < ${ts(to)}`);
   return { views: r?.views ?? 0, sessions: r?.sessions ?? 0 };
 }
 
@@ -73,7 +80,7 @@ export async function trafficByDay(from: Date, to: Date): Promise<Bucket[]> {
   const rows = await q<{ d: string; views: number; sessions: number }>(sql`
     select to_char(date_trunc('day', ts ${SEOUL}), 'YYYY-MM-DD') as d,
            count(*)::int as views, count(distinct session_id)::int as sessions
-    from page_views where ts >= ${from} and ts < ${to}
+    from page_views where ts >= ${ts(from)} and ts < ${ts(to)}
     group by 1 order by 1`);
   const map = new Map(rows.map((r) => [r.d, r]));
   const out: Bucket[] = [];
@@ -93,7 +100,7 @@ export async function trafficByHour(from: Date, to: Date): Promise<Bucket[]> {
   const rows = await q<{ h: number; views: number; sessions: number }>(sql`
     select extract(hour from ts ${SEOUL})::int as h,
            count(*)::int as views, count(distinct session_id)::int as sessions
-    from page_views where ts >= ${from} and ts < ${to}
+    from page_views where ts >= ${ts(from)} and ts < ${ts(to)}
     group by 1 order by 1`);
   const map = new Map(rows.map((r) => [r.h, r]));
   return Array.from({ length: 24 }, (_, h) => ({ label: `${h}시`, views: map.get(h)?.views ?? 0, sessions: map.get(h)?.sessions ?? 0 }));
@@ -103,7 +110,7 @@ export type CountryRow = { country: string; views: number; sessions: number; sha
 export async function trafficByCountry(from: Date, to: Date, limit = 15): Promise<CountryRow[]> {
   const rows = await q<{ country: string | null; views: number; sessions: number }>(sql`
     select country, count(*)::int as views, count(distinct session_id)::int as sessions
-    from page_views where ts >= ${from} and ts < ${to}
+    from page_views where ts >= ${ts(from)} and ts < ${ts(to)}
     group by 1 order by 2 desc limit ${limit}`);
   const total = rows.reduce((a, r) => a + r.views, 0) || 1;
   return rows.map((r) => ({ country: r.country ?? '??', views: r.views, sessions: r.sessions, share: r.views / total }));
@@ -113,21 +120,21 @@ export type SplitRow = { key: string; views: number; sessions: number };
 export async function trafficByDevice(from: Date, to: Date): Promise<SplitRow[]> {
   const rows = await q<{ key: string | null; views: number; sessions: number }>(sql`
     select device as key, count(*)::int as views, count(distinct session_id)::int as sessions
-    from page_views where ts >= ${from} and ts < ${to} group by 1 order by 2 desc`);
+    from page_views where ts >= ${ts(from)} and ts < ${ts(to)} group by 1 order by 2 desc`);
   return rows.map((r) => ({ key: r.key ?? '?', views: r.views, sessions: r.sessions }));
 }
 
 export async function trafficByLocale(from: Date, to: Date): Promise<SplitRow[]> {
   const rows = await q<{ key: string | null; views: number; sessions: number }>(sql`
     select locale as key, count(*)::int as views, count(distinct session_id)::int as sessions
-    from page_views where ts >= ${from} and ts < ${to} group by 1 order by 2 desc`);
+    from page_views where ts >= ${ts(from)} and ts < ${ts(to)} group by 1 order by 2 desc`);
   return rows.map((r) => ({ key: r.key ?? '?', views: r.views, sessions: r.sessions }));
 }
 
 export async function topReferrers(from: Date, to: Date, limit = 10): Promise<SplitRow[]> {
   const rows = await q<{ key: string; views: number; sessions: number }>(sql`
     select referrer_host as key, count(*)::int as views, count(distinct session_id)::int as sessions
-    from page_views where ts >= ${from} and ts < ${to} and referrer_host is not null
+    from page_views where ts >= ${ts(from)} and ts < ${ts(to)} and referrer_host is not null
     group by 1 order by 2 desc limit ${limit}`);
   return rows;
 }
@@ -165,7 +172,7 @@ export function classifyPath(path: string): string {
 export async function topPages(from: Date, to: Date, limit = 20, detailOnly = false): Promise<PageRow[]> {
   const rows = await q<{ path: string; views: number; sessions: number }>(sql`
     select path, count(*)::int as views, count(distinct session_id)::int as sessions
-    from page_views where ts >= ${from} and ts < ${to}
+    from page_views where ts >= ${ts(from)} and ts < ${ts(to)}
     group by 1 order by 2 desc limit ${detailOnly ? limit * 4 : limit}`);
   const mapped = rows.map((r) => ({ ...r, kind: classifyPath(r.path) }));
   const DETAIL = new Set(['병원 (레지스트리)', '병원 (인증)', '글로우업 상품', '글로우업 코스', '퍼스널 컬러', '맛집', '숙박', '뷰티샵', '관광지', '여행']);
@@ -180,14 +187,14 @@ export async function firstViewAt(): Promise<Date | null> {
 // ─── 신규 가입 ────────────────────────────────────────────────────────
 
 export async function signupTotals(from: Date, to: Date): Promise<number> {
-  const [r] = await q<{ n: number }>(sql`select count(*)::int as n from auth.users where created_at >= ${from} and created_at < ${to}`);
+  const [r] = await q<{ n: number }>(sql`select count(*)::int as n from auth.users where created_at >= ${ts(from)} and created_at < ${ts(to)}`);
   return r?.n ?? 0;
 }
 
 export async function signupsByDay(from: Date, to: Date): Promise<Bucket[]> {
   const rows = await q<{ d: string; n: number }>(sql`
     select to_char(date_trunc('day', created_at ${SEOUL}), 'YYYY-MM-DD') as d, count(*)::int as n
-    from auth.users where created_at >= ${from} and created_at < ${to} group by 1 order by 1`);
+    from auth.users where created_at >= ${ts(from)} and created_at < ${ts(to)} group by 1 order by 1`);
   const map = new Map(rows.map((r) => [r.d, r.n]));
   const days = Math.round((to.getTime() - from.getTime()) / 86_400_000);
   const end = seoulDate(to);
@@ -225,14 +232,14 @@ export async function signupsByProvider(from: Date, to: Date): Promise<SplitRow[
   // 라인은 자체 브릿지라 provider 가 email 로 남고 user_metadata.provider_hint 에 line 이 찍힌다
   const rows = await q<{ key: string; n: number }>(sql`
     select coalesce(raw_user_meta_data->>'provider_hint', raw_app_meta_data->>'provider', 'email') as key, count(*)::int as n
-    from auth.users where created_at >= ${from} and created_at < ${to} group by 1 order by 2 desc`);
+    from auth.users where created_at >= ${ts(from)} and created_at < ${ts(to)} group by 1 order by 2 desc`);
   return rows.map((r) => ({ key: r.key, views: r.n, sessions: r.n }));
 }
 
 export async function signupsByLocale(from: Date, to: Date): Promise<SplitRow[]> {
   const rows = await q<{ key: string | null; n: number }>(sql`
     select raw_user_meta_data->>'signup_locale' as key, count(*)::int as n
-    from auth.users where created_at >= ${from} and created_at < ${to} group by 1 order by 2 desc`);
+    from auth.users where created_at >= ${ts(from)} and created_at < ${ts(to)} group by 1 order by 2 desc`);
   return rows.map((r) => ({ key: r.key ?? '미상', views: r.n, sessions: r.n }));
 }
 
@@ -258,7 +265,7 @@ export type OrderSummary = { issued: number; reported: number; paid: number; can
 export async function orderSummary(from: Date, to: Date): Promise<OrderSummary> {
   const rows = await q<{ status: string; n: number; won: number }>(sql`
     select status::text as status, count(*)::int as n, coalesce(sum(total_won), 0)::float8 as won
-    from checkout_orders where created_at >= ${from} and created_at < ${to} group by 1`);
+    from checkout_orders where created_at >= ${ts(from)} and created_at < ${ts(to)} group by 1`);
   const s: OrderSummary = { issued: 0, reported: 0, paid: 0, cancelled: 0, paidWon: 0 };
   for (const r of rows) {
     if (r.status in s) s[r.status as keyof Omit<OrderSummary, 'paidWon'>] = r.n;
