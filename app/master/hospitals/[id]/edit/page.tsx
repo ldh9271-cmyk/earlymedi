@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { and, eq } from 'drizzle-orm';
 import { ArrowLeft, ExternalLink, Image as ImageIcon, Plus, X, Languages, Copy } from 'lucide-react';
+import HoursBulkApply from '@/components/shared/hours-bulk-apply';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
@@ -440,6 +441,7 @@ export default async function MasterHospitalEditPage({
           <form action={updateHospitalHours} className="space-y-4">
             <input type="hidden" name="id" value={base.id} />
             <input type="hidden" name="lng" value={activeLocale} />
+            <HoursBulkApply />
             <div className="grid gap-2 sm:grid-cols-2">
               {(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const).map((d, i) => (
                 <div key={d} className="flex items-center gap-2">

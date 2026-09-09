@@ -11,6 +11,7 @@ import { REGISTRY_LANGS } from './langs';
 import { REGISTRY_AGENCY_FEE_WON } from '@/lib/registry/agency';
 import { profileCompleteness } from '@/lib/registry/submission';
 import { parseRange, fmtHM } from '@/lib/hours/status';
+import HoursBulkApply from '@/components/shared/hours-bulk-apply';
 import AgencyPayButton from './_components/agency-pay';
 
 export const metadata = { title: '병원 공개 정보' };
@@ -195,6 +196,7 @@ export default async function MedicalRegistryPage({ searchParams }: { searchPara
                   <CardDescription className="text-xs">상세 페이지의 『진료 중 / 진료 종료』 배지가 이 요일별 시간으로 계산됩니다. 심평원 값이 미리 채워져 있으니 다르면 고쳐 주세요.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <HoursBulkApply />
                   <div className="grid gap-2 sm:grid-cols-2">
                     {(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const).map((day, i) => (
                       <div key={day} className="flex items-center gap-2">
