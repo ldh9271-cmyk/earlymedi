@@ -6,6 +6,7 @@ import { db } from '@/lib/db/client';
 import { aiFaceAnalyses } from '@/drizzle/schema/ai-face-analyses';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import FaceAnalyzer, { type FaceInitialResult } from './_components/face-analyzer';
+import Simulator from './_components/simulator';
 import AiChat from './_components/ai-chat';
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +37,7 @@ const AI_CSS =
   // 모바일(1열)에서는 소스 순서(카드1 → 업로더 → 카드2 → 상담창 →
   // 카드3)를 그대로 써서 업로더는 '얼굴 분석' 카드, 상담창은 '실시간
   // AI 상담' 카드 바로 아래에 온다.
-  + '.m-ai-analyzer-slot, .m-ai-chat-slot { order: 0 !important; }'
+  + '.m-ai-analyzer-slot, .m-ai-chat-slot, .m-ai-sim-slot { order: 0 !important; }'
   + '}';
 
 export default async function AiConsultPage({
@@ -191,9 +192,12 @@ export default async function AiConsultPage({
           title={f.sim.title}
           desc={f.sim.desc}
           cta={f.sim.cta}
-          ctaHref="#"
-          ctaDisabled
+          ctaHref="#ai-sim"
         />
+        {/* 시뮬레이터 — 카드 3 아래 전폭 행 (데스크톱 order:6, 모바일은 카드 3 바로 아래) */}
+        <div className="m-ai-sim-slot" style={{ gridColumn: '1 / -1', order: 6 }}>
+          <Simulator locale={params.locale} t={dict.ai.sim} userEmail={userEmail} note={dict.ai.note} />
+        </div>
       </div>
     </section>
   );

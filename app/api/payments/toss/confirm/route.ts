@@ -8,6 +8,7 @@ import { accrueOrderTravelMargin, stampOrderHospitalFee } from '@/lib/referral/s
 import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 import { onTripOrderPaid } from '@/lib/ai/trip-workflow';
 import { onRegistryAgencyPaid } from '@/lib/registry/agency';
+import { onSimCreditsPaid } from '@/lib/ai/sim-credits';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -99,6 +100,8 @@ export async function POST(req: Request): Promise<NextResponse> {
   await onTripOrderPaid(order.id).catch(() => undefined);
   // 병원 정보 등록 대행비면 검수 큐로
   await onRegistryAgencyPaid(order.id).catch(() => undefined);
+  // AI 시뮬레이션 포인트 팩이면 적립
+  await onSimCreditsPaid(order.id).catch(() => undefined);
 
   return NextResponse.json({ ok: true });
 }
