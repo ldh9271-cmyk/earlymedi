@@ -30,6 +30,15 @@ const leadInputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 };
 
+// 분석 중 애니메이션 — 스피너·줄무늬 진행바·단계 문구 페이드·미리보기 맥동
+const AI_LOADING_CSS = `
+@keyframes aiSpin { to { transform: rotate(360deg); } }
+@keyframes aiStripes { from { background-position: 0 0; } to { background-position: 28px 0; } }
+@keyframes aiFade { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+@keyframes aiPulse { 0%, 100% { box-shadow: 0 0 0 3px #ff385c33; } 50% { box-shadow: 0 0 0 9px #ff385c11; } }
+@media (prefers-reduced-motion: reduce) { .m-ai-upload * { animation: none !important; } }
+`;
+
 const SEASON_COLORS: Record<string, string> = {
   'spring warm': '#f59e0b',
   'summer cool': '#60a5fa',
@@ -72,6 +81,19 @@ export default function FaceAnalyzer({
   const [analysisId, setAnalysisId] = useState<string | null>(initialResult?.id ?? null);
   // 결과 이메일 발송 — 로그인 회원은 선택 연락처만 받고 계정 이메일로, 비회원은 회원가입/로그인으로
   const [emailPhase, setEmailPhase] = useState<'hidden' | 'signup' | 'form' | 'sending' | 'sent' | 'failed'>('hidden');
+  // 분석 중 진행률 — 실제 진행도를 알 수 없는 10초짜리 요청이라, 92% 를 향해 점점 느려지는
+  // 가짜 진행률을 보여준다. 멈춘 것처럼 보이지만 않으면 된다. 응답이 오면 100 으로 채운다.
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    if (phase !== 'loading') { setProgress(0); return; }
+    let p = 0;
+    const id = window.setInterval(() => {
+      p += (92 - p) * 0.035;
+      setProgress(p);
+    }, 100);
+    return () => window.clearInterval(id);
+  }, [phase]);
+  const stepText = progress < 22 ? t.step1 : progress < 48 ? t.step2 : progress < 74 ? t.step3 : t.step4;
   const [sentMsg, setSentMsg] = useState<string | null>(null);
   const [contact, setContact] = useState({ phone: '', messenger: '', birthDate: '' });
   const autoSent = useRef(false);
@@ -222,6 +244,8 @@ export default function FaceAnalyzer({
             width: 168, height: 168, objectFit: 'cover',
             borderRadius: 16, marginTop: 20,
             border: '1px solid #ebebeb',
+            boxShadow: phase === 'loading' ? '0 0 0 3px #ff385c33' : 'none',
+            animation: phase === 'loading' ? 'aiPulse 1.6s ease-in-out infinite' : 'none',
           }}
         />
       ) : null}
@@ -306,7 +330,30 @@ export default function FaceAnalyzer({
       </div>
 
       {phase === 'loading' ? (
-        <p style={{ fontSize: 14, color: '#6a6a6a', margin: '18px 0 0' }}>{t.analyzing}</p>
+        <div style={{ margin: '18px auto 0', maxWidth: 360 }} role="status" aria-live="polite">
+          <style dangerouslySetInnerHTML={{ __html: AI_LOADING_CSS }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, color: '#222', fontWeight: 600 }}>
+            <span style={{
+              width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
+              border: '2px solid #ffd4dc', borderTopColor: '#ff385c',
+              animation: 'aiSpin 0.8s linear infinite',
+            }} />
+            <span key={stepText} style={{ animation: 'aiFade 0.35s ease-out' }}>{stepText}…</span>
+          </div>
+          <div style={{ marginTop: 10, height: 8, borderRadius: 999, background: '#ffe3e9', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: `${Math.round(progress)}%`, borderRadius: 999,
+              background: 'repeating-linear-gradient(45deg, #ff385c 0 10px, #ff6b85 10px 20px)',
+              backgroundSize: '28px 28px',
+              animation: 'aiStripes 0.6s linear infinite',
+              transition: 'width 0.15s linear',
+            }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: '#6a6a6a' }}>
+            <span>{t.analyzing}</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: '#ff385c' }}>{Math.round(progress)}%</span>
+          </div>
+        </div>
       ) : null}
 
       {analysis ? (
