@@ -16,6 +16,8 @@ import { sendAdminTelegram } from '@/lib/notify/admin-alert';
 export const SIM_RUN_COST = Math.max(100, Math.round(Number(process.env.AI_SIM_RUN_COST_POINTS ?? 1000)));
 export const SIM_FREE_RUNS = Math.max(0, Math.round(Number(process.env.AI_SIM_FREE_RUNS ?? 1)));
 export const SIM_KIND = 'ai_sim_credits';
+/** 첫 충전 보너스(%) — 무료 1회를 쓴 직후 "지금 충전하면 +10%" 로 전환을 유도한다. */
+export const SIM_FIRST_BONUS_PCT = Math.max(0, Math.round(Number(process.env.AI_SIM_FIRST_BONUS_PCT ?? 10)));
 
 export type SimPack = { key: string; priceWon: number; points: number };
 // 만원 단위 충전(사용자 결정) — 1회 1,000P 기준 10회·22회·35회. 큰 팩일수록 보너스.
@@ -25,7 +27,7 @@ export const SIM_PACKS: SimPack[] = [
   { key: 'w30', priceWon: 30_000, points: 34_500 }, // +15%
 ];
 
-export type SimWallet = { balance: number; freeLeft: number; runCost: number; packs: SimPack[] };
+export type SimWallet = { balance: number; freeLeft: number; runCost: number; packs: SimPack[]; firstBonusPct: number };
 
 export async function simWallet(userId: string): Promise<SimWallet> {
   const [bal] = await db
@@ -36,7 +38,14 @@ export async function simWallet(userId: string): Promise<SimWallet> {
     .select({ n: sql<number>`count(*)::int` })
     .from(aiSimCredits)
     .where(and(eq(aiSimCredits.userId, userId), eq(aiSimCredits.reason, 'free')));
-  return { balance: bal?.n ?? 0, freeLeft: Math.max(0, SIM_FREE_RUNS - (free?.n ?? 0)), runCost: SIM_RUN_COST, packs: SIM_PACKS };
+  const [bought] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(aiSimCredits)
+    .where(and(eq(aiSimCredits.userId, userId), eq(aiSimCredits.reason, 'purchase')));
+  return {
+    balance: bal?.n ?? 0, freeLeft: Math.max(0, SIM_FREE_RUNS - (free?.n ?? 0)), runCost: SIM_RUN_COST, packs: SIM_PACKS,
+    firstBonusPct: (bought?.n ?? 0) === 0 ? SIM_FIRST_BONUS_PCT : 0,
+  };
 }
 
 /**
@@ -73,8 +82,11 @@ function makeInvoiceNo(): string {
 
 /** 충전 팩 인보이스 발행 — 토스 결제창은 클라이언트가 연다. */
 export async function createSimCreditOrder(input: { packKey: string; userId: string; userEmail: string; locale: string }): Promise<{ invoiceNo: string; orderId: string; amountWon: number; points: number } | null> {
-  const pack = SIM_PACKS.find((p) => p.key === input.packKey);
-  if (!pack) return null;
+  const pack0 = SIM_PACKS.find((p) => p.key === input.packKey);
+  if (!pack0) return null;
+  // 첫 충전이면 보너스를 얹는다 — 지갑 API 가 보여준 숫자와 같은 규칙
+  const { firstBonusPct } = await simWallet(input.userId);
+  const pack = firstBonusPct > 0 ? { ...pack0, points: Math.round(pack0.points * (1 + firstBonusPct / 100)) } : pack0;
   const today = new Date();
   const ymd = today.toISOString().slice(0, 10);
   for (let i = 0; i < 5; i += 1) {
@@ -85,7 +97,7 @@ export async function createSimCreditOrder(input: { packKey: string; userId: str
         reserveDate: today.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }), reserveYmd: ymd, reserveTime: '00:00', guests: 1,
         unitPriceWon: pack.priceWon, subtotalWon: pack.priceWon, serviceFeeWon: 0, totalWon: pack.priceWon,
         userId: input.userId, userEmail: input.userEmail, kind: SIM_KIND,
-        meta: { simPack: pack.key, simPoints: pack.points },
+        meta: { simPack: pack.key, simPoints: pack.points, firstBonusPct },
       }).returning({ id: checkoutOrders.id, invoiceNo: checkoutOrders.invoiceNo });
       if (r) return { invoiceNo: r.invoiceNo, orderId: r.id, amountWon: pack.priceWon, points: pack.points };
     } catch (e) {

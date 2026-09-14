@@ -136,6 +136,10 @@ const kr = {
       optionalContact: '연락처 (선택) — 컨시어지 상담을 원하시면 남겨주세요',
     },
     sim: {
+      shopsTitle: "이 스타일 잘하는 샵 보기",
+      shopsMore: "더 보기 →",
+      firstChargePromo: "첫 충전 보너스 — 지금 충전하면 +{pct}% 추가 적립",
+      firstBonusTag: "첫 충전 +{pct}%",
       title: "스타일 시뮬레이션 — 내 사진으로 미리 보기",
       intro: "헤어스타일·염색·메이크업·퍼스널컬러 톤을 내 사진에 바로 적용해 봅니다. 사진은 저장되지 않고, 결과는 참고용 예시입니다.",
       freeBadge: "첫 1회 무료",

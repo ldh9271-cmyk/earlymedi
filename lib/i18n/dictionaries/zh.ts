@@ -122,6 +122,10 @@ const zh: Dictionary = {
       optionalContact: '联系方式（可选）— 如需礼宾咨询请留下',
     },
     sim: {
+      shopsTitle: "擅长这种风格的店铺",
+      shopsMore: "查看更多 →",
+      firstChargePromo: "首充奖励 — 现在充值额外 +{pct}%",
+      firstBonusTag: "首充 +{pct}%",
       title: "风格模拟 — 用自己的照片预览",
       intro: "将发型、发色、妆容和个人色彩直接应用到您的照片。照片不会保存，结果仅供参考。",
       freeBadge: "首次免费",

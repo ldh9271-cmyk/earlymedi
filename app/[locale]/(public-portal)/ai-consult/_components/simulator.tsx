@@ -14,7 +14,8 @@ import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { openTossPayment } from '@/lib/payments/toss-client';
 
-type Wallet = { balance: number; freeLeft: number; runCost: number; packs: Array<{ key: string; priceWon: number; points: number }> };
+type Wallet = { balance: number; freeLeft: number; runCost: number; packs: Array<{ key: string; priceWon: number; points: number }>; firstBonusPct?: number };
+type Rec = { title: string; href: string; img: string | null; promo: string | null };
 type Group = 'hair' | 'color' | 'makeup' | 'tone' | 'skin';
 const GROUPS: Array<{ key: Group; presets: string[] }> = [
   { key: 'hair', presets: ['hair_short_bob', 'hair_layered', 'hair_wave', 'hair_bangs'] },
@@ -40,6 +41,8 @@ export default function Simulator({ locale, t, userEmail, note }: {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [charge, setCharge] = useState<'closed' | 'open' | 'paying'>('closed');
   const [notice, setNotice] = useState<string | null>(null);
+  const [recs, setRecs] = useState<Rec[]>([]);
+  const [landingHref, setLandingHref] = useState<string | null>(null);
 
   useEffect(() => {
     const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
@@ -87,13 +90,13 @@ export default function Simulator({ locale, t, userEmail, note }: {
   async function run(): Promise<void> {
     if (!before) return;
     if (!userEmail) { setErr(t.loginToUse); return; }
-    setErr(null); setPhase('running'); setAfter(null);
+    setErr(null); setPhase('running'); setAfter(null); setRecs([]);
     try {
       const r = await fetch('/api/ai/simulate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: before, mimeType: 'image/jpeg', preset, locale }),
       });
-      const j = (await r.json()) as { image?: string; mimeType?: string; error?: string; wallet?: Wallet };
+      const j = (await r.json()) as { image?: string; mimeType?: string; error?: string; wallet?: Wallet; recs?: Rec[]; landingHref?: string };
       if (!r.ok || !j.image) {
         if (j.wallet) setWallet(j.wallet);
         setErr(j.error === 'insufficient_points' ? t.errNoPoints : j.error === 'refused' ? t.errRefused : j.error === 'login_required' ? t.loginToUse : t.errFailed);
@@ -103,6 +106,7 @@ export default function Simulator({ locale, t, userEmail, note }: {
       }
       setAfter(`data:${j.mimeType ?? 'image/png'};base64,${j.image}`);
       if (j.wallet) setWallet(j.wallet);
+      setRecs(j.recs ?? []); setLandingHref(j.landingHref ?? null);
       setSplit(50);
       setPhase('done');
     } catch {
@@ -231,6 +235,35 @@ export default function Simulator({ locale, t, userEmail, note }: {
           </div>
           <p style={{ textAlign: 'center', fontSize: 12, color: '#6a6a6a', margin: '8px 0 0' }}>{t.sliderHint}</p>
           <p style={{ textAlign: 'center', fontSize: 12, color: '#b45309', margin: '8px auto 0', maxWidth: 560, lineHeight: 1.5, fontWeight: 600 }}>{t.disclaimer}</p>
+
+          {/* 이 스타일 잘하는 샵 — 시뮬레이션을 예약 유입으로 */}
+          {recs.length > 0 ? (
+            <div style={{ marginTop: 22 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>{t.shopsTitle}</h3>
+                {landingHref ? <Link href={landingHref} style={{ fontSize: 13, fontWeight: 700, color: '#047857', textDecoration: 'none' }}>{t.shopsMore}</Link> : null}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginTop: 10 }}>
+                {recs.map((r) => (
+                  <Link key={r.href} href={r.href} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#fff', border: '1px solid #ebebeb', borderRadius: 12, padding: 10, textDecoration: 'none', color: 'inherit' }}>
+                    <div style={{ width: 60, height: 60, borderRadius: 10, flexShrink: 0, background: r.img ? `#f2f2f2 url(${r.img}) center / cover` : 'linear-gradient(150deg,#fff7f8,#ffe3e9)' }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{r.title}</div>
+                      {r.promo ? <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 2 }}>{r.promo}</div> : null}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* 첫 충전 프로모 — 무료 1회를 다 쓴 회원이 아직 충전 전이면 */}
+      {userEmail && wallet && wallet.freeLeft === 0 && (wallet.firstBonusPct ?? 0) > 0 && wallet.balance < wallet.runCost && charge === 'closed' ? (
+        <div style={{ marginTop: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 12, padding: '12px 16px' }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#047857' }}>{t.firstChargePromo.replace('{pct}', String(wallet.firstBonusPct))}</span>
+          <button type="button" onClick={() => setCharge('open')} style={{ background: '#047857', color: '#fff', border: 'none', borderRadius: 10, padding: '9px 16px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>{t.charge}</button>
         </div>
       ) : null}
 
@@ -244,14 +277,17 @@ export default function Simulator({ locale, t, userEmail, note }: {
           <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 12px', lineHeight: 1.5 }}>{t.chargeBody.replace('{n}', wallet.runCost.toLocaleString('ko-KR'))}</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
             {wallet.packs.map((p) => {
-              const bonus = Math.round((p.points / p.priceWon - 1) * 100);
+              const fb = wallet.firstBonusPct ?? 0;
+              const pts = fb > 0 ? Math.round(p.points * (1 + fb / 100)) : p.points;
+              const bonus = Math.round((pts / p.priceWon - 1) * 100);
               return (
                 <button key={p.key} type="button" disabled={charge === 'paying'} onClick={() => void buy(p.key)}
-                  style={{ border: '1px solid #dddddd', background: '#fff', borderRadius: 12, padding: '14px 12px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  <div style={{ fontSize: 17, fontWeight: 700 }}>{p.points.toLocaleString('ko-KR')}P</div>
+                  style={{ border: fb > 0 ? '1px solid #047857' : '1px solid #dddddd', background: '#fff', borderRadius: 12, padding: '14px 12px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {fb > 0 ? <div style={{ fontSize: 10, fontWeight: 700, color: '#047857', marginBottom: 4 }}>{t.firstBonusTag.replace('{pct}', String(fb))}</div> : null}
+                  <div style={{ fontSize: 17, fontWeight: 700 }}>{pts.toLocaleString('ko-KR')}P</div>
                   <div style={{ fontSize: 13, color: '#222', marginTop: 2 }}>₩{p.priceWon.toLocaleString('ko-KR')}</div>
                   <div style={{ fontSize: 11, color: bonus > 0 ? '#047857' : '#9c9c9c', marginTop: 4, fontWeight: 700 }}>
-                    {bonus > 0 ? t.bonus.replace('{pct}', String(bonus)) : t.runs.replace('{n}', String(Math.floor(p.points / wallet.runCost)))}
+                    {t.runs.replace('{n}', String(Math.floor(pts / wallet.runCost)))}{bonus > 0 ? ` · ${t.bonus.replace('{pct}', String(bonus))}` : ''}
                   </div>
                 </button>
               );

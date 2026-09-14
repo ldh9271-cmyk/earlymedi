@@ -1,4 +1,5 @@
 import 'server-only';
+import type { ListingCategory } from '@/lib/listings/categories';
 
 /**
  * 스타일 시뮬레이션 — 구글 Gemini 이미지 편집 모델에 "같은 사람, 같은 포즈,
@@ -28,6 +29,15 @@ export const SIM_PRESETS: Record<string, { group: 'hair' | 'color' | 'makeup' | 
   tone_autumn_warm: { group: 'tone', prompt: `Restyle to suit an autumn-warm personal color: brick-orange lip, warm chestnut hair tint, an earthy warm-toned top. ${KEEP.replace('and clothing', '')}` },
   tone_winter_cool: { group: 'tone', prompt: `Restyle to suit a winter-cool personal color: clear berry-red lip, deep black hair, a crisp cool-toned top. ${KEEP.replace('and clothing', '')}` },
   skin_glow: { group: 'skin', prompt: `Subtly improve skin: brighter even tone, reduced blemishes and dullness, natural glow — do not change face shape or features. ${KEEP}` },
+};
+
+/** 결과 화면의 "이 스타일 잘하는 샵" — 프리셋 그룹별 추천 상품 카테고리와 카테고리 랜딩 키. */
+export const SIM_GROUP_RECS: Record<'hair' | 'color' | 'makeup' | 'tone' | 'skin', { categories: ListingCategory[]; landing: string }> = {
+  hair: { categories: ['hair'], landing: 'hair' },
+  color: { categories: ['hair'], landing: 'hair' },
+  makeup: { categories: ['makeup'], landing: 'makeup' },
+  tone: { categories: ['personal_color'], landing: 'color' },
+  skin: { categories: ['hospital'], landing: 'skin' },
 };
 
 export type SimOutcome =

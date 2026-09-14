@@ -125,6 +125,10 @@ const vi: Dictionary = {
       optionalContact: 'Liên hệ (tuỳ chọn) — để lại nếu bạn muốn được tư vấn',
     },
     sim: {
+      shopsTitle: "Salon làm đẹp giỏi phong cách này",
+      shopsMore: "Xem thêm →",
+      firstChargePromo: "Thưởng nạp lần đầu — nạp ngay để nhận thêm +{pct}%",
+      firstBonusTag: "Nạp lần đầu +{pct}%",
       title: "Mô phỏng phong cách — xem trước trên ảnh của bạn",
       intro: "Thử kiểu tóc, màu tóc, trang điểm và tông màu cá nhân ngay trên ảnh của bạn. Ảnh không được lưu; kết quả chỉ để tham khảo.",
       freeBadge: "Lần đầu miễn phí",

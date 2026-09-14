@@ -124,6 +124,10 @@ const ja: Dictionary = {
       optionalContact: '連絡先（任意）— コンシェルジュ相談をご希望なら入力してください',
     },
     sim: {
+      shopsTitle: "このスタイルが得意なサロン",
+      shopsMore: "もっと見る →",
+      firstChargePromo: "初回チャージボーナス — 今なら +{pct}% 追加",
+      firstBonusTag: "初回 +{pct}%",
       title: "スタイルシミュレーション — 自分の写真でプレビュー",
       intro: "ヘアスタイル・カラー・メイク・パーソナルカラーを自分の写真に適用。写真は保存されず、結果は参考イメージです。",
       freeBadge: "初回1回無料",
