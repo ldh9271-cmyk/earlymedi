@@ -16,6 +16,7 @@ import type { ListingCategory } from '@/lib/listings/categories';
 import { MainHeader } from '../_components/main-header';
 import { MainFooter } from '../_components/main-footer';
 import { ListingCardPlaceholder, LISTING_PLACEHOLDER_BG } from '../_components/listing-card-placeholder';
+import { EMPTY_REGISTRY, searchRegistries, type RegistryHit, type RegistryResults } from '@/lib/search/registry';
 
 export const dynamic = 'force-dynamic';
 
@@ -310,10 +311,20 @@ export default async function SearchPage({
   const q = (searchParams.q ?? '').trim().slice(0, 80);
   const tokens = q ? extractTokens(q) : [];
 
+  // 상품·인증 병원 먼저, 이어서 공공데이터 레지스트리 5종(전국 병원·숙박·맛집·뷰티샵·관광지)
   const [listings, clinics] = q
     ? await Promise.all([searchListings(q, tokens, params.locale), searchClinics(tokens, params.locale)])
     : [[], []];
-  const total = listings.length + clinics.length;
+  const reg: RegistryResults = q ? await searchRegistries(q, tokens, params.locale) : EMPTY_REGISTRY;
+  const allRegSections: Array<{ key: keyof RegistryResults; title: string; rows: RegistryHit[] }> = [
+    { key: 'registryClinics', title: sp.registryClinics, rows: reg.registryClinics },
+    { key: 'stays', title: sp.stays, rows: reg.stays },
+    { key: 'eats', title: sp.eats, rows: reg.eats },
+    { key: 'shops', title: sp.shops, rows: reg.shops },
+    { key: 'attractions', title: sp.attractions, rows: reg.attractions },
+  ];
+  const regSections = allRegSections.filter((x) => x.rows.length > 0);
+  const total = listings.length + clinics.length + regSections.reduce((n, x) => n + x.rows.length, 0);
 
   return (
     <div
@@ -390,12 +401,53 @@ export default async function SearchPage({
                 </div>
               </>
             ) : null}
+
+            {regSections.map((sec) => (
+              <div key={sec.key}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, margin: '36px 0 0' }}>{sec.title}</h2>
+                <div
+                  style={{
+                    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                    gap: 12, marginTop: 14,
+                  }}
+                >
+                  {sec.rows.map((r) => <RegistryCard key={r.key} hit={r} registeredLabel={sp.registered} />)}
+                </div>
+              </div>
+            ))}
           </>
         )}
       </section>
 
       <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[params.locale].native} locale={params.locale} />
     </div>
+  );
+}
+
+/** 공공데이터 레지스트리 카드 — 이미지가 거의 없어 텍스트 위주. 관광지만 썸네일. */
+function RegistryCard({ hit, registeredLabel }: { hit: RegistryHit; registeredLabel: string }): JSX.Element {
+  return (
+    <Link
+      href={hit.href}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        border: '1px solid #ebebeb', borderRadius: 12, padding: 12,
+        textDecoration: 'none', color: 'inherit', background: '#fff', minWidth: 0,
+      }}
+    >
+      {hit.thumb ? (
+        <div style={{ width: 56, height: 56, borderRadius: 10, flexShrink: 0, background: `#f2f2f2 url(${hit.thumb}) center / cover` }} />
+      ) : null}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hit.title}</span>
+          {hit.registered ? (
+            <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: '#c2143c', background: '#fff5f7', borderRadius: 999, padding: '2px 7px' }}>{registeredLabel}</span>
+          ) : null}
+        </div>
+        {hit.subtitle ? <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hit.subtitle}</div> : null}
+      </div>
+    </Link>
   );
 }
 
