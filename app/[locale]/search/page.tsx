@@ -312,10 +312,10 @@ export default async function SearchPage({
   const tokens = q ? extractTokens(q) : [];
 
   // 상품·인증 병원 먼저, 이어서 공공데이터 레지스트리 5종(전국 병원·숙박·맛집·뷰티샵·관광지)
-  const [listings, clinics] = q
-    ? await Promise.all([searchListings(q, tokens, params.locale), searchClinics(tokens, params.locale)])
-    : [[], []];
-  const reg: RegistryResults = q ? await searchRegistries(q, tokens, params.locale) : EMPTY_REGISTRY;
+  // 상품·인증 병원·레지스트리를 한꺼번에 — 순서대로 기다리면 시드니 왕복이 두 배로 든다
+  const [listings, clinics, reg] = q
+    ? await Promise.all([searchListings(q, tokens, params.locale), searchClinics(tokens, params.locale), searchRegistries(q, tokens, params.locale)])
+    : [[], [], EMPTY_REGISTRY];
   const allRegSections: Array<{ key: keyof RegistryResults; title: string; rows: RegistryHit[] }> = [
     { key: 'registryClinics', title: sp.registryClinics, rows: reg.registryClinics },
     { key: 'stays', title: sp.stays, rows: reg.stays },

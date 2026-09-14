@@ -59,11 +59,37 @@ function anyLike(cols: AnyPgColumn[], tokens: string[]): SQL | undefined {
   return conds.length ? (or(...conds) as SQL) : undefined;
 }
 
+// 지역 단어 — 이름이 아니라 시군구·주소 컬럼에서 찾는다. "강남 네일" 이면
+// 이름에 '네일'이 들어가고 주소가 강남인 곳. 전부 trigram 인덱스를 탄다.
+const REGION_WORDS = [
+  '강남', '청담', '압구정', '서초', '신사', '가로수길', '명동', '홍대', '삼성동', '역삼', '논현', '반포', '대치',
+  '성수', '용산', '이태원', '한남', '동대문', '종로', '마포', '송파', '잠실', '여의도', '서울', '부산', '해운대',
+  '서면', '제주', '인천', '대구', '광주', '대전', '울산', '수원', '분당', '판교', '일산',
+];
+function isRegion(t: string): boolean {
+  return REGION_WORDS.includes(t) || /[가-힣]{1,4}(구|시|동|군)$/.test(t);
+}
+function splitTokens(tokens: string[]): { nameToks: string[]; regionToks: string[] } {
+  const regionToks = tokens.filter(isRegion);
+  const nameToks = tokens.filter((t) => !isRegion(t));
+  return { nameToks, regionToks };
+}
+/** 이름 조건 AND 지역 조건. 둘 다 없으면 undefined (→ 분야 단어 대표 목록으로 대체). */
+function buildWhere(nameCols: AnyPgColumn[], regionCols: AnyPgColumn[], tokens: string[]): SQL | undefined {
+  const { nameToks, regionToks } = splitTokens(tokens);
+  const byName = anyLike(nameCols, nameToks);
+  const byRegion = anyLike(regionCols, regionToks);
+  if (byName && byRegion) return and(byName, byRegion) as SQL;
+  return byName ?? byRegion;
+}
+
 const region = (sido: string | null, sggu: string | null): string => [sido, sggu].filter(Boolean).join(' ');
 
-export async function searchRegistries(q: string, tokens: string[], locale: PublicLocale): Promise<RegistryResults> {
+export async function searchRegistries(q0: string, tokens: string[], locale: PublicLocale): Promise<RegistryResults> {
   if (tokens.length === 0) return EMPTY_REGISTRY;
   const enc = encodeURIComponent;
+  // 닮은 정도는 지역 단어를 뺀 나머지로 잰다 ("강남 네일" → '네일')
+  const q = splitTokens(tokens).nameToks.join(' ') || q0;
 
   const clinics = async (): Promise<RegistryHit[]> => {
     const sel = {
@@ -71,7 +97,7 @@ export async function searchRegistries(q: string, tokens: string[], locale: Publ
       sido: hospitalRegistry.sidoName, sggu: hospitalRegistry.sgguName,
       contracted: hospitalRegistry.contractedHospitalId, foreign: hospitalRegistry.foreignLicensed,
     };
-    const like = anyLike([hospitalRegistry.name, hospitalRegistry.addr], tokens);
+    const like = buildWhere([hospitalRegistry.name], [hospitalRegistry.sgguName, hospitalRegistry.addr], tokens);
     const byName = like
       ? await db.select(sel).from(hospitalRegistry).where(like)
           .orderBy(sql`(${hospitalRegistry.contractedHospitalId} is null)`, sql`${hospitalRegistry.foreignLicensed} desc`, sql`similarity(${hospitalRegistry.name}, ${q}) desc`)
@@ -92,7 +118,7 @@ export async function searchRegistries(q: string, tokens: string[], locale: Publ
     t: typeof lodgingRegistry | typeof foodRegistry | typeof beautyRegistry,
     path: string,
   ): Promise<RegistryHit[]> => {
-    const like = anyLike([t.name, t.sgguName], tokens);
+    const like = buildWhere([t.name], [t.sgguName, t.addrRoad], tokens);
     const sel = {
       mgtNo: t.mgtNo, name: t.name, bizType: t.bizType, sido: t.sidoName, sggu: t.sgguName, contracted: t.contractedListingId,
     };
@@ -112,17 +138,23 @@ export async function searchRegistries(q: string, tokens: string[], locale: Publ
 
   const spots = async (): Promise<RegistryHit[]> => {
     const i18nTitle = sql<string>`coalesce(${tourSpots.i18n}->${locale}->>'title', ${tourSpots.title})`;
-    const conds: SQL[] = [];
-    for (const t of tokens) {
-      conds.push(ilike(tourSpots.title, `%${t}%`) as SQL, ilike(tourSpots.keyword, `%${t}%`) as SQL, ilike(tourSpots.location, `%${t}%`) as SQL);
-      conds.push(sql`${tourSpots.i18n}->${locale}->>'title' ilike ${'%' + t + '%'}`);
+    const { nameToks, regionToks } = splitTokens(tokens);
+    const nameConds: SQL[] = [];
+    for (const t of nameToks) {
+      nameConds.push(ilike(tourSpots.title, `%${t}%`) as SQL, ilike(tourSpots.keyword, `%${t}%`) as SQL);
+      nameConds.push(sql`${tourSpots.i18n}->${locale}->>'title' ilike ${'%' + t + '%'}`);
     }
+    const byRegion = anyLike([tourSpots.sidoName, tourSpots.sgguName, tourSpots.location], regionToks);
+    const byName = nameConds.length ? (or(...nameConds) as SQL) : undefined;
+    const where = byName && byRegion ? (and(byName, byRegion) as SQL) : (byName ?? byRegion);
     const sel = { contentId: tourSpots.contentId, title: i18nTitle, thumb: tourSpots.thumbUrl, image: tourSpots.imageUrl, sido: tourSpots.sidoName, sggu: tourSpots.sgguName };
-    const byName = await db.select(sel).from(tourSpots).where(or(...conds))
-      .orderBy(sql`similarity(${tourSpots.title}, ${q}) desc`).limit(LIMIT);
-    const rows = byName.length === 0 && wants('attractions', tokens)
+    const byNameRows = where
+      ? await db.select(sel).from(tourSpots).where(where).orderBy(sql`similarity(${tourSpots.title}, ${q}) desc`).limit(LIMIT)
+      : [];
+    const byName2 = byNameRows;
+    const rows = byName2.length === 0 && wants('attractions', tokens)
       ? await db.select(sel).from(tourSpots).where(sql`${tourSpots.geoSource} = 'kakao_kw'`).orderBy(sql`${tourSpots.modifiedTime} desc nulls last`).limit(8)
-      : byName;
+      : byName2;
     return rows.map((r) => ({
       key: `ts-${r.contentId}`, href: `/${locale}/attractions/${enc(r.contentId)}`, title: r.title,
       subtitle: region(r.sido, r.sggu), thumb: r.thumb ?? r.image ?? null, registered: false,
