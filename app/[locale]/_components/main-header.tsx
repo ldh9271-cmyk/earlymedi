@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 /** Mobile (≤ 768px) overrides. Pulled out of JSX as a plain const to
@@ -195,6 +195,56 @@ export function MainHeader({
   // 파트너(모객 파트너·추천인)로 등록된 계정이면 '파트너 화면' 링크
   const [partnerHref, setPartnerHref] = useState<string | null>(null);
 
+  // 카테고리 스트립 무한 루프 — 모바일(≤768px)에서만. 같은 항목을 세 벌 그려 가운데 벌에서
+  // 시작하고, 스크롤이 가장자리 벌로 넘어가면 한 벌 폭만큼 소리 없이 되돌린다(내용이 같아
+  // 눈에 안 띈다). 3초마다 4칸씩 자동으로 밀고, 손이 닿으면 6초 쉰다. 데스크톱은 전부
+  // 한 줄에 들어가므로 손대지 않는다.
+  const stripRef = useRef<HTMLDivElement | null>(null);
+  const [loopStrip, setLoopStrip] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const apply = (): void => setLoopStrip(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+  useEffect(() => {
+    const el = stripRef.current;
+    if (!loopStrip || !el) return;
+    const copyWidth = (): number => el.scrollWidth / 3;
+    el.scrollLeft = copyWidth(); // 가운데 벌에서 시작
+    let settle: number | undefined;
+    const normalize = (): void => {
+      const w = copyWidth();
+      if (w <= 0) return;
+      if (el.scrollLeft < w * 0.5) el.scrollLeft += w;
+      else if (el.scrollLeft > w * 1.5) el.scrollLeft -= w;
+    };
+    // 스크롤이 멈춘 뒤(120ms 조용)에만 되돌린다 — 손가락 관성 중에 튀지 않게
+    const onScroll = (): void => { window.clearTimeout(settle); settle = window.setTimeout(normalize, 120); };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    let pausedUntil = 0;
+    const touched = (): void => { pausedUntil = Date.now() + 6000; };
+    el.addEventListener('touchstart', touched, { passive: true });
+    el.addEventListener('pointerdown', touched, { passive: true });
+    el.addEventListener('wheel', touched, { passive: true });
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timer = reduceMotion ? undefined : window.setInterval(() => {
+      if (document.hidden || Date.now() < pausedUntil) return;
+      const first = el.querySelector<HTMLElement>('.m-mh-cat-item');
+      const pitch = first ? first.offsetWidth + 26 : 90; // 모바일 CSS 의 gap 26px
+      el.scrollBy({ left: pitch * 4, behavior: 'smooth' });
+    }, 3000);
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      el.removeEventListener('touchstart', touched);
+      el.removeEventListener('pointerdown', touched);
+      el.removeEventListener('wheel', touched);
+      window.clearTimeout(settle);
+      if (timer) window.clearInterval(timer);
+    };
+  }, [loopStrip]);
+
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
@@ -226,7 +276,7 @@ export function MainHeader({
       mounted = false;
       sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [locale]);
 
   async function onSignOut(): Promise<void> {
     const supabase = createSupabaseBrowserClient();
@@ -726,6 +776,7 @@ export function MainHeader({
       {/* Category strip — 8 lifestyle entries (전체/병원 dropdown + travel/lifestyle). */}
       <div className="m-mh-cat-strip-row" style={{ borderTop: '1px solid #ebebeb', background: '#ffffff' }}>
         <div
+          ref={stripRef}
           className="m-mh-cat-strip"
           style={{
             position: 'relative',
@@ -734,60 +785,69 @@ export function MainHeader({
             gap: 34,
           }}
         >
-          {/* 모바일 전용 AI 분석 진입점 — 데스크톱은 상단 AI 상담 탭이
-              담당하므로 CSS 로 숨김. 스트립 맨 앞에 브랜드 컬러로 강조. */}
-          <Link
-            href={`/${locale}/ai-consult`}
-            className="m-mh-cat-item m-mh-cat-ai"
-            style={{
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', gap: 8,
-              padding: '14px 0',
-              borderBottom: '2px solid transparent',
-              color: '#ff385c', textDecoration: 'none',
-              flexShrink: 0,
-            }}
-          >
-            <svg className="m-mh-cat-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff385c" strokeWidth="1.6">
-              <path d="M12 3l1.6 3.6 3.6 1.6-3.6 1.6L12 13.4 10.4 9.8 6.8 8.2l3.6-1.6z" />
-              <path d="M5 17l.8 1.8L7.6 19.6 5.8 20.4 5 22.2 4.2 20.4 2.4 19.6l1.8-.8z" />
-            </svg>
-            <span className="m-mh-cat-label" style={{ fontSize: 12, fontWeight: 600 }}>
-              {t.catAi}
-            </span>
-          </Link>
-          {MAIN_CATEGORY_KEYS.map((cKey) => {
-            const isActive = cKey === activeKey;
-            const stroke = isActive ? '#222' : '#6a6a6a';
-            const cLabel = t[MAIN_CATEGORY_DICT_KEY[cKey]];
-            // 병원 / 여행 used to open click-toggle dropdowns, but the
-            // mobile category strip's overflow-y: hidden clipped the
-            // panel below the row — the dropdown rendered but was
-            // invisible, making the tap feel broken. Flat <Link>s now
-            // route to /clinics and /glowup/pc respectively; the
-            // sub-category chips that used to live in the dropdown
-            // surface on those landing pages instead.
-            return (
-              <Link
-                key={cKey}
-                href={hrefForCategory(locale, cKey)}
-                className="m-mh-cat-item"
-                style={{
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', gap: 8,
-                  padding: '14px 0',
-                  borderBottom: isActive ? '2px solid #222' : '2px solid transparent',
-                  color: stroke, textDecoration: 'none',
-                  flexShrink: 0,
-                }}
-              >
-                <MainCategoryIcon kind={cKey} stroke={stroke} />
-                <span className="m-mh-cat-label" style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
-                  {cLabel}
-                </span>
-              </Link>
-            );
-          })}
+          {/* 모바일이면 같은 묶음을 세 벌(0·1·2) 그린다 — 무한 루프용. 화면 낭독기·탭 이동은 가운데 벌만. */}
+          {(loopStrip ? [0, 1, 2] : [1]).map((copy) => (
+            <Fragment key={copy}>
+            {/* 모바일 전용 AI 분석 진입점 — 데스크톱은 상단 AI 상담 탭이
+                담당하므로 CSS 로 숨김. 스트립 맨 앞에 브랜드 컬러로 강조. */}
+            <Link
+              href={`/${locale}/ai-consult`}
+              className="m-mh-cat-item m-mh-cat-ai"
+              aria-hidden={loopStrip && copy !== 1 ? true : undefined}
+              tabIndex={loopStrip && copy !== 1 ? -1 : undefined}
+              style={{
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 8,
+                padding: '14px 0',
+                borderBottom: '2px solid transparent',
+                color: '#ff385c', textDecoration: 'none',
+                flexShrink: 0,
+              }}
+            >
+              <svg className="m-mh-cat-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff385c" strokeWidth="1.6">
+                <path d="M12 3l1.6 3.6 3.6 1.6-3.6 1.6L12 13.4 10.4 9.8 6.8 8.2l3.6-1.6z" />
+                <path d="M5 17l.8 1.8L7.6 19.6 5.8 20.4 5 22.2 4.2 20.4 2.4 19.6l1.8-.8z" />
+              </svg>
+              <span className="m-mh-cat-label" style={{ fontSize: 12, fontWeight: 600 }}>
+                {t.catAi}
+              </span>
+            </Link>
+            {MAIN_CATEGORY_KEYS.map((cKey) => {
+              const isActive = cKey === activeKey;
+              const stroke = isActive ? '#222' : '#6a6a6a';
+              const cLabel = t[MAIN_CATEGORY_DICT_KEY[cKey]];
+              // 병원 / 여행 used to open click-toggle dropdowns, but the
+              // mobile category strip's overflow-y: hidden clipped the
+              // panel below the row — the dropdown rendered but was
+              // invisible, making the tap feel broken. Flat <Link>s now
+              // route to /clinics and /glowup/pc respectively; the
+              // sub-category chips that used to live in the dropdown
+              // surface on those landing pages instead.
+              return (
+                <Link
+                  key={`${copy}-${cKey}`}
+                  href={hrefForCategory(locale, cKey)}
+                  aria-hidden={loopStrip && copy !== 1 ? true : undefined}
+                  tabIndex={loopStrip && copy !== 1 ? -1 : undefined}
+                  className="m-mh-cat-item"
+                  style={{
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', gap: 8,
+                    padding: '14px 0',
+                    borderBottom: isActive ? '2px solid #222' : '2px solid transparent',
+                    color: stroke, textDecoration: 'none',
+                    flexShrink: 0,
+                  }}
+                >
+                  <MainCategoryIcon kind={cKey} stroke={stroke} />
+                  <span className="m-mh-cat-label" style={{ fontSize: 12, fontWeight: isActive ? 600 : 500 }}>
+                    {cLabel}
+                  </span>
+                </Link>
+              );
+            })}
+            </Fragment>
+          ))}
           <FilterPill
             open={filterOpen}
             setOpen={setFilterOpen}
