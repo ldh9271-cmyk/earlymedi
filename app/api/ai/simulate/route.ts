@@ -24,7 +24,8 @@ export async function POST(req: Request): Promise<NextResponse> {
   let body: { image?: string; mimeType?: string; preset?: string; locale?: string };
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'bad_request' }, { status: 400 }); }
   const preset = body.preset ?? '';
-  if (!SIM_PRESETS[preset]) return NextResponse.json({ error: 'bad_preset' }, { status: 400 });
+  const presetDef = SIM_PRESETS[preset];
+  if (!presetDef) return NextResponse.json({ error: 'bad_preset' }, { status: 400 });
   const image = (body.image ?? '').replace(/^data:[^;]+;base64,/, '');
   const mimeType = body.mimeType && /^image\/(jpeg|png|webp)$/.test(body.mimeType) ? body.mimeType : 'image/jpeg';
   if (!image || image.length < 100) return NextResponse.json({ error: 'bad_request' }, { status: 400 });
@@ -45,8 +46,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
   await logSimulation({ userId: auth.user.id, locale, preset, status: 'ok', costPoints: hold.cost, durationMs: out.durationMs });
   // 결과 옆에 "이 스타일 잘하는 샵" — 시뮬레이션을 예약 유입으로 잇는다 (얼굴 분석 추천과 같은 모양)
-  const group = SIM_PRESETS[preset]!.group;
-  const rec = SIM_GROUP_RECS[group];
+  const rec = SIM_GROUP_RECS[presetDef.group];
   const [wallet, shops] = await Promise.all([
     simWallet(auth.user.id),
     fetchFeaturedListings({ locale, categories: rec.categories, limit: 4 }).catch(() => []),
