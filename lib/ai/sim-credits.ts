@@ -9,19 +9,20 @@ import { sendAdminTelegram } from '@/lib/notify/admin-alert';
  * 시뮬레이션 크레딧(포인트) — 가격표와 원장 조작.
  *
  * 가격 근거(2026-09): 구글 Gemini 이미지 편집 1장 원가가 약 ₩55 (공시 $0.039).
- * 1회 1,000P 면 원가·PG 수수료(약 3%)·거부/재시도를 빼고도 넉넉하고,
- * 사용자에겐 "커피 한 잔의 5분의 1" 정도라 결제 장벽이 낮다. 충전 팩은
- * 큰 팩일수록 보너스를 얹어 묶음 구매를 유도한다. 숫자는 env 로 바꿀 수 있다.
+ * 1회 1,000P 면 원가·PG 수수료(약 3%)·거부/재시도를 빼고도 넉넉하다.
+ * 충전은 만원 단위(사용자 결정) — "장당 얼마"가 아니라 "만원이면 스타일 10가지"로
+ * 읽히게 한다. 큰 팩일수록 보너스. 숫자는 env 로 바꿀 수 있다.
  */
 export const SIM_RUN_COST = Math.max(100, Math.round(Number(process.env.AI_SIM_RUN_COST_POINTS ?? 1000)));
 export const SIM_FREE_RUNS = Math.max(0, Math.round(Number(process.env.AI_SIM_FREE_RUNS ?? 1)));
 export const SIM_KIND = 'ai_sim_credits';
 
 export type SimPack = { key: string; priceWon: number; points: number };
+// 만원 단위 충전(사용자 결정) — 1회 1,000P 기준 10회·22회·35회. 큰 팩일수록 보너스.
 export const SIM_PACKS: SimPack[] = [
-  { key: 'p3', priceWon: 3_000, points: 3_000 },
-  { key: 'p5', priceWon: 5_000, points: 5_500 },   // +10%
-  { key: 'p10', priceWon: 10_000, points: 12_000 }, // +20%
+  { key: 'w10', priceWon: 10_000, points: 10_000 },
+  { key: 'w20', priceWon: 20_000, points: 22_000 }, // +10%
+  { key: 'w30', priceWon: 30_000, points: 34_500 }, // +15%
 ];
 
 export type SimWallet = { balance: number; freeLeft: number; runCost: number; packs: SimPack[] };
