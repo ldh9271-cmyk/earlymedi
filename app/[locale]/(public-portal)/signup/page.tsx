@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { isSafeInternalPath } from '@/lib/auth/safe-path';
 import { notFound } from 'next/navigation';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
@@ -37,7 +38,7 @@ export default async function PatientSignupPage({
   // 예약 도중 가입한 경우 끝나고 그 페이지로 되돌린다. 오픈 리다이렉트를
   // 막기 위해 같은 사이트 경로(/로 시작, //로 시작하지 않음)만 허용.
   const nextPath =
-    searchParams.next && searchParams.next.startsWith('/') && !searchParams.next.startsWith('//')
+    isSafeInternalPath(searchParams.next)
       ? searchParams.next
       : undefined;
 

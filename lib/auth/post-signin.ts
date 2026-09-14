@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { attributeUser, claimPartnerByEmail, REF_COOKIE } from '@/lib/referral/service';
 import { notifySignupEvent } from '@/lib/notify/admin-alert';
+import { isSafeInternalPath } from '@/lib/auth/safe-path';
 
 /**
  * 로그인 확정 직후 공통 처리 — 파트너 QR 귀속, 파트너 계정 자동 연결, 가입 출처 스탬프, 가입 알림(1회).
@@ -34,6 +35,6 @@ export async function afterSignIn(supabase: SupabaseClient, user: User, next: st
 
 /** 오픈 리다이렉트 방지 — 사이트 내부 경로만 허용 */
 export function safeNext(next: string | null | undefined, fallback = '/select-org'): string {
-  if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('://')) return fallback;
+  if (!isSafeInternalPath(next)) return fallback;
   return next;
 }

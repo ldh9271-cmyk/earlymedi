@@ -53,14 +53,20 @@ export async function simWallet(userId: string): Promise<SimWallet> {
  * 잔액 부족이면 null. 실패하면 호출부가 refundRun 으로 되돌린다.
  */
 export async function reserveRun(userId: string): Promise<{ ledgerId: string; cost: number } | null> {
-  const w = await simWallet(userId);
-  if (w.freeLeft > 0) {
-    const [row] = await db.insert(aiSimCredits).values({ userId, delta: 0, reason: 'free' }).returning({ id: aiSimCredits.id });
-    return row ? { ledgerId: row.id, cost: 0 } : null;
-  }
-  if (w.balance < SIM_RUN_COST) return null;
-  const [row] = await db.insert(aiSimCredits).values({ userId, delta: -SIM_RUN_COST, reason: 'run' }).returning({ id: aiSimCredits.id });
-  return row ? { ledgerId: row.id, cost: SIM_RUN_COST } : null;
+  // 같은 사용자의 동시 요청(더블클릭·탭 두 개)을 직렬화한다 — 잔액 확인과 차감 사이에
+  // 다른 요청이 끼어들면 잔액보다 많이 쓰거나 무료 1회를 두 번 쓸 수 있다.
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}))`);
+    const [bal] = await tx.select({ n: sql<number>`coalesce(sum(${aiSimCredits.delta}), 0)::int` }).from(aiSimCredits).where(eq(aiSimCredits.userId, userId));
+    const [free] = await tx.select({ n: sql<number>`count(*)::int` }).from(aiSimCredits).where(and(eq(aiSimCredits.userId, userId), eq(aiSimCredits.reason, 'free')));
+    if ((free?.n ?? 0) < SIM_FREE_RUNS) {
+      const [row] = await tx.insert(aiSimCredits).values({ userId, delta: 0, reason: 'free' }).returning({ id: aiSimCredits.id });
+      return row ? { ledgerId: row.id, cost: 0 } : null;
+    }
+    if ((bal?.n ?? 0) < SIM_RUN_COST) return null;
+    const [row] = await tx.insert(aiSimCredits).values({ userId, delta: -SIM_RUN_COST, reason: 'run' }).returning({ id: aiSimCredits.id });
+    return row ? { ledgerId: row.id, cost: SIM_RUN_COST } : null;
+  });
 }
 
 /** 모델이 거부했거나 실패했으면 잡아둔 비용을 되돌린다 (무료 1회도 되살린다). */

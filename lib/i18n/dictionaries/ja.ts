@@ -124,6 +124,7 @@ const ja: Dictionary = {
       optionalContact: '連絡先（任意）— コンシェルジュ相談をご希望なら入力してください',
     },
     sim: {
+      errConfirmEmail: "登録時の確認メールのリンクを先に押してください。確認済みアカウントのみ無料1回を使えます。",
       shopsTitle: "このスタイルが得意なサロン",
       shopsMore: "もっと見る →",
       firstChargePromo: "初回チャージボーナス — 今なら +{pct}% 追加",

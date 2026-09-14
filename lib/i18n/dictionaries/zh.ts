@@ -122,6 +122,7 @@ const zh: Dictionary = {
       optionalContact: '联系方式（可选）— 如需礼宾咨询请留下',
     },
     sim: {
+      errConfirmEmail: "请先点击注册邮件中的确认链接。仅已验证账号可使用免费一次。",
       shopsTitle: "擅长这种风格的店铺",
       shopsMore: "查看更多 →",
       firstChargePromo: "首充奖励 — 现在充值额外 +{pct}%",

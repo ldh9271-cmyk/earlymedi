@@ -20,6 +20,8 @@ export async function POST(req: Request): Promise<NextResponse> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'login_required' }, { status: 401 });
+  // 확인되지 않은 이메일 계정은 무료 1회를 못 쓴다 — 일회용 메일로 가입을 반복해 무료 실행(건당 비용)을 긁는 걸 막는다
+  if (!auth.user.email_confirmed_at && !auth.user.phone_confirmed_at) return NextResponse.json({ error: 'confirm_email' }, { status: 403 });
 
   let body: { image?: string; mimeType?: string; preset?: string; locale?: string };
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'bad_request' }, { status: 400 }); }

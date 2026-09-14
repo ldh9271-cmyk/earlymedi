@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { isSafeInternalPath } from '@/lib/auth/safe-path';
 import { notFound } from 'next/navigation';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
@@ -41,7 +42,7 @@ export default async function PatientLoginPage({
   const locale = params.locale as PublicLocale;
   const dict = await getDictionary(locale);
   const nextPath =
-    searchParams.next && searchParams.next.startsWith('/') && !searchParams.next.startsWith('//')
+    isSafeInternalPath(searchParams.next)
       ? searchParams.next
       : undefined;
   // 소셜 로그인 콜백이 실패하면 ?error= 로 돌아온다 — 조용히 로그인 화면만 다시 뜨면 원인을 알 수 없어 표시한다.

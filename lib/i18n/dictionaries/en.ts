@@ -125,6 +125,7 @@ const en: Dictionary = {
       optionalContact: 'Contact (optional) — leave it if you want a concierge consultation',
     },
     sim: {
+      errConfirmEmail: "Please confirm your email first (link in the signup email). Only confirmed accounts get the free run.",
       shopsTitle: "Shops that do this style well",
       shopsMore: "See more →",
       firstChargePromo: "First top-up bonus — top up now for +{pct}% extra points",

@@ -99,7 +99,7 @@ export default function Simulator({ locale, t, userEmail, note }: {
       const j = (await r.json()) as { image?: string; mimeType?: string; error?: string; wallet?: Wallet; recs?: Rec[]; landingHref?: string };
       if (!r.ok || !j.image) {
         if (j.wallet) setWallet(j.wallet);
-        setErr(j.error === 'insufficient_points' ? t.errNoPoints : j.error === 'refused' ? t.errRefused : j.error === 'login_required' ? t.loginToUse : t.errFailed);
+        setErr(j.error === 'insufficient_points' ? t.errNoPoints : j.error === 'refused' ? t.errRefused : j.error === 'login_required' ? t.loginToUse : j.error === 'confirm_email' ? t.errConfirmEmail : t.errFailed);
         if (j.error === 'insufficient_points') setCharge('open');
         setPhase('idle');
         return;

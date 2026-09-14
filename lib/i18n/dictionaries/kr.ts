@@ -136,6 +136,7 @@ const kr = {
       optionalContact: '연락처 (선택) — 컨시어지 상담을 원하시면 남겨주세요',
     },
     sim: {
+      errConfirmEmail: "가입 시 받은 확인 메일의 링크를 먼저 눌러 주세요. 확인된 계정만 무료 1회를 쓸 수 있습니다.",
       shopsTitle: "이 스타일 잘하는 샵 보기",
       shopsMore: "더 보기 →",
       firstChargePromo: "첫 충전 보너스 — 지금 충전하면 +{pct}% 추가 적립",

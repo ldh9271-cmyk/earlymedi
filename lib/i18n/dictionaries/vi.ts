@@ -125,6 +125,7 @@ const vi: Dictionary = {
       optionalContact: 'Liên hệ (tuỳ chọn) — để lại nếu bạn muốn được tư vấn',
     },
     sim: {
+      errConfirmEmail: "Vui lòng xác nhận email trước (liên kết trong email đăng ký). Chỉ tài khoản đã xác nhận mới được dùng lượt miễn phí.",
       shopsTitle: "Salon làm đẹp giỏi phong cách này",
       shopsMore: "Xem thêm →",
       firstChargePromo: "Thưởng nạp lần đầu — nạp ngay để nhận thêm +{pct}%",
