@@ -72,6 +72,8 @@ export const PUBLIC_PREFIXES = [
   '/api/ai/chat',
   '/api/ai/chat-lead',
   '/api/ai/trip',
+  '/api/ai/sim-credits', // 시뮬레이션 가격표 — 비로그인도 본다 (충전 POST 는 라우트가 직접 로그인 확인)
+  '/api/ai/simulate', // 라우트가 직접 401 을 낸다 — 미들웨어 401 은 JSON 형태가 달라 화면 안내가 깨진다
   // 공개 예약 팝업의 인보이스 발행 — 로그인 없이 결제 단계로 넘어간다
   '/api/checkout/order',
   // 파트너·추천인 QR 랜딩 (쿠키 귀속) + 귀속 기록 API
