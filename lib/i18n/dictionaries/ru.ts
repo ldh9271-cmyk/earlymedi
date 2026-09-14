@@ -349,6 +349,7 @@ const ru: Dictionary = {
     myBookings: 'Мои бронирования',
     referralMenu: "Реферальная программа",
     adminPage: "Админ-панель",
+    partnerPage: "Кабинет партнёра",
     catTravel: 'Туры',
     catHospital: 'Клиники',
     catColor: 'Цветотип',

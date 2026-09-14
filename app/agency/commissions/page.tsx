@@ -13,10 +13,10 @@ export const metadata = { title: '커미션 정산' };
 export const dynamic = 'force-dynamic';
 
 /**
- * 커미션 정산 — 총판·추천인 프로그램의 수당 원장(commission_ledger)을
+ * 커미션 정산 — 파트너·추천인 프로그램의 수당 원장(commission_ledger)을
  * 본다. 시술 완료/투어 출발이 등록되면 배분표(70:30 등)대로 원장 행이
  * 생기고, holdDays 가 지나면 확정 → 월 정산에서 지급 처리된다.
- * 배분율·총판 관리는 마스터 콘솔에서 (지역 마스터 권한).
+ * 배분율·파트너 관리는 마스터 콘솔에서 (지역 마스터 권한).
  */
 
 const STATUS_META: Record<string, { label: string; variant: 'brand' | 'hospitality' | 'care' | 'destructive' | 'outline' }> = {
@@ -31,7 +31,7 @@ const BENEFICIARY_LABEL: Record<string, string> = {
   patient_points: '고객 포인트',
   referrer_l1: '추천인 (1단계)',
   referrer_l2: '추천인 (2단계)',
-  distributor: '총판',
+  distributor: '파트너',
 };
 
 const BASIS_LABEL: Record<string, string> = {
@@ -94,10 +94,10 @@ export default async function AgencyCommissionsPage(): Promise<JSX.Element> {
         <Badge variant="brand" className="mb-2">🤝 커미션</Badge>
         <h1 className="text-2xl font-bold tracking-tight">커미션 정산</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          총판 · 추천인 프로그램의 수당 원장입니다. 시술 완료(또는 투어 출발)가 등록되면
+          파트너 · 추천인 프로그램의 수당 원장입니다. 시술 완료(또는 투어 출발)가 등록되면
           배분표대로 수당이 쌓이고, 보류 기간이 지나면 확정 → 월 정산으로 지급됩니다.
-          총판 등록 · 배분율 설정은{' '}
-          <a href="/master/partners" className="font-medium underline">마스터 → 총판 관리</a>에서.
+          파트너 등록 · 배분율 설정은{' '}
+          <a href="/master/partners" className="font-medium underline">마스터 → 파트너 관리</a>에서.
         </p>
       </div>
 
@@ -113,14 +113,14 @@ export default async function AgencyCommissionsPage(): Promise<JSX.Element> {
         <CardContent className="p-4">
           <h2 className="mb-2 text-sm font-bold">파트너 현황 ({partners.length})</h2>
           {partners.length === 0 ? (
-            <p className="text-xs text-muted-foreground">등록된 총판·추천인이 없습니다.</p>
+            <p className="text-xs text-muted-foreground">등록된 파트너·추천인이 없습니다.</p>
           ) : (
             <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
               {partners.map((p) => (
                 <div key={p.id} className={`rounded-md border px-3 py-2 ${p.isActive ? '' : 'opacity-50'}`}>
                   <div className="flex items-center gap-1.5 text-xs">
                     <Badge variant={p.role === 'distributor' ? 'brand' : 'outline'} className="text-[10px]">
-                      {p.role === 'distributor' ? '총판' : '추천인'}
+                      {p.role === 'distributor' ? '파트너' : '추천인'}
                     </Badge>
                     <span className="font-semibold">{p.name}</span>
                     <span className="text-[10px] text-muted-foreground">{p.countryCode}</span>
@@ -143,8 +143,8 @@ export default async function AgencyCommissionsPage(): Promise<JSX.Element> {
           <CardContent className="p-8 text-center text-sm">
             <p className="font-semibold">아직 수당 내역이 없습니다</p>
             <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-muted-foreground">
-              수당은 실제 매출에서만 발생합니다 — ① 고객이 총판·추천인 QR로 유입되어 결제하거나
-              시술 실적이 등록되면 ② 병원 유치 수수료 · 여행 마진이 배분표(예: 총판 70 : 플랫폼
+              수당은 실제 매출에서만 발생합니다 — ① 고객이 파트너·추천인 QR로 유입되어 결제하거나
+              시술 실적이 등록되면 ② 병원 유치 수수료 · 여행 마진이 배분표(예: 파트너 70 : 플랫폼
               30)대로 이 원장에 쌓이고 ③ 보류 기간이 지나 확정되면 월 정산으로 지급합니다.
             </p>
           </CardContent>

@@ -74,7 +74,7 @@ export const PUBLIC_PREFIXES = [
   '/api/ai/trip',
   // 공개 예약 팝업의 인보이스 발행 — 로그인 없이 결제 단계로 넘어간다
   '/api/checkout/order',
-  // 총판·추천인 QR 랜딩 (쿠키 귀속) + 귀속 기록 API
+  // 파트너·추천인 QR 랜딩 (쿠키 귀속) + 귀속 기록 API
   '/r',
   '/api/ref',
   // 로그인 계정의 관리 권한 조회 — 라우트가 자체 세션 검사

@@ -56,7 +56,7 @@ export default function LoginPage({
           파트너 로그인
         </h1>
         <p className="mt-1.5 text-sm leading-relaxed text-surface-mute">
-          병원 · 뷰티샵 · 호텔 · 여행사 · 총판을 위한 통합 콘솔입니다.
+          병원 · 뷰티샵 · 호텔 · 여행사 · 파트너을 위한 통합 콘솔입니다.
         </p>
       </div>
 

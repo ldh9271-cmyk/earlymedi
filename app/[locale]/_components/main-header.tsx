@@ -192,6 +192,8 @@ export function MainHeader({
   const [userEmail, setUserEmail] = useState<string | null | undefined>(null);
   // 마스터·지역 마스터면 관리자 페이지 링크. 서버(세션)만 판별 가능하므로 API 로 조회.
   const [adminHref, setAdminHref] = useState<string | null>(null);
+  // 파트너(모객 파트너·추천인)로 등록된 계정이면 '파트너 화면' 링크
+  const [partnerHref, setPartnerHref] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -201,11 +203,13 @@ export function MainHeader({
     }
     let mounted = true;
     const refreshAdmin = (signedIn: boolean): void => {
-      if (!signedIn) { setAdminHref(null); return; }
+      if (!signedIn) { setAdminHref(null); setPartnerHref(null); return; }
       void fetch('/api/me/admin-scope')
         .then((r) => (r.ok ? r.json() : null))
-        .then((j: { admin?: boolean; href?: string } | null) => {
-          if (mounted) setAdminHref(j?.admin && j.href ? j.href : null);
+        .then((j: { admin?: boolean; href?: string; partner?: boolean } | null) => {
+          if (!mounted) return;
+          setAdminHref(j?.admin && j.href ? j.href : null);
+          setPartnerHref(!j?.admin && j?.partner ? `/${locale}/me/referral` : null);
         })
         .catch(() => undefined);
     };
@@ -540,6 +544,24 @@ export function MainHeader({
                       <path d="M12 2l8 4v6c0 5-3.4 8-8 10-4.6-2-8-5-8-10V6z" strokeLinejoin="round" />
                     </svg>
                     {t.adminPage}
+                  </Link>
+                ) : partnerHref ? (
+                  <Link
+                    href={partnerHref}
+                    onClick={() => setAccountOpen(false)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '10px 14px', margin: '0 0 4px',
+                      fontSize: 14, color: '#c81e42', fontWeight: 700,
+                      background: '#fff5f7', borderRadius: 8, textDecoration: 'none',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#ffe3e9'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#fff5f7'; }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c81e42" strokeWidth="2">
+                      <path d="M12 2l8 4v6c0 5-3.4 8-8 10-4.6-2-8-5-8-10V6z" strokeLinejoin="round" />
+                    </svg>
+                    {t.partnerPage}
                   </Link>
                 ) : null}
                 <Link

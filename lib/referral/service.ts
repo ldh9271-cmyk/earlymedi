@@ -22,7 +22,7 @@ export const REF_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 export type Partner = typeof referralPartners.$inferSelect;
 
 /**
- * 총판 코드 — 국가별 일련번호. 예: JP_0001, JP_0002 …
+ * 파트너 코드 — 국가별 일련번호. 예: JP_0001, JP_0002 …
  * 같은 국가에서 이미 발급된 최댓값 + 1. 동시 생성으로 충돌하면 unique
  * 인덱스가 잡고, 호출부가 재조회해 다음 번호로 재시도한다.
  */
@@ -33,7 +33,7 @@ export async function nextDistributorCode(countryCode: string): Promise<string> 
     .from(referralPartners)
     .where(and(eq(referralPartners.role, 'distributor'), like(referralPartners.code, `${cc}_%`)));
   // 주의: 템플릿 리터럴에서 \d 는 이스케이프가 사라져 'd'가 된다 — \\d 필수.
-  // (이 버그로 기존 코드가 항상 JP_0001 을 재발급 → 유니크 충돌 → 총판
+  // (이 버그로 기존 코드가 항상 JP_0001 을 재발급 → 유니크 충돌 → 파트너
   //  생성이 code_collision 으로 실패했었다. 2026-08-27 수정)
   const re = new RegExp(`^${cc}_(\\d+)$`);
   let max = 0;
@@ -84,15 +84,15 @@ export async function getPartnerByUserId(userId: string): Promise<Partner | null
 
 export async function getDistributorConfig(distributorId: string): Promise<DistributorConfig> {
   const d = await getPartnerById(distributorId);
-  // 정산 비율(feeShare)을 포함한 모든 설정은 총판별 config 를 그대로 쓴다.
-  // 일본 마스터가 각 총판 상세 화면에서 총판마다 개별로 정한다.
+  // 정산 비율(feeShare)을 포함한 모든 설정은 파트너별 config 를 그대로 쓴다.
+  // 일본 마스터가 각 파트너 상세 화면에서 파트너마다 개별로 정한다.
   return { ...DEFAULT_DISTRIBUTOR_CONFIG, ...(d?.config ?? {}) };
 }
 
 /**
  * 환자를 소개한 파트너로부터 수당 체인을 푼다.
- *   총판 직접      → l1 = null, l2 = null
- *   추천인 A(총판 모집) → l1 = A, l2 = null
+ *   파트너 직접      → l1 = null, l2 = null
+ *   추천인 A(파트너 모집) → l1 = A, l2 = null
  *   추천인 B(A 모집)   → l1 = B, l2 = A
  */
 export async function resolveChain(partnerId: string): Promise<{
@@ -136,7 +136,7 @@ export async function attributeUser(userId: string, code: string, source = 'qr')
 }
 
 /**
- * 마스터가 미리 저장해 둔 총판 대시보드 이메일(가입 대기)을 실제 계정에
+ * 마스터가 미리 저장해 둔 파트너 대시보드 이메일(가입 대기)을 실제 계정에
  * 연결한다 — 해당 이메일이 가입·로그인하는 순간 인증 콜백에서 호출.
  * 이미 다른 계정이 연결된 파트너는 건드리지 않는다.
  */
@@ -169,7 +169,7 @@ export async function joinAsReferrer(opts: {
   if (existing) return existing;
   const parent = await getPartnerByCode(opts.parentCode);
   if (!parent) throw new Error('invite_not_found');
-  // 2단계 고정: 추천인은 총판 직속으로만 생긴다 (총판 → 추천인 → 고객).
+  // 2단계 고정: 추천인은 파트너 직속으로만 생긴다 (파트너 → 추천인 → 고객).
   // 추천인의 코드로는 하위 추천인을 만들 수 없다.
   if (parent.role !== 'distributor') throw new Error('invite_distributor_only');
   const distributorId = parent.id;
@@ -200,7 +200,7 @@ export async function joinAsReferrer(opts: {
 
 export type CreateResultOrderInput = {
   distributorId: string;
-  /** 환자를 소개한 파트너 (총판 직접이면 총판 id). */
+  /** 환자를 소개한 파트너 (파트너 직접이면 파트너 id). */
   partnerId: string;
   kind: 'procedure' | 'travel';
   category: string | null;
@@ -320,11 +320,11 @@ export async function createResultOrderWithLedger(input: CreateResultOrderInput)
 }
 
 /**
- * 사이트 결제 주문 → 총판 여행상품 마진 자동 적립.
+ * 사이트 결제 주문 → 파트너 여행상품 마진 자동 적립.
  *
- * 총판에 귀속된 회원이 여행 패키지(partner_listings.category =
+ * 파트너에 귀속된 회원이 여행 패키지(partner_listings.category =
  * 'travel_package')를 구매하면, 입금 확인(paid) 시점에 판매금액(패키지
- * 소계)의 travelMarginPct%(기본 10%)를 총판 마진으로 적립한다. 확정은
+ * 소계)의 travelMarginPct%(기본 10%)를 파트너 마진으로 적립한다. 확정은
  * 결제 확인 + holdDays 후. 같은 주문에 중복 적립하지 않는다(멱등).
  *
  * 반환: 적립된 마진 원화 (해당 없으면 0).
@@ -370,7 +370,7 @@ export async function accrueOrderTravelMargin(orderId: string): Promise<number> 
     orderId: order.id,
     distributorId: order.distributorId,
     beneficiary: 'distributor',
-    // 수당은 총판에게만 지급 — 추천인 몫은 총판이 자체 정산 (경유 추천인은
+    // 수당은 파트너에게만 지급 — 추천인 몫은 파트너이 자체 정산 (경유 추천인은
     // 주문의 partner_id 로 구분해 대시보드에 보여준다)
     beneficiaryPartnerId: order.distributorId,
     beneficiaryUserId: null,
@@ -399,7 +399,7 @@ export async function accrueOrderTravelMargin(orderId: string): Promise<number> 
 }
 
 /**
- * 사이트 결제 주문 → 병원 수수료 정산 대기 스탬프 (해외 총판 트랙 1단계).
+ * 사이트 결제 주문 → 병원 수수료 정산 대기 스탬프 (해외 파트너 트랙 1단계).
  *
  * 플랫폼 결제액은 정산 기준이 아니다 — 수수료는 환자가 병원에서
  * "실제로 결제한 금액"에서만 발생한다 (founder 2026-08-31). 그래서
@@ -408,7 +408,7 @@ export async function accrueOrderTravelMargin(orderId: string): Promise<number> 
  * 마스터가 병원 실결제액을 확인해 settleOrderHospitalFeeActual 로
  * 입력할 때 만들어진다.
  *
- * 반환: 스탬프했으면 true (의료상품 + 총판 귀속 주문만).
+ * 반환: 스탬프했으면 true (의료상품 + 파트너 귀속 주문만).
  */
 export async function stampOrderHospitalFee(orderId: string): Promise<boolean> {
   const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, orderId)).limit(1);
@@ -441,11 +441,11 @@ export async function stampOrderHospitalFee(orderId: string): Promise<boolean> {
 }
 
 /**
- * 병원 실결제액 확정 → 수수료 원장 생성 (해외 총판 트랙 2단계).
+ * 병원 실결제액 확정 → 수수료 원장 생성 (해외 파트너 트랙 2단계).
  *
  * 마스터가 병원에서 실제 결제된 금액을 확인해 입력하면:
  *   실결제액 × 진료과 요율(feePctByCategory) = 병원 수수료 풀
- *   → 총판 배분율(config.feeShare.distributorPct, 총판별)대로 분배.
+ *   → 파트너 배분율(config.feeShare.distributorPct, 파트너별)대로 분배.
  * 확정(confirmAt) = 시술일 + holdDays ("시술 완료 + 14일, 환불 시 환수").
  *
  * 재입력(정정)을 허용한다: 기존 hospital_fee 행은 지급 전이면 reversed,
@@ -461,7 +461,7 @@ export async function settleOrderHospitalFeeActual(input: {
 }): Promise<{ rows: number; total: number }> {
   const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, input.orderId)).limit(1);
   if (!order) throw new Error('order_not_found');
-  if (!order.distributorId) throw new Error('총판 귀속이 없는 주문입니다');
+  if (!order.distributorId) throw new Error('파트너 귀속이 없는 주문입니다');
   if (input.actualAmountWon <= 0) throw new Error('실결제액이 0보다 커야 합니다');
 
   // 진료과: paid 훅이 스탬프한 값 우선, 없으면 리스팅에서 다시 판별 (구주문)
@@ -615,7 +615,7 @@ export async function confirmDueLedger(distributorId?: string): Promise<number> 
   return updated.length;
 }
 
-/** 월 정산: 총판의 confirmed 행을 paid 로 (플랫폼 몫과 환자 포인트는 지급 대상이 아니라 제외). */
+/** 월 정산: 파트너의 confirmed 행을 paid 로 (플랫폼 몫과 환자 포인트는 지급 대상이 아니라 제외). */
 export async function markSettled(distributorId: string, period: string): Promise<{ rows: number; amount: number }> {
   const updated = await db
     .update(commissionLedger)
@@ -629,7 +629,7 @@ export async function markSettled(distributorId: string, period: string): Promis
   return { rows: updated.length, amount: updated.reduce((a, r) => a + r.amountWon, 0) };
 }
 
-/** 국가 목록을 주면 그 나라들의 총판만, 안 주면 전체. */
+/** 국가 목록을 주면 그 나라들의 파트너만, 안 주면 전체. */
 export async function listDistributors(countryCodes?: string[]): Promise<Partner[]> {
   const where = countryCodes && countryCodes.length > 0
     ? and(eq(referralPartners.role, 'distributor'), inArray(referralPartners.countryCode, countryCodes))
@@ -640,7 +640,7 @@ export async function listDistributors(countryCodes?: string[]): Promise<Partner
 export type AdminScope = { isMaster: true; regions: null } | { isMaster: false; regions: string[] };
 
 /**
- * 관리 권한 계층: 총괄 마스터(전체) > 지역 마스터(자기가 맡은 국가들의 총판만).
+ * 관리 권한 계층: 총괄 마스터(전체) > 지역 마스터(자기가 맡은 국가들의 파트너만).
  *
  * 한 사람이 여러 나라를 맡을 수 있다(일본 마스터가 영어권·중국어권·한국까지).
  * 지역 마스터가 아니면 빈 배열.
@@ -670,7 +670,7 @@ export async function listReferrers(distributorId: string): Promise<Partner[]> {
 
 export type LedgerTotals = { pending: number; confirmed: number; paid: number };
 
-/** 파트너(추천인·총판) 기준 수당 합계. */
+/** 파트너(추천인·파트너) 기준 수당 합계. */
 export async function partnerTotals(partnerId: string): Promise<LedgerTotals> {
   const rows = await db
     .select({ status: commissionLedger.status, amount: sql<number>`coalesce(sum(${commissionLedger.amountWon}), 0)::int` })

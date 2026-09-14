@@ -5,7 +5,7 @@ import { attributeUser, claimPartnerByEmail, REF_COOKIE } from '@/lib/referral/s
 import { notifySignupEvent } from '@/lib/notify/admin-alert';
 
 /**
- * 로그인 확정 직후 공통 처리 — 총판 QR 귀속, 총판 계정 자동 연결, 가입 출처 스탬프, 가입 알림(1회).
+ * 로그인 확정 직후 공통 처리 — 파트너 QR 귀속, 파트너 계정 자동 연결, 가입 출처 스탬프, 가입 알림(1회).
  * Supabase OAuth 콜백(/api/auth/callback)과 자체 구글 OAuth 콜백(/api/auth/google/callback) 이 함께 쓴다.
  */
 export async function afterSignIn(supabase: SupabaseClient, user: User, next: string, request: NextRequest): Promise<void> {

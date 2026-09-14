@@ -90,7 +90,7 @@ export async function markOrderPaidAction(formData: FormData): Promise<void> {
       .update(checkoutOrders)
       .set({ status: 'paid', paidAt: new Date(), updatedAt: new Date() })
       .where(eq(checkoutOrders.id, id));
-    // 총판 귀속 회원: 여행 패키지면 판매금액 마진을 적립하고, 의료상품이면
+    // 파트너 귀속 회원: 여행 패키지면 판매금액 마진을 적립하고, 의료상품이면
     // 진료과·요율만 스탬프한다 — 수수료 원장은 병원 실결제액 확정 시 생성
     await accrueOrderTravelMargin(id).catch(() => 0);
     await stampOrderHospitalFee(id).catch(() => false);

@@ -5,11 +5,11 @@ import type { DistributorConfig } from '@/drizzle/schema/referral-program';
  *
  * 원칙 (제안서 2026-07-28):
  *  - 플랫폼 운영비 3% 는 어느 경로든 먼저 뗀다.
- *  - 총판 직접 유치: 나머지 전부 총판 (환자 포인트는 총판 설정으로 0~).
+ *  - 파트너 직접 유치: 나머지 전부 파트너 (환자 포인트는 파트너 설정으로 0~).
  *  - 추천인 경유: 환자 포인트 · 1단계 · 2단계를 배분표대로 떼고 나머지는
- *    총판. 2단계가 없으면(1단계의 상위가 총판) 그 몫도 총판에게 간다 —
- *    총판을 잔여 청구자로 두면 "빈 단계는 총판으로" 가 자동으로 된다.
- *  - 여행상품: 판매가 × travelMarginPct 를 총판이 따로 받고, 포함 시술에는
+ *    파트너. 2단계가 없으면(1단계의 상위가 파트너) 그 몫도 파트너에게 간다 —
+ *    파트너을 잔여 청구자로 두면 "빈 단계는 파트너으로" 가 자동으로 된다.
+ *  - 여행상품: 판매가 × travelMarginPct 를 파트너이 따로 받고, 포함 시술에는
  *    위 규칙을 그대로 적용한다.
  */
 
@@ -33,9 +33,9 @@ export type CommissionInput = {
   /** 등록 시 고정한 병원 수수료율 (bp). null 이면 config 기본값. */
   hospitalFeeBp: number | null;
   distributorId: string;
-  /** 환자를 소개한 1단계 추천인. 총판 직접이면 null. */
+  /** 환자를 소개한 1단계 추천인. 파트너 직접이면 null. */
   l1PartnerId: string | null;
-  /** 1단계 추천인을 모집한 추천인. 총판이 모집했으면 null. */
+  /** 1단계 추천인을 모집한 추천인. 파트너이 모집했으면 null. */
   l2PartnerId: string | null;
   patientUserId: string | null;
   config: DistributorConfig;
@@ -59,7 +59,7 @@ export function computeLedger(input: CommissionInput): LedgerDraft[] {
   const rows: LedgerDraft[] = [];
   const { config } = input;
 
-  // ── 여행상품 판매 마진 (총판) ─────────────────────────────────
+  // ── 여행상품 판매 마진 (파트너) ─────────────────────────────────
   if (input.kind === 'travel' && input.saleAmountWon > 0 && config.travelMarginPct > 0) {
     const bp = pctToBp(config.travelMarginPct);
     rows.push({
@@ -80,7 +80,7 @@ export function computeLedger(input: CommissionInput): LedgerDraft[] {
   const feeBp = input.hospitalFeeBp ?? resolveFeeBp(input.category, config);
   const feeWon = won(base, feeBp);
 
-  // ── 단순 정산 모드: 수수료를 총판 N% / 플랫폼 (100−N)% 로만 나눈다 ──
+  // ── 단순 정산 모드: 수수료를 파트너 N% / 플랫폼 (100−N)% 로만 나눈다 ──
   const sharePct = config.feeShare?.distributorPct ?? 0;
   if (sharePct > 0) {
     const distWon = Math.round((feeWon * sharePct) / 100);
@@ -131,7 +131,7 @@ export function computeLedger(input: CommissionInput): LedgerDraft[] {
     push('patient_points', pctToBp(config.direct.patientPointsPct), null, input.patientUserId);
   }
 
-  // 총판 = 잔여. 2단계가 비었거나 수수료율이 배분표 합과 다르면 차액이 여기로.
+  // 파트너 = 잔여. 2단계가 비었거나 수수료율이 배분표 합과 다르면 차액이 여기로.
   if (remaining > 0) {
     rows.push({
       beneficiary: 'distributor',
@@ -146,5 +146,5 @@ export function computeLedger(input: CommissionInput): LedgerDraft[] {
   return rows;
 }
 
-/** 총판 수당 설정 기본값 — 제안서 배분표. */
+/** 파트너 수당 설정 기본값 — 제안서 배분표. */
 export { DEFAULT_DISTRIBUTOR_CONFIG } from '@/drizzle/schema/referral-program';

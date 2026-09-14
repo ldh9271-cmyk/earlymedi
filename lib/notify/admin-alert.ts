@@ -93,7 +93,7 @@ export async function notifySignupEvent(q: {
     esc(q.email),
   ];
   if (q.name) lines.push(`이름: ${esc(q.name)}`);
-  if (q.refLabel) lines.push(`총판·추천 경유: ${esc(q.refLabel)}`);
+  if (q.refLabel) lines.push(`파트너·추천 경유: ${esc(q.refLabel)}`);
   lines.push('', 'https://www.glowuptour.com/master/members');
   return sendAdminTelegram(lines.join('\n'));
 }
@@ -115,7 +115,7 @@ export async function notifyLeadUnlockEvent(q: {
   return sendAdminTelegram(lines.join('\n'));
 }
 
-/** 총판 실적 알림 — 수당 원장 생성(마진 적립·수수료 정산·실적 등록) 시. */
+/** 파트너 실적 알림 — 수당 원장 생성(마진 적립·수수료 정산·실적 등록) 시. */
 export async function notifyDistributorAccrual(q: {
   kind: '여행 마진 적립' | '병원 수수료 정산' | '실적 등록';
   distributorLabel: string;
@@ -124,8 +124,8 @@ export async function notifyDistributorAccrual(q: {
   amountWon: number;
 }): Promise<boolean> {
   const lines = [
-    `<b>📈 총판 실적 — ${q.kind}</b>`,
-    `총판: ${esc(q.distributorLabel)}`,
+    `<b>📈 파트너 실적 — ${q.kind}</b>`,
+    `파트너: ${esc(q.distributorLabel)}`,
     `<code>${esc(q.invoiceNo)}</code> · 기준액 ${won(q.baseWon)} → 수당 ${won(q.amountWon)}`,
     '',
     'https://www.glowuptour.com/master/partners',
@@ -133,13 +133,13 @@ export async function notifyDistributorAccrual(q: {
   return sendAdminTelegram(lines.join('\n'));
 }
 
-/** 총판·추천 코드로 회원이 새로 귀속된 시점 (최초 1회). */
+/** 파트너·추천 코드로 회원이 새로 귀속된 시점 (최초 1회). */
 export async function notifyAttributionEvent(q: {
   partnerLabel: string;
   source: string;
 }): Promise<boolean> {
   return sendAdminTelegram(
-    [`<b>👥 총판 회원 귀속</b>`, `코드: ${esc(q.partnerLabel)} · 경로: ${esc(q.source)}`].join('\n'),
+    [`<b>👥 파트너 회원 귀속</b>`, `코드: ${esc(q.partnerLabel)} · 경로: ${esc(q.source)}`].join('\n'),
   );
 }
 

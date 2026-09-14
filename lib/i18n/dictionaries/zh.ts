@@ -346,6 +346,7 @@ const zh: Dictionary = {
     myBookings: '我的预订',
     referralMenu: "推荐计划",
     adminPage: "管理后台",
+    partnerPage: "合作伙伴面板",
     catTravel: '旅行',
     catHospital: '医院',
     catColor: '个人色彩',

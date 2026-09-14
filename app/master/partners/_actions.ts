@@ -36,7 +36,7 @@ async function assertScope(): Promise<{ email: string; regions: string[] | null 
   return { email, regions };
 }
 
-/** 지역 마스터가 자기 국가 밖의 총판을 만지는 것을 막는다. */
+/** 지역 마스터가 자기 국가 밖의 파트너을 만지는 것을 막는다. */
 async function assertDistributorInScope(distributorId: string, regions: string[] | null): Promise<void> {
   if (!regions) return;
   const d = await getPartnerById(distributorId);
@@ -56,11 +56,11 @@ function num(fd: FormData, k: string): number {
   return Number.isFinite(v) ? v : 0;
 }
 
-/** 총판 생성 — 코드는 자동. 설정은 제안서 기본값으로 시작한다. */
+/** 파트너 생성 — 코드는 자동. 설정은 제안서 기본값으로 시작한다. */
 export async function createDistributorAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const name = str(fd, 'name');
-  if (!name) back('/master/partners', { error: '총판 이름은 필수입니다' });
+  if (!name) back('/master/partners', { error: '파트너 이름은 필수입니다' });
   // 지역 마스터는 자기가 맡은 국가 안에서만 — 고른 국가가 범위 밖이면 첫 국가로 되돌린다
   const typed = (str(fd, 'countryCode') || 'JP').toUpperCase().slice(0, 2);
   const countryCode = scope.regions
@@ -90,14 +90,14 @@ export async function createDistributorAction(fd: FormData): Promise<void> {
   back('/master/partners', { error: 'code_collision' });
 }
 
-/** 총판 아래 추천인을 운영자가 직접 등록 (총판이 명단을 주는 경우). */
+/** 파트너 아래 추천인을 운영자가 직접 등록 (파트너이 명단을 주는 경우). */
 export async function createReferrerAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const distributorId = str(fd, 'distributorId');
   await assertDistributorInScope(distributorId, scope.regions);
   const name = str(fd, 'name');
   if (!distributorId || !name) back(`/master/partners/${distributorId}`, { error: '이름은 필수입니다' });
-  // 2단계 고정: 추천인은 항상 총판 직속 (총판 → 추천인 → 고객).
+  // 2단계 고정: 추천인은 항상 파트너 직속 (파트너 → 추천인 → 고객).
   const parentId: string = distributorId;
   const d = await getPartnerById(distributorId);
   for (let i = 0; i < 5; i += 1) {
@@ -124,8 +124,8 @@ export async function createReferrerAction(fd: FormData): Promise<void> {
 }
 
 /**
- * 총판 삭제 — 총판과 하위 추천인·귀속·수당 원장을 함께 지운다.
- * 지역 마스터는 자기 국가 총판만. 주문(checkout_orders)은 회계 기록이라
+ * 파트너 삭제 — 파트너과 하위 추천인·귀속·수당 원장을 함께 지운다.
+ * 지역 마스터는 자기 국가 파트너만. 주문(checkout_orders)은 회계 기록이라
  * 남긴다(파트너 id 만 남고 상세 화면에서 '—' 로 표시됨).
  */
 export async function deleteDistributorAction(fd: FormData): Promise<void> {
@@ -134,20 +134,20 @@ export async function deleteDistributorAction(fd: FormData): Promise<void> {
   if (!id) back('/master/partners', { error: 'missing_id' });
   await assertDistributorInScope(id, scope.regions);
   const d = await getPartnerById(id);
-  if (!d || d.role !== 'distributor') back('/master/partners', { error: '총판을 찾을 수 없습니다' });
+  if (!d || d.role !== 'distributor') back('/master/partners', { error: '파트너을 찾을 수 없습니다' });
 
   await db.transaction(async (tx) => {
-    // 수당 원장 → 귀속 → 하위 추천인 → 총판 순으로 정리
+    // 수당 원장 → 귀속 → 하위 추천인 → 파트너 순으로 정리
     await tx.execute(sql`DELETE FROM commission_ledger WHERE distributor_id = ${id}`);
     await tx.execute(sql`DELETE FROM referral_attributions WHERE distributor_id = ${id}`);
     await tx.execute(sql`DELETE FROM referral_partners WHERE role = 'referrer' AND distributor_id = ${id}`);
     await tx.delete(referralPartners).where(eq(referralPartners.id, id));
   });
   revalidatePath('/master/partners');
-  back('/master/partners', { ok: `${d.name} (${d.code}) 총판을 삭제했습니다` });
+  back('/master/partners', { ok: `${d.name} (${d.code}) 파트너을 삭제했습니다` });
 }
 
-/** 총판 이름 변경. */
+/** 파트너 이름 변경. */
 export async function renameDistributorAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
   const id = str(fd, 'partnerId');
@@ -165,9 +165,9 @@ export async function renameDistributorAction(fd: FormData): Promise<void> {
  * 아직 가입 전인 이메일도 저장(가입 대기)해 두면, 그 이메일이 사이트에
  * 가입·로그인하는 순간 인증 콜백이 자동으로 user_id 를 연결한다.
  *
- * 총괄 마스터 + 지역 마스터(일본 총판 관리자) 모두 사용 — 지역 마스터는
- * 자기 국가 총판만. distributorId 는 폼에서 오지만 신뢰하지 않고,
- * 실제 파트너의 총판을 기준으로 국가 스코프를 검증한다.
+ * 총괄 마스터 + 지역 마스터(일본 파트너 관리자) 모두 사용 — 지역 마스터는
+ * 자기 국가 파트너만. distributorId 는 폼에서 오지만 신뢰하지 않고,
+ * 실제 파트너의 파트너을 기준으로 국가 스코프를 검증한다.
  */
 export async function linkPartnerUserAction(fd: FormData): Promise<void> {
   const scope = await assertScope();
@@ -175,7 +175,7 @@ export async function linkPartnerUserAction(fd: FormData): Promise<void> {
   const distributorId = str(fd, 'distributorId');
   const email = str(fd, 'email').toLowerCase();
   if (!partnerId || !email) back(`/master/partners/${distributorId}`, { error: '이메일이 필요합니다' });
-  // 스코프 검증 — 파트너가 총판이면 그 자신, 추천인이면 소속 총판으로 확인
+  // 스코프 검증 — 파트너가 파트너이면 그 자신, 추천인이면 소속 파트너으로 확인
   const target = await getPartnerById(partnerId);
   if (!target) back(`/master/partners/${distributorId}`, { error: '대상을 찾을 수 없습니다' });
   await assertDistributorInScope(target.role === 'distributor' ? partnerId : (target.distributorId ?? partnerId), scope.regions);
@@ -193,9 +193,9 @@ export async function linkPartnerUserAction(fd: FormData): Promise<void> {
 }
 
 /**
- * 총판 수당 설정 저장 — 정산 비율(총판/회사 배분) · 병원 유치 수수료율 ·
- * 여행 마진 · 확정 보류일. 정산 비율은 총판마다 다를 수 있어 총판별 config
- * 에 저장한다(일본 마스터가 이 화면에서 총판별로 정한다). 폼에 없는 값은
+ * 파트너 수당 설정 저장 — 정산 비율(파트너/회사 배분) · 병원 유치 수수료율 ·
+ * 여행 마진 · 확정 보류일. 정산 비율은 파트너마다 다를 수 있어 파트너별 config
+ * 에 저장한다(일본 마스터가 이 화면에서 파트너별로 정한다). 폼에 없는 값은
  * 기존 config(또는 기본값)를 그대로 유지한다.
  */
 export async function saveConfigAction(fd: FormData): Promise<void> {

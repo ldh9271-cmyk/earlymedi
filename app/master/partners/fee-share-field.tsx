@@ -3,10 +3,10 @@
 import { useState } from 'react';
 
 /**
- * 정산 비율 입력 — 배당 이익(병원 유치 수수료)을 100%로 보고 총판/회사로
- * 나눈다. 총판 % 를 입력하면 회사 몫(100 − 총판)이 실시간으로 계산돼
- * 보인다. 퍼센트는 자유롭게 바꿀 수 있다. 일본 마스터가 총판 상세 화면에서
- * 총판마다 개별로 설정한다(총판 본인은 이 화면에 접근할 수 없다).
+ * 정산 비율 입력 — 배당 이익(병원 유치 수수료)을 100%로 보고 파트너/회사로
+ * 나눈다. 파트너 % 를 입력하면 회사 몫(100 − 파트너)이 실시간으로 계산돼
+ * 보인다. 퍼센트는 자유롭게 바꿀 수 있다. 일본 마스터가 파트너 상세 화면에서
+ * 파트너마다 개별로 설정한다(파트너 본인은 이 화면에 접근할 수 없다).
  */
 export function FeeShareField({ defaultPct }: { defaultPct: number }): JSX.Element {
   const [raw, setRaw] = useState(String(defaultPct ?? 70));
@@ -26,7 +26,7 @@ export function FeeShareField({ defaultPct }: { defaultPct: number }): JSX.Eleme
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
         <label style={{ display: 'block' }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: '#6a6a6a', display: 'block', marginBottom: 4 }}>
-            총판 정산 비율 %
+            파트너 정산 비율 %
           </span>
           <input
             name="feeSharePct"
@@ -42,7 +42,7 @@ export function FeeShareField({ defaultPct }: { defaultPct: number }): JSX.Eleme
         {/* 실시간 배분 표시 */}
         <div style={{ display: 'flex', gap: 10, alignItems: 'stretch', flex: 1, minWidth: 220 }}>
           <div style={{ flex: n, minWidth: 60, background: '#ff385c', color: '#fff', borderRadius: 8, padding: '8px 12px' }}>
-            <div style={{ fontSize: 11, opacity: 0.9 }}>총판</div>
+            <div style={{ fontSize: 11, opacity: 0.9 }}>파트너</div>
             <div style={{ fontSize: 20, fontWeight: 800 }}>{n}%</div>
           </div>
           <div style={{ flex: company, minWidth: 60, background: '#222', color: '#fff', borderRadius: 8, padding: '8px 12px' }}>
@@ -52,9 +52,9 @@ export function FeeShareField({ defaultPct }: { defaultPct: number }): JSX.Eleme
         </div>
       </div>
       <div style={{ fontSize: 11, color: '#9c9c9c', marginTop: 8 }}>
-        예: 성형 300만원 시술(수수료 30%) → 배당 이익 90만원 → 총판 ₩{Math.round((900000 * n) / 100).toLocaleString('ko-KR')}
+        예: 성형 300만원 시술(수수료 30%) → 배당 이익 90만원 → 파트너 ₩{Math.round((900000 * n) / 100).toLocaleString('ko-KR')}
         {' · '}회사 ₩{Math.round((900000 * company) / 100).toLocaleString('ko-KR')}.
-        이 총판에만 적용됩니다.
+        이 파트너에만 적용됩니다.
       </div>
     </div>
   );

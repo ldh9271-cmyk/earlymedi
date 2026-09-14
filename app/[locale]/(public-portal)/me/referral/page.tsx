@@ -49,8 +49,8 @@ export default async function ReferralPage({
   if (refCode) await attributeUser(user.id, refCode, 'me').catch(() => null);
 
   // ── 마스터 미리보기: ?as=<파트너 id> — 총괄 마스터, 또는 그 파트너
-  //    국가의 지역 마스터만 해당 총판이 보는 화면을 그대로 볼 수 있다.
-  //    (마스터 콘솔 총판 목록의 '총판 화면' 아이콘에서 진입)
+  //    국가의 지역 마스터만 해당 파트너이 보는 화면을 그대로 볼 수 있다.
+  //    (마스터 콘솔 파트너 목록의 '파트너 화면' 아이콘에서 진입)
   let previewOf: Awaited<ReturnType<typeof getPartnerById>> = null;
   if (searchParams.as) {
     const email = (user.email ?? '').toLowerCase();
@@ -63,13 +63,13 @@ export default async function ReferralPage({
   }
 
   // 비밀번호 로그인은 인증 콜백을 지나지 않으므로, 마스터가 미리 저장해 둔
-  // 총판 계정 이메일(가입 대기)을 여기서도 연결한다.
+  // 파트너 계정 이메일(가입 대기)을 여기서도 연결한다.
   if (!previewOf && user.email) await claimPartnerByEmail(user.id, user.email).catch(() => 0);
   const me = previewOf ?? (await getPartnerByUserId(user.id));
 
   // ── 아직 추천인이 아님: 초대 여부에 따라 참여 폼 / 안내 ─────────
   if (!me) {
-    // 추천인 참여 폼은 총판의 초대 링크(?join=1)로 왔을 때만 — 추천인의
+    // 추천인 참여 폼은 파트너의 초대 링크(?join=1)로 왔을 때만 — 추천인의
     // 고객 링크로 온 사람은 고객이지 하위 추천인이 아니다 (2단계 고정).
     const inviteCode = jar.get(REF_JOIN_COOKIE)?.value ?? null;
     const invitedBy = inviteCode ? await getPartnerByCode(inviteCode) : null;
@@ -103,7 +103,7 @@ export default async function ReferralPage({
     );
   }
 
-  // ── 추천인 / 총판 화면 ──────────────────────────────────────────
+  // ── 추천인 / 파트너 화면 ──────────────────────────────────────────
   const isDistributor = me.role === 'distributor';
   // 여행 시작일이 지난 예비 적립은 대시보드를 볼 때 확정 적립으로 올린다
   // (운영자 조작 없이 "여행이 시작되면 확정"을 자동으로 반영).
@@ -111,7 +111,7 @@ export default async function ReferralPage({
   const customerLink = `${SITE}/r/${me.code}`;
   const inviteLink = `${SITE}/r/${me.code}?join=1`;
   const qr = await QRCode.toString(customerLink, { type: 'svg', margin: 1, width: 180 });
-  // 추천인 화면에 '소속 총판'을 보여준다 (총판 → 추천인 → 고객, 2단계 고정)
+  // 추천인 화면에 '소속 파트너'을 보여준다 (파트너 → 추천인 → 고객, 2단계 고정)
   const myDistributor = !isDistributor && me.distributorId ? await getPartnerById(me.distributorId).catch(() => null) : null;
   const totals = await partnerTotals(me.id);
 
@@ -137,11 +137,11 @@ export default async function ReferralPage({
   };
   const fmt = (n: number): string => `₩${n.toLocaleString('ko-KR')}`;
 
-  // 총판: 가입 회원 명부 + 추천인 목록 + 월 정산서
+  // 파트너: 가입 회원 명부 + 추천인 목록 + 월 정산서
   let referrers: Awaited<ReturnType<typeof listReferrers>> = [];
   // 추천인별 고객용 QR (② 초대 링크 아래 목록에 표시)
   let referrerQrs: string[] = [];
-  // 파트너(총판 본인·각 추천인)별 실적: 가입 회원 → 결제 완료 → 수당(대기/확정/지급)
+  // 파트너(파트너 본인·각 추천인)별 실적: 가입 회원 → 결제 완료 → 수당(대기/확정/지급)
   type Perf = { members: number; orders: number; paidWon: number; pending: number; confirmed: number; paid: number };
   const ZERO_PERF: Perf = { members: 0, orders: 0, paidWon: 0, pending: 0, confirmed: 0, paid: 0 };
   const perf = new Map<string, Perf>();
@@ -159,7 +159,7 @@ export default async function ReferralPage({
     );
 
     // ── 내 QR·추천 코드로 가입해 영구 귀속된 회원 명부 ──────────
-    // 표시는 마스킹 이메일까지만 — 회원 PII 는 총판에게 전부
+    // 표시는 마스킹 이메일까지만 — 회원 PII 는 파트너에게 전부
     // 노출하지 않는다. 주문 집계는 입금 확인(paid)된 건만 센다.
     const attrRows = await db
       .select({
@@ -204,7 +204,7 @@ export default async function ReferralPage({
       ordersByUser.set(o.userId, cur);
     }
 
-    // ── 추천인별 실적 구분: 어느 추천인(또는 총판 직접)을 거쳐 가입한
+    // ── 추천인별 실적 구분: 어느 추천인(또는 파트너 직접)을 거쳐 가입한
     //    소비자가 얼마나 결제했고, 그 추천인 수당이 얼마인지 ──────────
     const perfOf = (id: string): Perf => {
       let p = perf.get(id);
@@ -217,8 +217,8 @@ export default async function ReferralPage({
       const p = perfOf(o.partnerId);
       p.orders += 1; p.paidWon += o.totalWon;
     }
-    // 수당은 총판에게만 지급되므로, '어느 추천인을 거친 매출에서 나온 총판
-    // 수당인지'를 주문의 partner_id(경유)로 나눠 보여준다 — 총판이 추천인과
+    // 수당은 파트너에게만 지급되므로, '어느 추천인을 거친 매출에서 나온 파트너
+    // 수당인지'를 주문의 partner_id(경유)로 나눠 보여준다 — 파트너이 추천인과
     // 자체 정산할 때 쓰는 숫자.
     const ledgerByVia = await db
       .select({ via: checkoutOrders.partnerId, status: commissionLedger.status, amount: commissionLedger.amountWon })
@@ -252,8 +252,8 @@ export default async function ReferralPage({
     const [y = 2026, m = 1] = period.split('-').map(Number);
     const from = new Date(Date.UTC(y, m - 1, 1));
     const to = new Date(Date.UTC(y, m, 1));
-    // 월 정산서: 총판이 받을 금액을 '경유 추천인'별로 나눠 보여준다
-    // (플랫폼은 총판에게 일괄 지급, 추천인 배분은 총판이 자체 정산).
+    // 월 정산서: 파트너이 받을 금액을 '경유 추천인'별로 나눠 보여준다
+    // (플랫폼은 파트너에게 일괄 지급, 추천인 배분은 파트너이 자체 정산).
     // 실시간 정산 표기: 대기(pending, 확정 예정일이 이 달)도 포함한다.
     const rows = await db
       .select({ via: checkoutOrders.partnerId, status: commissionLedger.status, amountWon: commissionLedger.amountWon, confirmAt: commissionLedger.confirmAt })
@@ -287,7 +287,7 @@ export default async function ReferralPage({
       <div className="m-ref-noprint">
         {previewOf ? (
           <div style={{ background: '#fff7ed', border: '1px solid #fdba74', borderRadius: 12, padding: '10px 14px', marginBottom: 18, fontSize: 13, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-            <span><b style={{ color: '#c2410c' }}>마스터 미리보기</b> — <b>{previewOf.name}</b> ({previewOf.code}) 총판 계정으로 로그인하면 보이는 화면입니다. 조회만 되고 아무것도 바뀌지 않습니다.</span>
+            <span><b style={{ color: '#c2410c' }}>마스터 미리보기</b> — <b>{previewOf.name}</b> ({previewOf.code}) 파트너 계정으로 로그인하면 보이는 화면입니다. 조회만 되고 아무것도 바뀌지 않습니다.</span>
             <Link href={`/master/partners/${previewOf.id}`} style={{ color: '#222', fontWeight: 600, whiteSpace: 'nowrap' }}>← 관리 화면으로</Link>
           </div>
         ) : null}
@@ -298,7 +298,7 @@ export default async function ReferralPage({
         ) : null}
         {searchParams.joined ? <p style={{ fontSize: 13, color: '#047857', marginTop: 10 }}>✓ {t.joinTitle}</p> : null}
 
-        {/* ① 고객 모집 — 코드 · QR · 고객용 링크 (총판·추천인 공통) */}
+        {/* ① 고객 모집 — 코드 · QR · 고객용 링크 (파트너·추천인 공통) */}
         {isDistributor ? <h2 style={{ fontSize: 16, fontWeight: 700, margin: '24px 0 8px' }}>{t.sectionCustomer}</h2> : null}
         <div className="m-ref-two" style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, marginTop: isDistributor ? 0 : 24, border: '1px solid #ebebeb', borderRadius: 14, padding: 20 }}>
           <div dangerouslySetInnerHTML={{ __html: qr }} style={{ width: 180, height: 180 }} />
@@ -322,7 +322,7 @@ export default async function ReferralPage({
           </div>
         </div>
 
-        {/* ② 추천인(영업) 초대 링크 — 총판만. 추천인은 하위 추천인을 둘 수 없다. */}
+        {/* ② 추천인(영업) 초대 링크 — 파트너만. 추천인은 하위 추천인을 둘 수 없다. */}
         {isDistributor ? (
           <>
             <h2 style={{ fontSize: 16, fontWeight: 700, margin: '22px 0 8px' }}>{t.sectionInvite}</h2>
@@ -333,7 +333,7 @@ export default async function ReferralPage({
             </div>
 
             {/* 등록된 추천인(영업) — 각자의 고객용 QR · 링크. 추천인이 이 QR로
-                모은 고객은 추천인과 이 총판에 함께 귀속된다. */}
+                모은 고객은 추천인과 이 파트너에 함께 귀속된다. */}
             <h3 style={{ fontSize: 15, fontWeight: 700, margin: '18px 0 8px' }}>{t.registeredReferrers} ({referrers.length})</h3>
             {referrers.length === 0 ? (
               <p style={{ fontSize: 13, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 12, padding: 16, margin: 0 }}>{t.referrersNone}</p>
@@ -371,7 +371,7 @@ export default async function ReferralPage({
                 ))}
               </div>
             )}
-            {/* 총판 직접 모집(내 QR) 실적 — 추천인 경유와 비교용 */}
+            {/* 파트너 직접 모집(내 QR) 실적 — 추천인 경유와 비교용 */}
             {(() => {
               const p = perf.get(me.id) ?? ZERO_PERF;
               return (
@@ -385,7 +385,7 @@ export default async function ReferralPage({
           </>
         ) : null}
 
-        {/* 통계 — 총판은 큰 카드 4개(가입 회원·예상·확정·지급)로 간단히.
+        {/* 통계 — 파트너은 큰 카드 4개(가입 회원·예상·확정·지급)로 간단히.
             추천인(개인)은 기존 5칸 유지. */}
         {isDistributor ? (
           <div className="m-ref-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 20 }}>
@@ -438,7 +438,7 @@ export default async function ReferralPage({
         )}
       </div>
 
-      {/* 총판 전용 */}
+      {/* 파트너 전용 */}
       {isDistributor ? (
         <>
           <div className="m-ref-noprint">

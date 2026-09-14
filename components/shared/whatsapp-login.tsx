@@ -83,7 +83,7 @@ export default function WhatsAppLogin({ next, label, dict, disabled, compact }: 
     setBusy(true);
     const { data, error } = await supabase.auth.verifyOtp({ phone: e164, token, type: 'sms' });
     if (error || !data.user) { setBusy(false); setErr(explain(error, dict)); return; }
-    // 추천인 귀속·총판 연결·가입 알림은 서버에서 (다른 로그인 경로와 같은 함수)
+    // 추천인 귀속·파트너 연결·가입 알림은 서버에서 (다른 로그인 경로와 같은 함수)
     await fetch('/api/auth/phone/complete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -11,7 +11,7 @@ import { BrandLockup } from '../[locale]/_components/brand-mark';
 export const metadata = {
   title: '파트너 센터 — 글로우업투어 for Business',
   description:
-    '병원·뷰티샵·호텔·여행사·총판을 위한 글로우업투어 파트너 센터. 6개 언어 플랫폼이 외국인 고객의 모객·예약·결제·통역을 대신합니다.',
+    '병원·뷰티샵·호텔·여행사·파트너을 위한 글로우업투어 파트너 센터. 6개 언어 플랫폼이 외국인 고객의 모객·예약·결제·통역을 대신합니다.',
 };
 
 const ROSE = '#ff385c';
@@ -88,14 +88,14 @@ const PARTNER_TYPES = [
   },
   {
     emoji: '🌏',
-    title: '총판 · 에이전시',
+    title: '파트너 · 에이전시',
     sub: '국내·해외 모객 파트너',
     points: [
-      '배당 이익(유치 수수료)을 100으로 보고 총판 70% : 회사 30% 정산',
-      '전용 QR로 유입 고객이 총판에 영구 귀속 — 실적이 자동 집계',
+      '배당 이익(유치 수수료)을 100으로 보고 파트너 70% : 회사 30% 정산',
+      '전용 QR로 유입 고객이 파트너에 영구 귀속 — 실적이 자동 집계',
       '여행상품 판매가의 10% 마진 (결제 시 예비 → 출발일 확정)',
     ],
-    cta: '총판 프로그램',
+    cta: '파트너 프로그램',
     href: '#distributor',
   },
 ];
@@ -195,7 +195,7 @@ export default function BizPage(): JSX.Element {
               href="#distributor"
               style={{ background: '#fff', color: INK, textDecoration: 'none', fontWeight: 700, fontSize: 15, padding: '14px 28px', borderRadius: 9999, border: `1px solid ${INK}` }}
             >
-              총판 프로그램 (70:30)
+              파트너 프로그램 (70:30)
             </a>
           </div>
           {/* 숫자 밴드 */}
@@ -216,7 +216,7 @@ export default function BizPage(): JSX.Element {
           <SectionHead
             eyebrow="누구를 위한 플랫폼인가"
             title="네 가지 파트너, 하나의 플랫폼"
-            lead="고객 사이트의 카테고리 그대로 — 병원부터 총판까지 같은 고객 여정 안에서 함께 일합니다."
+            lead="고객 사이트의 카테고리 그대로 — 병원부터 파트너까지 같은 고객 여정 안에서 함께 일합니다."
           />
           <div className="bz-grid2" style={{ marginTop: 36 }}>
             {PARTNER_TYPES.map((p) => (
@@ -278,24 +278,24 @@ export default function BizPage(): JSX.Element {
         </div>
       </section>
 
-      {/* ── 총판 프로그램 ── */}
+      {/* ── 파트너 프로그램 ── */}
       <section id="distributor" style={{ borderBottom: `1px solid ${LINE}` }}>
         <div className="bz-wrap" style={{ padding: '64px 24px' }}>
           <div style={{ background: INK, borderRadius: 24, padding: '44px 34px', color: '#fff', overflow: 'hidden', position: 'relative' }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, color: ROSE }}>MASTER DISTRIBUTOR · 총판 프로그램</span>
+              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, color: ROSE }}>PARTNER PROGRAM · 파트너 프로그램</span>
               <h2 style={{ fontSize: 30, fontWeight: 800, margin: '10px 0 0', letterSpacing: '-0.5px' }}>
-                배당 이익을 100으로, <span style={{ color: ROSE }}>총판 70 : 회사 30</span>
+                배당 이익을 100으로, <span style={{ color: ROSE }}>파트너 70 : 회사 30</span>
               </h2>
               <p style={{ fontSize: 15, color: '#b8b0bc', lineHeight: 1.65, margin: '12px 0 0', maxWidth: 640 }}>
                 시술 정산 비용(병원 유치 수수료)을 배당 이익 100%로 보고 딱 한 번 나눕니다.
-                배분표 없이 숫자 하나 — 하위 추천인 보상은 총판이 70% 안에서 자유롭게 설계합니다.
+                배분표 없이 숫자 하나 — 하위 추천인 보상은 파트너이 70% 안에서 자유롭게 설계합니다.
               </p>
               <div className="bz-grid3" style={{ marginTop: 26 }}>
                 {[
-                  ['70%', '시술 정산 비용 중 총판 몫', '성형 수수료 30% · 피부 20% 기준, 시술 완료 + 14일 확정'],
+                  ['70%', '시술 정산 비용 중 파트너 몫', '성형 수수료 30% · 피부 20% 기준, 시술 완료 + 14일 확정'],
                   ['10%', '여행상품 판매 마진', '패키지 판매가 기준 — 결제 시 예비 적립, 출발일 확정'],
-                  ['QR', '고객 영구 귀속', '전용 QR로 가입한 고객의 실적이 총판에 자동 집계'],
+                  ['QR', '고객 영구 귀속', '전용 QR로 가입한 고객의 실적이 파트너에 자동 집계'],
                 ].map(([big, t, b]) => (
                   <div key={t} style={{ background: '#2a252f', borderRadius: 16, padding: 20 }}>
                     <div style={{ fontSize: 30, fontWeight: 800, color: ROSE }}>{big}</div>
@@ -309,7 +309,7 @@ export default function BizPage(): JSX.Element {
                   href="#contact"
                   style={{ background: ROSE, color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14.5, padding: '12px 24px', borderRadius: 9999 }}
                 >
-                  총판 상담 신청
+                  파트너 상담 신청
                 </a>
                 <span style={{ fontSize: 12.5, color: '#b8b0bc' }}>제안서 제공: 한국어 · English · 日本語 · 中文 · Русский · Tiếng Việt</span>
               </div>

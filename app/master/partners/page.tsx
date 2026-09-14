@@ -9,7 +9,7 @@ import { getRegionAdminCountries, listDistributors, listRegionAdmins } from '@/l
 import { addRegionAdminAction, createDistributorAction, deleteDistributorAction, removeRegionAdminAction } from './_actions';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '총판·추천인 프로그램 — 마스터 관리자' };
+export const metadata = { title: '파트너·추천인 프로그램 — 마스터 관리자' };
 
 const input: React.CSSProperties = {
   border: '1px solid #dddddd', borderRadius: 8, padding: '8px 10px', fontSize: 13, fontFamily: 'inherit', width: '100%',
@@ -24,7 +24,7 @@ export default async function MasterPartnersPage({
   if (!auth.user) redirect('/login');
   const email = (auth.user.email ?? '').toLowerCase();
   const isMaster = isMasterEmail(email);
-  // 지역 마스터(예: 일본 마스터)는 자기가 맡은 국가의 총판만 본다 — 여러 나라 가능
+  // 지역 마스터(예: 일본 마스터)는 자기가 맡은 국가의 파트너만 본다 — 여러 나라 가능
   const regions = isMaster ? null : await getRegionAdminCountries(email);
   if (!isMaster && (!regions || regions.length === 0)) redirect('/select-org');
 
@@ -54,9 +54,9 @@ export default async function MasterPartnersPage({
       <style dangerouslySetInnerHTML={{ __html: MP_CSS }} />
       <div className="m-mp-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>총판 · 추천인 프로그램{regions ? ` — ${regions.join(' · ')} 지역` : ''}</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>파트너 · 추천인 프로그램{regions ? ` — ${regions.join(' · ')} 지역` : ''}</h1>
           <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 0' }}>
-            해외 총판과 그 아래 추천인 네트워크. 수당은 시술·여행상품 실적에서만 발생하고 2단계까지 배분됩니다.
+            해외 파트너과 그 아래 추천인 네트워크. 수당은 시술·여행상품 실적에서만 발생하고 2단계까지 배분됩니다.
           </p>
         </div>
         {isMaster ? <Link href="/master" style={{ fontSize: 13, color: '#222', textDecoration: 'underline', whiteSpace: 'nowrap', flexShrink: 0 }}>마스터 홈</Link> : <span style={{ fontSize: 13, color: '#6a6a6a', flexShrink: 0 }}>{email} · 지역 마스터</span>}
@@ -69,14 +69,14 @@ export default async function MasterPartnersPage({
         <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: '#fafafa', textAlign: 'left' }}>
-              {['총판', '코드', '국가 / 랜딩', '추천인', '클릭 / 가입', '대기', '확정', '지급 완료', ''].map((h) => (
+              {['파트너', '코드', '국가 / 랜딩', '추천인', '클릭 / 가입', '대기', '확정', '지급 완료', ''].map((h) => (
                 <th key={h} style={{ padding: '10px 12px', fontSize: 12, color: '#6a6a6a', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {distributors.length === 0 ? (
-              <tr><td colSpan={9} style={{ padding: 28, textAlign: 'center', color: '#6a6a6a' }}>아직 등록된 총판이 없습니다. 아래에서 첫 총판을 만드세요.</td></tr>
+              <tr><td colSpan={9} style={{ padding: 28, textAlign: 'center', color: '#6a6a6a' }}>아직 등록된 파트너이 없습니다. 아래에서 첫 파트너을 만드세요.</td></tr>
             ) : distributors.map((d, i) => {
               const s = stats[i] ?? { referrers: 0, pending: 0, confirmed: 0, paid: 0 };
               return (
@@ -96,13 +96,13 @@ export default async function MasterPartnersPage({
                     <Link href={`/master/partners/${d.id}`} style={{ fontSize: 12, color: '#222', textDecoration: 'underline' }}>관리</Link>
                     <Link
                       href={`/${d.landingLocale}/me/referral?as=${d.id}`}
-                      title="이 총판이 로그인하면 보이는 화면 (조회 전용)"
+                      title="이 파트너이 로그인하면 보이는 화면 (조회 전용)"
                       style={{ marginLeft: 10, fontSize: 12, color: '#1d4ed8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, verticalAlign: 'middle' }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
                       </svg>
-                      총판 화면
+                      파트너 화면
                     </Link>
                     {searchParams.confirmDelete === d.id ? (
                       <span style={{ marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -116,7 +116,7 @@ export default async function MasterPartnersPage({
                     ) : (
                       <Link
                         href={`/master/partners?confirmDelete=${d.id}`}
-                        title="총판·하위 추천인·귀속·수당 원장을 모두 삭제합니다 (되돌릴 수 없음)"
+                        title="파트너·하위 추천인·귀속·수당 원장을 모두 삭제합니다 (되돌릴 수 없음)"
                         style={{ marginLeft: 10, border: '1px solid #dc2626', color: '#dc2626', background: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 11, textDecoration: 'none' }}
                       >
                         삭제
@@ -131,13 +131,13 @@ export default async function MasterPartnersPage({
       </div>
 
       <form action={createDistributorAction} className="m-mp-card" style={{ marginTop: 28, border: '1px solid #ebebeb', borderRadius: 12, padding: 20, maxWidth: 760 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>새 총판 등록</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>새 파트너 등록</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 16px' }}>
-          코드는 자동 생성되며(JP_0001, JP_0002 …) <strong>총판 수에는 제한이 없습니다</strong> — 필요한 만큼 계속 만들 수 있습니다.
-          정산 비율(기본 총판 70 / 회사 30)·병원 유치 수수료율·여행 마진은 총판별로 상세 화면에서 조정합니다.
+          코드는 자동 생성되며(JP_0001, JP_0002 …) <strong>파트너 수에는 제한이 없습니다</strong> — 필요한 만큼 계속 만들 수 있습니다.
+          정산 비율(기본 파트너 70 / 회사 30)·병원 유치 수수료율·여행 마진은 파트너별로 상세 화면에서 조정합니다.
         </p>
         <div className="m-mp-grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div><span style={label}>총판 이름 (법인명) *</span><input name="name" required style={input} placeholder="예: 株式会社○○ / Tokyo Beauty Partners" /></div>
+          <div><span style={label}>파트너 이름 (법인명) *</span><input name="name" required style={input} placeholder="예: 株式会社○○ / Tokyo Beauty Partners" /></div>
           <div><span style={label}>담당자 연락처</span><input name="contact" style={input} placeholder="이름 · 전화 · LINE" /></div>
           <div>
             <span style={label}>국가 코드{regions ? ' (내 담당 지역)' : ''}</span>
@@ -156,11 +156,11 @@ export default async function MasterPartnersPage({
               {['ja', 'en', 'zh', 'kr', 'ru', 'vi'].map((l) => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
-          <div><span style={label}>총판 대시보드 계정 이메일</span><input name="userEmail" type="email" style={input} placeholder="사이트 가입 후 연결됩니다" /></div>
+          <div><span style={label}>파트너 대시보드 계정 이메일</span><input name="userEmail" type="email" style={input} placeholder="사이트 가입 후 연결됩니다" /></div>
           <div><span style={label}>메모</span><input name="notes" style={input} placeholder="계약일 · 독점 여부 · KPI" /></div>
         </div>
         <button type="submit" style={{ marginTop: 16, background: '#ff385c', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-          총판 만들기
+          파트너 만들기
         </button>
       </form>
 
@@ -168,7 +168,7 @@ export default async function MasterPartnersPage({
         <div className="m-mp-card" style={{ marginTop: 28, border: '1px solid #ebebeb', borderRadius: 12, padding: 20, maxWidth: 760 }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>지역 마스터 계정</h2>
           <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
-            총괄 마스터 아래의 국가별 관리자입니다. 등록된 이메일로 로그인하면 /master/partners 에서 자기가 맡은 국가의 총판만 보고 생성·정산할 수 있습니다.
+            총괄 마스터 아래의 국가별 관리자입니다. 등록된 이메일로 로그인하면 /master/partners 에서 자기가 맡은 국가의 파트너만 보고 생성·정산할 수 있습니다.
             한 사람이 여러 나라를 맡을 수 있습니다 — 국가 칸에 쉼표로 나열하세요 (예: JP, US, CN, KR).
             (해당 이메일이 사이트에 가입돼 있어야 합니다)
           </p>

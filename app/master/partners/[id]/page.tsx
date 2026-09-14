@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 
 const SITE = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || 'https://glowuptour.com';
 const BENEFICIARY_KO: Record<string, string> = {
-  platform: '운영비', patient_points: '환자 포인트', referrer_l1: '1단계', referrer_l2: '2단계', distributor: '총판',
+  platform: '운영비', patient_points: '환자 포인트', referrer_l1: '1단계', referrer_l2: '2단계', distributor: '파트너',
 };
 const STATUS_KO: Record<string, { t: string; c: string }> = {
   pending: { t: '대기', c: '#b45309' }, confirmed: { t: '확정', c: '#1d4ed8' }, paid: { t: '지급', c: '#047857' }, reversed: { t: '취소', c: '#6a6a6a' },
@@ -56,7 +56,7 @@ export default async function DistributorDetailPage({
   if (!auth.user) redirect('/login');
   const email = (auth.user.email ?? '').toLowerCase();
   if (!isMasterEmail(email)) {
-    // 지역 마스터는 자기가 맡은 국가의 총판만 열 수 있다
+    // 지역 마스터는 자기가 맡은 국가의 파트너만 열 수 있다
     const regions = await getRegionAdminCountries(email);
     if (regions.length === 0) redirect('/select-org');
     const scoped = await getPartnerById(params.id);
@@ -80,14 +80,14 @@ export default async function DistributorDetailPage({
   const dueCount = ledger.filter((l) => l.status === 'pending' && l.confirmAt.getTime() <= now).length;
   const confirmedPayable = ledger.filter((l) => l.status === 'confirmed' && ['referrer_l1', 'referrer_l2', 'distributor'].includes(l.beneficiary))
     .reduce((a, l) => a + l.amountWon, 0);
-  const partnerName = (id: string | null): string => (id === d.id ? `${d.name} (총판)` : (id && byId.get(id)?.name) || '—');
+  const partnerName = (id: string | null): string => (id === d.id ? `${d.name} (파트너)` : (id && byId.get(id)?.name) || '—');
 
   return (
     <div className="m-pd-page" style={{ padding: '28px 32px 100px', maxWidth: 1240, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
       <style dangerouslySetInnerHTML={{ __html: PD_CSS }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <Link href="/master/partners" style={{ fontSize: 12, color: '#6a6a6a' }}>← 총판 목록</Link>
+          <Link href="/master/partners" style={{ fontSize: 12, color: '#6a6a6a' }}>← 파트너 목록</Link>
           <form action={renameDistributorAction} style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0 0' }}>
             <input type="hidden" name="partnerId" value={d.id} />
             <input
@@ -111,32 +111,32 @@ export default async function DistributorDetailPage({
           <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 4 }}>QR 링크 <code>{SITE}/r/{d.code}</code> · 추천인 초대 링크 <code>{SITE}/r/{d.code}?join=1</code></div>
           <Link
             href={`/${d.landingLocale}/me/referral?as=${d.id}`}
-            title="이 총판이 로그인하면 보이는 화면 (조회 전용)"
+            title="이 파트너이 로그인하면 보이는 화면 (조회 전용)"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 10, fontSize: 12, fontWeight: 600, color: '#1d4ed8', border: '1px solid #bfdbfe', background: '#eff6ff', borderRadius: 8, padding: '5px 10px', textDecoration: 'none' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
             </svg>
-            총판이 보는 화면 미리보기
+            파트너이 보는 화면 미리보기
           </Link>
         </div>
         <div className="m-pd-qr" dangerouslySetInnerHTML={{ __html: qr }} style={{ width: 120, flexShrink: 0 }} />
       </div>
 
-      {searchParams.created ? <p style={{ color: '#047857', fontSize: 13, margin: 0 }}>총판이 생성됐습니다. QR 을 총판에 전달하고, 대시보드 계정 이메일을 연결하세요.</p> : null}
+      {searchParams.created ? <p style={{ color: '#047857', fontSize: 13, margin: 0 }}>파트너이 생성됐습니다. QR 을 파트너에 전달하고, 대시보드 계정 이메일을 연결하세요.</p> : null}
 
-      {/* ── 총판 본인 계정 연결 — 연결돼야 /me/referral 대시보드가 열린다.
+      {/* ── 파트너 본인 계정 연결 — 연결돼야 /me/referral 대시보드가 열린다.
              연결 후에도 계정을 바꿀 수 있도록 항상 표시한다 (마스터·지역
              마스터 공통). ── */}
       <form action={linkPartnerUserAction} style={{ ...card, borderColor: '#1d4ed8', display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <input type="hidden" name="distributorId" value={d.id} />
         <input type="hidden" name="partnerId" value={d.id} />
         <div style={{ flex: 1, minWidth: 260 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px' }}>총판 대시보드 계정 {d.userId ? '변경' : '연결'}</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px' }}>파트너 대시보드 계정 {d.userId ? '변경' : '연결'}</h3>
           <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 8px' }}>
             {d.userId
               ? '연결된 계정을 다른 이메일로 바꾸려면 새 이메일을 입력하세요. 아직 가입 전 이메일이면 그 이메일로 가입·로그인할 때 자동 연결됩니다.'
-              : '총판 담당자 이메일을 입력하세요. 아직 가입 전이어도 저장되며, 그 이메일로 가입·로그인하는 순간 자동 연결됩니다. 연결되면 그 계정으로 로그인해 QR·수당·정산서를 봅니다.'}
+              : '파트너 담당자 이메일을 입력하세요. 아직 가입 전이어도 저장되며, 그 이메일로 가입·로그인하는 순간 자동 연결됩니다. 연결되면 그 계정으로 로그인해 QR·수당·정산서를 봅니다.'}
           </p>
           <input name="email" type="email" required defaultValue={d.userEmail ?? ''} placeholder="partner@example.jp" style={{ ...input, maxWidth: 360 }} />
         </div>
@@ -150,12 +150,12 @@ export default async function DistributorDetailPage({
         <input type="hidden" name="distributorId" value={d.id} />
         <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>실적 등록 — 시술 완료 · 투어 출발</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
-          병원이 시술 완료를 알려오면 여기에 입력합니다. 수당 원장이 자동 생성되고, 완료일 + {cfg.holdDays}일 뒤 확정됩니다. 정산 비율에 따라 수수료의 {feeSharePct}%가 총판 몫입니다.
+          병원이 시술 완료를 알려오면 여기에 입력합니다. 수당 원장이 자동 생성되고, 완료일 + {cfg.holdDays}일 뒤 확정됩니다. 정산 비율에 따라 수수료의 {feeSharePct}%가 파트너 몫입니다.
         </p>
         <div className="m-pd-grid4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           <div><span style={label}>종류</span>
             <select name="kind" style={input} defaultValue="procedure"><option value="procedure">시술</option><option value="travel">여행상품 (10% 마진 + 포함 시술)</option></select></div>
-          <div><span style={label}>추천인 코드 (비우면 총판 직접)</span><input name="partnerCode" style={input} placeholder="JP7K2M9Q" /></div>
+          <div><span style={label}>추천인 코드 (비우면 파트너 직접)</span><input name="partnerCode" style={input} placeholder="JP7K2M9Q" /></div>
           <div><span style={label}>시술 분류</span>
             <select name="category" style={input} defaultValue="plastic_surgery">
               <option value="plastic_surgery">성형외과 ({cfg.feePctByCategory.plastic_surgery}%)</option>
@@ -190,7 +190,7 @@ export default async function DistributorDetailPage({
         <form action={settleAction} style={card}>
           <input type="hidden" name="distributorId" value={d.id} />
           <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 6px' }}>월 정산 — 지급 완료 처리</h3>
-          <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 12px' }}>확정된 총판·추천인 몫 <b>₩{confirmedPayable.toLocaleString('ko-KR')}</b>을 총판 법인에 송금한 뒤 누릅니다 (운영비·환자 포인트 제외).</p>
+          <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 12px' }}>확정된 파트너·추천인 몫 <b>₩{confirmedPayable.toLocaleString('ko-KR')}</b>을 파트너 법인에 송금한 뒤 누릅니다 (운영비·환자 포인트 제외).</p>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input name="period" type="month" defaultValue={new Date().toISOString().slice(0, 7)} style={{ ...input, width: 160 }} />
             <button type="submit" style={btn('#047857')} disabled={confirmedPayable === 0}>지급 완료</button>
@@ -282,7 +282,7 @@ export default async function DistributorDetailPage({
 
       {/* ── 주문 ─────────────────────────────────────────────── */}
       <div style={card}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px' }}>이 총판에 귀속된 주문 ({orders.length})</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px' }}>이 파트너에 귀속된 주문 ({orders.length})</h2>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead><tr style={{ background: '#fafafa', textAlign: 'left' }}>
@@ -319,7 +319,7 @@ export default async function DistributorDetailPage({
         <input type="hidden" name="distributorId" value={d.id} />
         <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>수당 설정 (계약 조건)</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 14px' }}>
-          이 총판의 <b>정산 비율</b>을 정합니다 — 배당 이익(병원 유치 수수료)을 100%로 보고 총판/회사로 나눕니다. 총판마다 다르게 설정할 수 있습니다.
+          이 파트너의 <b>정산 비율</b>을 정합니다 — 배당 이익(병원 유치 수수료)을 100%로 보고 파트너/회사로 나눕니다. 파트너마다 다르게 설정할 수 있습니다.
         </p>
 
         <FeeShareField defaultPct={feeSharePct} />

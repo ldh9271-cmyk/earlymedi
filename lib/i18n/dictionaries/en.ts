@@ -361,6 +361,7 @@ const en: Dictionary = {
     myBookings: 'My bookings',
     referralMenu: "Referral program",
     adminPage: "Admin console",
+    partnerPage: "Partner dashboard",
     catTravel: 'Trips',
     catHospital: 'Clinics',
     catColor: 'Personal Color',

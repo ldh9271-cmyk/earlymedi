@@ -349,6 +349,7 @@ const vi: Dictionary = {
     myBookings: 'Đặt chỗ của tôi',
     referralMenu: "Chương trình giới thiệu",
     adminPage: "Trang quản trị",
+    partnerPage: "Trang đối tác",
     catTravel: 'Du lịch',
     catHospital: 'Phòng khám',
     catColor: 'Màu cá nhân',

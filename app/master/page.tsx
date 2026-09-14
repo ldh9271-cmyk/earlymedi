@@ -44,7 +44,7 @@ export default async function MasterPage({
 
   const email = auth.user.email ?? '';
   if (!isMasterEmail(email)) {
-    // 지역 마스터(일본 등)는 총판 관리로, 그 외는 일반 랜딩으로.
+    // 지역 마스터(일본 등)는 파트너 관리로, 그 외는 일반 랜딩으로.
     const { getRegionAdminCountries } = await import('@/lib/referral/service');
     const regions = await getRegionAdminCountries(email);
     if (regions.length > 0) redirect('/master/partners');
@@ -341,9 +341,9 @@ export default async function MasterPage({
             <QrCode className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold">총판 · 추천인 프로그램</div>
+            <div className="text-xs font-semibold">파트너 · 추천인 프로그램</div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              해외 총판 QR · 추천인 트리 · 실적 등록 · 수당 원장 · 월 정산
+              해외 파트너 QR · 추천인 트리 · 실적 등록 · 수당 원장 · 월 정산
             </p>
           </div>
         </Link>

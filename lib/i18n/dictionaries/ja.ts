@@ -348,6 +348,7 @@ const ja: Dictionary = {
     myBookings: '予約履歴',
     referralMenu: "紹介プログラム",
     adminPage: "管理者ページ",
+    partnerPage: "パートナー画面",
     catTravel: '旅行',
     catHospital: '病院',
     catColor: 'パーソナルカラー',

@@ -91,7 +91,7 @@ export default async function SelectOrgPage({
 
   const active = memberships.filter((m) => m.status === 'active');
 
-  // 총판·추천인 계정(조직 없음)은 '가입된 조직이 없습니다' 대신 자기
+  // 파트너·추천인 계정(조직 없음)은 '가입된 조직이 없습니다' 대신 자기
   // 조회 전용 대시보드(/{랜딩언어}/me/referral)로 바로 보낸다.
   if (!isMaster && active.length === 0) {
     // 비밀번호 로그인은 인증 콜백을 안 지나므로 가입 대기 이메일 연결을 여기서도 수행

@@ -7,7 +7,7 @@ import { BrandLockup } from '@/app/[locale]/_components/brand-mark';
  * 이 화면은 /biz 파트너 랜딩에서 넘어오는 첫 화면이므로 같은 디자인
  * 언어를 쓴다: glow-up 로즈 로크업, 라운드 카드, 필 버튼, 화이트 배경.
  * (예전에는 인디고 그라디언트 + "환자의 첫 문의부터…" 카피여서 병원
- * CRM 처럼 보였고, 호텔·뷰티샵·총판 파트너에게는 맞지 않았다.)
+ * CRM 처럼 보였고, 호텔·뷰티샵·파트너에게는 맞지 않았다.)
  *
  * 좌측 레일은 lg 이상에서만 보인다. 그 아래에서는 상단 바로 접힌다.
  */
@@ -16,7 +16,7 @@ const PARTNER_TYPES: Array<{ emoji: string; title: string; sub: string }> = [
   { emoji: '🏥', title: '병원 · 클리닉', sub: '성형 · 피부 · 치과 · 검진 · 한방' },
   { emoji: '💇', title: '뷰티 · 라이프스타일', sub: '헤어 · 메이크업 · 네일 · 스튜디오' },
   { emoji: '🏨', title: '호텔 · 여행 · 맛집', sub: '숙박 · 투어 · 다이닝 · 교통' },
-  { emoji: '🌏', title: '총판 · 에이전시', sub: '국내 · 해외 모객 파트너' },
+  { emoji: '🌏', title: '파트너 · 에이전시', sub: '국내 · 해외 모객 파트너' },
 ];
 
 export default function AuthLayout({ children }: { children: React.ReactNode }): JSX.Element {

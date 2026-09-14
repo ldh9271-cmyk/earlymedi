@@ -16,7 +16,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (code) {
     const supabase = createSupabaseServerClient();
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
-    // 총판 QR 귀속 · 총판 계정 연결 · 가입 출처 스탬프 · 가입 알림(1회) — 자체 구글 콜백과 공통
+    // 파트너 QR 귀속 · 파트너 계정 연결 · 가입 출처 스탬프 · 가입 알림(1회) — 자체 구글 콜백과 공통
     if (!error && data.user) await afterSignIn(supabase, data.user, next, request).catch(() => undefined);
     if (error) {
       const redirect = new URL('/login', url.origin);
