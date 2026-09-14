@@ -90,6 +90,8 @@ const vi: Dictionary = {
       body: 'Tải một ảnh chính diện, AI sẽ phân tích tông màu cá nhân, da, tóc, chân mày và gợi ý shop·phòng khám phù hợp theo danh mục.',
       choose: 'Chọn ảnh',
       change: 'Đổi ảnh',
+      takePhoto: "Chụp ảnh",
+      fromAlbum: "Chọn từ album",
       analyze: 'Bắt đầu phân tích AI',
       analyzing: 'AI đang phân tích… (khoảng 10 giây)',
       resultTitle: 'Kết quả phân tích AI',

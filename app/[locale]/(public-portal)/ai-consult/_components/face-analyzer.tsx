@@ -55,6 +55,15 @@ export default function FaceAnalyzer({
   autoSend?: boolean;
 }): JSX.Element {
   const fileRef = useRef<HTMLInputElement | null>(null);
+  // 모바일 전용 — capture="user" 가 붙어 있어 누르면 앨범이 아니라 전면 카메라가 바로 열린다
+  const cameraRef = useRef<HTMLInputElement | null>(null);
+  // 서버 렌더는 PC 형태(버튼 하나)로 그리고, 마운트 뒤 터치 기기면 촬영/앨범 두 버튼으로 바꾼다
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+    const ua = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    setIsMobile(coarse || ua);
+  }, []);
   const [preview, setPreview] = useState<string | null>(null);
   const [phase, setPhase] = useState<'idle' | 'ready' | 'loading' | 'done'>(initialResult ? 'done' : 'idle');
   const [error, setError] = useState<string | null>(null);
@@ -155,6 +164,7 @@ export default function FaceAnalyzer({
     setEmailPhase('hidden');
     setSentMsg(null);
     if (fileRef.current) fileRef.current.value = '';
+    if (cameraRef.current) cameraRef.current.value = '';
   }
 
   const seasonColor = analysis
@@ -185,10 +195,20 @@ export default function FaceAnalyzer({
         {t.body}
       </p>
 
+      {/* 앨범/파일 선택 — PC 는 이것만 쓴다 */}
       <input
         ref={fileRef}
         type="file"
         accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => onPick(e.target.files?.[0])}
+      />
+      {/* 카메라 촬영 — capture 속성은 모바일 브라우저만 존중하고 PC 에선 일반 파일 선택으로 동작한다 */}
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="user"
         style={{ display: 'none' }}
         onChange={(e) => onPick(e.target.files?.[0])}
       />
@@ -212,19 +232,50 @@ export default function FaceAnalyzer({
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
         {phase !== 'loading' && phase !== 'done' ? (
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            style={{
-              background: preview ? '#fff' : '#ff385c',
-              color: preview ? '#222' : '#fff',
-              border: preview ? '1px solid #222' : 'none',
-              borderRadius: 10, padding: '12px 22px',
-              fontWeight: 600, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            {preview ? t.change : t.choose}
-          </button>
+          isMobile ? (
+            // 모바일: 바로 찍기 / 앨범에서 고르기 두 갈래. 사진이 있으면 둘 다 보조 버튼으로 내려간다
+            <>
+              <button
+                type="button"
+                onClick={() => cameraRef.current?.click()}
+                style={{
+                  background: preview ? '#fff' : '#ff385c',
+                  color: preview ? '#222' : '#fff',
+                  border: preview ? '1px solid #222' : 'none',
+                  borderRadius: 10, padding: '12px 20px',
+                  fontWeight: 600, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                📷 {t.takePhoto}
+              </button>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                style={{
+                  background: '#fff', color: '#222',
+                  border: '1px solid #222',
+                  borderRadius: 10, padding: '12px 20px',
+                  fontWeight: 600, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                🖼 {t.fromAlbum}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              style={{
+                background: preview ? '#fff' : '#ff385c',
+                color: preview ? '#222' : '#fff',
+                border: preview ? '1px solid #222' : 'none',
+                borderRadius: 10, padding: '12px 22px',
+                fontWeight: 600, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              {preview ? t.change : t.choose}
+            </button>
+          )
         ) : null}
         {phase === 'ready' ? (
           <button

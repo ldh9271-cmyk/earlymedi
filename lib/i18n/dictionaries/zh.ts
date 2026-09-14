@@ -87,6 +87,8 @@ const zh: Dictionary = {
       body: '上传一张正面照片，AI 分析您的个人色彩·皮肤·头发·眉毛，并按分类推荐适合的店铺和诊所。',
       choose: '选择照片',
       change: '更换照片',
+      takePhoto: "拍照",
+      fromAlbum: "从相册选择",
       analyze: '开始 AI 分析',
       analyzing: 'AI 分析中…（约 10 秒）',
       resultTitle: 'AI 分析结果',

@@ -101,6 +101,8 @@ const kr = {
       body: '정면 얼굴 사진 한 장을 올리면 AI가 퍼스널컬러 톤·피부·헤어·눈썹을 분석하고, 어울리는 샵과 클리닉을 카테고리별로 추천해 드려요.',
       choose: '사진 선택',
       change: '사진 변경',
+      takePhoto: "사진 촬영",
+      fromAlbum: "앨범에서 선택",
       analyze: 'AI 분석 시작',
       analyzing: 'AI가 분석 중입니다… (약 10초)',
       resultTitle: 'AI 분석 결과',

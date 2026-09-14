@@ -90,6 +90,8 @@ const en: Dictionary = {
       body: 'Upload one front-facing photo and AI analyzes your personal color tone, skin, hair and brows — then recommends matching shops and clinics by category.',
       choose: 'Choose photo',
       change: 'Change photo',
+      takePhoto: "Take a photo",
+      fromAlbum: "Choose from album",
       analyze: 'Start AI analysis',
       analyzing: 'AI is analyzing… (about 10s)',
       resultTitle: 'AI analysis result',

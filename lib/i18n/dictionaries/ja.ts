@@ -89,6 +89,8 @@ const ja: Dictionary = {
       body: '正面の顔写真を1枚アップすると、AI がパーソナルカラー・肌・髪・眉を分析し、似合うショップやクリニックをカテゴリ別におすすめします。',
       choose: '写真を選ぶ',
       change: '写真を変更',
+      takePhoto: "写真を撮る",
+      fromAlbum: "アルバムから選ぶ",
       analyze: 'AI 分析を開始',
       analyzing: 'AI が分析中…（約10秒）',
       resultTitle: 'AI 分析結果',
