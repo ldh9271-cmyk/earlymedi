@@ -281,6 +281,74 @@ export default async function ReferralPage({
   }
   const stmtTotal = statement.reduce((a, s) => a + s.amount, 0);
 
+  // ── 유치 회원의 예약 현황·이용 실적 (파트너·추천인 공통) ──────────────
+  // 파트너는 위에서 만든 명부(members)를 그대로 쓰고, 추천인은 자기 코드로
+  // 귀속된 회원만 따로 모은다. 예약은 회원 기준으로 전부(상태 무관) 가져와
+  // 대기·결제 완료·이용 완료·취소로 나눈다. 회원 PII 는 마스킹 이메일까지만.
+  if (!isDistributor) {
+    const mine = await db
+      .select({ userId: referralAttributions.userId, source: referralAttributions.source, createdAt: referralAttributions.createdAt })
+      .from(referralAttributions)
+      .where(eq(referralAttributions.partnerId, me.id))
+      .orderBy(desc(referralAttributions.createdAt))
+      .limit(200);
+    const emailById = new Map<string, string>();
+    if (mine.length > 0) {
+      try {
+        const svc = createSupabaseServiceClient();
+        const { data } = await (svc as unknown as {
+          auth: { admin: { listUsers: (o: { perPage: number }) => Promise<{ data?: { users?: Array<{ id: string; email?: string }> } }> } };
+        }).auth.admin.listUsers({ perPage: 500 });
+        for (const u of data?.users ?? []) if (u.email) emailById.set(u.id, u.email);
+      } catch { /* 익명 표기로 대체 */ }
+    }
+    const maskEmail = (e: string | undefined): string => (e ? e.replace(/^(..)[^@]*(@.*)$/, '$1***$2') : '');
+    members = mine.map((r) => ({
+      userId: r.userId, label: maskEmail(emailById.get(r.userId)) || `member-${r.userId.slice(0, 8)}`,
+      via: `${me.name} (${me.code})`, source: r.source, joinedAt: r.createdAt, orders: 0, spentWon: 0,
+    }));
+  }
+  type Bk = { total: number; pending: number; paid: number; done: number; cancelled: number; spentWon: number; last: { title: string; date: string; status: string; done: boolean } | null };
+  const ZERO_BK: Bk = { total: 0, pending: 0, paid: 0, done: 0, cancelled: 0, spentWon: 0, last: null };
+  const bk = new Map<string, Bk>();
+  if (members.length > 0) {
+    const orderRows = await db
+      .select({
+        userId: checkoutOrders.userId, title: checkoutOrders.listingTitle, status: checkoutOrders.status,
+        totalWon: checkoutOrders.totalWon, reserveYmd: checkoutOrders.reserveYmd, reserveDate: checkoutOrders.reserveDate,
+        completedAt: checkoutOrders.completedAt, meta: checkoutOrders.meta, createdAt: checkoutOrders.createdAt,
+      })
+      .from(checkoutOrders)
+      .where(inArray(checkoutOrders.userId, members.map((m) => m.userId)))
+      .orderBy(desc(checkoutOrders.createdAt))
+      .limit(1000);
+    for (const o of orderRows) {
+      if (!o.userId) continue;
+      const cur = bk.get(o.userId) ?? { ...ZERO_BK };
+      // 이용 완료 = 완료 시각이 찍혔거나 QR 방문 확인이 된 주문
+      const voucher = (o.meta as { voucher?: { checkedInAt?: string; usedAt?: string } } | null)?.voucher;
+      const done = !!(o.completedAt || voucher?.checkedInAt || voucher?.usedAt);
+      cur.total += 1;
+      if (o.status === 'cancelled') cur.cancelled += 1;
+      else if (done) cur.done += 1;
+      else if (o.status === 'paid') cur.paid += 1;
+      else cur.pending += 1;
+      if (o.status === 'paid') cur.spentWon += o.totalWon;
+      if (!cur.last) cur.last = { title: o.title, date: o.reserveYmd ?? o.reserveDate, status: o.status, done };
+      bk.set(o.userId, cur);
+    }
+  }
+  const bkSum = [...bk.values()].reduce((a, b) => ({
+    total: a.total + b.total, pending: a.pending + b.pending, paid: a.paid + b.paid, done: a.done + b.done,
+    cancelled: a.cancelled + b.cancelled, spentWon: a.spentWon + b.spentWon, last: null,
+  }), { ...ZERO_BK });
+  const bkStatus = (o: { status: string; done: boolean }): { text: string; color: string } =>
+    o.status === 'cancelled' ? { text: t.bkCancelled, color: '#6a6a6a' }
+      : o.done ? { text: t.bkDone, color: '#047857' }
+        : o.status === 'paid' ? { text: t.bkPaid, color: '#1d4ed8' }
+          : { text: t.bkPending, color: '#b45309' };
+  const fmtDate = (d: Date): string => d.toLocaleDateString(locale === 'kr' ? 'ko-KR' : locale);
+
   return (
     <section className="m-ref-page" style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px 96px' }}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -438,44 +506,83 @@ export default async function ReferralPage({
         )}
       </div>
 
+      {/* 유치 회원 예약 현황 · 이용 실적 — 파트너·추천인 공통 */}
+      <div className="m-ref-noprint">
+        <h2 style={{ fontSize: 17, fontWeight: 700, margin: '28px 0 10px' }}>{t.bookingsTitle}</h2>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+          {[
+            [t.bkMembers, String(members.length), '#222'],
+            [t.bkTotal, String(bkSum.total), '#222'],
+            [t.bkPending, String(bkSum.pending), '#b45309'],
+            [t.bkPaid, String(bkSum.paid), '#1d4ed8'],
+            [t.bkDone, String(bkSum.done), '#047857'],
+            [t.bkCancelled, String(bkSum.cancelled), '#6a6a6a'],
+            [t.bkSpent, fmt(bkSum.spentWon), '#222'],
+          ].map(([label, value, color]) => (
+            <div key={label} style={{ border: '1px solid #ebebeb', borderRadius: 10, padding: '8px 12px', minWidth: 96 }}>
+              <div style={{ fontSize: 11, color: '#6a6a6a' }}>{label}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+            </div>
+          ))}
+        </div>
+        {members.length === 0 ? (
+          <p style={{ fontSize: 13, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 12, padding: 18 }}>{t.membersNone}</p>
+        ) : (
+          <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontVariantNumeric: 'tabular-nums', minWidth: 720 }}>
+              <thead><tr style={{ background: '#fafafa', textAlign: 'left' }}>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mJoined}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mMember}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mVia}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mBookings}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mLast}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right' }}>{t.mUsage}</th>
+              </tr></thead>
+              <tbody>
+                {members.map((m) => {
+                  const b = bk.get(m.userId) ?? ZERO_BK;
+                  const chip = (n: number, label: string, color: string): JSX.Element | null =>
+                    n > 0 ? <span style={{ display: 'inline-block', marginRight: 6, fontSize: 11, fontWeight: 700, color, background: '#f7f7f7', borderRadius: 999, padding: '2px 8px' }}>{label} {n}</span> : null;
+                  return (
+                    <tr key={m.userId} style={{ borderTop: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{fmtDate(m.joinedAt)}</td>
+                      <td style={{ padding: '9px 12px', fontWeight: 600, wordBreak: 'break-all' }}>{m.label}</td>
+                      <td style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', whiteSpace: 'nowrap' }}>
+                        {m.via}<span style={{ marginLeft: 6, fontSize: 11, color: '#9c9c9c' }}>{m.source}</span>
+                      </td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
+                        {b.total === 0 ? <span style={{ color: '#9c9c9c' }}>{t.bkNone}</span> : (
+                          <>
+                            {chip(b.pending, t.bkPending, '#b45309')}
+                            {chip(b.paid, t.bkPaid, '#1d4ed8')}
+                            {chip(b.done, t.bkDone, '#047857')}
+                            {chip(b.cancelled, t.bkCancelled, '#6a6a6a')}
+                          </>
+                        )}
+                      </td>
+                      <td style={{ padding: '9px 12px', fontSize: 12, maxWidth: 260 }}>
+                        {b.last ? (
+                          <>
+                            <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.last.title}</div>
+                            <div style={{ color: '#6a6a6a' }}>{b.last.date} · <b style={{ color: bkStatus(b.last).color }}>{bkStatus(b.last).text}</b></div>
+                          </>
+                        ) : '—'}
+                      </td>
+                      <td style={{ padding: '9px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        {b.total > 0 ? <><b>{t.bkDone} {b.done}</b> · {fmt(b.spentWon)}</> : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* 파트너 전용 */}
       {isDistributor ? (
         <>
-          <div className="m-ref-noprint">
-            <h2 style={{ fontSize: 17, fontWeight: 700, margin: '28px 0 10px' }}>{t.membersTitle} ({members.length})</h2>
-            {members.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#6a6a6a', border: '1px dashed #dddddd', borderRadius: 12, padding: 18 }}>{t.membersNone}</p>
-            ) : (
-              <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontVariantNumeric: 'tabular-nums', minWidth: 560 }}>
-                  <thead><tr style={{ background: '#fafafa', textAlign: 'left' }}>
-                    <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mJoined}</th>
-                    <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mMember}</th>
-                    <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mVia}</th>
-                    <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right' }}>{t.mOrders}</th>
-                  </tr></thead>
-                  <tbody>
-                    {members.map((m) => (
-                      <tr key={m.userId} style={{ borderTop: '1px solid #f0f0f0' }}>
-                        <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
-                          {m.joinedAt.toLocaleDateString(locale === 'kr' ? 'ko-KR' : locale)}
-                        </td>
-                        <td style={{ padding: '9px 12px', fontWeight: 600, wordBreak: 'break-all' }}>{m.label}</td>
-                        <td style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>
-                          {m.via}
-                          <span style={{ marginLeft: 6, fontSize: 11, color: '#9c9c9c' }}>{m.source}</span>
-                        </td>
-                        <td style={{ padding: '9px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                          {m.orders > 0 ? <><b>{m.orders}</b> · {fmt(m.spentWon)}</> : '—'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-          </div>
 
           <div style={{ marginTop: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>{t.statement} · {period}</h2>
