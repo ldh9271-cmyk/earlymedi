@@ -1,0 +1,91 @@
+{
+  "firewallEnabled": true,
+  "ips": [],
+  "rules": [
+    {
+      "name": "AI 호출 남용 방지",
+      "description": "/api/ai/* POST — IP당 분당 30회 초과 시 차단. 비로그인 AI 분석·상담·여행 API는 호출마다 비용이 든다.",
+      "active": true,
+      "conditionGroup": [
+        { "conditions": [
+          { "type": "path", "op": "pre", "value": "/api/ai/" },
+          { "type": "method", "op": "eq", "value": "POST" }
+        ] }
+      ],
+      "action": { "mitigate": { "action": "rate_limit", "rateLimit": { "algo": "fixed_window", "window": 60, "limit": 30, "keys": ["ip"], "action": "deny" }, "actionDuration": null } }
+    },
+    {
+      "name": "주문 생성 남용 방지",
+      "description": "/api/checkout/*, /api/me/orders/* POST — IP당 분당 20회. 게스트 주문·취소 스팸(텔레그램 알림 폭주) 방지.",
+      "active": true,
+      "conditionGroup": [
+        { "conditions": [
+          { "type": "path", "op": "pre", "value": "/api/checkout/" },
+          { "type": "method", "op": "eq", "value": "POST" }
+        ] },
+        { "conditions": [
+          { "type": "path", "op": "pre", "value": "/api/me/orders/" },
+          { "type": "method", "op": "eq", "value": "POST" }
+        ] }
+      ],
+      "action": { "mitigate": { "action": "rate_limit", "rateLimit": { "algo": "fixed_window", "window": 60, "limit": 20, "keys": ["ip"], "action": "deny" }, "actionDuration": null } }
+    },
+    {
+      "name": "인증 엔드포인트 남용 방지",
+      "description": "/api/auth/* — IP당 분당 30회. 전화 OTP 완료·소셜 콜백·로그아웃 반복 호출 방지.",
+      "active": true,
+      "conditionGroup": [
+        { "conditions": [
+          { "type": "path", "op": "pre", "value": "/api/auth/" }
+        ] }
+      ],
+      "action": { "mitigate": { "action": "rate_limit", "rateLimit": { "algo": "fixed_window", "window": 60, "limit": 30, "keys": ["ip"], "action": "deny" }, "actionDuration": null } }
+    },
+    {
+      "name": "방문 비콘·추천 귀속 남용 방지",
+      "description": "/api/track/*, /api/ref/* POST — IP당 분당 120회. 통계 오염·DB 쓰기 폭주 방지.",
+      "active": true,
+      "conditionGroup": [
+        { "conditions": [
+          { "type": "path", "op": "pre", "value": "/api/track/" },
+          { "type": "method", "op": "eq", "value": "POST" }
+        ] },
+        { "conditions": [
+          { "type": "path", "op": "pre", "value": "/api/ref/" },
+          { "type": "method", "op": "eq", "value": "POST" }
+        ] }
+      ],
+      "action": { "mitigate": { "action": "rate_limit", "rateLimit": { "algo": "fixed_window", "window": 60, "limit": 120, "keys": ["ip"], "action": "deny" }, "actionDuration": null } }
+    },
+    {
+      "name": "공개 페이지 서버 액션 남용 방지",
+      "description": "Next-Action 헤더가 붙은 폼 제출 — 공개 페이지에서 IP당 분당 60회. 콘솔(/master,/agency,/medical,/partner)은 제외.",
+      "active": true,
+      "conditionGroup": [
+        { "conditions": [
+          { "type": "header", "key": "next-action", "op": "ex" },
+          { "type": "path", "op": "pre", "neg": true, "value": "/master" },
+          { "type": "path", "op": "pre", "neg": true, "value": "/agency" },
+          { "type": "path", "op": "pre", "neg": true, "value": "/medical" },
+          { "type": "path", "op": "pre", "neg": true, "value": "/partner" }
+        ] }
+      ],
+      "action": { "mitigate": { "action": "rate_limit", "rateLimit": { "algo": "fixed_window", "window": 60, "limit": 60, "keys": ["ip"], "action": "deny" }, "actionDuration": null } }
+    },
+    {
+      "name": "API 홍수 방지(전체)",
+      "description": "/api/* — IP당 분당 300회 안전망. 웹훅(/api/webhooks, 토스 웹훅)·크론·잡은 제외.",
+      "active": true,
+      "conditionGroup": [
+        { "conditions": [
+          { "type": "path", "op": "pre", "value": "/api/" },
+          { "type": "path", "op": "pre", "neg": true, "value": "/api/webhooks/" },
+          { "type": "path", "op": "pre", "neg": true, "value": "/api/payments/toss/webhook" },
+          { "type": "path", "op": "pre", "neg": true, "value": "/api/cron/" },
+          { "type": "path", "op": "pre", "neg": true, "value": "/api/jobs/" }
+        ] }
+      ],
+      "action": { "mitigate": { "action": "rate_limit", "rateLimit": { "algo": "fixed_window", "window": 60, "limit": 300, "keys": ["ip"], "action": "deny" }, "actionDuration": null } }
+    }
+  ]
+}
