@@ -150,6 +150,13 @@ export const KO_LABELS = {
     "ru": "Обновлено в 2023 г.",
     "vi": "Mới đổi mới 2023"
   },
+  "2023년 비엔나 유럽 학회에서 클리어스마일라식 임상 결과 발표": {
+    "en": "CLEAR SMILE Clinical Results Presented at 2023 Vienna European Congress",
+    "zh": "2023维也纳欧洲眼科学会发表CLEAR全飞秒临床结果",
+    "ja": "2023年ウィーン欧州学会でCLEARスマイル臨床結果発表",
+    "ru": "Клин. результаты CLEAR SMILE на европ. конгрессе 2023 в Вене",
+    "vi": "Công bố kết quả LS CLEAR SMILE tại Hội nghị châu Âu 2023 Vienna"
+  },
   "2026년 9월 개원": {
     "en": "Opening September 2026",
     "zh": "2026年9月开业",
@@ -486,6 +493,13 @@ export const KO_LABELS = {
     "ru": "Линия 9 Синнонхён вых. 8 (5 мин) · Синбундан вых. 7 (3 мин) · Линия 2 Каннам вых. 10 (10 мин)",
     "vi": "Tuyến 9 Ga Sinnonhyeon Cổng 8 đi bộ 5p · Shinbundang Cổng 7 đi bộ 3p · Tuyến 2 Ga Gangnam Cổng 10 đi bộ 10p"
   },
+  "9호선·신분당선 신논현역 9번 출구 (투썸플레이스 건물 5·6층) · 반포IC 1분": {
+    "en": "Sinnonhyeon Station Exit 9 (Lines 9 & Shinbundang, 5-6F) · 1 min from Banpo IC",
+    "zh": "9号线·新盆唐线新论岘站9号出口(Twosome楼5·6层)·半坡IC 1分",
+    "ja": "9号線·新盆唐線 新論峴駅9番出口(Twosomeビル5·6階)·半坡IC 1分",
+    "ru": "Выход 9 ст. Синнонхён (лин. 9/Синбундан, 5-6 эт.) · 1 мин от Banpo IC",
+    "vi": "Ga Sinnonhyeon Cửa 9 (Tuyến 9·Shinbundang, Tầng 5·6) · 1p từ Banpo IC"
+  },
   "ABHRS(미국모발이식전문의) 자격 보유 의료진": {
     "en": "ABHRS-Certified Hair Transplant Doctors",
     "zh": "拥有ABHRS(美国植发专科)资格医疗团队",
@@ -499,6 +513,13 @@ export const KO_LABELS = {
     "ja": "All-On-X インプラント",
     "ru": "Имплантация All-On-X",
     "vi": "Cấy ghép Implant All-On-X"
+  },
+  "Aquacel 안구건조증 치료기": {
+    "en": "Aquacel Dry Eye Treatment Device",
+    "zh": "Aquacel干眼症治疗仪",
+    "ja": "Aquacel ドライアイ治療器",
+    "ru": "Aquacel аппарат для лечения сухого глаза",
+    "vi": "Thiết bị điều trị khô mắt Aquacel"
   },
   "BBL 히어로": {
     "en": "BBL Hero",
@@ -535,6 +556,13 @@ export const KO_LABELS = {
     "ru": "Фракционный CO2-лазер",
     "vi": "Laser CO2 Fractional"
   },
+  "Centurion 백내장 수술기": {
+    "en": "Centurion Cataract Surgery System",
+    "zh": "Centurion白内障手术系统",
+    "ja": "Centurion 白内障手術システム",
+    "ru": "Centurion система для хирургии катаракты",
+    "vi": "Hệ thống phẫu thuật đục thủy tinh thể Centurion"
+  },
   "Cera Dento Lab 원내 기공소": {
     "en": "In-House Lab: Cera Dento Lab",
     "zh": "Cera Dento Lab 院内技工所",
@@ -569,6 +597,13 @@ export const KO_LABELS = {
     "ja": "ENL 輪郭注射",
     "ru": "Инъекция для контура ENL",
     "vi": "Tiêm thon gọn ENL"
+  },
+  "EX500 엑시머레이저": {
+    "en": "EX500 Excimer Laser",
+    "zh": "EX500准分子激光",
+    "ja": "EX500 エキシマレーザー",
+    "ru": "Эксимерный лазер EX500",
+    "vi": "Laser Excimer EX500"
   },
   "FIMS 비수술 통증": {
     "en": "FIMS Non-Surgical Pain Care",
@@ -703,6 +738,20 @@ export const KO_LABELS = {
     "ru": "Lift — упругость и лифтинг",
     "vi": "Lift — Săn chắc & Nâng cơ"
   },
+  "Lightlas 532 망막 레이저": {
+    "en": "Lightlas 532 Retinal Laser",
+    "zh": "Lightlas 532视网膜激光",
+    "ja": "Lightlas 532 網膜レーザー",
+    "ru": "Ретинальный лазер Lightlas 532",
+    "vi": "Laser võng mạc Lightlas 532"
+  },
+  "Lumera 수술 현미경": {
+    "en": "Lumera Surgical Microscope",
+    "zh": "Lumera手术显微镜",
+    "ja": "Lumera 手術顕微鏡",
+    "ru": "Хирургический микроскоп Lumera",
+    "vi": "Kính hiển vi phẫu thuật Lumera"
+  },
   "MRI·CT 정밀검사": {
     "en": "MRI·CT Precision Exam",
     "zh": "MRI·CT 精密检查",
@@ -794,6 +843,13 @@ export const KO_LABELS = {
     "ru": "Липофилинг с PRP",
     "vi": "Cấy mỡ tự thân PRP"
   },
+  "Pentacam 각막지형도": {
+    "en": "Pentacam Corneal Topography",
+    "zh": "Pentacam角膜地形图",
+    "ja": "Pentacam 角膜形状解析",
+    "ru": "Топография роговицы Pentacam",
+    "vi": "Bản đồ giác mạc Pentacam"
+  },
   "Refine — 피부결·재생": {
     "en": "Refine — Skin Texture & Renewal",
     "zh": "Refine — 肤质·再生",
@@ -821,6 +877,13 @@ export const KO_LABELS = {
     "ja": "SMP 頭皮アートメイク",
     "ru": "Трихопигментация SMP",
     "vi": "Xăm da đầu SMP"
+  },
+  "SP-1P 각막내피세포검사": {
+    "en": "SP-1P Corneal Endothelial Cell Exam",
+    "zh": "SP-1P角膜内皮细胞检查",
+    "ja": "SP-1P 角膜内皮細胞検査",
+    "ru": "SP-1P эндотелиальная микроскопия",
+    "vi": "Kiểm tra tế bào nội mô giác mạc SP-1P"
   },
   "SVF 지방줄기세포": {
     "en": "SVF Adipose Stem Cells",
@@ -1466,6 +1529,13 @@ export const KO_LABELS = {
     "ru": "Программа центра укрепления здоровья",
     "vi": "Chương trình TT Nâng cao Sức khỏe"
   },
+  "건물 기계식 주차 (승용차 전용) · 소형 SUV/RV 이상은 교보타워 주차장": {
+    "en": "Mechanical Parking (Sedans Only) · SUVs/RVs use Kyobo Tower Parking",
+    "zh": "楼内机械停车(限轿车)·小型SUV/RV及以上停Kyobo Tower停车场",
+    "ja": "機械式駐車場(乗用車専用)·小型SUV/RV以上は教保タワー駐車場",
+    "ru": "Механич. парковка (седаны) · SUV/внедорожники в Kyobo Tower",
+    "vi": "Bãi đỗ cơ học (chỉ xe con) · SUV/RV gửi tại bãi đỗ Kyobo Tower"
+  },
   "건물 주차장 3시간 지원": {
     "en": "3 Hours Free Building Parking",
     "zh": "提供大厦停车场3小时免费",
@@ -1514,6 +1584,20 @@ export const KO_LABELS = {
     "ja": "検査",
     "ru": "Обследование",
     "vi": "Xét nghiệm / Kiểm tra"
+  },
+  "검사·수술 장비": {
+    "en": "Diagnostic & Surgical Equipment",
+    "zh": "检查·手术设备",
+    "ja": "検査·手術機器",
+    "ru": "Диагностическое и операционное оборудование",
+    "vi": "Thiết bị khám · phẫu thuật"
+  },
+  "검안실·상담실": {
+    "en": "Optometry & Consultation Room",
+    "zh": "验光室·咨询室",
+    "ja": "検眼室·カウンセリング室",
+    "ru": "Оптометрия и консультация",
+    "vi": "Phòng đo thị lực · tư vấn"
   },
   "검진": {
     "en": "Checkup / Screening",
@@ -1949,6 +2033,13 @@ export const KO_LABELS = {
     "ru": "Эксперт по суставам (3 аккредитации) · 3D-эндопротезирование",
     "vi": "Chuyên khoa khớp chứng nhận 3 lần · Khớp nhân tạo 3D"
   },
+  "광각 망막안저검사": {
+    "en": "Ultra-Widefield Retinal Fundus Exam",
+    "zh": "超广角眼底检查",
+    "ja": "広角眼底検査",
+    "ru": "Широкопольная фундус-диагностика сетчатки",
+    "vi": "Khám đáy mắt võng mạc góc rộng"
+  },
   "광대 축소술(관골 성형술)": {
     "en": "Zygoma Reduction (Malarplasty)",
     "zh": "颧骨缩小术(颧骨整形)",
@@ -2347,6 +2438,13 @@ export const KO_LABELS = {
     "ja": "金〜日 20:30まで診療",
     "ru": "Пт–Вс прием до 20:30",
     "vi": "Khám T6–CN đến 20:30"
+  },
+  "금요일 20시까지 야간 진료(예약)": {
+    "en": "Friday Night Clinic until 20:00 (Appt Only)",
+    "zh": "周五夜诊至20:00(需预约)",
+    "ja": "金曜20時まで夜間診療(予約制)",
+    "ru": "Вечерний прием по пт до 20:00 (по записи)",
+    "vi": "Khám ngoài giờ Thứ 6 đến 20:00 (Hẹn trước)"
   },
   "금요일 21시까지 진료": {
     "en": "Friday open until 21:00",
@@ -5617,6 +5715,13 @@ export const KO_LABELS = {
     "ru": "Операция по удалению катаракты",
     "vi": "Phẫu thuật đục thủy tinh thể"
   },
+  "백내장 수술 (다초점 인공수정체)": {
+    "en": "Cataract Surgery (Multifocal IOL)",
+    "zh": "白内障手术(多焦点人工晶体)",
+    "ja": "白内障手術(多焦点眼内レンズ)",
+    "ru": "Хирургия катаракты (мультифокальная ИОЛ)",
+    "vi": "Phẫu thuật đục thủy tinh thể (IOL đa tiêu)"
+  },
   "백내장·굴절": {
     "en": "Cataract & Refractive",
     "zh": "白内障·屈光",
@@ -5637,6 +5742,13 @@ export const KO_LABELS = {
     "ja": "白内障・老眼手術",
     "ru": "Операции при катаракте и пресбиопии",
     "vi": "Phẫu thuật đục thủy tinh thể & lão thị"
+  },
+  "백동원 대표원장": {
+    "en": "Head Director Dr. Dong-won Baek",
+    "zh": "代表院长 白东远",
+    "ja": "代表院長 ペク·ドンウォン",
+    "ru": "Главный врач Пэк Дон Вон",
+    "vi": "Bác sĩ trưởng Baek Dong-won"
   },
   "백반증": {
     "en": "Vitiligo",
@@ -6464,6 +6576,13 @@ export const KO_LABELS = {
     "ru": "Выездная экскурсия · Углубленный курс",
     "vi": "Tham quan thực địa · Khóa học nâng cao"
   },
+  "삼성서울병원 SMC 파트너(협력의사)": {
+    "en": "Samsung Medical Center (SMC) Partner Doctor",
+    "zh": "三星首尔医院 SMC合作医生",
+    "ja": "サムスンソウル病院 SMC協力医",
+    "ru": "Партнер Samsung Medical Center (SMC)",
+    "vi": "Bác sĩ đối tác Bệnh viện Samsung Seoul (SMC)"
+  },
   "삼성중앙역 도보 3분": {
     "en": "3-min walk from Samseong Jungang Station",
     "zh": "三成中央站步行3分钟",
@@ -6806,6 +6925,13 @@ export const KO_LABELS = {
     "ja": "聖淡ビル 2~8階・10階 健診フロア",
     "ru": "Зона чек-апа на 2-8 и 10 этажах здания Сондам",
     "vi": "Khu khám SK Tầng 2~8 & 10 Tòa nhà Seongdam"
+  },
+  "성인 드림렌즈": {
+    "en": "Adult Dream Lens (Ortho-K)",
+    "zh": "成人OK镜 (角膜塑形镜)",
+    "ja": "大人向けドリームレンズ (オルソケラトロジー)",
+    "ru": "Ночные линзы Ortho-K для взрослых",
+    "vi": "Kính áp tròng ban đêm Ortho-K cho người lớn"
   },
   "성인 진료": {
     "en": "Adult Care",
@@ -7262,6 +7388,13 @@ export const KO_LABELS = {
     "ru": "1-я категория в оценке потребителей 3 года подряд",
     "vi": "Hạng 1 Đánh giá người tiêu dùng 3 năm liên tiếp"
   },
+  "소아 드림렌즈": {
+    "en": "Pediatric Dream Lens (Ortho-K)",
+    "zh": "儿童OK镜 (角膜塑形镜)",
+    "ja": "小児向けドリームレンズ (オルソケラトロジー)",
+    "ru": "Детские ночные линзы Ortho-K",
+    "vi": "Kính áp tròng ban đêm Ortho-K cho trẻ em"
+  },
   "소아 비염 치료": {
     "en": "Pediatric Rhinitis Treatment",
     "zh": "儿童鼻炎治疗",
@@ -7583,6 +7716,13 @@ export const KO_LABELS = {
     "ja": "手術や施術の結果は個人の身体条件や回復過程により異なり、副作用が生じる場合があります。韓国内における先端再生医療（幹細胞治療）は、「先端再生バイオ法」に基づき指定された再生医療機関にて承認された計画の範囲内でのみ実施されます。施術方法はカウンセリングと検査を経て決定されます。",
     "ru": "Результаты операций и процедур зависят от индивидуальных особенностей и процесса восстановления; возможны побочные эффекты. В Корее передовая регенеративная медицина (стволовые клетки) проводится только в назначенных учреждениях в рамках планов, одобренных Законом о передовой регенеративной биотехнологии. Метод определяется после консультации и обследования.",
     "vi": "Kết quả phẫu thuật và thủ thuật có thể khác nhau tùy theo thể trạng và quá trình hồi phục của mỗi người, đồng thời có thể xảy ra tác dụng phụ. Tại Hàn Quốc, liệu pháp tế bào gốc chỉ được thực hiện tại các cơ sở được chỉ định và theo kế hoạch được phê duyệt theo Đạo luật Sinh học Tái tạo Tiên tiến. Phương pháp được quyết định qua tư vấn và xét nghiệm."
+  },
+  "수술대기실·수술실·회복실": {
+    "en": "Pre-Op Waiting · OR · Recovery Room",
+    "zh": "术前候诊室·手术室·恢复室",
+    "ja": "手術待合室·手術室·回復室",
+    "ru": "Предоперационная · Операционная · Палата пробуждения",
+    "vi": "Phòng chờ phẫu thuật · Phòng mổ · Phòng hồi sức"
   },
   "수술센터와 검사·진료센터 층 분리 운영": {
     "en": "Separate Floors: Surgery Center & Exam/Clinic Center",
@@ -8116,6 +8256,13 @@ export const KO_LABELS = {
     "ru": "Рядом с вых. 3 ст. Синнонхён",
     "vi": "Gần Ga Sinnonhyeon Lối ra 3"
   },
+  "신논현역 9번 출구 바로 앞": {
+    "en": "Right outside Sinnonhyeon Station Exit 9",
+    "zh": "新论岘站9号出口正前方",
+    "ja": "新論峴駅9番出口すぐ前",
+    "ru": "Прямо у выхода 9 ст. Синнонхён",
+    "vi": "Ngay trước Cửa 9 Ga Sinnonhyeon"
+  },
   "신논현역 인근": {
     "en": "Near Sinnonhyeon Station",
     "zh": "近新论岘站",
@@ -8501,6 +8648,20 @@ export const KO_LABELS = {
     "ru": "Офтальмолог · Коррекция зрения и кератоконус",
     "vi": "Bác sĩ mắt · Chỉnh thị & Giác mạc chóp"
   },
+  "안과 전문의 · 인제대 의대 안과학 석사 · 삼성서울병원 안과 전안부 임상강사 역임 · 삼성서울병원 SMC 파트너(협력의사)": {
+    "en": "Ophthalmologist · MS, Inje Univ. · Fmr SMC Anterior Segment Instructor · SMC Partner Doctor",
+    "zh": "眼科专科医·仁济大眼科硕士·曾任三星首尔医院前节临床讲师·SMC合作医生",
+    "ja": "眼科専門医·仁済大眼科学修士·元サムスンソウル病院前眼部臨床講師·SMC協力医",
+    "ru": "Офтальмолог · Магистр (Инчже) · Экс-клинич. инструктор SMC · Партнер SMC",
+    "vi": "BS Chuyên khoa Mắt · ThS ĐH Inje · Cựu Giảng viên SMC · BS đối tác SMC"
+  },
+  "안과 전문의 · 전북대병원 안과 전공의·망막 전임의·진료교수 역임 · 전 예수병원 안과 주임과장": {
+    "en": "Ophthalmologist · Fmr Resident, Retinal Fellow & Clinical Prof at JBNU · Fmr Chief, Jesus Hospital",
+    "zh": "眼科专科医·曾任全北大医院住院医/视网膜培训医/临床教授·曾任耶稣医院眼科主任",
+    "ja": "眼科専門医·元全北大学病院専攻医/網膜フェロー/臨床教授·元イエス病院眼科部長",
+    "ru": "Офтальмолог · Экс-ординатор, витреоретинальный феллоу и проф. JBNU · Экс-зав. Jesus Hospital",
+    "vi": "BS Chuyên khoa Mắt · Cựu BS nội trú, Fellow võng mạc & GS BV ĐH Chonbuk · Cựu Trưởng khoa BV Jesus"
+  },
   "안과 정밀 검진": {
     "en": "Detailed Eye Screening",
     "zh": "眼科精密检查",
@@ -8654,6 +8815,13 @@ export const KO_LABELS = {
     "ja": "眼疾患の診療",
     "ru": "Лечение заболеваний глаз",
     "vi": "Khám & điều trị bệnh mắt"
+  },
+  "안질환 클리닉": {
+    "en": "Eye Disease Clinic",
+    "zh": "眼病专科门诊",
+    "ja": "眼疾患クリニック",
+    "ru": "Клиника глазных болезней",
+    "vi": "Phòng khám bệnh lý về mắt"
   },
   "안티에이징": {
     "en": "Anti-Aging",
@@ -9432,6 +9600,13 @@ export const KO_LABELS = {
     "ru": "Предоставляется гид на английском. Уточняйте перевод при записи.",
     "vi": "Cung cấp hướng dẫn tiếng Anh. Vui lòng xác nhận hỗ trợ thông dịch khi đặt hẹn."
   },
+  "영문 홈페이지(eyeonceclinic.com)와 영문 리플렛을 운영하며 외국인환자 유치 의료기관으로 등록되어 있습니다. 국제 문의 +82-10-6778-1996 · eyeonceclinic@gmail.com. 통역 지원 범위는 예약 시 확인해 주세요.": {
+    "en": "English website (eyeonceclinic.com) & leaflets available; registered for int'l patients. Inquiries: +82-10-6778-1996 · eyeonceclinic@gmail.com. Confirm interpreter support upon booking.",
+    "zh": "设英文官网(eyeonceclinic.com)及手册，为持证外籍患者定点医疗机构。国际咨询 +82-10-6778-1996 · eyeonceclinic@gmail.com。翻译服务请预约时确认。",
+    "ja": "英語HP(eyeonceclinic.com)·パンフ対応の外国人誘致登録医療機関。国際問合せ: +82-10-6778-1996 · eyeonceclinic@gmail.com。通訳は予約時に要確認。",
+    "ru": "Англ. сайт (eyeonceclinic.com), буклет; аккредитация для интуристов. Запросы: +82-10-6778-1996 · eyeonceclinic@gmail.com. Переводчик уточняется при записи.",
+    "vi": "Có website tiếng Anh (eyeonceclinic.com) & tờ rơi; cơ sở tiếp nhận bệnh nhân quốc tế. LH: +82-10-6778-1996 · eyeonceclinic@gmail.com. Vui lòng hỏi hỗ trợ phiên dịch khi đặt lịch."
+  },
   "영문 홈페이지를 운영하며 외국인 환자 상담을 받습니다. 통역 지원 범위는 예약 시 확인해 주세요.": {
     "en": "English website & international consultation available. Check interpreter support upon booking.",
     "zh": "运营英文官网并提供外籍咨询。翻译支持范围请在预约时确认。",
@@ -9740,6 +9915,27 @@ export const KO_LABELS = {
     "ru": "Лифтинг ONDA",
     "vi": "Nâng cơ ONDA"
   },
+  "올레이저 라섹": {
+    "en": "All-Laser LASEK",
+    "zh": "全激光LASEK",
+    "ja": "オールレーザーラセック",
+    "ru": "Полностью лазерный LASEK",
+    "vi": "LASEK toàn phần bằng laser"
+  },
+  "올레이저 라식": {
+    "en": "All-Laser LASIK",
+    "zh": "全激光LASIK",
+    "ja": "オールレーザーレーシック",
+    "ru": "Полностью лазерный LASIK",
+    "vi": "LASIK toàn phần bằng laser"
+  },
+  "올레이저 라식/라섹": {
+    "en": "All-Laser LASIK/LASEK",
+    "zh": "全激光LASIK/LASEK",
+    "ja": "オールレーザーLASIK/LASEK",
+    "ru": "Полностью лазерный LASIK/LASEK",
+    "vi": "LASIK/LASEK toàn phần bằng laser"
+  },
   "올리디아": {
     "en": "Olidia",
     "zh": "Olidia",
@@ -9928,6 +10124,13 @@ export const KO_LABELS = {
     "ja": "外国人向け視力矯正・白内障診療案内 (江南ソウル明るい眼科)",
     "ru": "Коррекция зрения и катаракта (Gangnam Seoul Bright Eye)",
     "vi": "Chỉnh thị & đục thủy tinh thể cho khách quốc tế (Gangnam Seoul Bright Eye)"
+  },
+  "외국인환자 유치 의료기관 등록": {
+    "en": "Registered Clinic for Int'l Patients",
+    "zh": "外籍患者定点医疗机构认证",
+    "ja": "外国人患者誘致登録医療機関",
+    "ru": "Сертификация для иностранных пациентов",
+    "vi": "Cơ sở tiếp nhận bệnh nhân quốc tế"
   },
   "외국인환자 유치 의료기관 등록(M-2022-01-08-6738)": {
     "en": "Registered Foreign Patient Facilitator (M-2022-01-08-6738)",
@@ -11679,6 +11882,13 @@ export const KO_LABELS = {
     "ru": "Без обеда · Вечерний прием 19:00~21:00 · Вс: вых.",
     "vi": "Khám không nghỉ trưa · Khám tối 19:00~21:00 · Nghỉ CN"
   },
+  "접수·데스크·진료실 (접수는 5층)": {
+    "en": "Reception · Desk · Clinic (Reception on 5F)",
+    "zh": "挂号·前台·诊室(请至5层挂号)",
+    "ja": "受付·デスク·診察室(受付は5階)",
+    "ru": "Регистратура · Стойка · Кабинет (прием на 5 эт.)",
+    "vi": "Tiếp đón · Quầy lễ tân · Khám bệnh (Đăng ký tại Tầng 5)"
+  },
   "정관 수술": {
     "en": "Vasectomy",
     "zh": "输精管结扎术",
@@ -11748,6 +11958,13 @@ export const KO_LABELS = {
     "ja": "チョン・ビョンフン院長",
     "ru": "Доктор Чон Бён Хун",
     "vi": "Bác sĩ Jung Byung-hoon"
+  },
+  "정새롬 원장": {
+    "en": "Director Sae-rom Jung",
+    "zh": "院长 郑塞罗姆",
+    "ja": "チョン·セロム院長",
+    "ru": "Доктор Чон Сэ Ром",
+    "vi": "Bác sĩ Jung Sae-rom"
   },
   "정수리 모발이식": {
     "en": "Crown Hair Transplant",
@@ -13464,6 +13681,41 @@ export const KO_LABELS = {
     "ru": "Clarity",
     "vi": "Clarity"
   },
+  "클리어 수프라": {
+    "en": "CLEAR Supra",
+    "zh": "CLEAR Supra",
+    "ja": "CLEAR Supra",
+    "ru": "CLEAR Supra",
+    "vi": "CLEAR Supra"
+  },
+  "클리어스마일라식": {
+    "en": "CLEAR SMILE LASIK",
+    "zh": "CLEAR全飞秒",
+    "ja": "CLEARスマイルレーシック",
+    "ru": "CLEAR SMILE LASIK",
+    "vi": "CLEAR SMILE LASIK"
+  },
+  "클리어스마일라식 (FEMTO LDV Z8)": {
+    "en": "CLEAR SMILE LASIK (FEMTO LDV Z8)",
+    "zh": "CLEAR全飞秒 (FEMTO LDV Z8)",
+    "ja": "CLEARスマイルレーシック (FEMTO LDV Z8)",
+    "ru": "CLEAR SMILE LASIK (FEMTO LDV Z8)",
+    "vi": "CLEAR SMILE LASIK (FEMTO LDV Z8)"
+  },
+  "클리어스마일라식 중점 진료": {
+    "en": "CLEAR SMILE LASIK Specialist",
+    "zh": "专攻 CLEAR全飞秒",
+    "ja": "CLEARスマイル重点診療",
+    "ru": "Специализация: CLEAR SMILE LASIK",
+    "vi": "Chuyên sâu CLEAR SMILE LASIK"
+  },
+  "클리어스마일라식·올레이저 라식/라섹·ICL·노안·백내장을 안과 전문의 2인이 진료하는 안과": {
+    "en": "Eye Clinic with 2 Specialists: CLEAR SMILE, All-Laser LASIK/LASEK, ICL, Presbyopia & Cataract",
+    "zh": "2位眼科专科医主诊：CLEAR全飞秒·全激光LASIK/LASEK·ICL·老花眼·白内障",
+    "ja": "CLEARスマイル·全レーザーLASIK/LASEK·ICL·老眼·白内障を眼科専門医2名が診療",
+    "ru": "Клиника с 2 специалистами: CLEAR SMILE, All-Laser LASIK/LASEK, ICL, пресбиопия и катаракта",
+    "vi": "PK với 2 BS Chuyên khoa: CLEAR SMILE · All-laser LASIK/LASEK · ICL · Lão thị · Đục thủy tinh thể"
+  },
   "클리피씨 교정": {
     "en": "Clippy-C Braces",
     "zh": "Clippy-C 自锁正畸",
@@ -14163,6 +14415,13 @@ export const KO_LABELS = {
     "ja": "平日 08:30~19:00 · 土曜 08:30~13:00(昼休みなし) · 昼休み 13:00~14:00 · 日曜・祝日休診",
     "ru": "Будни 08:30–19:00 · Сб 08:30–13:00 (без обеда) · Обед 13:00–14:00 · Вс/Праздники: вых.",
     "vi": "Ngày thường 08:30~19:00 · T7 08:30~13:00 (không nghỉ trưa) · Trưa 13:00~14:00 · CN/Lễ nghỉ"
+  },
+  "평일 09:00~18:00 · 금요일 09:00~20:00(야간은 예약 진료) · 토요일 09:00~16:00 · 점심 13:00~14:00 · 수요일·일요일·공휴일 휴진": {
+    "en": "Weekdays 09:00~18:00 · Fri 09:00~20:00 (Night Appt Only) · Sat 09:00~16:00 · Lunch 13:00~14:00 · Closed Wed, Sun & Holidays",
+    "zh": "平日 09:00~18:00·周五 09:00~20:00(夜间预约)·周六 09:00~16:00·午休 13:00~14:00·周三/周日/公休休诊",
+    "ja": "平日 09:00~18:00·金曜 09:00~20:00(夜間予約制)·土曜 09:00~16:00·昼休 13:00~14:00·水·日·祝 休診",
+    "ru": "Будни 09:00~18:00 · Пт 09:00~20:00 (вечер по записи) · Сб 09:00~16:00 · Обед 13:00~14:00 · Ср/Вс/Праздн: вых.",
+    "vi": "Ngày thường 09:00~18:00 · T6 09:00~20:00 (Tối hẹn trước) · T7 09:00~16:00 · Trưa 13:00~14:00 · Nghỉ T4, CN & Ngày lễ"
   },
   "평일 09:00~18:00 · 점심 13:00~14:00 · 자세한 시간은 예약 시 안내": {
     "en": "Weekdays 09:00–18:00 · Lunch 13:00–14:00 · Details upon booking",
@@ -15619,6 +15878,13 @@ export const KO_LABELS = {
     "ja": "回復ベースのクリニック",
     "ru": "Клиника, ориентированная на восстановление",
     "vi": "Phòng khám tập trung phục hồi"
+  },
+  "후발 백내장 레이저": {
+    "en": "Secondary Cataract Laser (YAG Capsulotomy)",
+    "zh": "后发障激光治疗 (YAG激光)",
+    "ja": "後発白内障レーザー治療",
+    "ru": "Лазерное лечение вторичной катаракты",
+    "vi": "Laser điều trị đục bao sau thủy tinh thể"
   },
   "흉터": {
     "en": "Scars",
