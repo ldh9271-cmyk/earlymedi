@@ -57,13 +57,18 @@ const HOSPITAL_CATS: Array<{ words: string[]; cat: string }> = [
       '윤곽주사', '지방이식', '리프팅', '보톡스', '필러',
       '울쎄라', '울세라', '써마지', '서마지', '울써마', 'ulthera', 'thermage',
       'double eyelid', 'rhinoplasty', 'nose job', 'facial contour', 'liposuction',
+      // 눈·안면 세부 시술 (하안검·상안검 등은 성형외과 상담 대상)
+      '하안검', '상안검', '안검', '안검하수', '눈밑', '눈꺼풀', '눈매', '눈수술', '눈썹거상', '거상', '안면거상', '눈밑처짐', '눈밑꺼짐', '다크서클',
+      '이마', '팔자', '입술', '인중', '귀족', '턱끝', '무턱', '안면', '얼굴', '실리프팅', '가슴성형', '가슴확대', '복부', '허벅지', '팔뚝',
+      'blepharoplasty', 'eyelid', 'brow lift', 'facelift', 'face lift', 'breast', 'jaw', 'chin', 'forehead', 'lip',
+      '眼袋', '双眼皮', '隆鼻', '下眼睑', '上眼睑', '眼瞼', '二重', '鼻', 'блефаро', 'веки', 'ринопласт', 'mí mắt', 'nâng mũi',
     ],
     cat: 'plastic_surgery',
   },
-  { words: ['피부', 'skin', 'derma', '皮肤', '皮膚', 'кожа', 'da liễu'], cat: 'dermatology' },
-  { words: ['치과', '임플란트', 'dental', 'implant', '牙', '歯', 'стомат', 'nha khoa'], cat: 'dental' },
-  { words: ['안과', '라식', '라섹', 'eye', 'lasik', '眼', 'глаз', 'mắt'], cat: 'ophthalmology' },
-  { words: ['모발', '탈모', '모발이식', 'hair transplant', '植发', '植毛', 'волос', 'tóc'], cat: 'hair' },
+  { words: ['피부', 'skin', 'derma', '皮肤', '皮膚', 'кожа', 'da liễu', '여드름', '흉터', '기미', '잡티', '색소', '미백', '모공', '토닝', '레이저', '제모', '문신제거', '스킨부스터', '리쥬란', '주름', '탄력', '피부관리', 'acne', 'scar', 'pigment', 'laser', 'whitening', 'pore', 'wrinkle', '痘', '色斑', '美白', '脱毛', 'ニキビ', 'シミ', '脱毛', 'акне', 'пигмент', 'mụn', 'nám'], cat: 'dermatology' },
+  { words: ['치과', '임플란트', 'dental', 'implant', '牙', '歯', 'стомат', 'nha khoa', '치아', '교정', '라미네이트', '치아미백', '신경치료', '사랑니', '크라운', '틀니', '충치', '잇몸', 'teeth', 'tooth', 'orthodont', 'veneer', 'braces', '矯正', '正畸', 'зуб', 'răng'], cat: 'dental' },
+  { words: ['안과', '라식', '라섹', 'eye', 'lasik', 'lasek', '眼', 'глаз', 'mắt', '스마일라식', '렌즈삽입', 'icl', '백내장', '노안', '녹내장', '시력교정', '드림렌즈', '안구건조', '시력', 'cataract', 'presbyopia', 'glaucoma', 'vision', '近视', '白内障', '老花', '視力', 'катаракт', 'зрени', 'cận thị', 'đục thủy tinh thể'], cat: 'ophthalmology' },
+  { words: ['모발', '탈모', '모발이식', 'hair transplant', '植发', '植毛', 'волос', 'tóc', '헤어라인', '이마축소', '두피', 'hairline', 'scalp', '脱发', '薄毛', 'rụng tóc'], cat: 'hair' },
   { words: ['검진', '건강검진', 'checkup', 'check-up', '体检', '検診', 'чек-ап', 'khám sức khỏe'], cat: 'health_checkup' },
   { words: ['줄기세포', 'stem cell', '干细胞', '幹細胞', 'стволов', 'tế bào gốc'], cat: 'stem_cell' },
   { words: ['한방', '한의', 'korean medicine', 'oriental', '韩医', '韓方', 'восточн', 'y học cổ truyền'], cat: 'oriental' },
@@ -89,6 +94,15 @@ function matchCats<T extends { words: string[] }>(q: string, table: T[]): T[] {
 }
 
 type Card = { kind: 'clinic' | 'listing'; title: string; href: string; note: string };
+
+/** 카테고리 단어가 없어도 수술·시술 문의면 성형외과로 본다 (하안검처럼 목록에 없는 시술명 대비). */
+const MEDICAL_HINT = /수술|시술|성형|병원|의원|surgery|procedure|clinic|hospital|手术|整形|手術|операц|клиник|phẫu thuật|thẩm mỹ/i;
+
+function inferFallbackCat(q: string): string | null {
+  const cats = matchCats(q, HOSPITAL_CATS).map((m) => m.cat);
+  if (cats[0]) return cats[0];
+  return MEDICAL_HINT.test(q) ? 'plastic_surgery' : null;
+}
 
 /** 질문에 맞는 병원 근거 수집 — 카테고리 매칭 우선, 없으면 이름 검색. */
 /**
@@ -139,7 +153,7 @@ function procedureTokens(q: string): string[] {
   return expandSynonyms(raw);
 }
 
-async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ text: string; card: Card }>> {
+async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ text: string; card: Card; fallback?: boolean }>> {
   const cats = matchCats(q, HOSPITAL_CATS).map((m) => m.cat);
   try {
     const rows = cats.length
@@ -199,7 +213,26 @@ async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ t
         rows.push(r as (typeof rows)[number]);
       }
     }
-    if (rows.length === 0) return [];
+    // 정확히 맞는 병원이 없으면 "없다"고 끝내지 않고, 해당 과의 글로우 인증 병원 1~5위(마스터 순서)를 근거로 준다.
+    let fallbackCat: string | null = null;
+    if (rows.length === 0) {
+      fallbackCat = inferFallbackCat(q);
+      if (!fallbackCat) return [];
+      const top = await db
+        .select({
+          id: hospitals.id, name: hospitals.name, slug: hospitals.slug,
+          details: hospitals.details, notes: hospitals.notes,
+          addressJson: hospitals.addressJson,
+          promo: categoryListings.promoLabel, cat: categoryListings.categoryKey,
+        })
+        .from(categoryListings)
+        .innerJoin(hospitals, eq(categoryListings.hospitalId, hospitals.id))
+        .where(and(eq(categoryListings.categoryKey, fallbackCat), eq(hospitals.isActiveForMatching, true), eq(hospitals.countryCode, 'KR')))
+        .orderBy(sql`${hospitals.sortOrder} asc`, sql`${categoryListings.sortOrder} asc`, sql`${hospitals.name} asc`)
+        .limit(5);
+      for (const r of top) rows.push(r as (typeof rows)[number]);
+      if (rows.length === 0) return [];
+    }
 
     const lc = new Map<string, { name: string | null; intro: string | null }>();
     try {
@@ -235,7 +268,8 @@ async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ t
         `링크: /${locale}/clinics/${r.slug}`,
       ].filter(Boolean);
       return {
-        text: parts.join(' | '),
+        fallback: Boolean(fallbackCat),
+        text: (fallbackCat ? '[글로우 인증 추천] ' : '') + parts.join(' | '),
         card: {
           kind: 'clinic' as const,
           title: name,
@@ -429,6 +463,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     findListings(recentUser || lastUser, locale, (await getDictionary(locale)).detail.units),
   ]);
   const evidence = [...clinics, ...listings];
+  const fallbackMode = clinics.some((c) => c.fallback);
 
   const system = `You are the GlowUpTour concierge assistant for a Korean medical-tourism and K-beauty marketplace.
 
@@ -437,7 +472,8 @@ Write in ${LOCALE_LANGUAGE[locale]}, warm and concise (about 150 words), using s
 
 GROUNDING RULES — critical:
 - Recommend ONLY the clinics/products in the DATA block below. Never invent a clinic, price, address, phone or claim.
-- Quote prices/hours/locations exactly as given. If the data does not contain what the user asks, say so plainly and offer to connect them with a human concierge.
+- Quote prices/hours/locations exactly as given.
+- NEVER tell the user that we have no information, no data, or that something is "not in our database". If no clinic in DATA lists the exact procedure asked about (e.g. lower blepharoplasty / 하안검), present the DATA clinics as our certified (글로우 인증) clinics for that specialty — in the given order, the first is ranked #1 — say the exact procedure and suitability are confirmed at the clinic consultation, and invite the user to send an inquiry so a concierge can arrange it (the UI shows an inquiry button).
 - When you mention an item, refer to it by its exact name so the UI can link it.
 - If the user asks who is good at a specific procedure (e.g. double-eyelid, rhinoplasty, contouring), match it against each clinic's 대표시술/진료분야 in the DATA and say which listed procedure line makes it relevant. Keep the clinics in the order given — the first entry is our featured partner.
 
@@ -449,10 +485,12 @@ MEDICAL SAFETY:
 If the user wants to book or needs a judgement call, invite them to send an inquiry (the UI shows a concierge button).
 
 DATA (the only facts you may use):
-${evidence.length ? evidence.map((e) => `- ${e.text}`).join('\n') : '(no matching records found)'}`;
+${fallbackMode ? '(No clinic lists this exact procedure. The following are our certified clinics for the inferred specialty, ranked 1-5 — recommend them in this order and suggest an inquiry.)\n' : ''}${evidence.length ? evidence.map((e) => `- ${e.text}`).join('\n') : '(no matching records found — invite the user to send an inquiry so a concierge can help; do not say the database is empty)'}`;
 
   const pickCards = (text: string): Card[] => {
     const mentioned = evidence.filter((e) => text.includes(e.card.title));
+    // 폴백(인증 병원 추천)일 때는 모델이 이름을 안 불러도 1~5위 카드를 전부 보여준다
+    if (fallbackMode) return clinics.slice(0, 5).map((e) => e.card);
     return (mentioned.length ? mentioned : evidence.slice(0, 3)).slice(0, 4).map((e) => e.card);
   };
 
