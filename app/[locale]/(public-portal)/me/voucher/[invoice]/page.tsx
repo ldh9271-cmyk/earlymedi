@@ -40,7 +40,7 @@ export default async function VoucherPage({ params }: { params: { locale: string
         <div style={{ fontSize: 18, fontWeight: 700, marginTop: 14 }}>{s.listingTitle}</div>
         <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 4 }}>{s.invoiceNo} · {s.reserveDate} {s.reserveTime} · {s.guests}</div>
         <div style={{ fontSize: 14, marginTop: 10 }}>
-          <b>₩{s.totalWon.toLocaleString('ko-KR')}</b>{s.depositWon ? ` · ${t.depositPaidNote}` : ''}
+          {o.kind === 'hospital_visit' ? <b style={{ color: '#1d4ed8' }}>🏥 {t.hospitalVisitNote}</b> : <><b>₩{s.totalWon.toLocaleString('ko-KR')}</b>{s.depositWon ? ` · ${t.depositPaidNote}` : ''}</>}
           {s.payOnSiteWon ? <div style={{ fontSize: 13, color: '#c2143c', marginTop: 2 }}>{dict.checkout.payOnSiteRow} ₩{s.payOnSiteWon.toLocaleString('ko-KR')}</div> : null}
         </div>
         <VoucherLive
@@ -50,7 +50,7 @@ export default async function VoucherPage({ params }: { params: { locale: string
             settlement: s.settlement ? { finalAmountWon: s.settlement.finalAmountWon, status: s.settlement.status, declaredAt: s.settlement.declaredAt } : null,
           }}
           labels={{
-            paid: t.voucherPaid, checkedIn: t.voucherCheckedIn, cancelled: t.voucherCancelled, waiting: t.voucherWaiting, checkedInAt: t.voucherCheckedInAt, by: t.voucherBy, live: t.voucherLive,
+            paid: o.kind === 'hospital_visit' ? t.statusConfirmed : t.voucherPaid, checkedIn: t.voucherCheckedIn, cancelled: t.voucherCancelled, waiting: o.kind === 'hospital_visit' ? t.voucherWaitingHospital : t.voucherWaiting, checkedInAt: t.voucherCheckedInAt, by: t.voucherBy, live: t.voucherLive,
             finalAmount: t.voucherFinalAmount, amountHint: t.voucherAmountHint, confirmAmount: t.voucherConfirmAmount, dispute: t.voucherDispute,
             disputeNote: t.voucherDisputeNote, disputeSend: t.voucherDisputeSend, amountConfirmed: t.voucherAmountConfirmed, disputed: t.voucherDisputed, amountWaiting: t.voucherAmountWaiting,
           }}

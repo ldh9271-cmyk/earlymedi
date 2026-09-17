@@ -68,3 +68,15 @@ export async function settleAction(fd: FormData): Promise<void> {
   }
   back({ ok: 'settled' });
 }
+
+/** 병원 진료 예약(hospital_visit) — 병원이 계정 없이 QR 화면에서 환자 방문을 확인한다. 토큰 소지가 곧 권한. */
+export async function hospitalCheckInAction(fd: FormData): Promise<void> {
+  const token = String(fd.get('token') ?? '');
+  const back = (q: Record<string, string>): never => redirect(`/v/${encodeURIComponent(token)}?${new URLSearchParams(q).toString()}`);
+  const o = await loadOrderByToken(token);
+  if (!o) return back({ error: '유효하지 않은 바우처입니다.' });
+  if (o.kind !== 'hospital_visit') return back({ error: '병원 진료 예약 바우처만 이 버튼으로 확인할 수 있습니다. 사업자 로그인 후 확인해 주세요.' });
+  const r = await checkIn(token, { id: 'hospital-qr', name: `${o.hospitalName ?? '병원'} (QR 확인)`, isMaster: false }, { viaToken: true });
+  if (!r.ok) back({ error: r.reason === 'not_paid' ? '아직 확정되지 않은 예약입니다. 글로우업투어 운영팀 확정 후 확인할 수 있습니다.' : r.reason === 'cancelled' ? '취소된 예약입니다.' : '유효하지 않은 바우처입니다.' });
+  back({ ok: r.ok && r.already ? 'already' : '1' });
+}

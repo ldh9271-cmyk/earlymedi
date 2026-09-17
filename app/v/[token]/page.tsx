@@ -7,7 +7,8 @@ import { db } from '@/lib/db/client';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { loadOrderByToken, orgCanCheckIn, summarize } from '@/lib/voucher/service';
 import { resolveMerchantFeeBp, SETTLEMENT_STATUS_KO } from '@/lib/voucher/settlement';
-import { checkInAction, settleAction } from './_actions';
+import { checkInAction, hospitalCheckInAction, settleAction } from './_actions';
+import { maskName } from '@/lib/hospital-visit/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,9 @@ export default async function VoucherLanding({ params, searchParams }: { params:
     }
   }
   const isOwner = Boolean(o && auth.user && o.userId === auth.user.id);
+  // 병원 진료 예약(무료) — 병원 계정이 없어도 이 화면에서 방문 확인. 개인정보 없이 이름만 가려서 보여준다.
+  const isHospitalVisit = o?.kind === 'hospital_visit';
+  const patientMasked = isHospitalVisit && o ? maskName(o.guestName ?? o.patientLabel ?? '') : '';
   const s = o ? summarize(o, { withPII: canCheckIn || isOwner, withFee: canCheckIn }) : null;
   const feeBp = canCheckIn ? (s?.settlement?.feeBp ?? (await resolveMerchantFeeBp(isMaster && !orgId ? null : orgId))) : 0;
   const won = (n: number | null | undefined): string => (n == null ? '—' : `₩${n.toLocaleString('ko-KR')}`);
@@ -43,8 +47,8 @@ export default async function VoucherLanding({ params, searchParams }: { params:
   const settleEditable = canCheckIn && Boolean(s?.checkedInAt) && (!st || st.status === 'declared' || st.status === 'disputed' || (isMaster && st.status === 'confirmed'));
   const status = !s ? null : s.status === 'cancelled' ? { t: '취소됨 · Cancelled', c: '#6a6a6a', bg: '#f5f5f5' }
     : s.checkedInAt ? { t: '방문 확인 완료 · Checked in', c: '#047857', bg: '#ecfdf5' }
-      : s.status === 'paid' ? { t: '결제 완료 · Paid — 스캔 대기', c: '#1d4ed8', bg: '#eff6ff' }
-        : { t: '결제 대기 · Unpaid', c: '#b45309', bg: '#fffbeb' };
+      : s.status === 'paid' ? { t: isHospitalVisit ? '예약 확정 · Confirmed — 병원 확인 대기' : '결제 완료 · Paid — 스캔 대기', c: '#1d4ed8', bg: '#eff6ff' }
+        : { t: isHospitalVisit ? '예약 요청 접수 · Requested — 확정 대기' : '결제 대기 · Unpaid', c: '#b45309', bg: '#fffbeb' };
 
   return (
     <main style={{ maxWidth: 560, margin: '0 auto', padding: '32px 20px 80px', fontFamily: 'inherit' }}>
@@ -63,7 +67,10 @@ export default async function VoucherLanding({ params, searchParams }: { params:
             <table style={{ width: '100%', fontSize: 14, marginTop: 14, borderCollapse: 'collapse' }}>
               <tbody>
                 <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>예약 · Booking</td><td style={{ fontWeight: 700, textAlign: 'right' }}>{s.reserveDate} {s.reserveTime} · {s.guests}명</td></tr>
-                <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>결제 · Paid online</td><td style={{ fontWeight: 700, textAlign: 'right' }}>{won(s.totalWon)}{s.depositWon ? ' (예약금 · deposit)' : ''}</td></tr>
+                {isHospitalVisit
+                  ? <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>구분 · Type</td><td style={{ fontWeight: 700, textAlign: 'right' }}>🏥 병원 진료 예약 · 결제 없음</td></tr>
+                  : <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>결제 · Paid online</td><td style={{ fontWeight: 700, textAlign: 'right' }}>{won(s.totalWon)}{s.depositWon ? ' (예약금 · deposit)' : ''}</td></tr>}
+                {isHospitalVisit && !s.guestName && patientMasked ? <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>예약자 · Patient</td><td style={{ fontWeight: 700, textAlign: 'right' }}>{patientMasked}</td></tr> : null}
                 {s.payOnSiteWon ? <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>현장 결제 예정 · Pay on site</td><td style={{ fontWeight: 700, textAlign: 'right', color: '#c2143c' }}>{won(s.payOnSiteWon)}</td></tr> : null}
                 {s.guestName ? <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>예약자 · Guest</td><td style={{ fontWeight: 700, textAlign: 'right' }}>{s.guestName}{s.guestContact ? ` · ${s.guestContact}` : ''}</td></tr> : null}
                 {s.checkedInAt ? <tr><td style={{ color: '#6a6a6a', padding: '6px 0' }}>방문 확인 · Checked in</td><td style={{ fontWeight: 700, textAlign: 'right' }}>{new Date(s.checkedInAt).toLocaleString('ko-KR')}{s.checkedInByName ? ` · ${s.checkedInByName}` : ''}</td></tr> : null}
@@ -111,6 +118,19 @@ export default async function VoucherLanding({ params, searchParams }: { params:
                 ✅ 방문 확인 (체크인)
               </button>
               <p style={{ fontSize: 12, color: '#6a6a6a', marginTop: 8, textAlign: 'center' }}>소비자·사업자·플랫폼이 같은 예약·결제 정보를 실시간으로 봅니다.</p>
+            </form>
+          ) : null}
+          {isHospitalVisit && !canCheckIn && !s.checkedInAt && s.status === 'paid' ? (
+            <form action={hospitalCheckInAction} style={{ marginTop: 16, border: '1px solid #bfdbfe', background: '#eff6ff', borderRadius: 14, padding: 16 }}>
+              <input type="hidden" name="token" value={token} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#1e3a8a' }}>🏥 병원 접수 담당자용 · For clinic staff</div>
+              <p style={{ fontSize: 12, color: '#3f5f8a', margin: '4px 0 10px', lineHeight: 1.55 }}>
+                환자가 보여준 QR 을 읽으셨다면 아래 버튼으로 방문을 확인해 주세요. 별도 계정·로그인 없이 됩니다. 확인 즉시 환자와 글로우업투어 화면에 반영됩니다.
+                <br />If the patient showed you this QR, tap below to confirm the visit — no account needed.
+              </p>
+              <button type="submit" style={{ width: '100%', background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 16, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+                ✅ 환자 방문 확인 · Confirm patient visit
+              </button>
             </form>
           ) : null}
           {isOwner ? <p style={{ marginTop: 16, fontSize: 13 }}><Link href={`/${s.locale}/me/voucher/${encodeURIComponent(s.invoiceNo)}`} style={{ color: '#222' }}>→ 내 바우처 화면에서 크게 보기</Link></p> : null}

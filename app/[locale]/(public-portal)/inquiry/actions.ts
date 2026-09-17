@@ -11,6 +11,8 @@ import { messages } from '@/drizzle/schema/messages';
 import { auditLogs } from '@/drizzle/schema/audit';
 import { detectLocale } from '@/lib/ai/translation';
 import { notifyInquiryEvent } from '@/lib/notify/admin-alert';
+import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
+import { createHospitalVisitRequest } from '@/lib/hospital-visit/service';
 
 /**
  * Public inquiry intake — no Supabase session, no RLS context.
@@ -40,11 +42,19 @@ const InputSchema = z.object({
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   interests: z.array(z.string()).max(20),
   memo: z.string().max(4000),
+  // 병원 진료 예약 요청(관심 병원 선택 시) — 아래 전부 필수. 일반 문의면 선택.
+  gender: z.enum(['female', 'male', 'other']).nullable().optional(),
+  phone: z.string().max(40).nullable().optional(),
+  messengerType: z.string().max(20).nullable().optional(),
+  messengerId: z.string().max(120).nullable().optional(),
+  email: z.string().max(200).nullable().optional(),
+  visitYmd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  visitTime: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),
 });
 
 export type PublicInquiryInput = z.infer<typeof InputSchema>;
 export type PublicInquiryResult =
-  | { ok: true; conversationId: string }
+  | { ok: true; conversationId: string; invoiceNo?: string }
   | { ok: false; error: string };
 
 async function resolveIntakeOrgId(): Promise<string | null> {
@@ -100,6 +110,10 @@ export async function submitPublicInquiryAction(
   raw: PublicInquiryInput,
 ): Promise<PublicInquiryResult> {
   const input = InputSchema.parse(raw);
+  const reserveMode = Boolean(input.hospitalId);
+  if (reserveMode && (!input.gender || !input.phone?.trim() || !input.messengerType || !input.messengerId?.trim() || !input.birthDate || !input.visitYmd || !input.visitTime || !input.memo.trim())) {
+    return { ok: false, error: '예약 요청에는 이름·성별·국가·전화번호·메신저·생년월일·희망 예약 일시·문의 내용이 모두 필요합니다.' };
+  }
 
   // 1. Decide which agency receives this inquiry.
   const intakeOrgId = await resolveIntakeOrgId();
@@ -128,10 +142,18 @@ export async function submitPublicInquiryAction(
       ? `\n관심 병원 ID: ${input.hospitalId}`
       : `\n관심 병원: (선택 안 함)`;
   const dobLine = input.birthDate ? `\n생년월일: ${input.birthDate}` : '';
+  const genderKo = input.gender === 'female' ? '여성' : input.gender === 'male' ? '남성' : input.gender === 'other' ? '기타' : '';
+  const reserveLines = [
+    genderKo ? `\n성별: ${genderKo}` : '',
+    input.phone ? `\n전화: ${input.phone}` : '',
+    input.messengerId ? `\n메신저: ${input.messengerType ?? ''} ${input.messengerId}` : '',
+    input.email ? `\n이메일: ${input.email}` : '',
+    input.visitYmd ? `\n희망 예약: ${input.visitYmd} ${input.visitTime ?? ''}` : '',
+  ].join('');
   const composedBody =
     `[환자 포털 문의 · ${input.locale.toUpperCase()}]\n` +
     `이름: ${input.name} (${input.countryCode})\n` +
-    `연락처: ${input.contact}${dobLine}${interestsLine}${hospitalLine}\n\n` +
+    `연락처: ${input.contact}${reserveLines}${dobLine}${interestsLine}${hospitalLine}\n\n` +
     `${input.memo || '(별도 메모 없음)'}`;
 
   // 3.5 Resolve patient language BEFORE inserting the conversation. The
@@ -206,6 +228,27 @@ export async function submitPublicInquiryAction(
     },
   });
 
+  // 병원 진료 예약 요청 — 무료 주문(hospital_visit)을 만들어 마이페이지·확정·QR 흐름에 태운다.
+  let invoiceNo: string | undefined;
+  if (reserveMode && input.hospitalId) {
+    let userId: string | null = null; let userEmail: string | null = null;
+    try {
+      const { data: auth } = await createSupabaseServerClient().auth.getUser();
+      userId = auth.user?.id ?? null; userEmail = auth.user?.email ?? null;
+    } catch { /* 비로그인 */ }
+    try {
+      const r = await createHospitalVisitRequest({
+        locale: input.locale, hospitalId: input.hospitalId, hospitalName: input.hospitalName ?? '병원', name: input.name,
+        gender: input.gender ?? '', countryCode: input.countryCode, phone: input.phone ?? '', messengerType: input.messengerType ?? '', messengerId: input.messengerId ?? '',
+        email: input.email ?? null, birthDate: input.birthDate ?? '', visitYmd: input.visitYmd ?? '', visitTime: input.visitTime ?? '', memo: input.memo, interests: input.interests,
+        conversationId: conv.id, userId, userEmail,
+      });
+      invoiceNo = r.invoiceNo;
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : '예약 요청을 만들지 못했습니다.' };
+    }
+  }
+
   // 운영자 텔레그램 알림 — 문의 DB 정보 그대로. 실패해도 접수는 성공 처리.
   await notifyInquiryEvent({
     locale: input.locale,
@@ -216,6 +259,14 @@ export async function submitPublicInquiryAction(
     interests: input.interests,
     hospitalName: input.hospitalName ?? (input.hospitalId ? `ID ${input.hospitalId}` : null),
     memo: input.memo,
+    extra: [
+      ...(genderKo ? [`성별: ${genderKo}`] : []),
+      ...(input.phone ? [`전화: ${input.phone}`] : []),
+      ...(input.messengerId ? [`메신저: ${input.messengerType ?? ''} ${input.messengerId}`] : []),
+      ...(input.email ? [`이메일: ${input.email}`] : []),
+      ...(input.visitYmd ? [`희망 예약: ${input.visitYmd} ${input.visitTime ?? ''}`] : []),
+      ...(invoiceNo ? [`🏥 진료 예약 요청 ${invoiceNo} → /master/orders 에서 병원 확인 후 '예약 확정'`] : []),
+    ],
   }).catch(() => false);
 
   await db.insert(auditLogs).values({
@@ -232,5 +283,5 @@ export async function submitPublicInquiryAction(
     metadata: { contact: input.contact },
   });
 
-  return { ok: true, conversationId: conv.id };
+  return { ok: true, conversationId: conv.id, invoiceNo };
 }

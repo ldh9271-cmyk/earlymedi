@@ -8662,6 +8662,13 @@ export const KO_LABELS = {
     "ru": "Офтальмолог · Экс-ординатор, витреоретинальный феллоу и проф. JBNU · Экс-зав. Jesus Hospital",
     "vi": "BS Chuyên khoa Mắt · Cựu BS nội trú, Fellow võng mạc & GS BV ĐH Chonbuk · Cựu Trưởng khoa BV Jesus"
   },
+  "안과 전문의 직접 진료": {
+    "en": "Direct Care by Ophthalmologist",
+    "zh": "眼科专科医生亲自诊疗",
+    "ja": "眼科専門医による直接診療",
+    "ru": "Прямой прием врача-офтальмолога",
+    "vi": "Bác sĩ nhãn khoa trực tiếp khám"
+  },
   "안과 정밀 검진": {
     "en": "Detailed Eye Screening",
     "zh": "眼科精密检查",
@@ -13715,6 +13722,13 @@ export const KO_LABELS = {
     "ja": "CLEARスマイル·全レーザーLASIK/LASEK·ICL·老眼·白内障を眼科専門医2名が診療",
     "ru": "Клиника с 2 специалистами: CLEAR SMILE, All-Laser LASIK/LASEK, ICL, пресбиопия и катаракта",
     "vi": "PK với 2 BS Chuyên khoa: CLEAR SMILE · All-laser LASIK/LASEK · ICL · Lão thị · Đục thủy tinh thể"
+  },
+  "클리어스마일라식·올레이저 라식/라섹·ICL·노안·백내장을 안과 전문의가 진료하는 안과": {
+    "en": "Specialist Care: CLEAR SMILE·All-Laser LASIK/LASEK·ICL·Presbyopia·Cataracts",
+    "zh": "专科诊疗：CLEAR SMILE·全激光LASIK/LASEK·ICL·老花·白内障",
+    "ja": "眼科専門医によるCLEAR SMILE·全レーザーLASIK/LASEK·ICL·老眼·白内障診療",
+    "ru": "CLEAR SMILE·All-Laser LASIK/LASEK·ICL·пресбиопия·катаракта от офтальмолога",
+    "vi": "CLEAR SMILE·All-Laser LASIK/LASEK·ICL·Lão thị·Đục thủy tinh thể bởi BS chuyên khoa"
   },
   "클리피씨 교정": {
     "en": "Clippy-C Braces",

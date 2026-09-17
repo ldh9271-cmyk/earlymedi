@@ -170,15 +170,21 @@ export default async function MyPage({
           {rows.map((r) => {
             // 예약금 주문: 입금 확인 후 컨시어지 확정(meta.reserveConfirmedAt)까지
             // 한 단계가 더 있다 — 확정되면 '예약 확정'으로 표시한다.
-            const orderMeta = (r.meta ?? {}) as { depositWon?: number; reserveConfirmedAt?: string; cancelRequest?: CancelRequestMeta; cancel?: { refundWon?: number } };
+            const orderMeta = (r.meta ?? {}) as { depositWon?: number; reserveConfirmedAt?: string; cancelRequest?: CancelRequestMeta; cancel?: { refundWon?: number }; voucher?: { checkedInAt?: string } };
+            // 병원 진료 예약(무료): issued=요청 중, paid+reserveConfirmedAt=확정, voucher.checkedInAt=방문 확인
+            const isHospitalVisit = r.kind === 'hospital_visit';
             const isDeposit = !!orderMeta.depositWon;
             const cat = refundCats.get(r.id) ?? 'travel';
             const can = cancellableByConsumer(r);
             const est = orderEstimate(r, cat);
             const sameDayHours = REFUND_POLICIES[cat].find((x) => x.minDays === 0)?.sameDayHoursBefore ?? null;
-            const s = r.status === 'paid' && orderMeta.reserveConfirmedAt
-              ? { label: t.statusConfirmed, bg: '#ecfdf5', fg: '#047857' }
-              : statusMeta[r.status] ?? { label: r.status, bg: '#f5f5f5', fg: '#6a6a6a' };
+            const s = r.status === 'paid' && orderMeta.voucher?.checkedInAt
+              ? { label: t.visitDone, bg: '#eff6ff', fg: '#1d4ed8' }
+              : r.status === 'paid' && orderMeta.reserveConfirmedAt
+                ? { label: t.statusConfirmed, bg: '#ecfdf5', fg: '#047857' }
+                : isHospitalVisit && r.status === 'issued'
+                  ? { label: t.statusRequested, bg: '#fffbeb', fg: '#b45309' }
+                  : statusMeta[r.status] ?? { label: r.status, bg: '#f5f5f5', fg: '#6a6a6a' };
             const highlighted = searchParams.invoice === r.invoiceNo;
             return (
               <article
@@ -249,6 +255,9 @@ export default async function MyPage({
                       {r.reserveDate} · {r.reserveTime} · {t.guestsValue.replace('{n}', String(r.guests))}
                     </div>
                   </div>
+                  {isHospitalVisit ? (
+                    <div className="m-my-amount" style={{ textAlign: 'right', fontSize: 13, fontWeight: 700, color: '#1d4ed8' }}>🏥 {t.hospitalVisitNote}</div>
+                  ) : (
                   <div className="m-my-amount" style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 18, fontWeight: 700 }}>
                       ₩{r.totalWon.toLocaleString('ko-KR')}
@@ -259,6 +268,7 @@ export default async function MyPage({
                         : `₩${r.subtotalWon.toLocaleString('ko-KR')} + ${t.feeLabel} ₩${r.serviceFeeWon.toLocaleString('ko-KR')}`}
                     </div>
                   </div>
+                  )}
                 </div>
 
                 <div
@@ -282,7 +292,7 @@ export default async function MyPage({
                       {t.reportedAt} {new Date(r.reportedAt).toLocaleDateString('ko-KR')}
                     </span>
                   ) : null}
-                  <span style={{ textTransform: 'uppercase' }}>{r.paymentMethod}</span>
+                  {r.paymentMethod !== 'none' ? <span style={{ textTransform: 'uppercase' }}>{r.paymentMethod}</span> : null}
                 </div>
 
                 {r.status === 'reported' ? (

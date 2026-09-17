@@ -37,6 +37,8 @@ export type VoucherSummary = {
   guestName?: string | null;
   guestContact?: string | null;
   userEmail?: string | null;
+  /** 'listing' | 'hospital_visit'(병원 진료 예약, 금액 0) 등 */
+  kind: string;
   locale: string;
   paidAt: string | null;
   /** 3자 검증 정산 — 가맹점이 입력한 최종 결제금액. 수수료(feeBp/feeWon)는 사업자·마스터 화면(withFee)에만. */
@@ -103,6 +105,7 @@ export function summarize(o: OrderRow, opts: { withPII: boolean; withFee?: boole
     reserveConfirmedAt: meta.reserveConfirmedAt ?? null,
     checkedInAt: v.checkedInAt ?? null,
     checkedInByName: v.checkedInByName ?? null,
+    kind: o.kind,
     locale: o.locale,
     paidAt: o.paidAt ? o.paidAt.toISOString() : null,
     ...(opts.withPII ? { guestName: o.guestName ?? o.patientLabel ?? null, guestContact: o.guestContact ?? null, userEmail: o.userEmail ?? null } : {}),
@@ -127,12 +130,13 @@ export type CheckInResult =
   | { ok: false; reason: 'invalid' | 'not_paid' | 'cancelled' | 'forbidden' };
 
 /** 방문 확인(체크인). 멱등 — 이미 확인된 주문은 already=true 로 그대로 돌려준다. */
-export async function checkIn(token: string, org: { id: string; name: string; isMaster?: boolean }): Promise<CheckInResult> {
+export async function checkIn(token: string, org: { id: string; name: string; isMaster?: boolean }, opts: { viaToken?: boolean } = {}): Promise<CheckInResult> {
   const o = await loadOrderByToken(token);
   if (!o) return { ok: false, reason: 'invalid' };
   if (o.status === 'cancelled') return { ok: false, reason: 'cancelled' };
   if (o.status !== 'paid') return { ok: false, reason: 'not_paid' };
-  if (!org.isMaster && !(await orgCanCheckIn(o, org.id))) return { ok: false, reason: 'forbidden' };
+  // 병원 진료 예약은 병원에 계정이 없어도 QR 화면(토큰 소지)만으로 방문 확인을 허용한다
+  if (!org.isMaster && !(opts.viaToken && o.kind === 'hospital_visit') && !(await orgCanCheckIn(o, org.id))) return { ok: false, reason: 'forbidden' };
 
   const meta = (o.meta ?? {}) as { voucher?: VoucherMeta };
   if (meta.voucher?.checkedInAt) return { ok: true, already: true, summary: summarize(o, { withPII: true, withFee: true }) };

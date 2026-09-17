@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
-import { markOrderPaidAction, cancelOrderAction, confirmReservationAction, settleHospitalActualAction, setMerchantSettlementStatusAction, masterDeclareSettlementAction, refundCancelOrderAction } from './_actions';
+import { markOrderPaidAction, cancelOrderAction, confirmReservationAction, settleHospitalActualAction, setMerchantSettlementStatusAction, masterDeclareSettlementAction, refundCancelOrderAction, confirmHospitalVisitAction } from './_actions';
 import ConfirmForm from './_components/confirm-form';
 import { orderEstimate, resolveRefundCategories, type CancelMeta, type CancelRequestMeta } from '@/lib/refund/service';
 import type { RefundCategory } from '@/lib/refund/policy';
@@ -183,7 +183,7 @@ export default async function MasterOrdersPage({
                       </Td>
                       <Td>{r.guests}명</Td>
                       <Td align="right">
-                        <div style={{ fontWeight: 700 }}>₩{r.totalWon.toLocaleString('ko-KR')}</div>
+                        {r.kind === 'hospital_visit' ? <div style={{ fontWeight: 700, color: '#1d4ed8', whiteSpace: 'nowrap' }}>🏥 진료 예약 · 무료</div> : <div style={{ fontWeight: 700 }}>₩{r.totalWon.toLocaleString('ko-KR')}</div>}
                         <div style={{ fontSize: 11, color: '#9c9c9c', marginTop: 2 }}>
                           {r.serviceFeeWon > 0
                             ? `₩${r.subtotalWon.toLocaleString('ko-KR')} + 수수료 ₩${r.serviceFeeWon.toLocaleString('ko-KR')}`
@@ -202,7 +202,16 @@ export default async function MasterOrdersPage({
                       </Td>
                       <Td>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          {r.status !== 'paid' && r.status !== 'cancelled' ? (
+                          {r.kind === 'hospital_visit' && r.status === 'issued' ? (
+                            <ConfirmForm action={confirmHospitalVisitAction} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}
+                              message={`${r.invoiceNo} · ${r.hospitalName ?? ''}\n확정 일시: {visitYmd} {visitTime}\n병원과 이 시간에 진료 가능한지 확인했나요? 확정하면 환자 마이페이지에 QR 예약증이 생기고 환자에게 안내됩니다.`}>
+                              <input type="hidden" name="id" value={r.id} />
+                              <input type="date" name="visitYmd" defaultValue={r.reserveYmd ?? ''} style={{ border: '1px solid #dddddd', borderRadius: 8, padding: '5px 8px', fontSize: 12, fontFamily: 'inherit' }} />
+                              <input type="time" name="visitTime" defaultValue={r.reserveTime} step={1800} style={{ border: '1px solid #dddddd', borderRadius: 8, padding: '5px 8px', fontSize: 12, fontFamily: 'inherit' }} />
+                              <button type="submit" style={btnStyle('#1d4ed8')}>🏥 예약 확정</button>
+                            </ConfirmForm>
+                          ) : null}
+                          {r.kind !== 'hospital_visit' && r.status !== 'paid' && r.status !== 'cancelled' ? (
                             <ConfirmForm action={markOrderPaidAction} message={`${r.invoiceNo} · ₩${r.totalWon.toLocaleString('ko-KR')}\n입금(결제)이 실제로 확인되었나요? 확인 처리하면 고객에게 결제 완료로 표시되고 QR 바우처가 열립니다.`}>
                               <input type="hidden" name="id" value={r.id} />
                               <button type="submit" style={btnStyle('#047857')}>입금 확인</button>

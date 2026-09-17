@@ -67,6 +67,8 @@ export async function notifyInquiryEvent(q: {
   interests?: string[];
   hospitalName?: string | null;
   memo?: string;
+  /** 예약 요청 등 추가 줄 (성별·전화·메신저·희망 일시·인보이스) */
+  extra?: string[];
 }): Promise<boolean> {
   const lines = [
     `<b>📩 새 1:1 문의</b> (${esc(q.locale.toUpperCase())})`,
@@ -76,6 +78,7 @@ export async function notifyInquiryEvent(q: {
   if (q.birthDate) lines.push(`생년월일: ${esc(q.birthDate)}`);
   if (q.interests && q.interests.length > 0) lines.push(`관심 분야: ${esc(q.interests.join(', '))}`);
   if (q.hospitalName) lines.push(`관심 병원: ${esc(q.hospitalName)}`);
+  if (q.extra?.length) lines.push(...q.extra.map((l) => esc(l)));
   if (q.memo?.trim()) lines.push('', esc(q.memo.trim().slice(0, 800)));
   lines.push('', 'https://www.glowuptour.com/agency/inbox');
   return sendAdminTelegram(lines.join('\n'));

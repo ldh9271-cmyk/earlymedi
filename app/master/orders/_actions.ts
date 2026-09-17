@@ -12,6 +12,7 @@ import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 import { onTripOrderPaid } from '@/lib/ai/trip-workflow';
 import { declareFinalAmount, masterSetSettlementStatus, type SettlementStatus } from '@/lib/voucher/settlement';
 import { refundAndCancel } from '@/lib/refund/service';
+import { confirmHospitalVisit } from '@/lib/hospital-visit/service';
 import { onRegistryAgencyPaid } from '@/lib/registry/agency';
 import {
   accrueOrderTravelMargin,
@@ -199,4 +200,18 @@ export async function cancelOrderAction(formData: FormData): Promise<void> {
   }
   revalidatePath('/master/orders');
   redirect('/master/orders');
+}
+
+/** 병원 진료 예약 요청(hospital_visit) 확정 — 결제 없이 status paid + reserveConfirmedAt. 병원과 맞춘 날짜·시간으로 바꿔 확정할 수 있다. */
+export async function confirmHospitalVisitAction(formData: FormData): Promise<void> {
+  await assertMaster();
+  const id = String(formData.get('id') ?? '');
+  const visitYmd = String(formData.get('visitYmd') ?? '').trim();
+  const visitTime = String(formData.get('visitTime') ?? '').trim();
+  if (!id) redirect('/master/orders?error=missing_id');
+  if (visitYmd && !/^\d{4}-\d{2}-\d{2}$/.test(visitYmd)) redirect(`/master/orders?error=${encodeURIComponent('날짜 형식이 올바르지 않습니다')}`);
+  const r = await confirmHospitalVisit(id, { visitYmd: visitYmd || undefined, visitTime: visitTime || undefined });
+  if (!r.ok) redirect(`/master/orders?error=${encodeURIComponent(r.reason)}`);
+  revalidatePath('/master/orders');
+  redirect(`/master/orders?ok=${encodeURIComponent(`${r.invoiceNo} 진료 예약 확정 — 환자 마이페이지에 QR 예약증 생성${r.emailed ? ' · 이메일 발송' : ''}`)}`);
 }
