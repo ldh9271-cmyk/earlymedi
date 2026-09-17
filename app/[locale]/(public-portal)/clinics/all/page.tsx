@@ -10,7 +10,7 @@ import { hospitals } from '@/drizzle/schema/hospitals';
 import { RegistryCard, type RegistryCardRow } from '../_registry/shared';
 import { DEPT_GROUPS, DEPT_GROUP_BY_KEY, groupKeyOfCode } from '@/lib/hospital-registry/departments';
 import MoreRow from '@/components/shared/more-row';
-import { HOSPITAL_CAT_TO_DEPT, sidoMatches } from '@/lib/certified';
+import { HOSPITAL_CAT_TO_DEPT, hospitalCatsForDept, sidoMatches } from '@/lib/certified';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,24 +83,30 @@ export default async function RegistryListPage({ params, searchParams }: { param
     const listedRank = sql`case when ${hospitalRegistry.contractedHospitalId} is not null or ${hospitalRegistry.claimStatus} = 'approved' then 0 else 1 end`;
     const foreignRank = sql`case when ${hospitalRegistry.foreignLicensed} then 0 else 1 end`;
     const gradeRank = sql`case when ${hospitalRegistry.clCd} in ('01','11','21','41','93') then 0 when ${hospitalRegistry.clCd} in ('28','29') then 1 else 2 end`;
+    // 과별 보기: 그 과를 주 카테고리로 등록한 병원이 먼저 (피부과 목록에서 성형외과 등록 병원보다 피부과 등록 병원 우선).
+    // 카테고리 키는 우리 상수(lib/certified)라 raw 배열 리터럴로 만든다.
+    const deptCats = dept ? hospitalCatsForDept(dept).filter((c) => /^[a-z_]+$/.test(c)) : [];
+    const catRank = deptCats.length
+      ? sql<number>`case when ${hospitals.primaryCategories} ?| ${sql.raw(`array[${deptCats.map((c) => `'${c}'`).join(',')}]::text[]`)} then 0 else 1 end`
+      : sql<number>`0`;
     const found = await db
       .select({
         id: hospitalRegistry.id, ykiho: hospitalRegistry.ykiho, name: hospitalRegistry.name, clCd: hospitalRegistry.clCd, clName: hospitalRegistry.clName,
         sidoName: hospitalRegistry.sidoName, sgguName: hospitalRegistry.sgguName, addr: hospitalRegistry.addr, drTotal: hospitalRegistry.drTotal,
         foreignLicensed: hospitalRegistry.foreignLicensed, contractedHospitalId: hospitalRegistry.contractedHospitalId, claimStatus: hospitalRegistry.claimStatus,
-        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerSortOrder: hospitals.sortOrder, partnerCover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = hospitals.id and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`,
+        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerSortOrder: hospitals.sortOrder, partnerCatRank: catRank, partnerCover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = hospitals.id and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`,
       })
       .from(hospitalRegistry)
       .leftJoin(hospitals, eq(hospitals.id, hospitalRegistry.contractedHospitalId))
       .where(where)
       // 글로우업 등록 병원끼리는 마스터 '순서'(hospitals.sort_order, 낮을수록 먼저)를 따른다 — 공공정보 병원은 sort_order 가 없어 뒤 기준으로 정렬
-      .orderBy(listedRank, sql`coalesce(${hospitals.sortOrder}, 1000000)`, foreignRank, gradeRank, desc(hospitalRegistry.drTotal), hospitalRegistry.name)
+      .orderBy(listedRank, catRank, sql`coalesce(${hospitals.sortOrder}, 1000000)`, foreignRank, gradeRank, desc(hospitalRegistry.drTotal), hospitalRegistry.name)
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE);
     // 과목 코드 → 소비자 과별 라벨 (중복 그룹 제거, 최대 3개)
     // 카드 id → 마스터 순서 (레지스트리 연결 병원 + 아래 미연결 등록 병원을 한 줄로 정렬할 때 사용)
     const sortKey = new Map<string, number>();
-    for (const f of found) if (f.partnerSortOrder != null) sortKey.set(f.id, f.partnerSortOrder);
+    for (const f of found) if (f.partnerSortOrder != null) sortKey.set(f.id, Number(f.partnerCatRank ?? 0) * 10_000_000 + f.partnerSortOrder);
     rows = found.map((f) => {
       const keys = Array.from(new Set((f.deptCodes ?? []).map(groupKeyOfCode).filter((k): k is string => Boolean(k))));
       const deptLabels = keys.map((k) => (dict.clinicsPage.depts as Record<string, string>)[k] ?? k);
