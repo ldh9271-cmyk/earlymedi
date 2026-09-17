@@ -88,15 +88,19 @@ export default async function RegistryListPage({ params, searchParams }: { param
         id: hospitalRegistry.id, ykiho: hospitalRegistry.ykiho, name: hospitalRegistry.name, clCd: hospitalRegistry.clCd, clName: hospitalRegistry.clName,
         sidoName: hospitalRegistry.sidoName, sgguName: hospitalRegistry.sgguName, addr: hospitalRegistry.addr, drTotal: hospitalRegistry.drTotal,
         foreignLicensed: hospitalRegistry.foreignLicensed, contractedHospitalId: hospitalRegistry.contractedHospitalId, claimStatus: hospitalRegistry.claimStatus,
-        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerCover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = hospitals.id and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`,
+        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerSortOrder: hospitals.sortOrder, partnerCover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = hospitals.id and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`,
       })
       .from(hospitalRegistry)
       .leftJoin(hospitals, eq(hospitals.id, hospitalRegistry.contractedHospitalId))
       .where(where)
-      .orderBy(listedRank, foreignRank, gradeRank, desc(hospitalRegistry.drTotal), hospitalRegistry.name)
+      // 글로우업 등록 병원끼리는 마스터 '순서'(hospitals.sort_order, 낮을수록 먼저)를 따른다 — 공공정보 병원은 sort_order 가 없어 뒤 기준으로 정렬
+      .orderBy(listedRank, sql`coalesce(${hospitals.sortOrder}, 1000000)`, foreignRank, gradeRank, desc(hospitalRegistry.drTotal), hospitalRegistry.name)
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE);
     // 과목 코드 → 소비자 과별 라벨 (중복 그룹 제거, 최대 3개)
+    // 카드 id → 마스터 순서 (레지스트리 연결 병원 + 아래 미연결 등록 병원을 한 줄로 정렬할 때 사용)
+    const sortKey = new Map<string, number>();
+    for (const f of found) if (f.partnerSortOrder != null) sortKey.set(f.id, f.partnerSortOrder);
     rows = found.map((f) => {
       const keys = Array.from(new Set((f.deptCodes ?? []).map(groupKeyOfCode).filter((k): k is string => Boolean(k))));
       const deptLabels = keys.map((k) => (dict.clinicsPage.depts as Record<string, string>)[k] ?? k);
@@ -105,9 +109,10 @@ export default async function RegistryListPage({ params, searchParams }: { param
     // 첫 페이지(과별 필터 또는 글로우 인증 필터): 레지스트리 미연결 직접 등록 병원도 컬러 카드로 포함 (글로우업 상세로 연결)
     if (page === 1 && (dept || listed)) {
       const unlinked = await db
-        .select({ id: hospitals.id, name: hospitals.name, slug: hospitals.slug, cover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = hospitals.id and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`, cats: hospitals.primaryCategories, addressJson: hospitals.addressJson })
+        .select({ id: hospitals.id, name: hospitals.name, slug: hospitals.slug, cover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = hospitals.id and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`, cats: hospitals.primaryCategories, addressJson: hospitals.addressJson, sortOrder: hospitals.sortOrder })
         .from(hospitals)
         .where(sql`${hospitals.countryCode} = 'KR' and ${hospitals.isActiveForMatching} = true and not exists (select 1 from hospital_registry r where r.contracted_hospital_id = ${hospitals.id})`)
+        .orderBy(hospitals.sortOrder, hospitals.name)
         .limit(200);
       const deptLabel = (k: string): string => (dict.clinicsPage.depts as Record<string, string>)[k] ?? k;
       const like = q.toLowerCase();
@@ -116,6 +121,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
         .filter((h) => sidoMatches(sido, h.addressJson))
         .filter((h) => !like || h.name.toLowerCase().includes(like))
         .map((h) => {
+          sortKey.set(`hosp:${h.id}`, h.sortOrder ?? 100);
           const keys = dept ? [dept] : Array.from(new Set(((h.cats ?? []) as string[]).flatMap((c) => HOSPITAL_CAT_TO_DEPT[c] ?? []))).slice(0, 3);
           return {
             id: `hosp:${h.id}`, ykiho: h.slug, name: h.name, clCd: null, clName: dict.clinicsPage.registry.contractedBadge,
@@ -124,7 +130,14 @@ export default async function RegistryListPage({ params, searchParams }: { param
             partnerSlug: h.slug, partnerCover: h.cover,
           };
         });
-      if (extras.length) { rows = [...extras, ...rows]; total += extras.length; }
+      if (extras.length) {
+        // 등록 병원(레지스트리 연결 + 미연결)을 마스터 순서로 한 줄에 정렬하고, 공공정보 병원은 그 뒤에 둔다
+        const isListed = (r: RegistryCardRow): boolean => !!r.contractedHospitalId || r.claimStatus === 'approved';
+        const key = (r: RegistryCardRow): number => sortKey.get(r.id) ?? 1000000;
+        const listedRows = [...rows.filter(isListed), ...extras].sort((a, b) => key(a) - key(b) || a.name.localeCompare(b.name, 'ko'));
+        rows = [...listedRows, ...rows.filter((r) => !isListed(r))];
+        total += extras.length;
+      }
     }
     const sidos = await db.selectDistinct({ s: hospitalRegistry.sidoName }).from(hospitalRegistry).where(isNotNull(hospitalRegistry.sidoName)).orderBy(hospitalRegistry.sidoName);
     sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));

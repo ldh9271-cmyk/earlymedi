@@ -179,13 +179,15 @@ export default async function ClinicsListPage({
             promoLabel: categoryListings.promoLabel,
           })
           .from(categoryListings)
+          .leftJoin(hospitals, eq(hospitals.id, categoryListings.hospitalId))
           .where(
             and(
               eq(categoryListings.categoryKey, categoryFilter),
               eq(categoryListings.procedureSlug, procedureFilter ?? ''),
             ),
           )
-          .orderBy(categoryListings.sortOrder);
+          // 큐레이션 순서가 같으면(대부분 100) 마스터 '순서'(hospitals.sort_order)로 정렬
+          .orderBy(categoryListings.sortOrder, hospitals.sortOrder, hospitals.name);
       } catch {
         // curated 테이블 없음 — legacy 로 폴백
       }
