@@ -186,8 +186,8 @@ export default async function ClinicsListPage({
               eq(categoryListings.procedureSlug, procedureFilter ?? ''),
             ),
           )
-          // 큐레이션 순서가 같으면(대부분 100) 마스터 '순서'(hospitals.sort_order)로 정렬
-          .orderBy(categoryListings.sortOrder, hospitals.sortOrder, hospitals.name);
+          // 마스터 '병원 통합 관리' 순서(hospitals.sort_order)가 기준 — 큐레이션 순서는 같은 값일 때만 보조
+          .orderBy(hospitals.sortOrder, categoryListings.sortOrder, hospitals.name);
       } catch {
         // curated 테이블 없음 — legacy 로 폴백
       }
