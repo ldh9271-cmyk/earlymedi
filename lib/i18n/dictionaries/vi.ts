@@ -272,6 +272,7 @@ const vi: Dictionary = {
   inquiryCta: {
     title: 'Vẫn đang phân vân?',
     subtitle: 'Trò chuyện 1:1 với concierge y tế. Phản hồi trung bình dưới 15 phút. Miễn phí.',
+    subtitleGeneral: 'Trò chuyện 1:1 với concierge làm đẹp. Phản hồi trung bình dưới 15 phút. Miễn phí.',
     nameLabel: 'Họ tên',
     countryLabel: 'Quốc gia',
     contactLabel: 'Liên hệ (Email hoặc KakaoTalk ID)',

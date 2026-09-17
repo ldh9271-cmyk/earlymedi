@@ -60,7 +60,8 @@ export default async function InquiryPage({
           lineHeight: 1.5,
         }}
       >
-        {dict.inquiryCta.subtitle}
+        {/* 병원을 지정해 들어온 예약 문의만 '의료 컨시어지', 일반 문의는 '뷰티 컨시어지' */}
+        {searchParams.hospital ? dict.inquiryCta.subtitle : dict.inquiryCta.subtitleGeneral}
       </p>
 
       <InquiryForm

@@ -283,6 +283,7 @@ const kr = {
   inquiryCta: {
     title: '아직 결정하기 어려우신가요?',
     subtitle: '의료 컨시어지에게 1:1로 물어보세요. 평균 응답 15분 이내, 무료.',
+    subtitleGeneral: '뷰티 컨시어지에게 1:1로 물어보세요. 평균 응답 15분 이내, 무료.',
     nameLabel: '이름',
     countryLabel: '국가',
     contactLabel: '연락처 (이메일 또는 카카오톡 ID)',

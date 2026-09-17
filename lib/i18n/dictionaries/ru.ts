@@ -272,6 +272,7 @@ const ru: Dictionary = {
   inquiryCta: {
     title: 'Ещё не решили?',
     subtitle: 'Поговорите 1-на-1 с медицинским консьержем. Среднее время ответа — менее 15 минут. Бесплатно.',
+    subtitleGeneral: 'Поговорите 1-на-1 с бьюти-консьержем. Средний ответ — до 15 минут. Бесплатно.',
     nameLabel: 'Имя',
     countryLabel: 'Страна',
     contactLabel: 'Контакт (Email или KakaoTalk ID)',

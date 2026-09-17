@@ -269,6 +269,7 @@ const zh: Dictionary = {
   inquiryCta: {
     title: '还在犹豫吗？',
     subtitle: '1对1与医疗礼宾对话。平均响应时间不超过 15 分钟。免费。',
+    subtitleGeneral: '1对1与美容礼宾对话。平均响应时间不超过 15 分钟。免费。',
     nameLabel: '姓名',
     countryLabel: '国家',
     contactLabel: '联系方式（邮箱或微信）',

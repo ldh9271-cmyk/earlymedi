@@ -272,6 +272,7 @@ const en: Dictionary = {
   inquiryCta: {
     title: 'Still deciding?',
     subtitle: 'Talk 1:1 with a medical concierge. Average response under 15 minutes. Free.',
+    subtitleGeneral: 'Talk 1:1 with a beauty concierge. Average response under 15 minutes. Free.',
     nameLabel: 'Name',
     countryLabel: 'Country',
     contactLabel: 'Contact (Email or KakaoTalk ID)',

@@ -271,6 +271,7 @@ const ja: Dictionary = {
   inquiryCta: {
     title: 'まだ迷っていますか？',
     subtitle: '医療コンシェルジュと1対1相談。平均応答15分以内、無料。',
+    subtitleGeneral: 'ビューティーコンシェルジュと1対1相談。平均応答15分以内、無料。',
     nameLabel: 'お名前',
     countryLabel: '国',
     contactLabel: '連絡先（メールまたはLINE ID）',
