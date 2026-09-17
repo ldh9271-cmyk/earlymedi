@@ -1,5 +1,5 @@
 export const metadata = {
-  title: '이용약관 | 글로우업투어',
+  title: '이용약관',
   description:
     '글로우업투어 서비스의 이용약관 — 회원의 권리와 의무, 회사의 책임 범위, 분쟁 해결 절차를 규정합니다.',
 };
