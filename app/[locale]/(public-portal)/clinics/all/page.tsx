@@ -5,6 +5,7 @@ import { and, desc, eq, ilike, inArray, isNotNull, or, sql, type SQL } from 'dri
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { db } from '@/lib/db/client';
+import { cachedQuery, COUNT_TTL, LIST_TTL, SIDOS_TTL } from '@/lib/cache/registry-cache';
 import { hospitalRegistry, HOSPITAL_GRADE_CL_CODES } from '@/drizzle/schema/hospital-registry';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { RegistryCard, type RegistryCardRow } from '../_registry/shared';
@@ -78,8 +79,10 @@ export default async function RegistryListPage({ params, searchParams }: { param
   let sidoOptions: string[] = [];
   let error: string | null = null;
   try {
-    const [cnt] = await db.select({ n: sql<number>`count(*)::int` }).from(hospitalRegistry).where(where);
-    total = cnt?.n ?? 0;
+    // 시도 목록·건수·목록을 캐시하고 동시에 시작한다 — DB 왕복(다른 리전)과 큰 테이블 count 를 매 요청마다 치르지 않도록 (lib/cache/registry-cache)
+    const cacheKey = ['hospital_registry', locale, q, sido, type, foreign ? 1 : 0, listed ? 1 : 0, dept, page];
+    const sidosPromise = cachedQuery(['hospital_registry', 'sidos'], SIDOS_TTL, () => db.selectDistinct({ s: hospitalRegistry.sidoName }).from(hospitalRegistry).where(isNotNull(hospitalRegistry.sidoName)).orderBy(hospitalRegistry.sidoName));
+    const countPromise = cachedQuery([...cacheKey, 'count'], COUNT_TTL, () => db.select({ n: sql<number>`count(*)::int` }).from(hospitalRegistry).where(where));
     const listedRank = sql`case when ${hospitalRegistry.contractedHospitalId} is not null or ${hospitalRegistry.claimStatus} = 'approved' then 0 else 1 end`;
     const foreignRank = sql`case when ${hospitalRegistry.foreignLicensed} then 0 else 1 end`;
     const gradeRank = sql`case when ${hospitalRegistry.clCd} in ('01','11','21','41','93') then 0 when ${hospitalRegistry.clCd} in ('28','29') then 1 else 2 end`;
@@ -89,7 +92,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
     const catRank = deptCats.length
       ? sql<number>`case when ${hospitals.primaryCategories} ?| ${sql.raw(`array[${deptCats.map((c) => `'${c}'`).join(',')}]::text[]`)} then 0 else 1 end`
       : sql<number>`0`;
-    const found = await db
+    const found = await cachedQuery([...cacheKey, 'list'], LIST_TTL, () => db
       .select({
         id: hospitalRegistry.id, ykiho: hospitalRegistry.ykiho, name: hospitalRegistry.name, clCd: hospitalRegistry.clCd, clName: hospitalRegistry.clName,
         sidoName: hospitalRegistry.sidoName, sgguName: hospitalRegistry.sgguName, addr: hospitalRegistry.addr, drTotal: hospitalRegistry.drTotal,
@@ -102,7 +105,9 @@ export default async function RegistryListPage({ params, searchParams }: { param
       // 글로우업 등록 병원끼리는 마스터 '순서'(hospitals.sort_order, 낮을수록 먼저)를 따른다 — 공공정보 병원은 sort_order 가 없어 뒤 기준으로 정렬
       .orderBy(listedRank, catRank, sql`coalesce(${hospitals.sortOrder}, 1000000)`, foreignRank, gradeRank, desc(hospitalRegistry.drTotal), hospitalRegistry.name)
       .limit(PAGE_SIZE)
-      .offset((page - 1) * PAGE_SIZE);
+      .offset((page - 1) * PAGE_SIZE));
+    const [cnt] = await countPromise;
+    total = cnt?.n ?? 0;
     // 과목 코드 → 소비자 과별 라벨 (중복 그룹 제거, 최대 3개)
     // 카드 id → 마스터 순서 (레지스트리 연결 병원 + 아래 미연결 등록 병원을 한 줄로 정렬할 때 사용)
     const sortKey = new Map<string, number>();
@@ -145,7 +150,7 @@ export default async function RegistryListPage({ params, searchParams }: { param
         total += extras.length;
       }
     }
-    const sidos = await db.selectDistinct({ s: hospitalRegistry.sidoName }).from(hospitalRegistry).where(isNotNull(hospitalRegistry.sidoName)).orderBy(hospitalRegistry.sidoName);
+    const sidos = await sidosPromise;
     sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));
   } catch (err) {
     error = err instanceof Error ? err.message : 'db_error';

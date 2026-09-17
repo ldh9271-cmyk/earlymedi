@@ -3,6 +3,7 @@ import { and, desc, eq, ilike, isNotNull, or, sql, type SQL } from 'drizzle-orm'
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { db } from '@/lib/db/client';
+import { cachedQuery, COUNT_TTL, LIST_TTL, SIDOS_TTL } from '@/lib/cache/registry-cache';
 import { foodRegistry } from '@/drizzle/schema/food-registry';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { CERTIFIED_LISTING_CATS, sidoMatches } from '@/lib/certified';
@@ -55,10 +56,12 @@ export async function EatsRegistryList({ locale, dict, searchParams, basePath, d
   let sidoOptions: string[] = [];
   let error: string | null = null;
   try {
-    const [cnt] = await db.select({ n: sql<number>`count(*)::int` }).from(foodRegistry).where(where);
-    total = cnt?.n ?? 0;
+    // 시도 목록·건수·목록을 캐시하고 동시에 시작한다 — DB 왕복(다른 리전)과 큰 테이블 count 를 매 요청마다 치르지 않도록 (lib/cache/registry-cache)
+    const cacheKey = ['food_registry', locale, q, sido, cat, listed ? 1 : 0, page];
+    const sidosPromise = cachedQuery(['food_registry', 'sidos'], SIDOS_TTL, () => db.selectDistinct({ s: foodRegistry.sidoName }).from(foodRegistry).where(isNotNull(foodRegistry.sidoName)).orderBy(foodRegistry.sidoName));
+    const countPromise = cachedQuery([...cacheKey, 'count'], COUNT_TTL, () => db.select({ n: sql<number>`count(*)::int` }).from(foodRegistry).where(where));
     const listedRank = sql`case when ${foodRegistry.contractedListingId} is not null or ${foodRegistry.claimStatus} = 'approved' then 0 else 1 end`;
-    const found = await db
+    const found = await cachedQuery([...cacheKey, 'list'], LIST_TTL, () => db
       .select({
         id: foodRegistry.id, mgtNo: foodRegistry.mgtNo, name: foodRegistry.name, bizType: foodRegistry.bizType, categoryKeys: foodRegistry.categoryKeys,
         sidoName: foodRegistry.sidoName, sgguName: foodRegistry.sgguName, addrRoad: foodRegistry.addrRoad, addrLot: foodRegistry.addrLot,
@@ -70,7 +73,9 @@ export async function EatsRegistryList({ locale, dict, searchParams, basePath, d
       .where(where)
       .orderBy(listedRank, desc(foodRegistry.openedDate), foodRegistry.name)
       .limit(PAGE_SIZE)
-      .offset((page - 1) * PAGE_SIZE);
+      .offset((page - 1) * PAGE_SIZE));
+    const [cnt] = await countPromise;
+    total = cnt?.n ?? 0;
     rows = found as EatCardRow[];
     // 첫 페이지(세부 카테고리 없을 때): 글로우 인증(플랫폼 직접 등록) 찐맛집 중 음식점 레지스트리에 아직 연결 안 된 것도 컬러 카드로 (정의 lib/certified)
     if (page === 1 && !cat) {
@@ -91,7 +96,7 @@ export async function EatsRegistryList({ locale, dict, searchParams, basePath, d
         }));
       if (extras.length) { rows = [...extras, ...rows]; total += extras.length; }
     }
-    const sidos = await db.selectDistinct({ s: foodRegistry.sidoName }).from(foodRegistry).where(isNotNull(foodRegistry.sidoName)).orderBy(foodRegistry.sidoName);
+    const sidos = await sidosPromise;
     sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));
   } catch (err) {
     error = err instanceof Error ? err.message : 'db_error';

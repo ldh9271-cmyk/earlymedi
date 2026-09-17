@@ -14,6 +14,7 @@ import type { ListingCategory } from '@/lib/listings/categories';
 import { type PcCategoryKey } from '../../_components/pc-header';
 import { and, desc, eq, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
+import { cachedQuery, LIST_TTL } from '@/lib/cache/registry-cache';
 import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { ShopCard, type ShopCardRow } from '@/app/[locale]/(public-portal)/shops/_registry/shared';
@@ -31,7 +32,8 @@ async function fetchBeautyRegistryForKey(key: Exclude<PcCategoryKey, 'all'>): Pr
   const conds: SQL[] = [eq(beautyRegistry.statusCode, '01'), sql`${beautyRegistry.categoryKeys} @> ${sql.raw(`array['${cat}']::text[]`)}`];
   const listedRank = sql`case when ${beautyRegistry.contractedListingId} is not null or ${beautyRegistry.claimStatus} = 'approved' then 0 else 1 end`;
   try {
-    const rows = await db
+    // 카테고리별 12곳 — 22만 건 테이블 정렬이라 10분 캐시 (lib/cache/registry-cache)
+    const rows = await cachedQuery(['beauty_registry', 'landing', cat], LIST_TTL, () => db
       .select({
         id: beautyRegistry.id, mgtNo: beautyRegistry.mgtNo, name: beautyRegistry.name, bizType: beautyRegistry.bizType, categoryKeys: beautyRegistry.categoryKeys,
         sidoName: beautyRegistry.sidoName, sgguName: beautyRegistry.sgguName, addrRoad: beautyRegistry.addrRoad, addrLot: beautyRegistry.addrLot,
@@ -43,7 +45,7 @@ async function fetchBeautyRegistryForKey(key: Exclude<PcCategoryKey, 'all'>): Pr
       .leftJoin(partnerListings, eq(partnerListings.id, beautyRegistry.contractedListingId))
       .where(and(...conds))
       .orderBy(listedRank, desc(beautyRegistry.chairs), beautyRegistry.name)
-      .limit(12);
+      .limit(12));
     return rows as ShopCardRow[];
   } catch {
     return [];

@@ -5,6 +5,7 @@ import { and, desc, eq, ilike, isNotNull, or, sql, type SQL } from 'drizzle-orm'
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { db } from '@/lib/db/client';
+import { cachedQuery, COUNT_TTL, LIST_TTL, SIDOS_TTL } from '@/lib/cache/registry-cache';
 import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { SHOP_CATS, ShopCard, type ShopCardRow } from '../_registry/shared';
@@ -59,10 +60,12 @@ export default async function ShopsListPage({ params, searchParams }: { params: 
   let sidoOptions: string[] = [];
   let error: string | null = null;
   try {
-    const [cnt] = await db.select({ n: sql<number>`count(*)::int` }).from(beautyRegistry).where(where);
-    total = cnt?.n ?? 0;
+    // 시도 목록·건수·목록을 캐시하고 동시에 시작한다 — DB 왕복(다른 리전)과 큰 테이블 count 를 매 요청마다 치르지 않도록 (lib/cache/registry-cache)
+    const cacheKey = ['beauty_registry', locale, q, sido, cat, listed ? 1 : 0, page];
+    const sidosPromise = cachedQuery(['beauty_registry', 'sidos'], SIDOS_TTL, () => db.selectDistinct({ s: beautyRegistry.sidoName }).from(beautyRegistry).where(isNotNull(beautyRegistry.sidoName)).orderBy(beautyRegistry.sidoName));
+    const countPromise = cachedQuery([...cacheKey, 'count'], COUNT_TTL, () => db.select({ n: sql<number>`count(*)::int` }).from(beautyRegistry).where(where));
     const listedRank = sql`case when ${beautyRegistry.contractedListingId} is not null or ${beautyRegistry.claimStatus} = 'approved' then 0 else 1 end`;
-    const found = await db
+    const found = await cachedQuery([...cacheKey, 'list'], LIST_TTL, () => db
       .select({
         id: beautyRegistry.id, mgtNo: beautyRegistry.mgtNo, name: beautyRegistry.name, bizType: beautyRegistry.bizType, categoryKeys: beautyRegistry.categoryKeys,
         sidoName: beautyRegistry.sidoName, sgguName: beautyRegistry.sgguName, addrRoad: beautyRegistry.addrRoad, addrLot: beautyRegistry.addrLot,
@@ -75,7 +78,9 @@ export default async function ShopsListPage({ params, searchParams }: { params: 
       .where(where)
       .orderBy(listedRank, desc(beautyRegistry.chairs), desc(beautyRegistry.openedDate), beautyRegistry.name)
       .limit(PAGE_SIZE)
-      .offset((page - 1) * PAGE_SIZE);
+      .offset((page - 1) * PAGE_SIZE));
+    const [cnt] = await countPromise;
+    total = cnt?.n ?? 0;
     rows = found as ShopCardRow[];
     // 첫 페이지: 글로우 인증(플랫폼 직접 등록) 뷰티샵 중 아직 미용업 레지스트리에 연결 안 된 것도
     // 컬러 카드로 함께 노출 (글로우 인증 필터에서도 보이도록). 카테고리 정의는 lib/certified.
@@ -100,7 +105,7 @@ export default async function ShopsListPage({ params, searchParams }: { params: 
         if (extras.length) { rows = [...extras, ...rows]; total += extras.length; }
       }
     }
-    const sidos = await db.selectDistinct({ s: beautyRegistry.sidoName }).from(beautyRegistry).where(isNotNull(beautyRegistry.sidoName)).orderBy(beautyRegistry.sidoName);
+    const sidos = await sidosPromise;
     sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));
   } catch (err) {
     error = err instanceof Error ? err.message : 'db_error';

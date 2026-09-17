@@ -5,6 +5,7 @@ import { and, desc, eq, ilike, isNotNull, or, sql, type SQL } from 'drizzle-orm'
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { db } from '@/lib/db/client';
+import { cachedQuery, COUNT_TTL, LIST_TTL, SIDOS_TTL } from '@/lib/cache/registry-cache';
 import { tourSpots } from '@/drizzle/schema/tour-spots';
 import { TOUR_CATS, TourCard, type TourCardRow } from '../_registry/shared';
 import MapView from '../../map/_components/map-view';
@@ -56,9 +57,11 @@ export default async function AttractionsListPage({ params, searchParams }: { pa
   let sidoOptions: string[] = [];
   let error: string | null = null;
   try {
-    const [cnt] = await db.select({ n: sql<number>`count(*)::int` }).from(tourSpots).where(where);
-    total = cnt?.n ?? 0;
-    const found = await db
+    // 시도 목록·건수·목록을 캐시하고 동시에 시작한다 — DB 왕복(다른 리전)과 큰 테이블 count 를 매 요청마다 치르지 않도록 (lib/cache/registry-cache)
+    const cacheKey = ['tour_spots', locale, q, sido, cat, page];
+    const sidosPromise = cachedQuery(['tour_spots', 'sidos'], SIDOS_TTL, () => db.selectDistinct({ s: tourSpots.sidoName }).from(tourSpots).where(isNotNull(tourSpots.sidoName)).orderBy(tourSpots.sidoName));
+    const countPromise = cachedQuery([...cacheKey, 'count'], COUNT_TTL, () => db.select({ n: sql<number>`count(*)::int` }).from(tourSpots).where(where));
+    const found = await cachedQuery([...cacheKey, 'list'], LIST_TTL, () => db
       .select({
         // 다국어 제목: 관광공사 영·일·중 TourAPI 매칭분(i18n) 우선, 없으면 한국어
         id: tourSpots.id, contentId: tourSpots.contentId, title: sql<string>`coalesce(${tourSpots.i18n}->${locale}->>'title', ${tourSpots.title})`, imageUrl: tourSpots.imageUrl, thumbUrl: tourSpots.thumbUrl,
@@ -68,9 +71,11 @@ export default async function AttractionsListPage({ params, searchParams }: { pa
       .where(where)
       .orderBy(desc(tourSpots.modifiedTime), tourSpots.title)
       .limit(PAGE_SIZE)
-      .offset((page - 1) * PAGE_SIZE);
+      .offset((page - 1) * PAGE_SIZE));
+    const [cnt] = await countPromise;
+    total = cnt?.n ?? 0;
     rows = found as TourCardRow[];
-    const sidos = await db.selectDistinct({ s: tourSpots.sidoName }).from(tourSpots).where(isNotNull(tourSpots.sidoName)).orderBy(tourSpots.sidoName);
+    const sidos = await sidosPromise;
     sidoOptions = sidos.map((r) => r.s).filter((s): s is string => Boolean(s));
   } catch (err) {
     error = err instanceof Error ? err.message : 'db_error';
