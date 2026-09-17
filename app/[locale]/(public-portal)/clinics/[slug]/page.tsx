@@ -640,8 +640,19 @@ function ClinicDetailSections({
                 style={{ border: '1px solid #ebebeb', borderRadius: 12, padding: '14px 16px' }}
               >
                 <div style={{ fontSize: 14, fontWeight: 700 }}>{L(dep.title)}</div>
-                <div style={{ fontSize: 13, color: '#6a6a6a', marginTop: 6, lineHeight: 1.6 }}>
-                  {dep.items.map(L).join(' · ')}
+                {/* 항목을 ' · ' 로 이어 붙이면 항목이 많을 때 한 문단으로 뭉개진다 — 칩으로 줄바꿈 */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                  {dep.items.map((item) => (
+                    <span
+                      key={item}
+                      style={{
+                        display: 'inline-block', fontSize: 12.5, lineHeight: 1.4, color: '#3f3f3f',
+                        background: '#f7f7f7', border: '1px solid #ececec', borderRadius: 999, padding: '3px 10px',
+                      }}
+                    >
+                      {L(item)}
+                    </span>
+                  ))}
                 </div>
               </div>
             ))}
