@@ -91,19 +91,19 @@ export default async function RegistryListPage({ params, searchParams }: { param
     const deptCats = dept ? hospitalCatsForDept(dept).filter((c) => /^[a-z_]+$/.test(c)) : [];
     const catRank = deptCats.length
       ? sql<number>`case when ${hospitals.primaryCategories} ?| ${sql.raw(`array[${deptCats.map((c) => `'${c}'`).join(',')}]::text[]`)} then 0 else 1 end`
-      : sql<number>`0`;
+      : null; // 과에 대응하는 등록 카테고리가 없으면 정렬에서 뺀다 — ORDER BY 에 정수 리터럴을 두면 컬럼 순번으로 해석돼 오류
     const found = await cachedQuery([...cacheKey, 'list'], LIST_TTL, () => db
       .select({
         id: hospitalRegistry.id, ykiho: hospitalRegistry.ykiho, name: hospitalRegistry.name, clCd: hospitalRegistry.clCd, clName: hospitalRegistry.clName,
         sidoName: hospitalRegistry.sidoName, sgguName: hospitalRegistry.sgguName, addr: hospitalRegistry.addr, drTotal: hospitalRegistry.drTotal,
         foreignLicensed: hospitalRegistry.foreignLicensed, contractedHospitalId: hospitalRegistry.contractedHospitalId, claimStatus: hospitalRegistry.claimStatus,
-        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerSortOrder: hospitals.sortOrder, partnerCatRank: catRank, partnerCover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = hospitals.id and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`,
+        details: hospitalRegistry.details, deptCodes: hospitalRegistry.deptCodes, partnerSlug: hospitals.slug, partnerSortOrder: hospitals.sortOrder, partnerCatRank: catRank ?? sql<number>`0`, partnerCover: sql<string | null>`(select coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) from hospital_locale_content c where c.hospital_id = hospitals.id and coalesce(c.cover_image_url, c.landing_image_url, case when jsonb_typeof(c.gallery_image_urls) = 'array' then c.gallery_image_urls->>0 end) is not null order by (c.locale = ${locale}) desc, (c.locale = 'kr') desc limit 1)`,
       })
       .from(hospitalRegistry)
       .leftJoin(hospitals, eq(hospitals.id, hospitalRegistry.contractedHospitalId))
       .where(where)
       // 글로우업 등록 병원끼리는 마스터 '순서'(hospitals.sort_order, 낮을수록 먼저)를 따른다 — 공공정보 병원은 sort_order 가 없어 뒤 기준으로 정렬
-      .orderBy(listedRank, catRank, sql`coalesce(${hospitals.sortOrder}, 1000000)`, foreignRank, gradeRank, desc(hospitalRegistry.drTotal), hospitalRegistry.name)
+      .orderBy(...[listedRank, ...(catRank ? [catRank] : []), sql`coalesce(${hospitals.sortOrder}, 1000000)`, foreignRank, gradeRank, desc(hospitalRegistry.drTotal), hospitalRegistry.name])
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE));
     const [cnt] = await countPromise;
