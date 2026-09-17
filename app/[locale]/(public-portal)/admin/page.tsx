@@ -47,7 +47,7 @@ export async function generateMetadata({
   params: { locale: string };
 }): Promise<{ title: string }> {
   if (!isPublicLocale(params.locale)) return { title: 'Admin' };
-  return { title: `Patient Admin · KoreaGlowUp` };
+  return { title: `Patient Admin · 글로우업투어` };
 }
 
 type PatientSignup = {

@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils/cn';
  *
  * MiniMax-inspired: pill sub-nav items, generous vertical rhythm,
  * card radius hierarchy (32px hero promo vs 16px doc cards).
- * KoreaGlowUp tokens: brand-50/brand-600 for active states.
+ * 글로우업투어 tokens: brand-50/brand-600 for active states.
  */
 
 export type SettingsSection = {

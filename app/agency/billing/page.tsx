@@ -15,7 +15,7 @@ export const metadata = { title: '요금제 · 청구서' };
 export const dynamic = 'force-dynamic';
 
 /**
- * 요금제 · 청구서 — 우리 조직의 KoreaGlowUp 구독 상태를 본다:
+ * 요금제 · 청구서 — 우리 조직의 글로우업투어 구독 상태를 본다:
  * 현재 플랜 · 무료 체험 잔량 · 팀 시트 사용량 · 청구 연락처(편집 가능)
  * · 에이전시 플랜 비교. 결제 수단 등록·청구서 발행은 유료 전환 시
  * 활성화된다 (전환은 /upgrade).
@@ -115,7 +115,7 @@ export default async function AgencyBillingPage(): Promise<JSX.Element> {
         <Badge variant="brand" className="mb-2">🧾 요금제</Badge>
         <h1 className="text-2xl font-bold tracking-tight">요금제 · 청구서</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          KoreaGlowUp 구독 상태와 청구 정보를 관리합니다. 유료 전환·플랜 변경은{' '}
+          글로우업투어 구독 상태와 청구 정보를 관리합니다. 유료 전환·플랜 변경은{' '}
           <Link href="/upgrade" className="font-medium underline">유료 전환</Link>에서.
         </p>
       </div>

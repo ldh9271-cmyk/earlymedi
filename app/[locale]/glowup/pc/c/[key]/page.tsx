@@ -105,7 +105,7 @@ export async function generateMetadata({
   if (!VALID_KEYS.has(params.key as Exclude<PcCategoryKey, 'all'>)) return {};
   const dict = await getDictionary(params.locale);
   const p = dict.pcCategory[params.key as Exclude<PcCategoryKey, 'all'>];
-  return { title: `${p.title} · KoreaGlowUp`, description: p.subtitle };
+  return { title: `${p.title} · 글로우업투어`, description: p.subtitle };
 }
 
 export default async function CategoryListPage({

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
  * 뷰티 회복 숙소 — 프리미엄 회복 숙박 상품 상세 페이지.
  *
  * Claude Design 프로젝트에서 임포트한 "뷰티 회복 숙소.dc.html" 을
- * EarlyMedi 앱 구조에 맞춰 재구현. Airbnb-style 5-panel 갤러리 +
+ * 글로우업투어 앱 구조에 맞춰 재구현. Airbnb-style 5-panel 갤러리 +
  * 타이틀 + 가격 카드. 실제 이미지는 stock 파스텔 그라디언트로
  * 대체(디자인 원본과 동일한 톤). 나중에 파트너 사진 확보되면
  * 배경만 교체하면 됨.

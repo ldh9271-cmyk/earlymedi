@@ -24,7 +24,7 @@ export { CHANNEL_DISPLAY, ALL_CHANNEL_KINDS } from './types';
  *   - naver     (via Naver TalkTalk Chatbot API — no 24h window)
  *   - wechat    (via WeChat OA API)
  * Non-messenger sinks (sms / email / web) still use BaseMockAdapter —
- * they store outbound in KoreaGlowUp DB; carrier integration is a
+ * they store outbound in 글로우업투어 DB; carrier integration is a
  * future step.
  */
 const adapters: Record<ChannelKind, ChannelAdapter> = {

@@ -133,7 +133,7 @@ function Hero(): JSX.Element {
 }
 
 // ─────────────────────────────────────────────────────────
-// Actor matrix — KoreaGlowUp unique identity
+// Actor matrix — 글로우업투어 unique identity
 // ─────────────────────────────────────────────────────────
 
 const ACTORS = [
@@ -547,17 +547,16 @@ function Footer(): JSX.Element {
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-10 text-xs text-muted-foreground">
         <div className="space-y-1">
           <div className="text-foreground">
-            <span className="font-extrabold text-brand-600">Korea</span>
-            <span className="font-semibold">GlowUp</span>{' '}
-            <span className="text-hospitality-500">AI Concierge</span>
+            <span className="font-extrabold text-brand-600">글로우업</span><span className="font-semibold">투어</span>{' '}
+            <span className="text-hospitality-500">파트너 플랫폼</span>
           </div>
-          <div>© {new Date().getFullYear()} KoreaGlowUp · 의료법 27조의2 외국인환자 유치 광고 가이드라인 준수</div>
+          <div>© {new Date().getFullYear()} 글로우업투어 · 의료법 27조의2 외국인환자 유치 광고 가이드라인 준수</div>
         </div>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <Link href="/legal/privacy" className="hover:text-foreground">개인정보처리방침</Link>
           <Link href="/legal/terms" className="hover:text-foreground">이용약관</Link>
           <Link href="/legal/medical-ad" className="hover:text-foreground">의료광고 가이드</Link>
-          <a href="mailto:hello@koreaglowup.com" className="hover:text-foreground">문의</a>
+          <a href="mailto:ldh9271@gmail.com" className="hover:text-foreground">문의</a>
         </nav>
       </div>
     </footer>

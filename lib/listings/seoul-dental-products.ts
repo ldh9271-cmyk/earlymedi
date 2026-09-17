@@ -56,11 +56,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en', 'zh', 'ja'],
     interpreterIncluded: true,
     sortOrder: 10,
-    seoTitle: '에이플러스치과병원 | 강남 외국인 치과·임플란트·교정 | EarlyMedi',
+    seoTitle: '에이플러스치과병원 | 강남 외국인 치과·임플란트·교정 | 글로우업투어',
     seoDescription:
-      '1996년 개원 국내 최초 치과종합병원. 강남구 외국인환자 우수기관 선정. 서울대 출신 분과별 협진. 영어·중국어·일어 상담 가능. EarlyMedi에서 예약.',
+      '1996년 개원 국내 최초 치과종합병원. 강남구 외국인환자 우수기관 선정. 서울대 출신 분과별 협진. 영어·중국어·일어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '강남임플란트', '치과종합병원', '외국인치과', '강남교정', 'Korea dental', 'dental implant Korea', 'Seoul dental clinic', '의료관광치과'],
-    ogDescription: '강남 치과 | 국내 최초 치과종합병원·외국인환자 우수기관·4개국어 응대 — EarlyMedi',
+    ogDescription: '강남 치과 | 국내 최초 치과종합병원·외국인환자 우수기관·4개국어 응대 — 글로우업투어',
     imageKeywords: ['A Plus Dental Hospital Gangnam', 'Korea dental hospital', 'Sinsa dental', '에이플러스치과 강남'],
   },
   {
@@ -79,11 +79,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en', 'zh', 'ja', 'ru'],
     interpreterIncluded: true,
     sortOrder: 20,
-    seoTitle: '에스플란트치과병원 | 강남 청담 임플란트 전문 | EarlyMedi',
+    seoTitle: '에스플란트치과병원 | 강남 청담 임플란트 전문 | 글로우업투어',
     seoDescription:
-      '서울대 출신 6인 전문의. 3D 모의수술 기반 가이드 임플란트. 청담동 위치. 영어·중국어·러시아어 상담 가능. EarlyMedi에서 예약.',
+      '서울대 출신 6인 전문의. 3D 모의수술 기반 가이드 임플란트. 청담동 위치. 영어·중국어·러시아어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '청담치과', '임플란트전문', '3D임플란트', '가이드임플란트', '외국인치과', 'Korea implant', 'Seoul dental surgery', '의료관광치과'],
-    ogDescription: '강남 치과 | 서울대 출신 6인·3D 모의수술·임플란트 전문 — EarlyMedi',
+    ogDescription: '강남 치과 | 서울대 출신 6인·3D 모의수술·임플란트 전문 — 글로우업투어',
     imageKeywords: ['S.Plant Dental Hospital Cheongdam', 'guided implant Korea', 'Dosan-daero dental', '에스플란트치과 청담'],
   },
   {
@@ -102,11 +102,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en', 'zh'],
     interpreterIncluded: true,
     sortOrder: 30,
-    seoTitle: '레브치과 | 강남 무삭제 라미네이트·스마일디자인 전문 | EarlyMedi',
+    seoTitle: '레브치과 | 강남 무삭제 라미네이트·스마일디자인 전문 | 글로우업투어',
     seoDescription:
-      '신사역 1번 출구. 280평 대형치과. 대통령자문의 출신 원장. 무삭제 라미네이트·스마일디자인 특화. 영어·중국어 상담 가능. EarlyMedi에서 예약.',
+      '신사역 1번 출구. 280평 대형치과. 대통령자문의 출신 원장. 무삭제 라미네이트·스마일디자인 특화. 영어·중국어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '신사역치과', '무삭제라미네이트', '스마일디자인', '라미네이트전문', 'Korea veneer', 'dental veneer Seoul', '외국인치과', '심미치과'],
-    ogDescription: '강남 치과 | 대통령자문의·무삭제 라미네이트·스마일디자인 전문 — EarlyMedi',
+    ogDescription: '강남 치과 | 대통령자문의·무삭제 라미네이트·스마일디자인 전문 — 글로우업투어',
     imageKeywords: ['REVE Dental Clinic Sinsa', 'no-prep veneer Seoul', 'smile design Korea', '레브치과 신사'],
   },
   {
@@ -125,11 +125,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
     sortOrder: 40,
-    seoTitle: '뉴엔치과 | 강남역 라미네이트·투명교정·임플란트 | EarlyMedi',
+    seoTitle: '뉴엔치과 | 강남역 라미네이트·투명교정·임플란트 | 글로우업투어',
     seoDescription:
-      '강남역 10번 출구 21m. 무삭제 퍼스널 라미네이트·투명교정 전문. 3D 당일 보철. 야간 진료. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남역 10번 출구 21m. 무삭제 퍼스널 라미네이트·투명교정 전문. 3D 당일 보철. 야간 진료. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '강남역치과', '무삭제라미네이트', '투명교정', '임플란트', '당일보철', 'Korea dental', 'teeth veneer Seoul', '외국인치과', '야간진료치과'],
-    ogDescription: '강남 치과 | 강남역 바로 앞·무삭제 라미네이트·투명교정·야간진료 — EarlyMedi',
+    ogDescription: '강남 치과 | 강남역 바로 앞·무삭제 라미네이트·투명교정·야간진료 — 글로우업투어',
     imageKeywords: ['NUEN Dental Clinic Gangnam Station', 'clear aligner Seoul', 'same-day prosthesis Korea', '뉴엔치과 강남역'],
   },
   {
@@ -148,11 +148,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
     sortOrder: 50,
-    seoTitle: '원진치과 | 강남역 브리네이트·임플란트 심미치과 | EarlyMedi',
+    seoTitle: '원진치과 | 강남역 브리네이트·임플란트 심미치과 | 글로우업투어',
     seoDescription:
-      '강남역 1번 출구 30초. 브리네이트(무삭제 라미네이트)·임플란트·투명교정. 평일 21시 야간 진료. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남역 1번 출구 30초. 브리네이트(무삭제 라미네이트)·임플란트·투명교정. 평일 21시 야간 진료. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '강남역치과', '브리네이트', '무삭제라미네이트', '야간진료치과', '임플란트', 'Korea dental veneer', 'Seoul dental', '외국인치과'],
-    ogDescription: '강남 치과 | 강남역 30초·브리네이트·야간 21시 진료 — EarlyMedi',
+    ogDescription: '강남 치과 | 강남역 30초·브리네이트·야간 21시 진료 — 글로우업투어',
     imageKeywords: ['Wonjin Dental Clinic Gangnam', 'veneer Gangnam Station', 'night dental Seoul', '원진치과 강남역'],
   },
   {
@@ -171,11 +171,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en', 'zh'],
     interpreterIncluded: true,
     sortOrder: 60,
-    seoTitle: '화이트드림치과 | 강남 임플란트·라미네이트·치아성형 | EarlyMedi',
+    seoTitle: '화이트드림치과 | 강남 임플란트·라미네이트·치아성형 | 글로우업투어',
     seoDescription:
-      '서초 강남역 인근. 자가치아뼈이식 임플란트·화이티니 라미네이트. 자체기공실 보유. 고난이도 임상 전문. 영어·중국어 상담 가능. EarlyMedi에서 예약.',
+      '서초 강남역 인근. 자가치아뼈이식 임플란트·화이티니 라미네이트. 자체기공실 보유. 고난이도 임상 전문. 영어·중국어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '서초치과', '임플란트', '라미네이트', '자가치아뼈이식', '치아성형', 'Korea dental implant', 'Seoul cosmetic dentistry', '외국인치과'],
-    ogDescription: '서초 치과 | 자체기공실·자가치아뼈이식 임플란트·화이티니 라미네이트 — EarlyMedi',
+    ogDescription: '서초 치과 | 자체기공실·자가치아뼈이식 임플란트·화이티니 라미네이트 — 글로우업투어',
     imageKeywords: ['White Dream Dental Clinic Seocho', 'autogenous bone graft implant', 'Block77 dental', '화이트드림치과 서초'],
   },
   {
@@ -194,11 +194,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en', 'ja'],
     interpreterIncluded: true,
     sortOrder: 70,
-    seoTitle: 'CDC어린이치과 | 강남 외국인 소아치과·교정 | EarlyMedi',
+    seoTitle: 'CDC어린이치과 | 강남 외국인 소아치과·교정 | 글로우업투어',
     seoDescription:
-      '청담역 12번 출구. 영어 원어민 의료진 상주. 강남구 외국인환자 우수기관. 소아치과·교정 전문. 외국인 주재원 가족 환영. EarlyMedi에서 예약.',
+      '청담역 12번 출구. 영어 원어민 의료진 상주. 강남구 외국인환자 우수기관. 소아치과·교정 전문. 외국인 주재원 가족 환영. 글로우업투어에서 예약.',
     seoTags: ['강남소아치과', '청담치과', '외국인치과', '어린이치과', '영어치과', 'English dentist Seoul', 'children dentist Korea', 'expat dental Seoul', '의료관광치과'],
-    ogDescription: '강남 치과 | 영어 원어민 의료진·소아치과 전문·외국인 우수기관 — EarlyMedi',
+    ogDescription: '강남 치과 | 영어 원어민 의료진·소아치과 전문·외국인 우수기관 — 글로우업투어',
     imageKeywords: ['CDC Children Dental Clinic Cheongdam', 'English pediatric dentist Seoul', 'kids dental Korea', 'CDC어린이치과 청담'],
   },
   {
@@ -217,11 +217,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
     sortOrder: 80,
-    seoTitle: '강남젠틀치과 | 신논현역 주말·야간진료 치과 | EarlyMedi',
+    seoTitle: '강남젠틀치과 | 신논현역 주말·야간진료 치과 | 글로우업투어',
     seoDescription:
-      '서초 강남대로 위치. 토·일 주말 진료·야간 진료. 임플란트·교정·보철 전문. 영어 상담 가능. EarlyMedi에서 예약.',
+      '서초 강남대로 위치. 토·일 주말 진료·야간 진료. 임플란트·교정·보철 전문. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '신논현역치과', '주말진료치과', '야간진료치과', '임플란트', '교정', 'weekend dentist Seoul', 'Korea dental clinic', '외국인치과'],
-    ogDescription: '서초 치과 | 신논현역·주말·야간 진료·임플란트·교정 전문 — EarlyMedi',
+    ogDescription: '서초 치과 | 신논현역·주말·야간 진료·임플란트·교정 전문 — 글로우업투어',
     imageKeywords: ['Gangnam Gentle Dental Clinic', 'weekend dental Seoul', 'Sinnonhyeon dental', '강남젠틀치과'],
   },
   {
@@ -240,11 +240,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en', 'zh', 'ja'],
     interpreterIncluded: true,
     sortOrder: 90,
-    seoTitle: '드림치과 강남 | 압구정역 성형·피부·치과 원스톱 | EarlyMedi',
+    seoTitle: '드림치과 강남 | 압구정역 성형·피부·치과 원스톱 | 글로우업투어',
     seoDescription:
-      '압구정역 3번 출구. 드림성형외과·드림피부과 동일 건물 원스톱. 임플란트·교정·라미네이트 전문. 영어·중국어·일어 상담. EarlyMedi에서 예약.',
+      '압구정역 3번 출구. 드림성형외과·드림피부과 동일 건물 원스톱. 임플란트·교정·라미네이트 전문. 영어·중국어·일어 상담. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '압구정치과', '원스톱메디컬', '임플란트', '라미네이트', '외국인치과', 'Korea dental', 'one-stop medical Seoul', '의료관광치과'],
-    ogDescription: '강남 치과 | 성형·피부·치과 원스톱·압구정역·다국어 응대 — EarlyMedi',
+    ogDescription: '강남 치과 | 성형·피부·치과 원스톱·압구정역·다국어 응대 — 글로우업투어',
     imageKeywords: ['Dream Dental Clinic Apgujeong', 'one-stop medical building Gangnam', 'Nonhyeon-ro dental', '드림치과 압구정'],
   },
   {
@@ -263,11 +263,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en', 'zh'],
     interpreterIncluded: true,
     sortOrder: 100,
-    seoTitle: '유씨강남치과 | 강남구 의료관광 협력 치과 | EarlyMedi',
+    seoTitle: '유씨강남치과 | 강남구 의료관광 협력 치과 | 글로우업투어',
     seoDescription:
-      '강남구 의료관광 공식 협력기관. 임플란트·교정·라미네이트 전문. 영어·중국어 상담 가능. 외국인 환자 전문 시스템. EarlyMedi에서 예약.',
+      '강남구 의료관광 공식 협력기관. 임플란트·교정·라미네이트 전문. 영어·중국어 상담 가능. 외국인 환자 전문 시스템. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '강남구의료관광', '임플란트', '치아교정', '라미네이트', '외국인치과', 'Korea dental tourism', 'Seoul dental clinic', '의료관광치과'],
-    ogDescription: '강남 치과 | 의료관광 공식 협력기관·영어·중국어 응대 — EarlyMedi',
+    ogDescription: '강남 치과 | 의료관광 공식 협력기관·영어·중국어 응대 — 글로우업투어',
     imageKeywords: ['UC Gangnam Dental Clinic', 'Gangnam medical tour dental', 'dental tourism Korea', '유씨강남치과'],
   },
   {
@@ -286,11 +286,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
     sortOrder: 110,
-    seoTitle: '세라치과의원 | 강남 삼성동 라미네이트·임플란트 심미치과 | EarlyMedi',
+    seoTitle: '세라치과의원 | 강남 삼성동 라미네이트·임플란트 심미치과 | 글로우업투어',
     seoDescription:
-      '삼성중앙역 5분. 무삭제 라미네이트·임플란트·투명교정 전문. 자연스러운 스마일 디자인. 코엑스 인근. 영어 상담 가능. EarlyMedi에서 예약.',
+      '삼성중앙역 5분. 무삭제 라미네이트·임플란트·투명교정 전문. 자연스러운 스마일 디자인. 코엑스 인근. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '삼성동치과', '무삭제라미네이트', '임플란트', '투명교정', '심미치과', 'Korea dental', 'dental veneer Gangnam', '외국인치과', '코엑스치과'],
-    ogDescription: '강남 치과 | 삼성동·무삭제 라미네이트·자연스러운 스마일 디자인 — EarlyMedi',
+    ogDescription: '강남 치과 | 삼성동·무삭제 라미네이트·자연스러운 스마일 디자인 — 글로우업투어',
     imageKeywords: ['Cera Dental Clinic Samsung-dong', 'no-prep veneer Korea', 'S&C Tower Samsung', '세라치과 삼성동'],
   },
   {
@@ -309,11 +309,11 @@ export const DENTAL_PRODUCTS: ReadonlyArray<DentalSeed> = [
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
     sortOrder: 120,
-    seoTitle: '뉴욕화이트치과 | 강남 무절개 네비게이션 임플란트 전문 | EarlyMedi',
+    seoTitle: '뉴욕화이트치과 | 강남 무절개 네비게이션 임플란트 전문 | 글로우업투어',
     seoDescription:
-      '선릉역 인근. 세계 임플란트 대회 2위 입상 원장 직접 집도. 무절개 네비게이션 임플란트·라미네이트. 방문 횟수 최소화. 영어 상담 가능. EarlyMedi에서 예약.',
+      '선릉역 인근. 세계 임플란트 대회 2위 입상 원장 직접 집도. 무절개 네비게이션 임플란트·라미네이트. 방문 횟수 최소화. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남치과', '선릉역치과', '네비게이션임플란트', '무절개임플란트', '라미네이트', '치아성형', 'Korea implant', 'navigation implant Seoul', '외국인치과', '단기방문치과'],
-    ogDescription: '강남 치과 | 세계 임플란트 대회 2위·무절개 네비게이션·방문 횟수 최소화 — EarlyMedi',
+    ogDescription: '강남 치과 | 세계 임플란트 대회 2위·무절개 네비게이션·방문 횟수 최소화 — 글로우업투어',
     imageKeywords: ['New York White Dental Clinic Gangnam', 'navigation implant Korea', 'Teheran-ro dental', '뉴욕화이트치과 역삼'],
   },
 ];

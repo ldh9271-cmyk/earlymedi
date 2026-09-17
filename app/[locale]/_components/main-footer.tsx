@@ -49,7 +49,7 @@ export function MainFooter({
       items: [
         { label: t.support1, href: L('/inquiry') },              // 도움말 센터 → 1:1 문의
         { label: t.support2, href: '/legal/medical-ad' },        // 안전 정보 → 의료광고·안전 고지
-        { label: t.support3, href: '/legal/terms' },             // 취소 옵션 → 이용약관(취소·환불)
+        { label: t.support3, href: L('/policy/refund') },       // 취소 옵션 → 취소·환불 규정
         { label: t.support4, href: L('/inquiry') },              // 예약 문의
       ],
     },
@@ -68,7 +68,7 @@ export function MainFooter({
         { label: t.brand1, href: '/about' },
         { label: t.brand2, href: L('/glowup/pc/c/food') },
         { label: t.brand3, href: L('/glowup/pc/c/kpop') },
-        { label: t.brand4, href: '/signup' },                    // 호스트 되기 → 파트너 가입
+        { label: t.brand4, href: '/biz' },                       // 비즈니스 회원가입 → 파트너 센터
       ],
     },
   ];
@@ -140,7 +140,7 @@ export function MainFooter({
                   {privacy ? (
                     <>
                       <span>·</span>
-                      <Link href="/legal/privacy" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                      <Link href={L('/privacy')} style={{ color: 'inherit', textDecoration: 'underline' }}>
                         {privacy}
                       </Link>
                     </>
@@ -148,7 +148,7 @@ export function MainFooter({
                   {terms ? (
                     <>
                       <span>·</span>
-                      <Link href="/legal/terms" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                      <Link href={L('/terms')} style={{ color: 'inherit', textDecoration: 'underline' }}>
                         {terms}
                       </Link>
                     </>

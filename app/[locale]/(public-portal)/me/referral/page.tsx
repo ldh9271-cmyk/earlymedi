@@ -27,7 +27,7 @@ const CSS =
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<{ title: string }> {
   if (!isPublicLocale(params.locale)) return { title: 'Referral' };
   const dict = await getDictionary(params.locale);
-  return { title: `${dict.referral.title} · KoreaGlowUp` };
+  return { title: `${dict.referral.title} · 글로우업투어` };
 }
 
 export default async function ReferralPage({

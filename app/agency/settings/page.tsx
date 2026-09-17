@@ -68,10 +68,10 @@ export default async function AgencySettingsPage(): Promise<JSX.Element> {
             }
           >
             <SettingsRow label="회사명" hint="환자에게 노출되는 브랜드명">
-              <Input defaultValue="KoreaGlowUp 데모 에이전시" className="rounded-md" />
+              <Input defaultValue="글로우업투어 데모 에이전시" className="rounded-md" />
             </SettingsRow>
             <SettingsRow label="법인명" hint="사업자등록증상 상호">
-              <Input defaultValue="주식회사 KoreaGlowUp 데모" className="rounded-md" />
+              <Input defaultValue="주식회사 글로우업투어 데모" className="rounded-md" />
             </SettingsRow>
             <SettingsRow label="사업자등록번호">
               <Input defaultValue="123-45-67890" className="rounded-md font-mono" />
@@ -191,7 +191,7 @@ export default async function AgencySettingsPage(): Promise<JSX.Element> {
             <IntegrationRow icon="💚" name="LINE Official" status="connected" detail="bot id @koreaglowup" />
             <IntegrationRow icon="📷" name="Instagram DM" status="action" detail="페이지 액세스 토큰 만료 임박" />
             <IntegrationRow icon="🐉" name="WeChat OA" status="disconnected" detail="—" />
-            <IntegrationRow icon="📧" name="Resend Email" status="connected" detail="no-reply@koreaglowup.com" />
+            <IntegrationRow icon="📧" name="Resend Email" status="connected" detail="no-reply@glowuptour.com" />
             <IntegrationRow icon="✉️" name="Twilio SMS · WhatsApp" status="connected" detail="account SID AC···7821" />
             <IntegrationRow icon="🗺️" name="Mapbox" status="connected" detail="public token pk.···" />
             <IntegrationRow icon="💱" name="exchangerate-api" status="connected" detail="snapshot 매일 09:00 KST" />
@@ -215,7 +215,7 @@ export default async function AgencySettingsPage(): Promise<JSX.Element> {
             <SettingsRow label="정산 계좌 (KRW)">
               <div className="space-y-1">
                 <div className="font-mono text-sm">하나은행 123-456789-01234</div>
-                <div className="text-[11px] text-muted-foreground">예금주: 주식회사 KoreaGlowUp 데모</div>
+                <div className="text-[11px] text-muted-foreground">예금주: 주식회사 글로우업투어 데모</div>
               </div>
             </SettingsRow>
             <SettingsRow label="해외 송금 (Wise)" hint="외화 정산 시 사용">
@@ -234,7 +234,7 @@ export default async function AgencySettingsPage(): Promise<JSX.Element> {
         <SettingsSectionAnchor id="api">
           <SettingsCard
             title="API 키"
-            description="외부 시스템(병원 EMR · 통계 DB · CRM)에서 KoreaGlowUp에 접근할 때 사용합니다. 30일 무사용 시 자동 회수."
+            description="외부 시스템(병원 EMR · 통계 DB · CRM)에서 글로우업투어에 접근할 때 사용합니다. 30일 무사용 시 자동 회수."
             action={
               <Button variant="brand" className="rounded-full">
                 + 새 키 발급

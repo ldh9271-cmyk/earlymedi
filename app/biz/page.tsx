@@ -362,7 +362,7 @@ export default function BizPage(): JSX.Element {
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginTop: 26 }}>
             <a
-              href="mailto:hello@koreaglowup.com?subject=%5B%EC%9E%85%EC%A0%90%C2%B7%EC%A0%9C%ED%9C%B4%20%EB%AC%B8%EC%9D%98%5D&body=%EC%97%85%EC%B2%B4%EB%AA%85%3A%0A%EC%97%85%EC%A2%85(%EB%B3%91%EC%9B%90%2F%EB%B7%B0%ED%8B%B0%2F%ED%98%B8%ED%85%94%C2%B7%EC%97%AC%ED%96%89%2F%EC%B4%9D%ED%8C%90)%3A%0A%EC%97%B0%EB%9D%BD%EC%B2%98%3A%0A%EB%AC%B8%EC%9D%98%20%EB%82%B4%EC%9A%A9%3A%0A"
+              href="mailto:ldh9271@gmail.com?subject=%5B%EC%9E%85%EC%A0%90%C2%B7%EC%A0%9C%ED%9C%B4%20%EB%AC%B8%EC%9D%98%5D&body=%EC%97%85%EC%B2%B4%EB%AA%85%3A%0A%EC%97%85%EC%A2%85(%EB%B3%91%EC%9B%90%2F%EB%B7%B0%ED%8B%B0%2F%ED%98%B8%ED%85%94%C2%B7%EC%97%AC%ED%96%89%2F%EC%B4%9D%ED%8C%90)%3A%0A%EC%97%B0%EB%9D%BD%EC%B2%98%3A%0A%EB%AC%B8%EC%9D%98%20%EB%82%B4%EC%9A%A9%3A%0A"
               style={{ background: ROSE, color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 15, padding: '14px 30px', borderRadius: 9999 }}
             >
               이메일로 문의하기
@@ -385,13 +385,13 @@ export default function BizPage(): JSX.Element {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <BrandLockup height={20} color={ROSE} />
-            <span>© {new Date().getFullYear()} 글로우업투어 (KoreaGlowUp) · 파트너 센터</span>
+            <span>© {new Date().getFullYear()} 글로우업투어 (글로우업투어) · 파트너 센터</span>
           </div>
           <nav style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
             <Link href="/kr" style={{ color: MUTED, textDecoration: 'none' }}>고객 사이트</Link>
             <Link href="/legal/privacy" style={{ color: MUTED, textDecoration: 'none' }}>개인정보처리방침</Link>
             <Link href="/legal/terms" style={{ color: MUTED, textDecoration: 'none' }}>이용약관</Link>
-            <a href="mailto:hello@koreaglowup.com" style={{ color: MUTED, textDecoration: 'none' }}>hello@koreaglowup.com</a>
+            <a href="mailto:ldh9271@gmail.com" style={{ color: MUTED, textDecoration: 'none' }}>ldh9271@gmail.com</a>
           </nav>
         </div>
       </footer>

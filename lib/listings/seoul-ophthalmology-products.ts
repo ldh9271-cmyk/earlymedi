@@ -59,11 +59,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: '스마일프로 국내 최초 도입',
     languagesSpoken: ['ko', 'en', 'zh'],
     interpreterIncluded: true,
-    seoTitle: '아이리움안과 | 강남 스마일라식·ICL 전문 | EarlyMedi',
+    seoTitle: '아이리움안과 | 강남 스마일라식·ICL 전문 | 글로우업투어',
     seoDescription:
-      '강남역 2번 출구 직결. 스마일프로 국내 최초 도입, ICL렌즈삽입술 전문. 영어·중국어 상담 가능. EarlyMedi에서 예약 상담.',
+      '강남역 2번 출구 직결. 스마일프로 국내 최초 도입, ICL렌즈삽입술 전문. 영어·중국어 상담 가능. 글로우업투어에서 예약 상담.',
     seoTags: ['강남안과', '강남스마일라식', 'ICL렌즈삽입술', '스마일프로', '강남역안과', 'Korea eye clinic', 'LASIK Korea', 'Seoul eye surgery', '외국인안과'],
-    ogDescription: '강남 안과 | 스마일프로 최초 도입, ICL·라섹 전문 — EarlyMedi',
+    ogDescription: '강남 안과 | 스마일프로 최초 도입, ICL·라섹 전문 — 글로우업투어',
     imageKeywords: ['Eyereum Eye Clinic Gangnam', 'SMILE Pro LASIK Korea', 'ICL Gangnam Station', '아이리움안과 강남'],
   },
   {
@@ -82,11 +82,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: 'JCI 국제인증·47만 안 시술',
     languagesSpoken: ['ko', 'en', 'zh', 'ja'],
     interpreterIncluded: true,
-    seoTitle: '비앤빛강남밝은세상안과 | JCI인증 강남 라식 전문 | EarlyMedi',
+    seoTitle: '비앤빛강남밝은세상안과 | JCI인증 강남 라식 전문 | 글로우업투어',
     seoDescription:
-      '1994년 개원, 국내 최초 JCI 국제인증 안과. 47만 안 시술 경험. 강남역 9번 출구 50m. 영어·중국어·일어 상담 가능. EarlyMedi에서 예약 상담.',
+      '1994년 개원, 국내 최초 JCI 국제인증 안과. 47만 안 시술 경험. 강남역 9번 출구 50m. 영어·중국어·일어 상담 가능. 글로우업투어에서 예약 상담.',
     seoTags: ['강남안과', 'JCI인증안과', '강남밝은세상안과', '비앤빛', '라식강남', '라섹강남', 'Korea LASIK', 'JCI certified eye clinic', 'Seoul medical tourism', '외국인안과'],
-    ogDescription: '강남 안과 | 1994년 개원·JCI 국제인증·47만 안 경험 — EarlyMedi',
+    ogDescription: '강남 안과 | 1994년 개원·JCI 국제인증·47만 안 경험 — 글로우업투어',
     imageKeywords: ['B&VIIT Eye Clinic Gangnam', 'JCI certified Korea eye', 'GT Tower Seocho', '강남밝은세상안과'],
   },
   {
@@ -105,11 +105,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: '18년 경력 전문의 1:1 담당',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '강남서울밝은안과 | 강남역 스마일라식·ICL 전문 | EarlyMedi',
+    seoTitle: '강남서울밝은안과 | 강남역 스마일라식·ICL 전문 | 글로우업투어',
     seoDescription:
-      '강남역 1번 출구 도보 2분. 평균 경력 18년 전문의, 75가지 정밀 검진. 1:1 맞춤 케어. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남역 1번 출구 도보 2분. 평균 경력 18년 전문의, 75가지 정밀 검진. 1:1 맞춤 케어. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남안과', '강남역안과', '스마일라식', '아이디자인라식', 'ICL', 'Korea eye surgery', 'Seoul LASIK', '외국인안과', '강남시력교정'],
-    ogDescription: '강남 안과 | 18년 경력 전문의·75종 정밀검진·1:1 맞춤 케어 — EarlyMedi',
+    ogDescription: '강남 안과 | 18년 경력 전문의·75종 정밀검진·1:1 맞춤 케어 — 글로우업투어',
     imageKeywords: ['Gangnam Seoul Bright Eye', 'Mijin Plaza 18F Yeoksam', '강남서울밝은안과'],
   },
   {
@@ -127,11 +127,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: '원추각막 국내 최다 증례',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '수연세안과 | 강남 원추각막·초고도근시 전문 | EarlyMedi',
+    seoTitle: '수연세안과 | 강남 원추각막·초고도근시 전문 | 글로우업투어',
     seoDescription:
-      '원추각막 국내 최다 증례. 초고도근시 라섹·스마일라식 특화. 신논현역 7번 출구 도보 5분. 영어 상담 가능. EarlyMedi에서 예약.',
+      '원추각막 국내 최다 증례. 초고도근시 라섹·스마일라식 특화. 신논현역 7번 출구 도보 5분. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남안과', '원추각막치료', '초고도근시라섹', '수연세안과', '신논현안과', 'keratoconus Korea', 'LASEK Korea', 'Seoul eye clinic', '외국인안과'],
-    ogDescription: '서초 안과 | 원추각막 국내 최다 증례·초고도근시 라섹 특화 — EarlyMedi',
+    ogDescription: '서초 안과 | 원추각막 국내 최다 증례·초고도근시 라섹 특화 — 글로우업투어',
     imageKeywords: ['Suyonsei Eye Clinic Seocho', 'keratoconus Korea center', 'Seocho W Tower', '수연세안과'],
   },
   {
@@ -149,11 +149,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: '스마일라식 국내 최초 집도',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: 'SNU안과 | 스마일라식 최초 집도·강남 ICL 전문 | EarlyMedi',
+    seoTitle: 'SNU안과 | 스마일라식 최초 집도·강남 ICL 전문 | 글로우업투어',
     seoDescription:
-      '국내 스마일라식 최초 집도 병원. ICL렌즈삽입술·노안·백내장 전문. 강남 신사역 인근. 영어 상담 가능. EarlyMedi에서 예약.',
+      '국내 스마일라식 최초 집도 병원. ICL렌즈삽입술·노안·백내장 전문. 강남 신사역 인근. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남안과', '스마일라식', 'SNU안과', 'ICL렌즈삽입술', '신사역안과', 'SMILE LASIK Korea', 'Seoul eye surgery', '외국인안과', '강남시력교정'],
-    ogDescription: '강남 안과 | 스마일라식 국내 최초·ICL·노안백내장 전문 — EarlyMedi',
+    ogDescription: '강남 안과 | 스마일라식 국내 최초·ICL·노안백내장 전문 — 글로우업투어',
     imageKeywords: ['SNU Eye Clinic Sinsa', 'SMILE LASIK first Korea', 'ICT Tower 3F', 'SNU안과 신사'],
   },
   {
@@ -171,11 +171,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: '18~20층 3개층 규모',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '강남이오스안과 | 서초 ICL·백내장·망막 전문 | EarlyMedi',
+    seoTitle: '강남이오스안과 | 서초 ICL·백내장·망막 전문 | 글로우업투어',
     seoDescription:
-      '서초 삼성화재 사옥 18~20층. ICL 렌즈삽입술·백내장·망막질환 전문. 영어 상담 가능. EarlyMedi에서 예약.',
+      '서초 삼성화재 사옥 18~20층. ICL 렌즈삽입술·백내장·망막질환 전문. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['서초안과', '강남안과', 'ICL렌즈삽입술', '백내장수술', '망막질환', '이오스안과', 'ICL Korea', 'Seoul cataract surgery', '외국인안과'],
-    ogDescription: '서초 안과 | ICL·백내장·망막질환 전문·3개층 규모 — EarlyMedi',
+    ogDescription: '서초 안과 | ICL·백내장·망막질환 전문·3개층 규모 — 글로우업투어',
     imageKeywords: ['Gangnam EOS Eye Clinic', 'Samsung Fire Seocho building', '강남이오스안과'],
   },
   {
@@ -193,11 +193,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: '당일 라섹·야간 진료',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '강남그랜드안과 | 강남역 라식·야간진료 안과 | EarlyMedi',
+    seoTitle: '강남그랜드안과 | 강남역 라식·야간진료 안과 | 글로우업투어',
     seoDescription:
-      '강남역 5번 출구 바로 앞. 당일 라섹(투데이라섹)·야간 진료. 스마일라식·ICL·컨투라비전 특화. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남역 5번 출구 바로 앞. 당일 라섹(투데이라섹)·야간 진료. 스마일라식·ICL·컨투라비전 특화. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남안과', '강남역안과', '투데이라섹', '야간진료안과', '스마일라식', '컨투라비전', 'same-day LASEK Korea', 'Seoul eye clinic', '외국인안과'],
-    ogDescription: '강남 안과 | 강남역 5번출구 바로 앞·당일라섹·야간진료 — EarlyMedi',
+    ogDescription: '강남 안과 | 강남역 5번출구 바로 앞·당일라섹·야간진료 — 글로우업투어',
     imageKeywords: ['Gangnam Grand Eye Clinic', 'same-day LASEK Korea', 'Gangnam Tower 4F', '강남그랜드안과'],
   },
   {
@@ -216,11 +216,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: 'JCI인증·4개국어 응대',
     languagesSpoken: ['ko', 'en', 'zh', 'ja', 'ru'],
     interpreterIncluded: true,
-    seoTitle: '서울밝은세상안과 | JCI인증·강남 시력교정 1세대 | EarlyMedi',
+    seoTitle: '서울밝은세상안과 | JCI인증·강남 시력교정 1세대 | 글로우업투어',
     seoDescription:
-      '1997년 개원. JCI 국제인증, 35만 안 누적. 3D 스마일엣지·ICL·노안라식 전문. 영어·중국어·일어·러시아어 상담. EarlyMedi에서 예약.',
+      '1997년 개원. JCI 국제인증, 35만 안 누적. 3D 스마일엣지·ICL·노안라식 전문. 영어·중국어·일어·러시아어 상담. 글로우업투어에서 예약.',
     seoTags: ['강남안과', 'JCI인증', '밝은세상안과', 'ICL', '3D스마일라식', '노안라식', 'Korea vision correction', 'JCI eye clinic Seoul', '의료관광안과', '외국인안과'],
-    ogDescription: '강남 안과 | JCI인증·35만 안 시술·4개국어 응대 — EarlyMedi',
+    ogDescription: '강남 안과 | JCI인증·35만 안 시술·4개국어 응대 — 글로우업투어',
     imageKeywords: ['Seoul Bright World Eye Gangnam', 'JCI eye clinic Korea', 'C-Near presbyopia LASIK', '서울밝은세상안과'],
   },
   {
@@ -238,11 +238,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: '강남구 의료관광 협력',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '강남서울밝은안과 | 강남구 의료관광 협력 안과 | EarlyMedi',
+    seoTitle: '강남서울밝은안과 | 강남구 의료관광 협력 안과 | 글로우업투어',
     seoDescription:
-      '강남구 의료관광 공식 협력기관. 스마일라식·ICL·백내장·노안 전문. 3인 대표원장 각 2만 회 이상 집도. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남구 의료관광 공식 협력기관. 스마일라식·ICL·백내장·노안 전문. 3인 대표원장 각 2만 회 이상 집도. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남안과', '강남구의료관광', '스마일라식', 'ICL Expert Surgeon', '백내장', 'Korea eye clinic', 'Seoul medical tourism', '외국인안과'],
-    ogDescription: '강남 안과 | 의료관광 공식 협력기관·3인 전문의 각 2만 회 집도 — EarlyMedi',
+    ogDescription: '강남 안과 | 의료관광 공식 협력기관·3인 전문의 각 2만 회 집도 — 글로우업투어',
     imageKeywords: ['Gangnam Seoul Bright Eye medical tourism', 'STAAR ICL Expert Surgeon', 'Mijin Plaza 18F', '강남서울밝은안과 의료관광'],
   },
   {
@@ -260,11 +260,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: '5개국어 통역 상주',
     languagesSpoken: ['ko', 'en', 'zh', 'ja', 'ru', 'ar'],
     interpreterIncluded: true,
-    seoTitle: '삼성서울병원 안과 | 강남 종합병원 국제진료 | EarlyMedi',
+    seoTitle: '삼성서울병원 안과 | 강남 종합병원 국제진료 | 글로우업투어',
     seoDescription:
-      '국내 최고 수준 안과 종합병원. 5개국어 통역 상주. 망막·녹내장·백내장·각막 전 분야. 외국인 원스톱 진료. EarlyMedi에서 예약.',
+      '국내 최고 수준 안과 종합병원. 5개국어 통역 상주. 망막·녹내장·백내장·각막 전 분야. 외국인 원스톱 진료. 글로우업투어에서 예약.',
     seoTags: ['강남안과', '삼성서울병원', '종합병원안과', '외국인안과', '국제진료', '망막치료', '백내장', 'Samsung Medical Center', 'Seoul hospital', 'Korea medical tourism'],
-    ogDescription: '강남 안과 | 삼성서울병원·5개국어 통역·전 분야 종합 — EarlyMedi',
+    ogDescription: '강남 안과 | 삼성서울병원·5개국어 통역·전 분야 종합 — 글로우업투어',
     imageKeywords: ['Samsung Medical Center Ophthalmology', 'International Health Services Seoul', 'Ilwon Samsung hospital', '삼성서울병원 안과'],
   },
   {
@@ -282,11 +282,11 @@ export const OPHTHALMOLOGY_PRODUCTS: ReadonlyArray<OphthalmologySeed> = [
     promoLabel: '대학병원 출신 원장 직접 집도',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '강남밝은미소안과 | 강남역 스마일라식·ICL·노안 전문 | EarlyMedi',
+    seoTitle: '강남밝은미소안과 | 강남역 스마일라식·ICL·노안 전문 | 글로우업투어',
     seoDescription:
-      '강남역 11번 출구 도보 2분. 대학병원 출신 원장 직접 집도. 스마일라식·ICL·백내장·노안 전문. 철저한 사전검사·사후관리. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남역 11번 출구 도보 2분. 대학병원 출신 원장 직접 집도. 스마일라식·ICL·백내장·노안 전문. 철저한 사전검사·사후관리. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남안과', '강남역안과', '스마일라식', 'ICL렌즈삽입술', '노안교정', '백내장', '안구건조증', 'Korea LASIK', 'Seoul eye clinic', '외국인안과'],
-    ogDescription: '강남 안과 | 대학병원 출신 원장 직접 집도·스마일라식·ICL 전문 — EarlyMedi',
+    ogDescription: '강남 안과 | 대학병원 출신 원장 직접 집도·스마일라식·ICL 전문 — 글로우업투어',
     imageKeywords: ['Gangnam Bright Smile Eye Clinic', 'YBM Gangnam Center 3F', '강남밝은미소안과'],
   },
 ];

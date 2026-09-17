@@ -39,7 +39,7 @@ export async function generateMetadata({
 }): Promise<{ title: string }> {
   if (!isPublicLocale(params.locale)) return { title: 'My bookings' };
   const dict = await getDictionary(params.locale);
-  return { title: `${dict.myPage.title} · KoreaGlowUp` };
+  return { title: `${dict.myPage.title} · 글로우업투어` };
 }
 
 export default async function MyPage({

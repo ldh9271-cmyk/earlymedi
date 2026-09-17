@@ -43,7 +43,7 @@ export default function PrivacyPage({
         개인정보처리방침
       </h1>
       <p style={{ fontSize: 13, color: '#6a6a6a', margin: 0 }}>
-        시행일: 2026년 1월 1일 · 최근 개정: 2026년 6월 24일
+        시행일: 2026년 1월 1일 · 최근 개정: 2026년 9월 17일<br />주식회사 쉐어아트 · 대표 문석호 · 사업자등록번호 507-81-16147 · 서울특별시 서초구 서초대로 398 4층 426호
       </p>
 
       {!isKr ? (
@@ -60,7 +60,7 @@ export default function PrivacyPage({
       ) : null}
 
       <Section title="1. 총칙">
-        KoreaGlowUp(이하 “회사”)은 「개인정보 보호법」 및 「의료 해외진출 및 외국인환자 유치 지원에 관한 법률」
+        주식회사 쉐어아트(이하 “회사”)는 「개인정보 보호법」 및 「의료 해외진출 및 외국인환자 유치 지원에 관한 법률」
         등 관련 법령을 준수하며, 이용자의 개인정보를 안전하게 처리하기 위해 본 방침을 수립 · 공개합니다.
       </Section>
 
@@ -141,8 +141,8 @@ export default function PrivacyPage({
 
       <Section title="10. 개인정보 보호 책임자">
         <ul style={listStyle}>
-          <li>이름: KoreaGlowUp 개인정보 보호 책임자</li>
-          <li>이메일: privacy@koreaglowup.ai</li>
+          <li>이름: 이동희 (주식회사 쉐어아트 개인정보 보호 책임자)</li>
+          <li>이메일: ldh9271@gmail.com</li>
           <li>운영 시간: 평일 09:00 – 18:00 (KST)</li>
         </ul>
       </Section>

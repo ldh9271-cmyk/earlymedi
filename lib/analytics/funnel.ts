@@ -38,7 +38,7 @@ export function computeFunnel(stages: ReadonlyArray<FunnelStage>): FunnelStep[] 
   });
 }
 
-/** Standard KoreaGlowUp funnel labels (KO). */
+/** Standard 글로우업투어 funnel labels (KO). */
 export const STANDARD_FUNNEL_STAGES: Array<{ key: string; label: string }> = [
   { key: 'lead', label: '리드 (Lead)' },
   { key: 'qualified', label: 'Qualified' },

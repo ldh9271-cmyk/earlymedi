@@ -54,11 +54,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '피부과+성형외과 협진 20년',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '맥스웰피부과 강남 | 모발이식·탈모치료 전문 | EarlyMedi',
+    seoTitle: '맥스웰피부과 강남 | 모발이식·탈모치료 전문 | 글로우업투어',
     seoDescription:
-      '강남역 인근. 피부과+성형외과 전문의 협진 20년. 고밀도 그라데이션 모발이식. 탈모치료·약 처방. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남역 인근. 피부과+성형외과 전문의 협진 20년. 고밀도 그라데이션 모발이식. 탈모치료·약 처방. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남모발이식', '탈모치료', '비절개모발이식', '강남탈모병원', '고밀도이식', 'hair transplant Korea', 'hair loss treatment Seoul', 'Korea hair clinic', '외국인모발이식'],
-    ogDescription: '강남 모발이식 | 피부과+성형외과 협진 20년·고밀도 그라데이션 — EarlyMedi',
+    ogDescription: '강남 모발이식 | 피부과+성형외과 협진 20년·고밀도 그라데이션 — 글로우업투어',
     imageKeywords: ['Maxwell Hair Clinic Gangnam', 'high density hair transplant Korea', 'Sangkyung Building Teheran-ro', '맥스웰피부과 강남'],
   },
   {
@@ -77,11 +77,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '28년·10만 건 이상 모발이식',
     languagesSpoken: ['ko', 'en', 'zh'],
     interpreterIncluded: true,
-    seoTitle: '모제림성형외과 | 압구정 모발이식 28년 전문 | EarlyMedi',
+    seoTitle: '모제림성형외과 | 압구정 모발이식 28년 전문 | 글로우업투어',
     seoDescription:
-      '압구정역. 1997년 개원, 모발이식 10만 건 이상. 남성·여성 센터 이원화. 헤어라인교정·이마축소. 영어·중국어 상담. EarlyMedi에서 예약.',
+      '압구정역. 1997년 개원, 모발이식 10만 건 이상. 남성·여성 센터 이원화. 헤어라인교정·이마축소. 영어·중국어 상담. 글로우업투어에서 예약.',
     seoTags: ['강남모발이식', '압구정모발이식', '헤어라인교정', '이마축소', '여성모발이식', 'hair transplant Apgujeong', 'Korea hair restoration', '외국인모발이식'],
-    ogDescription: '강남 모발이식 | 1997년 개원·10만 건·남녀 전용 센터 — EarlyMedi',
+    ogDescription: '강남 모발이식 | 1997년 개원·10만 건·남녀 전용 센터 — 글로우업투어',
     imageKeywords: ['Mojelim Hair Transplant Apgujeong', 'hairline correction Korea', 'forehead reduction Seoul', '모제림 압구정'],
   },
   {
@@ -99,11 +99,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '당일 일상복귀 히든컷',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '모먼트의원 | 강남역 히든컷 비절개 모발이식 | EarlyMedi',
+    seoTitle: '모먼트의원 | 강남역 히든컷 비절개 모발이식 | 글로우업투어',
     seoDescription:
-      '강남역 10번 출구. 당일 일상복귀 가능한 히든컷 비절개. 탈모치료·두피진단. 단기 방문 외국인 적합. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남역 10번 출구. 당일 일상복귀 가능한 히든컷 비절개. 탈모치료·두피진단. 단기 방문 외국인 적합. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남모발이식', '비절개모발이식', '히든컷', '당일회복이식', '탈모치료', 'FUE hair transplant Korea', 'non-shave transplant Seoul', '외국인모발이식'],
-    ogDescription: '강남 모발이식 | 히든컷 비절개·당일 일상복귀 가능 — EarlyMedi',
+    ogDescription: '강남 모발이식 | 히든컷 비절개·당일 일상복귀 가능 — 글로우업투어',
     imageKeywords: ['Moment Hair Clinic Gangnam', 'hidden cut FUE Korea', 'same-day hair transplant Seoul', '모먼트의원 강남'],
   },
   {
@@ -121,11 +121,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '서울대 출신·한미일 특허 12건',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '모아이의원 | 강남 AI 두피진단·모발이식 전문 | EarlyMedi',
+    seoTitle: '모아이의원 | 강남 AI 두피진단·모발이식 전문 | 글로우업투어',
     seoDescription:
-      '삼성역 인근. 서울대 출신 원장. AI 두피진단기·한미일 특허 12건. 모발이식·탈모·두피문신. 영어 상담 가능. EarlyMedi에서 예약.',
+      '삼성역 인근. 서울대 출신 원장. AI 두피진단기·한미일 특허 12건. 모발이식·탈모·두피문신. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남모발이식', 'AI두피진단', '두피문신', '원형탈모', '선릉역탈모', 'hair transplant Korea', 'AI hair diagnosis', 'SMP Korea', '외국인모발이식'],
-    ogDescription: '강남 모발이식 | 서울대 출신·AI 두피진단·한미일 특허 12건 — EarlyMedi',
+    ogDescription: '강남 모발이식 | 서울대 출신·AI 두피진단·한미일 특허 12건 — 글로우업투어',
     imageKeywords: ['MOAI Hair Clinic Samsung-dong', 'AFS3D AI scalp diagnosis', 'SMP scalp micropigmentation Korea', '모아이의원 삼성'],
   },
   {
@@ -143,11 +143,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '여의사 원장·여성/헤어라인 특화',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '모우다의원 | 압구정 여성 모발이식·헤어라인 전문 | EarlyMedi',
+    seoTitle: '모우다의원 | 압구정 여성 모발이식·헤어라인 전문 | 글로우업투어',
     seoDescription:
-      '압구정역 인근. 여의사 원장. 여성 모발이식·헤어라인교정·무모증 특화. 엑소좀 탈모치료. 영어 상담 가능. EarlyMedi에서 예약.',
+      '압구정역 인근. 여의사 원장. 여성 모발이식·헤어라인교정·무모증 특화. 엑소좀 탈모치료. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남모발이식', '여성모발이식', '헤어라인교정', '무모증모발이식', '압구정탈모', 'female hair transplant Korea', 'hairline correction Seoul', '외국인모발이식'],
-    ogDescription: '압구정 모발이식 | 여의사·여성 특화·헤어라인·무모증 전문 — EarlyMedi',
+    ogDescription: '압구정 모발이식 | 여의사·여성 특화·헤어라인·무모증 전문 — 글로우업투어',
     imageKeywords: ['Mouda Hair Clinic Apgujeong', 'female hair transplant Korea', 'exosome hair treatment Seoul', '모우다의원 신사'],
   },
   {
@@ -165,11 +165,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '원장 탈모 직접 경험 14년',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '용닥터의원 | 강남역 투명 모발이식·탈모치료 | EarlyMedi',
+    seoTitle: '용닥터의원 | 강남역 투명 모발이식·탈모치료 | 글로우업투어',
     seoDescription:
-      '강남역 인근. 원장 직접 탈모 경험 14년. 수술 전 과정 투명 공개·책임보증제. 모발이식·두피문신. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남역 인근. 원장 직접 탈모 경험 14년. 수술 전 과정 투명 공개·책임보증제. 모발이식·두피문신. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남모발이식', '탈모치료', '투명한모발이식', '두피문신', '책임보증제', 'hair transplant Korea', 'scalp micropigmentation Seoul', '외국인모발이식'],
-    ogDescription: '강남 모발이식 | 원장 탈모 직접 경험·수술 전 과정 투명 공개 — EarlyMedi',
+    ogDescription: '강남 모발이식 | 원장 탈모 직접 경험·수술 전 과정 투명 공개 — 글로우업투어',
     imageKeywords: ['Yongdr Hair Clinic Gangnam', 'transparent hair transplant Korea', 'follicle counting system', '용닥터의원 역삼'],
   },
   {
@@ -187,11 +187,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '줄기세포·PRP 결합 이식',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '리치모아의원 | 압구정 줄기세포 모발이식 전문 | EarlyMedi',
+    seoTitle: '리치모아의원 | 압구정 줄기세포 모발이식 전문 | 글로우업투어',
     seoDescription:
-      '압구정역. 줄기세포(SVF·PRP) 결합 모발이식. 흉터복원술. 생착률 향상 특화. 영어 상담 가능. EarlyMedi에서 예약.',
+      '압구정역. 줄기세포(SVF·PRP) 결합 모발이식. 흉터복원술. 생착률 향상 특화. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남모발이식', '줄기세포모발이식', 'PRP모발이식', '흉터복원', '압구정탈모', 'stem cell hair transplant Korea', 'PRP hair treatment Seoul', '외국인모발이식'],
-    ogDescription: '압구정 모발이식 | 줄기세포+PRP 결합·흉터복원 특화 — EarlyMedi',
+    ogDescription: '압구정 모발이식 | 줄기세포+PRP 결합·흉터복원 특화 — 글로우업투어',
     imageKeywords: ['Richmora Hair Clinic Apgujeong', 'SVF stem cell hair transplant Korea', 'PRP scar repair', '리치모아 압구정'],
   },
   {
@@ -209,11 +209,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '강남구 의료관광 공식 협력',
     languagesSpoken: ['ko', 'en', 'zh'],
     interpreterIncluded: true,
-    seoTitle: '모아만의원 | 강남구 의료관광 협력 모발이식 | EarlyMedi',
+    seoTitle: '모아만의원 | 강남구 의료관광 협력 모발이식 | 글로우업투어',
     seoDescription:
-      '신사역 인근. 강남구 의료관광 공식 협력기관. 2인 원장 협진. 경력 30년+15년. 모발이식·탈모치료. 영어·중국어 상담. EarlyMedi에서 예약.',
+      '신사역 인근. 강남구 의료관광 공식 협력기관. 2인 원장 협진. 경력 30년+15년. 모발이식·탈모치료. 영어·중국어 상담. 글로우업투어에서 예약.',
     seoTags: ['강남모발이식', '신사역탈모', '강남구의료관광', '헤어라인교정', '탈모치료', 'hair transplant Korea', 'medical tourism hair Seoul', '외국인모발이식'],
-    ogDescription: '강남 모발이식 | 의료관광 협력기관·2인 전문의 협진·경력 30년 — EarlyMedi',
+    ogDescription: '강남 모발이식 | 의료관광 협력기관·2인 전문의 협진·경력 30년 — 글로우업투어',
     imageKeywords: ['Moaman Hair Clinic Sinsa', 'Gangnam medical tourism hair transplant', 'Kyungpook Univ hair center alumni', '모아만의원 신사'],
   },
   {
@@ -231,11 +231,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: 'VIP 1:1 프리미엄 케어',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '세븐레마의원 | 강남 프리미엄 VIP 모발이식 | EarlyMedi',
+    seoTitle: '세븐레마의원 | 강남 프리미엄 VIP 모발이식 | 글로우업투어',
     seoDescription:
-      '강남역 인근. 프리미엄 VIP 모발이식 클리닉. 1:1 맞춤 케어. 외국인 VIP 환자 특화. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남역 인근. 프리미엄 VIP 모발이식 클리닉. 1:1 맞춤 케어. 외국인 VIP 환자 특화. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남모발이식', '프리미엄모발이식', 'VIP탈모치료', '강남역탈모', '외국인VIP', 'premium hair transplant Korea', 'VIP hair clinic Seoul', '외국인모발이식'],
-    ogDescription: '강남 모발이식 | 프리미엄 VIP 1:1 맞춤 모발이식 — EarlyMedi',
+    ogDescription: '강남 모발이식 | 프리미엄 VIP 1:1 맞춤 모발이식 — 글로우업투어',
     imageKeywords: ['Seven Rema Hair Clinic Gangnam', 'VIP premium hair transplant Korea', 'luxury hair restoration Seoul', '세븐레마의원 강남'],
   },
   {
@@ -253,11 +253,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '합리적 비용 290만원~',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '루트의원 | 강남역 합리적 모발이식·탈모치료 | EarlyMedi',
+    seoTitle: '루트의원 | 강남역 합리적 모발이식·탈모치료 | 글로우업투어',
     seoDescription:
-      '강남역 인근. 290만원~의 합리적 모발이식. 탈모치료 병행. 1:1 진료 체계. 영어 상담 가능. EarlyMedi에서 예약.',
+      '강남역 인근. 290만원~의 합리적 모발이식. 탈모치료 병행. 1:1 진료 체계. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['강남모발이식', '합리적모발이식', '탈모치료', '강남역탈모', '모발이식비용', 'affordable hair transplant Korea', 'hair loss clinic Gangnam', '외국인모발이식'],
-    ogDescription: '강남 모발이식 | 합리적 비용 290만원~·1:1 진료 — EarlyMedi',
+    ogDescription: '강남 모발이식 | 합리적 비용 290만원~·1:1 진료 — 글로우업투어',
     imageKeywords: ['Root Hair Clinic Gangnam', 'affordable hair transplant Korea', 'value hair loss clinic Seoul', '루트의원 강남'],
   },
   {
@@ -275,11 +275,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '백화점 입점 프리미엄 네트워크',
     languagesSpoken: ['ko', 'en', 'zh', 'ja'],
     interpreterIncluded: true,
-    seoTitle: '메이린클리닉 | 압구정 비수술 탈모치료·두피케어 | EarlyMedi',
+    seoTitle: '메이린클리닉 | 압구정 비수술 탈모치료·두피케어 | 글로우업투어',
     seoDescription:
-      '압구정역. 백화점 입점 프리미엄 클리닉. 비수술 탈모치료·두피케어·탈모주사. 영어·중국어·일어 상담. EarlyMedi에서 예약.',
+      '압구정역. 백화점 입점 프리미엄 클리닉. 비수술 탈모치료·두피케어·탈모주사. 영어·중국어·일어 상담. 글로우업투어에서 예약.',
     seoTags: ['탈모치료', '두피케어', '압구정탈모', '비수술탈모', '모낭주사', 'non-surgical hair loss Korea', 'scalp care Seoul', '외국인탈모치료'],
-    ogDescription: '압구정 탈모치료 | 프리미엄 네트워크·비수술·다국어 응대 — EarlyMedi',
+    ogDescription: '압구정 탈모치료 | 프리미엄 네트워크·비수술·다국어 응대 — 글로우업투어',
     imageKeywords: ['Maylin Clinic hair loss Apgujeong', 'non-surgical hair loss Korea', 'scalp injection premium', '메이린클리닉 탈모 압구정'],
   },
   {
@@ -297,11 +297,11 @@ export const HAIR_LOSS_PRODUCTS: ReadonlyArray<HairLossSeed> = [
     promoLabel: '피부과 전문의 직접 진료',
     languagesSpoken: ['ko', 'en'],
     interpreterIncluded: true,
-    seoTitle: '더힐피부과 | 청량리역 탈모치료·두피케어 피부과 | EarlyMedi',
+    seoTitle: '더힐피부과 | 청량리역 탈모치료·두피케어 피부과 | 글로우업투어',
     seoDescription:
-      '청량리역 6번 출구. 피부과 전문의 직접 진료. 탈모치료·두피케어·탈모약 처방. 영어 상담 가능. EarlyMedi에서 예약.',
+      '청량리역 6번 출구. 피부과 전문의 직접 진료. 탈모치료·두피케어·탈모약 처방. 영어 상담 가능. 글로우업투어에서 예약.',
     seoTags: ['탈모치료', '두피케어', '피부과탈모', '청량리탈모', '탈모약처방', 'hair loss dermatology Korea', 'scalp treatment Seoul', '외국인탈모치료'],
-    ogDescription: '청량리 탈모치료 | 피부과 전문의·두피케어·탈모약 처방 — EarlyMedi',
+    ogDescription: '청량리 탈모치료 | 피부과 전문의·두피케어·탈모약 처방 — 글로우업투어',
     imageKeywords: ['The Heal Dermatology hair loss Dongdaemun', 'scalp regeneration Rejuran', 'Cheongnyangni dermatology', '더힐피부과 청량리 탈모'],
   },
 ];

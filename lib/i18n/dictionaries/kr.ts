@@ -260,7 +260,7 @@ const kr = {
     },
   },
   trust: {
-    title: '왜 KoreaGlowUp인가요?',
+    title: '왜 글로우업투어인가요?',
     items: {
       koiha: {
         title: 'KOIHA 등록 의료기관만',
@@ -307,7 +307,7 @@ const kr = {
     forHospitals: '병원·의원용',
     forPartners: '호텔·파트너용',
     forFreelancers: '프리랜서·코디용',
-    copy: '© 2026 KoreaGlowUp · 한국 보건복지부 외국인환자 유치 광고 가이드라인 준수',
+    copy: '© 2026 글로우업투어 · 한국 보건복지부 외국인환자 유치 광고 가이드라인 준수',
   },
   signup: {
     badge: '게스트 가입',
@@ -416,7 +416,7 @@ const kr = {
     brand3: 'K-팝 성지',
     brand4: '비즈니스 회원가입',
     business: "쉐어아트(Shareart) · 대표 문석호 · 사업자등록번호 507-81-16147 · 서울특별시 서초구 서초대로 398 4층 426호",
-    copy: '© 2026 Korea Glow-up Challenge · 개인정보처리방침 · 이용약관',
+    copy: '© 2026 주식회사 쉐어아트 · 글로우업투어 · 개인정보처리방침 · 이용약관',
   },
   header: {
     quickMap: "지도로 찾기",

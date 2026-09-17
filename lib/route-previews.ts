@@ -143,7 +143,7 @@ export const ROUTE_PREVIEWS: Record<string, RoutePreview> = {
   },
   '/agency/billing': {
     title: '요금제 · 청구서',
-    description: 'KoreaGlowUp 자체의 구독 요금제 · 사용량 · 청구서를 확인하고 결제 수단을 관리합니다.',
+    description: '글로우업투어 자체의 구독 요금제 · 사용량 · 청구서를 확인하고 결제 수단을 관리합니다.',
     bullets: [
       '현재 플랜 + 무료 체험 잔여 기간 (D-N)',
       '사용량 메트릭 (환자 · AI 호출 · 메시지 · 비자 처리)',
@@ -260,7 +260,7 @@ export const ROUTE_PREVIEWS: Record<string, RoutePreview> = {
   },
   '/medical/billing': {
     title: '잔액 · 사용량',
-    description: 'KoreaGlowUp PAYG 잔액과 시술 차트 자동 채움 · AI Vision · STT 사용량을 확인합니다.',
+    description: '글로우업투어 PAYG 잔액과 시술 차트 자동 채움 · AI Vision · STT 사용량을 확인합니다.',
     bullets: [
       '현재 선불 잔액 + 자동 충전 설정',
       '사용량 메트릭 (차트 자동 채움 · AI Vision · STT · 통역)',
@@ -332,7 +332,7 @@ export const ROUTE_PREVIEWS: Record<string, RoutePreview> = {
     bullets: [
       '대화 로그 · 추천 코드 클릭 시점 자동 첨부',
       '에이전시 응답 SLA 추적',
-      '제3자 중재 요청 (KoreaGlowUp 운영팀)',
+      '제3자 중재 요청 (글로우업투어 운영팀)',
       '판정 결과 + 정산 자동 반영',
     ],
     workingLinks: FREELANCER_WORKING,

@@ -25,7 +25,7 @@ export async function generateMetadata({
   const dict = await getDictionary(params.locale as PublicLocale);
   const url = `/${params.locale}`;
   return {
-    // absolute — 루트 레이아웃의 '· KoreaGlowUp AI Concierge' 템플릿은
+    // absolute — 루트 레이아웃의 '· 글로우업투어' 템플릿은
     // B2B SaaS 이름이라 소비자 포털 제목에 붙으면 브랜드가 흐려진다.
     // 사전 제목이 이미 브랜드로 시작하면 접미를 생략한다 (withBrandSuffix).
     title: { absolute: withBrandSuffix(dict.meta.siteTitle) },

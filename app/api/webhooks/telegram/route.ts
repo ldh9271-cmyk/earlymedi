@@ -21,9 +21,9 @@ import { detectLocale } from '@/lib/ai/translation';
  *      secret string yourself — used as setWebhook's secret_token
  *      so Telegram includes it on every webhook POST as the
  *      X-Telegram-Bot-Api-Secret-Token header.
- *   3. KoreaGlowUp > 채널 연결 > Telegram > 연결하기 → paste token
+ *   3. 글로우업투어 > 채널 연결 > Telegram > 연결하기 → paste token
  *      (+ optional secret) → save.
- *   4. KoreaGlowUp returns the webhook URL. Either:
+ *   4. 글로우업투어 returns the webhook URL. Either:
  *        a) Click the "Webhook 자동 등록" button in the connection
  *           card (calls Telegram setWebhook for you), OR
  *        b) Paste this curl in a terminal:

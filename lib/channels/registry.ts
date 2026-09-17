@@ -1,5 +1,5 @@
 /**
- * Public registry of every messenger KoreaGlowUp can integrate with. Used
+ * Public registry of every messenger 글로우업투어 can integrate with. Used
  * by the /agency/channels page to render the connection grid, and by
  * server actions to validate `kind` against allowed values.
  *
@@ -90,7 +90,7 @@ export const CHANNELS: Record<ChannelKind, ChannelDef> = {
       // Outbound (CS Message via i 오픈빌더 EventAPI) — fills in once
       // the chatbot is operating.  Without these the inbox can RECEIVE
       // messages but agent replies can't be pushed back to the user's
-      // KakaoTalk — they only get stored in KoreaGlowUp DB.
+      // KakaoTalk — they only get stored in 글로우업투어 DB.
       {
         key: 'botId',
         label: '챗봇 ID (i 오픈빌더)',
@@ -105,7 +105,7 @@ export const CHANNELS: Record<ChannelKind, ChannelDef> = {
         type: 'password',
         placeholder: '봇 설정 > API 관리에서 발급',
         helpText:
-          '카카오 i 오픈빌더 > 봇 > 설정 > API 관리 > Event API 키. 미입력 시 발신은 KoreaGlowUp 인박스에만 저장되고 사용자에게 전달 안 됨.',
+          '카카오 i 오픈빌더 > 봇 > 설정 > API 관리 > Event API 키. 미입력 시 발신은 글로우업투어 인박스에만 저장되고 사용자에게 전달 안 됨.',
       },
     ],
     webhookPath: '/api/webhooks/kakao',

@@ -29,10 +29,10 @@ import { detectLocale } from '@/lib/ai/translation';
  *        - Copy the Instagram Business Account ID (numeric).
  *   4. App Settings → Basic → copy App Secret.
  *   5. Make up a random verify token (16+ chars).
- *   6. Paste all 4 fields into KoreaGlowUp → 채널 연결 → Instagram →
+ *   6. Paste all 4 fields into 글로우업투어 → 채널 연결 → Instagram →
  *      연결하기 → save.
  *   7. In Meta app → Instagram → Webhooks (or Webhooks product):
- *        - Callback URL: KoreaGlowUp 가 표시한 webhook URL
+ *        - Callback URL: 글로우업투어 가 표시한 webhook URL
  *        - Verify token: 같은 값
  *        - Subscribe to the `messages` field on the Instagram object.
  *

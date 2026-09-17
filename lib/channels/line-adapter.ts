@@ -30,7 +30,7 @@ import type {
  *   1. developers.line.biz/console → Messaging API channel
  *   2. Copy Channel Access Token (long-lived). Channel Secret needed
  *      only for inbound webhook signature, not for Push.
- *   3. Paste into KoreaGlowUp > 채널 연결 > LINE > 연결하기.
+ *   3. Paste into 글로우업투어 > 채널 연결 > LINE > 연결하기.
  *
  * Failure modes:
  *   - Missing access token → agent gets a clear toast asking to

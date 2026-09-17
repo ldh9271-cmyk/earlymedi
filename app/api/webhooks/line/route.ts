@@ -18,8 +18,8 @@ import { detectLocale } from '@/lib/ai/translation';
  * Operator setup (developers.line.biz/console):
  *   1. Create / select a Messaging API channel.
  *   2. Copy the Channel Access Token (long-lived) and Channel Secret.
- *   3. Paste both into KoreaGlowUp > 채널 연결 > LINE > 연결하기.
- *   4. KoreaGlowUp saves them and returns this webhook URL.
+ *   3. Paste both into 글로우업투어 > 채널 연결 > LINE > 연결하기.
+ *   4. 글로우업투어 saves them and returns this webhook URL.
  *   5. In the LINE console: Messaging API > Webhook settings → paste the
  *      URL → "Verify" should respond 200 → enable "Use webhook".
  *   6. Turn OFF "Auto-reply messages" in the LINE Official Account

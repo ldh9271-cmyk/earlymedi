@@ -18,7 +18,7 @@ import { Card, CardContent } from '@/components/shared/ui/card';
 import { MasterOrgCard } from './_components/master-org-card';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '마스터 관리자 — KoreaGlowUp' };
+export const metadata = { title: '마스터 관리자 — 글로우업투어' };
 
 /**
  * Master control panel. Lists every organization on the platform grouped
@@ -146,7 +146,7 @@ export default async function MasterPage({
           <div>
             <h1 className="text-xl font-bold tracking-tight">마스터 관리자</h1>
             <p className="text-xs text-muted-foreground">
-              KoreaGlowUp 플랫폼 · {email}
+              글로우업투어 플랫폼 · {email}
             </p>
           </div>
         </div>

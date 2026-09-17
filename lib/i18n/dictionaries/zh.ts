@@ -246,7 +246,7 @@ const zh: Dictionary = {
     },
   },
   trust: {
-    title: '为什么选择 KoreaGlowUp？',
+    title: '为什么选择 GlowUpTour？',
     items: {
       koiha: {
         title: '仅 KOIHA 认证医疗机构',
@@ -293,7 +293,7 @@ const zh: Dictionary = {
     forHospitals: '医院诊所',
     forPartners: '酒店合作伙伴',
     forFreelancers: '自由职业者',
-    copy: '© 2026 KoreaGlowUp · 遵守韩国保健福祉部外国患者诱致广告指南',
+    copy: '© 2026 GlowUpTour · 遵守韩国保健福祉部外国患者诱致广告指南',
   },
   signup: {
     badge: '客人注册',
@@ -390,7 +390,7 @@ const zh: Dictionary = {
     brand3: 'K-pop 圣地',
     brand4: '商家注册',
     business: "Shareart · 代表人 Seokho Moon · 营业执照号 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
-    copy: '© 2026 Korea Glow-up Challenge · 隐私政策 · 使用条款',
+    copy: '© 2026 Shareart Co., Ltd. · GlowUpTour · 隐私政策 · 使用条款',
   },
   header: {
     quickMap: "地图查找",

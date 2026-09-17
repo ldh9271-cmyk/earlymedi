@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/shared/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { LoginForm } from './_components/login-form';
 
-// absolute — 루트 레이아웃의 '· KoreaGlowUp AI Concierge' 템플릿은
+// absolute — 루트 레이아웃의 '· 글로우업투어' 템플릿은
 // 콘솔 내부용이라, 브랜드 얼굴인 이 화면에서는 글로우업투어로 덮는다.
 export const metadata = { title: { absolute: '파트너 로그인 · 글로우업투어' } };
 export const dynamic = 'force-dynamic';

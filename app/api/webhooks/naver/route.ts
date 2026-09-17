@@ -18,7 +18,7 @@ import { detectLocale } from '@/lib/ai/translation';
  *   1. 사업자 계정으로 Naver 톡톡 파트너 가입 → 사업자 인증 (1~2일).
  *   2. 새 톡톡 계정 생성 (검색에 노출되는 비즈니스 채널 이름).
  *   3. 설정 > 챗봇 API > 챗봇 활성화 → Partner ID + 인증 토큰 발급.
- *   4. KoreaGlowUp > 채널 연결 > Naver 톡톡 > 연결하기 → 두 값 입력 + 저장.
+ *   4. 글로우업투어 > 채널 연결 > Naver 톡톡 > 연결하기 → 두 값 입력 + 저장.
  *   5. 화면에 표시되는 Webhook URL 을 Naver 톡톡 파트너 센터의
  *      '챗봇 API 연결' 설정에 붙여넣기.
  *   6. 본인 휴대폰 Naver 앱에서 톡톡 계정 검색 → 메시지 보내기로 테스트.
@@ -38,7 +38,7 @@ import { detectLocale } from '@/lib/ai/translation';
  *   - echo                   → 우리가 보낸 메시지의 반향 (skip)
  *   - pay_complete / confirm → 결제 이벤트 (다음 단계)
  *   - profile                → 사용자 프로필 (다음 단계)
- *   - handover               → 상담사 인계 (이미 KoreaGlowUp 가 상담자라 X)
+ *   - handover               → 상담사 인계 (이미 글로우업투어 가 상담자라 X)
  *
  * 답신 정책:
  *   Naver 톡톡은 24h customer service window 제약이 없습니다.

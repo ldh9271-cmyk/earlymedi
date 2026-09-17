@@ -249,7 +249,7 @@ const vi: Dictionary = {
     },
   },
   trust: {
-    title: 'Vì sao chọn KoreaGlowUp?',
+    title: 'Vì sao chọn GlowUpTour?',
     items: {
       koiha: {
         title: 'Chỉ phòng khám được KOIHA chứng nhận',
@@ -296,7 +296,7 @@ const vi: Dictionary = {
     forHospitals: 'Dành cho phòng khám',
     forPartners: 'Dành cho khách sạn & đối tác',
     forFreelancers: 'Dành cho freelancer',
-    copy: '© 2026 KoreaGlowUp · Tuân thủ hướng dẫn quảng cáo cho bệnh nhân nước ngoài của Bộ Y tế Hàn Quốc',
+    copy: '© 2026 GlowUpTour · Tuân thủ hướng dẫn quảng cáo cho bệnh nhân nước ngoài của Bộ Y tế Hàn Quốc',
   },
   signup: {
     badge: 'Đăng ký khách',
@@ -393,7 +393,7 @@ const vi: Dictionary = {
     brand3: 'Thánh địa K-pop',
     brand4: 'Đăng ký doanh nghiệp',
     business: "Shareart · Người đại diện: Seokho Moon · Số ĐKKD 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
-    copy: '© 2026 Korea Glow-up Challenge · Chính sách bảo mật · Điều khoản sử dụng',
+    copy: '© 2026 Shareart Co., Ltd. · GlowUpTour · Chính sách bảo mật · Điều khoản sử dụng',
   },
   header: {
     quickMap: "Bản đồ",

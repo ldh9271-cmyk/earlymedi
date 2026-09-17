@@ -43,7 +43,7 @@ export default function TermsPage({
         이용약관
       </h1>
       <p style={{ fontSize: 13, color: '#6a6a6a', margin: 0 }}>
-        시행일: 2026년 1월 1일 · 최근 개정: 2026년 6월 24일
+        시행일: 2026년 1월 1일 · 최근 개정: 2026년 9월 17일<br />주식회사 쉐어아트 · 대표 문석호 · 사업자등록번호 507-81-16147 · 서울특별시 서초구 서초대로 398 4층 426호
       </p>
 
       {!isKr ? (
@@ -60,7 +60,7 @@ export default function TermsPage({
       ) : null}
 
       <Section title="제1조 (목적)">
-        본 약관은 KoreaGlowUp(이하 “회사”)이 운영하는 글로우업 의료관광 플랫폼(이하
+        본 약관은 주식회사 쉐어아트(이하 “회사”)가 운영하는 글로우업투어(GlowUpTour) 의료관광 플랫폼(이하
         “서비스”)의 이용과 관련하여 회사와 게스트 회원(이하 “이용자”) 간의 권리,
         의무, 책임사항 및 서비스 이용 절차를 규정함을 목적으로 합니다.
       </Section>
@@ -140,7 +140,7 @@ export default function TermsPage({
       <Section title="제11조 (문의)">
         본 약관에 관한 문의는 다음 연락처로 접수해 주시기 바랍니다.
         <ul style={listStyle}>
-          <li>이메일: support@koreaglowup.ai</li>
+          <li>이메일: ldh9271@gmail.com</li>
           <li>운영 시간: 평일 09:00 – 18:00 (KST)</li>
         </ul>
       </Section>

@@ -27,10 +27,10 @@ import { detectLocale } from '@/lib/ai/translation';
  *          + whatsapp_business_management scopes.
  *   3. From the app's main settings > Basic, copy App Secret.
  *   4. Make up a random "verify token" (any 16+ char string).
- *   5. Paste all 5 fields into KoreaGlowUp > 채널 연결 > WhatsApp >
+ *   5. Paste all 5 fields into 글로우업투어 > 채널 연결 > WhatsApp >
  *      연결하기 → save.
  *   6. In Meta app > WhatsApp > Configuration > Webhook:
- *        - Callback URL: KoreaGlowUp 가 표시한 webhook URL
+ *        - Callback URL: 글로우업투어 가 표시한 webhook URL
  *        - Verify token: 같은 값 입력
  *        - Click "Verify and save" → Meta GET 으로 hub.challenge 검증
  *        - Webhook fields: subscribe to `messages`
@@ -383,7 +383,7 @@ function parseWhatsAppMessage(
 
 /**
  * Best-effort phone prefix → ISO 2-letter country mapping for the
- * common KoreaGlowUp source markets. Falls back to undefined so the
+ * common 글로우업투어 source markets. Falls back to undefined so the
  * router doesn't claim a country we can't be sure of.
  *
  * WhatsApp `wa_id` is E.164 without the leading '+', e.g. '821012345678'.

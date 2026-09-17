@@ -98,7 +98,7 @@ export async function generateMetadata({
   }
 
   const displayName = lcRow?.name?.trim() || baseName;
-  const title = lcRow?.seoTitle?.trim() || `${displayName} | KoreaGlowUp`;
+  const title = lcRow?.seoTitle?.trim() || `${displayName} | 글로우업투어`;
   const descRaw = lcRow?.seoDescription?.trim() || lcRow?.intro?.trim() || baseNotes?.trim() || '';
   const description = descRaw.length > 160 ? `${descRaw.slice(0, 157)}…` : descRaw || undefined;
 

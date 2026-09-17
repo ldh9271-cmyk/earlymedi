@@ -50,7 +50,7 @@ export async function generateMetadata({
   if (!VALID_TYPES.has(params.type as TravelType)) return {};
   const dict = await getDictionary(params.locale);
   const t = dict.travel[params.type as TravelType];
-  return { title: `${t.title} · KoreaGlowUp`, description: t.priceNote };
+  return { title: `${t.title} · 글로우업투어`, description: t.priceNote };
 }
 
 export default async function TravelTypeListPage({

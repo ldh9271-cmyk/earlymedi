@@ -99,7 +99,7 @@ export default function ShowroomPatientPwaPage(): JSX.Element {
               <Sparkles className="h-3 w-3" />
               현재 단계 · 시술 D-3
             </div>
-            <div className="mt-3 text-3xl font-bold leading-tight md:text-4xl">코재수술 · KoreaGlowUp 데모 성형외과</div>
+            <div className="mt-3 text-3xl font-bold leading-tight md:text-4xl">코재수술 · 글로우업투어 데모 성형외과</div>
             <div className="mt-1 text-sm text-white/80">2026-06-10 입국 · 2026-06-20 출국 · C-3-3 비자 승인</div>
           </div>
           <Button className="rounded-full bg-white text-brand-700 hover:bg-white/90">전체 일정 보기</Button>

@@ -132,7 +132,7 @@ export default async function UpgradePage(): Promise<JSX.Element> {
             <Link href="/pricing" className="flex-1">
               <Button variant="outline" className="w-full">요금제 자세히 보기</Button>
             </Link>
-            <Link href="mailto:sales@koreaglowup.com?subject=KoreaGlowUp%20%EC%9C%A0%EB%A3%8C%20%EC%A0%84%ED%99%98%20%EB%AC%B8%EC%9D%98" className="flex-1">
+            <Link href="mailto:ldh9271@gmail.com?subject=%EA%B8%80%EB%A1%9C%EC%9A%B0%EC%97%85%ED%88%AC%EC%96%B4%20%EC%9C%A0%EB%A3%8C%20%EC%A0%84%ED%99%98%20%EB%AC%B8%EC%9D%98" className="flex-1">
               <Button variant="brand" className="w-full">영업팀에 문의 →</Button>
             </Link>
           </div>

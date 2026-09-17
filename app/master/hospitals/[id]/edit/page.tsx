@@ -402,7 +402,7 @@ export default async function MasterHospitalEditPage({
                   id="lc-seo-title"
                   name="seoTitle"
                   defaultValue={lc?.seoTitle ?? ''}
-                  placeholder={`${fallbackName} | KoreaGlowUp`}
+                  placeholder={`${fallbackName} | 글로우업투어`}
                   className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 <p className="text-[11px] text-muted-foreground">권장 50–60자.</p>

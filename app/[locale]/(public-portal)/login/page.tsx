@@ -28,7 +28,7 @@ export async function generateMetadata({
 }): Promise<{ title: string }> {
   if (!isPublicLocale(params.locale)) return { title: 'Login' };
   const dict = await getDictionary(params.locale);
-  return { title: `${dict.login.title} · KoreaGlowUp` };
+  return { title: `${dict.login.title} · 글로우업투어` };
 }
 
 export default async function PatientLoginPage({

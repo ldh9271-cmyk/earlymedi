@@ -29,10 +29,10 @@ import { detectLocale } from '@/lib/ai/translation';
  *      page's "About" section, or via Meta Business Suite > Settings.
  *   5. App Settings → Basic → copy App Secret.
  *   6. Make up a random 16+ char verify token.
- *   7. Paste all 4 fields into KoreaGlowUp → 채널 연결 → Facebook
+ *   7. Paste all 4 fields into 글로우업투어 → 채널 연결 → Facebook
  *      Messenger → 연결하기 → save.
  *   8. In Meta app → Messenger → Settings → Webhooks:
- *        - Callback URL: KoreaGlowUp 가 표시한 webhook URL
+ *        - Callback URL: 글로우업투어 가 표시한 webhook URL
  *        - Verify token: 같은 값
  *        - Subscribe the Page to the `messages` field (and
  *          optionally messaging_postbacks, messaging_optins).

@@ -172,7 +172,7 @@ export default async function SignupPage({
         </Card>
 
         <div className="rounded-lg border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
-          이미 KoreaGlowUp 계정이 있으신가요?{' '}
+          이미 글로우업투어 계정이 있으신가요?{' '}
           <Link
             href={`/login?next=/invite/${inviteContext.token}`}
             className="font-medium text-foreground underline"

@@ -249,7 +249,7 @@ const en: Dictionary = {
     },
   },
   trust: {
-    title: 'Why KoreaGlowUp?',
+    title: 'Why GlowUpTour?',
     items: {
       koiha: {
         title: 'KOIHA-Certified Clinics Only',
@@ -296,7 +296,7 @@ const en: Dictionary = {
     forHospitals: 'For Clinics',
     forPartners: 'For Hotels & Partners',
     forFreelancers: 'For Freelancers',
-    copy: '© 2026 KoreaGlowUp · Compliant with Korea MOHW foreign-patient advertising guidelines',
+    copy: '© 2026 GlowUpTour · Compliant with Korea MOHW foreign-patient advertising guidelines',
   },
   signup: {
     badge: 'Guest Sign-up',
@@ -405,7 +405,7 @@ const en: Dictionary = {
     brand3: 'K-pop landmarks',
     brand4: 'Business sign-up',
     business: "Shareart · Representative: Seokho Moon · Business Registration No. 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
-    copy: '© 2026 Korea Glow-up Challenge · Privacy policy · Terms of service',
+    copy: '© 2026 Shareart Co., Ltd. · GlowUpTour · Privacy policy · Terms of service',
   },
   header: {
     quickMap: "Map search",

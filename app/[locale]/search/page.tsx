@@ -296,7 +296,7 @@ async function searchClinics(tokens: string[], locale: PublicLocale): Promise<Cl
 
 export async function generateMetadata({ params }: { params: { locale: PublicLocale } }) {
   const dict = await getDictionary(params.locale);
-  return { title: `${dict.searchPage.title} · KoreaGlowUp` };
+  return { title: `${dict.searchPage.title} · 글로우업투어` };
 }
 
 export default async function SearchPage({

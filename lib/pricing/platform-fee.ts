@@ -1,5 +1,5 @@
 /**
- * Platform settlement-fee — what KoreaGlowUp charges its B2B customers (agency·
+ * Platform settlement-fee — what 글로우업투어 charges its B2B customers (agency·
  * medical·non_medical) on every successful settlement.
  *
  * Rates come from `billing_plans.settlementFeeBp` and are fixed per plan tier:

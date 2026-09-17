@@ -22,7 +22,7 @@ export async function generateMetadata({
 }): Promise<{ title: string }> {
   if (!isPublicLocale(params.locale)) return { title: 'Sign up' };
   const dict = await getDictionary(params.locale);
-  return { title: `${dict.signup.title} · KoreaGlowUp` };
+  return { title: `${dict.signup.title} · 글로우업투어` };
 }
 
 export default async function PatientSignupPage({
