@@ -129,6 +129,20 @@ export const KO_LABELS = {
     "ru": "1 чел. (курс)",
     "vi": "1 người (gói)"
   },
+  "1인 시술·관리실": {
+    "en": "Private Treatment & Care Room",
+    "zh": "单人施术·护理室",
+    "ja": "完全個室の施術・管理室",
+    "ru": "Индивид. процедурный кабинет",
+    "vi": "Phòng trị liệu & chăm sóc riêng"
+  },
+  "1인 시술·관리실 운영": {
+    "en": "Private Treatment Rooms",
+    "zh": "设有单人施术·护理室",
+    "ja": "個室施術・管理室完備",
+    "ru": "Отдельные процедурные кабинеты",
+    "vi": "Vận hành phòng trị liệu 1 người"
+  },
   "1층 접근성": {
     "en": "Easy 1st Floor Access",
     "zh": "1楼位置方便",
@@ -374,12 +388,26 @@ export const KO_LABELS = {
     "ru": "Линия 3 ст. Джуёп вых. 3 (15 мин) · Ост. Hyundai Dept",
     "vi": "Ga Juyeop Tuyến 3 Cửa 3 (đi bộ ~15p) · Điểm dừng Hyundai Dept"
   },
+  "3호선·신분당선 신사역 5번 출구 도보 1~2분 (K-TOWER 4층) · 버스 신사역 5번 출구 정류장(22186) · 주차 2시간 무료, 1층 발렛 4,000원": {
+    "en": "Sinsa Sta. Ex. 5 (Line 3/Shinbundang) 1-2m · K-TOWER 4F · 2h Free Parking (Valet ₩4,000)",
+    "zh": "3号线·新盆唐线新沙站5号出口步行1~2分(K-TOWER 4F)·免费停车2h(泊车4,000韩元)",
+    "ja": "3号線・新盆唐線新沙駅5番出口徒歩1~2分 (K-TOWER 4階)・駐車場2時間無料 (バレー4,000ウォン)",
+    "ru": "М. Синса, вых. 5 (1-2 мин, 4 эт. K-TOWER) · Парковка 2 ч беспл. (валет 4000 вон)",
+    "vi": "Ga Sinsa Lối ra 5 (Tuyến 3/Shinbundang) đi bộ 1-2p (K-TOWER Tầng 4) · Đỗ xe 2h miễn phí (Valet 4.000 KRW)"
+  },
   "4D 헤어라인": {
     "en": "4D Hairline",
     "zh": "4D发际线",
     "ja": "4Dヘアライン",
     "ru": "4D-моделирование линии волос",
     "vi": "Tạo viền chân tóc 4D"
+  },
+  "4개 언어 홈페이지 (한·영·중·일)": {
+    "en": "4-Language Website (KR·EN·CN·JP)",
+    "zh": "4语官网 (韩·英·中·日)",
+    "ja": "4言語対応HP (韓・英・中・日)",
+    "ru": "Сайт на 4 языках (кор·англ·кит·яп)",
+    "vi": "Website 4 ngôn ngữ (Hàn·Anh·Trung·Nhật)"
   },
   "4개국어 진료": {
     "en": "Consultations in 4 Languages",
@@ -507,6 +535,13 @@ export const KO_LABELS = {
     "ru": "Врачи с сертификатом ABHRS (США)",
     "vi": "Đội ngũ y bác sĩ chứng chỉ ABHRS (Mỹ)"
   },
+  "AI 피부분석 (EVE V 뮤즈·마크뷰)": {
+    "en": "AI Skin Analysis (EVE V Muse·Mark-Vu)",
+    "zh": "AI皮肤分析 (EVE V Muse·Mark-Vu)",
+    "ja": "AI肌診断 (EVE V Muse・Mark-Vu)",
+    "ru": "AI-анализ кожи (EVE V Muse · Mark-Vu)",
+    "vi": "Phân tích da AI (EVE V Muse·Mark-Vu)"
+  },
   "All-On-X 임플란트": {
     "en": "All-On-X Implants",
     "zh": "All-On-X 种植牙",
@@ -548,6 +583,13 @@ export const KO_LABELS = {
     "ja": "CKビル9・10階の2フロア運営",
     "ru": "Здание CK, 9–10 этажи (2 этажа)",
     "vi": "Tòa nhà CK, tầng 9·10 (2 tầng)"
+  },
+  "CO2 레이저": {
+    "en": "CO2 Laser",
+    "zh": "CO2激光",
+    "ja": "CO2レーザー",
+    "ru": "CO2 лазер",
+    "vi": "Laser CO2"
   },
   "CO2 프락셀": {
     "en": "CO2 Fraxel",
@@ -598,6 +640,20 @@ export const KO_LABELS = {
     "ru": "Инъекция для контура ENL",
     "vi": "Tiêm thon gọn ENL"
   },
+  "EVE V 뮤즈": {
+    "en": "EVE V Muse",
+    "zh": "EVE V Muse",
+    "ja": "EVE V Muse",
+    "ru": "EVE V Muse",
+    "vi": "EVE V Muse"
+  },
+  "EVE V 뮤즈 AI 피부분석": {
+    "en": "EVE V Muse AI Skin Analysis",
+    "zh": "EVE V Muse AI皮肤分析",
+    "ja": "EVE V Muse AI肌診断",
+    "ru": "AI-анализ кожи EVE V Muse",
+    "vi": "Phân tích da AI EVE V Muse"
+  },
   "EX500 엑시머레이저": {
     "en": "EX500 Excimer Laser",
     "zh": "EX500准分子激光",
@@ -618,6 +674,13 @@ export const KO_LABELS = {
     "ja": "Flow — 水分・肌の巡り",
     "ru": "Flow — увлажнение и микроциркуляция",
     "vi": "Flow — Cấp ẩm & Tuần hoàn da"
+  },
+  "GA 스케일링": {
+    "en": "GA Peeling",
+    "zh": "GA果酸焕肤",
+    "ja": "GAピーリング",
+    "ru": "GA-пилинг",
+    "vi": "Peel da GA"
   },
   "GMP 시설 보유": {
     "en": "GMP-Certified Facility",
@@ -779,6 +842,27 @@ export const KO_LABELS = {
     "ja": "Nプラント",
     "ru": "N-Имплант",
     "vi": "Cấy ghép N-Plant"
+  },
+  "O2덤 산소관리": {
+    "en": "O2toDerm Oxygen Therapy",
+    "zh": "O2toDerm氧气护理",
+    "ja": "O2toDerm酸素トリートメント",
+    "ru": "Кислородный уход O2toDerm",
+    "vi": "Chăm sóc da oxy O2toDerm"
+  },
+  "PDT/압출": {
+    "en": "PDT / Extraction",
+    "zh": "PDT光疗/挤痘",
+    "ja": "PDT／圧出",
+    "ru": "PDT / Экстракция",
+    "vi": "PDT / Nặn mụn"
+  },
+  "PHA필": {
+    "en": "PHA Peel",
+    "zh": "PHA水光焕肤",
+    "ja": "PHAピール",
+    "ru": "PHA-пилинг",
+    "vi": "Peel da PHA"
   },
   "PO:VE 써마지 프로토콜": {
     "en": "PO:VE Thermage Protocol",
@@ -989,6 +1073,13 @@ export const KO_LABELS = {
     "ja": "Vラインリフティング",
     "ru": "V-line лифтинг",
     "vi": "Nâng cơ V-line"
+  },
+  "V레이저": {
+    "en": "V-Laser",
+    "zh": "V-Laser激光",
+    "ja": "Vレーザー",
+    "ru": "V-Laser",
+    "vi": "V-Laser"
   },
   "V레이저(제네시스)": {
     "en": "V-Laser (Genesis)",
@@ -1459,6 +1550,13 @@ export const KO_LABELS = {
     "ru": "Главврач Кан Сонён",
     "vi": "Viện trưởng Kang Seong-yong"
   },
+  "개별 상담실": {
+    "en": "Private Consultation Room",
+    "zh": "独立咨询室",
+    "ja": "個別カウンセリングルーム",
+    "ru": "Индивид. кабинет консультаций",
+    "vi": "Phòng tư vấn riêng biệt"
+  },
   "개인·기업 검진 예약 운영": {
     "en": "Individual & Corporate Checkup Booking",
     "zh": "个人·企业体检预约",
@@ -1535,6 +1633,13 @@ export const KO_LABELS = {
     "ja": "機械式駐車場(乗用車専用)·小型SUV/RV以上は教保タワー駐車場",
     "ru": "Механич. парковка (седаны) · SUV/внедорожники в Kyobo Tower",
     "vi": "Bãi đỗ cơ học (chỉ xe con) · SUV/RV gửi tại bãi đỗ Kyobo Tower"
+  },
+  "건물 주차 2시간 무료 · 1층 발렛 4,000원": {
+    "en": "2h Free Parking · 1F Valet ₩4,000",
+    "zh": "免费停车2小时 · 1楼代泊4,000韩元",
+    "ja": "2時間無料駐車場・1階バレー 4,000ウォン",
+    "ru": "Парковка 2 ч беспл. · Валет 1F 4 000 вон",
+    "vi": "Đỗ xe 2h miễn phí · Valet Tầng 1 4.000 KRW"
   },
   "건물 주차장 3시간 지원": {
     "en": "3 Hours Free Building Parking",
@@ -2187,6 +2292,13 @@ export const KO_LABELS = {
     "ru": "Пересадка бакенбардов",
     "vi": "Cấy tóc mai"
   },
+  "구영은 원장": {
+    "en": "Dr. Koo Young-eun",
+    "zh": "具英恩 院长",
+    "ja": "ク・ヨンウン院長",
+    "ru": "Главврач Ку Ён Ын",
+    "vi": "Bác sĩ Koo Young-eun"
+  },
   "구축 교정": {
     "en": "Contracture Correction",
     "zh": "挛缩矫正",
@@ -2277,6 +2389,13 @@ export const KO_LABELS = {
     "ja": "国内外提携病院連携",
     "ru": "Связь с партнерскими клиниками",
     "vi": "Liên kết bệnh viện đối tác quốc tế"
+  },
+  "국산 필러 (아띠에르/채움)": {
+    "en": "Korean Filler (Atiere / Chaeum)",
+    "zh": "韩国产玻尿酸 (Atiere/Chaeum)",
+    "ja": "韓国産フィラー (アティエール／チェウム)",
+    "ru": "Корейские филлеры (Atiere / Chaeum)",
+    "vi": "Filler Hàn Quốc (Atiere / Chaeum)"
   },
   "국원석 대표원장": {
     "en": "Chief Director Won-seok Kook",
@@ -3433,6 +3552,13 @@ export const KO_LABELS = {
     "ru": "Гипергидроз",
     "vi": "Tăng tiết mồ hôi"
   },
+  "다한증 보톡스": {
+    "en": "Hyperhidrosis Botox",
+    "zh": "多汗症肉毒素",
+    "ja": "多汗症ボトックス",
+    "ru": "Ботокс от гипергидроза",
+    "vi": "Botox trị tăng tiết mồ hôi"
+  },
   "닥터드림": {
     "en": "Dr. Dream",
     "zh": "Dr. Dream",
@@ -3937,6 +4063,27 @@ export const KO_LABELS = {
     "ru": "Латеральная кантопластика",
     "vi": "Mở rộng đuôi mắt"
   },
+  "듀이디 라운지 · 대기 공간": {
+    "en": "Dewy D Lounge · Waiting Area",
+    "zh": "Dewy D休息室 · 等候区",
+    "ja": "Dewy Dラウンジ・待合スペース",
+    "ru": "Лаундж Dewy D · Зона ожидания",
+    "vi": "Dewy D Lounge · Khu vực chờ"
+  },
+  "듀이디의원 대표자 · 진료 원장": {
+    "en": "Dewy D Clinic Chief Director",
+    "zh": "Dewy D诊所 代表·主诊院长",
+    "ja": "Dewy D医院 代表・診療院長",
+    "ru": "Главврач и представитель клиники Dewy D",
+    "vi": "Giám đốc đại diện · Bác sĩ điều trị Dewy D"
+  },
+  "듀핏 윤곽주사": {
+    "en": "DewFit Contour Injection",
+    "zh": "DewFit轮廓针",
+    "ja": "DewFit輪郭注射",
+    "ru": "Контурные инъекции DewFit",
+    "vi": "Tiêm thon gọn DewFit"
+  },
   "드림 스페셜": {
     "en": "Dream Special",
     "zh": "Dream特别项目",
@@ -4105,6 +4252,13 @@ export const KO_LABELS = {
     "ru": "Контурирующая инъекция",
     "vi": "Tiêm định hình đường nét"
   },
+  "라하필/라라필/블랙필/아쿠아필": {
+    "en": "LHA Peel/LHALALA/Black Peel/Aqua Peel",
+    "zh": "LHA刷酸/LALA果酸/黑醋焕肤/小气泡",
+    "ja": "ラハピール／ララピール／ブラックピール／アクアピール",
+    "ru": "LHA / LHALALA / Black Peel / Aqua Peel",
+    "vi": "LHA Peel/LHALALA/Black Peel/Aqua Peel"
+  },
   "러시아어": {
     "en": "Russian",
     "zh": "俄语",
@@ -4252,6 +4406,13 @@ export const KO_LABELS = {
     "ru": "Люминиры",
     "vi": "Lumineer"
   },
+  "루카스": {
+    "en": "Lucas",
+    "zh": "Lucas",
+    "ja": "Lucas",
+    "ru": "Lucas",
+    "vi": "Lucas"
+  },
   "루카스플러스": {
     "en": "Lucas Plus",
     "zh": "卢卡斯激光 (Lucas Plus)",
@@ -4294,6 +4455,13 @@ export const KO_LABELS = {
     "ru": "Rejuran (P/HB)",
     "vi": "Rejuran (P/HB)"
   },
+  "리쥬란 (힐러/HB plus/아이/S)": {
+    "en": "Rejuran (Healer/HB plus/I/S)",
+    "zh": "丽珠兰 (黑盒Healer/HB plus/白盒I/S)",
+    "ja": "リジュラン (ヒーラー／HB plus／アイ／S)",
+    "ru": "Rejuran (Healer / HB plus / I / S)",
+    "vi": "Rejuran (Healer/HB plus/I/S)"
+  },
   "리쥬란 힐러": {
     "en": "Rejuran Healer",
     "zh": "丽珠兰黑盒",
@@ -4322,6 +4490,13 @@ export const KO_LABELS = {
     "ru": "Rejumate",
     "vi": "Rejumate"
   },
+  "리즈네": {
+    "en": "Lizne",
+    "zh": "Lizne",
+    "ja": "Lizne",
+    "ru": "Lizne",
+    "vi": "Lizne"
+  },
   "리커버리 주사": {
     "en": "Recovery Injection",
     "zh": "恢复针注射",
@@ -4335,6 +4510,48 @@ export const KO_LABELS = {
     "ja": "リツオ",
     "ru": "Lituo",
     "vi": "Lituo"
+  },
+  "리팟 레이저": {
+    "en": "Reepot Laser",
+    "zh": "Reepot激光",
+    "ja": "Reepotレーザー",
+    "ru": "Лазер Reepot",
+    "vi": "Laser Reepot"
+  },
+  "리팟 레이저 · 1인 시술실": {
+    "en": "Reepot Laser · Private Room",
+    "zh": "Reepot激光 · 单人施术室",
+    "ja": "Reepotレーザー・完全個室",
+    "ru": "Лазер Reepot · Отдельный кабинет",
+    "vi": "Laser Reepot · Phòng trị liệu riêng"
+  },
+  "리팟 레이저·색소·토닝": {
+    "en": "Reepot Laser · Pigment · Toning",
+    "zh": "Reepot激光·色素·净肤",
+    "ja": "Reepotレーザー・色素・トーニング",
+    "ru": "Лазер Reepot · Пигментация · Тонинг",
+    "vi": "Laser Reepot · Sắc tố · Toning"
+  },
+  "리팟(Reepot) 레이저": {
+    "en": "Reepot Laser",
+    "zh": "Reepot激光",
+    "ja": "Reepotレーザー",
+    "ru": "Лазер Reepot",
+    "vi": "Laser Reepot"
+  },
+  "리팟(Reepot) 레이저 색소·토닝과 리프팅·스킨부스터를 1인 시술실에서 진료하는 신사역 피부 시술 의원": {
+    "en": "Sinsa Clinic: Reepot, Toning, Lifting & Skinboosters in Private Rooms",
+    "zh": "新沙站皮肤科：单人诊室提供Reepot祛斑、提拉及水光治疗",
+    "ja": "新沙駅皮膚科：完全個室でReepot色素・リフティング・スキンブースター",
+    "ru": "Клиника у ст. Синса: лазер Reepot, тонинг, лифтинг в отд. палатах",
+    "vi": "PK Da liễu Ga Sinsa: Trị sắc tố Reepot, nâng cơ & skin booster phòng riêng"
+  },
+  "리팟레이저": {
+    "en": "Reepot Laser",
+    "zh": "Reepot激光",
+    "ja": "Reepotレーザー",
+    "ru": "Лазер Reepot",
+    "vi": "Laser Reepot"
   },
   "리포소닉": {
     "en": "Liposonix",
@@ -4483,6 +4700,13 @@ export const KO_LABELS = {
     "ru": "Клиника в Чхондаме: лифтинг, филлеры, скинбустеры и контурирование",
     "vi": "Phòng khám Cheongdam: Nâng cơ, Filler, Skin booster & Thon gọn"
   },
+  "릴리이드 M": {
+    "en": "Relead M",
+    "zh": "Relead M",
+    "ja": "Relead M",
+    "ru": "Relead M",
+    "vi": "Relead M"
+  },
   "링클리어넥": {
     "en": "Wrinkle-Clear Neck",
     "zh": "颈部抚纹",
@@ -4524,6 +4748,20 @@ export const KO_LABELS = {
     "ja": "麻酔痛症医学科",
     "ru": "Анестезиология и лечение боли",
     "vi": "Khoa Gây mê & Giảm đau"
+  },
+  "마크뷰": {
+    "en": "Mark-Vu",
+    "zh": "Mark-Vu",
+    "ja": "Mark-Vu",
+    "ru": "Mark-Vu",
+    "vi": "Mark-Vu"
+  },
+  "마크뷰 피부분석": {
+    "en": "Mark-Vu Skin Analysis",
+    "zh": "Mark-Vu皮肤分析",
+    "ja": "Mark-Vu肌診断",
+    "ru": "Анализ кожи Mark-Vu",
+    "vi": "Phân tích da Mark-Vu"
   },
   "마크뷰·메타뷰 피부 진단 장비": {
     "en": "Mark-Vu · Meta-Vu Skin Analysis Devices",
@@ -4700,6 +4938,13 @@ export const KO_LABELS = {
     "ru": "Медицинский уход за кожей",
     "vi": "Chăm sóc da y khoa"
   },
+  "메디컬 스킨케어·영양": {
+    "en": "Medical Skincare & Nutrition",
+    "zh": "医美护肤·营养管理",
+    "ja": "メディカルスキンケア・栄養管理",
+    "ru": "Мед. уход за кожей · Питание",
+    "vi": "Chăm sóc da y khoa & Dinh dưỡng"
+  },
   "메리어트 Moxy": {
     "en": "Marriott Moxy",
     "zh": "万豪 Moxy",
@@ -4846,6 +5091,13 @@ export const KO_LABELS = {
     "ja": "毛穴",
     "ru": "Поры",
     "vi": "Lỗ chân lông"
+  },
+  "모공/흉터 패키지": {
+    "en": "Pores & Scars Package",
+    "zh": "毛孔/疤痕套餐",
+    "ja": "毛穴／瘢痕パッケージ",
+    "ru": "Программа: поры и рубцы",
+    "vi": "Gói trị lỗ chân lông/sẹo"
   },
   "모공·흉터": {
     "en": "Pores · Scars",
@@ -5274,12 +5526,33 @@ export const KO_LABELS = {
     "ru": "Лифтинг Mini Plus",
     "vi": "Nâng cơ Mini Plus"
   },
+  "미라셀 줄기세포 주사": {
+    "en": "Miracell Stem Cell Injection",
+    "zh": "Miracell干细胞注射",
+    "ja": "Miracell幹細胞注射",
+    "ru": "Инъекции стволовых клеток Miracell",
+    "vi": "Tiêm tế bào gốc Miracell"
+  },
+  "미라젯": {
+    "en": "Mirajet",
+    "zh": "Mirajet",
+    "ja": "Mirajet",
+    "ru": "Mirajet",
+    "vi": "Mirajet"
+  },
   "미백": {
     "en": "Whitening",
     "zh": "美白",
     "ja": "美白",
     "ru": "Отбеливание",
     "vi": "Làm trắng"
+  },
+  "미백 이온토": {
+    "en": "Whitening Iontophoresis",
+    "zh": "美白离子导入",
+    "ja": "美白イオントフォレーシス",
+    "ru": "Отбеливающий ионофорез",
+    "vi": "Điện di ion trắng da"
   },
   "미백주사": {
     "en": "Whitening Injection",
@@ -5323,12 +5596,26 @@ export const KO_LABELS = {
     "ru": "Эстетическая медицина",
     "vi": "Khám thẩm mỹ"
   },
+  "민트실 리프팅": {
+    "en": "MINT Thread Lift",
+    "zh": "MINT线雕提拉",
+    "ja": "MINT糸リフト",
+    "ru": "Нитевой лифтинг MINT",
+    "vi": "Căng chỉ MINT"
+  },
   "바디": {
     "en": "Body",
     "zh": "身体",
     "ja": "ボディ",
     "ru": "Тело",
     "vi": "Cơ thể"
+  },
+  "바디 걸그룹 주사": {
+    "en": "Body Girl Group Injection",
+    "zh": "身体女团针",
+    "ja": "ボディガールズグループ注射",
+    "ru": "Инъекции «Girl Group» для тела",
+    "vi": "Tiêm thon gọn body Girl Group"
   },
   "바디 다이어트": {
     "en": "Body Slimming",
@@ -5414,6 +5701,13 @@ export const KO_LABELS = {
     "ru": "Body Onda (100k · 200k Дж)",
     "vi": "Body Onda (100.000 · 200.000 J)"
   },
+  "바디 인모드": {
+    "en": "Body InMode",
+    "zh": "身体InMode",
+    "ja": "ボディインモード",
+    "ru": "InMode для тела",
+    "vi": "InMode body"
+  },
   "바디 지방이식": {
     "en": "Body Fat Grafting",
     "zh": "身体脂肪移植",
@@ -5441,6 +5735,13 @@ export const KO_LABELS = {
     "ja": "ボディタイトニング(オンダ+ソフウェーブ)",
     "ru": "Подтяжка тела (Onda + Sofwave)",
     "vi": "Săn chắc Body (Onda+Sofwave)"
+  },
+  "바디 티타늄": {
+    "en": "Body Titanium",
+    "zh": "身体Titanium",
+    "ja": "ボディチタニウム",
+    "ru": "Titanium для тела",
+    "vi": "Titanium body"
   },
   "바디라인": {
     "en": "Body Line",
@@ -5546,6 +5847,13 @@ export const KO_LABELS = {
     "ja": "パク・ジュヨン代表院長",
     "ru": "Главврач Пак Чжу Ён",
     "vi": "Tổng viện trưởng Park Ju-young"
+  },
+  "박준형 원장": {
+    "en": "Dr. Park Jun-hyung",
+    "zh": "朴俊亨 院长",
+    "ja": "パク・ジュンヒョン院長",
+    "ru": "Доктор Пак Чжунхён",
+    "vi": "Bác sĩ Park Jun-hyung"
   },
   "박찬성 원장": {
     "en": "Dr. Park Chan-sung",
@@ -5855,6 +6163,13 @@ export const KO_LABELS = {
     "ru": "Многоязычный сайт · Запись с учетом дат визита в Корею",
     "vi": "Hỗ trợ đa ngôn ngữ · Điều phối lịch hẹn phù hợp lịch trình đến Hàn"
   },
+  "보건복지부 외국인환자 유치 의료기관으로 등록되어 있으며 영어·중국어·일본어 홈페이지(en/cn/jp.dewydclinic.com)와 왓츠앱·라인·위챗·카카오톡 상담 채널을 운영합니다. 통역 지원 범위와 결제 방식은 예약 시 확인해 주세요.": {
+    "en": "Ministry of Health registered clinic for foreign patients. EN/CN/JP websites (en/cn/jp.dewydclinic.com) & WhatsApp/LINE/WeChat/KakaoTalk channels available. Please verify interpretation & payment methods upon booking.",
+    "zh": "获保健福祉部认证的外籍患者医疗机构，提供英/中/日官网(en/cn/jp.dewydclinic.com)及WhatsApp/LINE/微信/KakaoTalk咨询。翻译与支付方式请预约时确认。",
+    "ja": "保健福祉部認定の外国人患者誘致医療機関です。英・中・日HP(en/cn/jp.dewydclinic.com)とWhatsApp/LINE/WeChat/KakaoTalk相談窓口を運営中。通訳範囲・決済方法は予約時にご確認ください。",
+    "ru": "Сертифицированная Минздравом клиника для иностранцев. Сайты на EN/CN/JP (en/cn/jp.dewydclinic.com) и чаты WhatsApp/LINE/WeChat/KakaoTalk. Уточняйте детали перевода и оплаты при бронировании.",
+    "vi": "Cơ sở y tế tiếp nhận bệnh nhân quốc tế của Bộ Y tế. Có website EN/CN/JP (en/cn/jp.dewydclinic.com) & hỗ trợ qua WhatsApp/LINE/WeChat/KakaoTalk. Vui lòng xác nhận dịch vụ dịch thuật và thanh toán khi đặt lịch."
+  },
   "보건복지부 지정 관절 전문병원": {
     "en": "Joint Specialty Hospital (Ministry of Health)",
     "zh": "保健福祉部指定 关节专科医院",
@@ -5987,6 +6302,13 @@ export const KO_LABELS = {
     "ja": "ボトックス・ヒアルロン酸等プチ施術の皮膚診療部門",
     "ru": "Отделение косметологии медцентра: ботокс и филлеры",
     "vi": "Khoa da liễu thực hiện tiêm Botox, Filler & thủ thuật nhỏ"
+  },
+  "보톡스·필러·윤곽": {
+    "en": "Botox · Filler · Contouring",
+    "zh": "肉毒素·玻尿酸·轮廓",
+    "ja": "ボトックス・フィラー・輪郭",
+    "ru": "Ботокс · Филлеры · Контурная пластика",
+    "vi": "Botox · Filler · Thon gọn hàm"
   },
   "복강경 수술": {
     "en": "Laparoscopic Surgery",
@@ -6246,6 +6568,13 @@ export const KO_LABELS = {
     "ja": "ブリネイト（削らないラミネート）",
     "ru": "Brinate (виниры без обточки)",
     "vi": "Brinate (Dán sứ không mài răng)"
+  },
+  "브이레이저": {
+    "en": "V-Laser",
+    "zh": "V Laser",
+    "ja": "Vレーザー",
+    "ru": "V-Laser",
+    "vi": "V-Laser"
   },
   "브이로": {
     "en": "V-RO",
@@ -6793,6 +7122,13 @@ export const KO_LABELS = {
     "ru": "Консультация по образу жизни и диете",
     "vi": "Tư vấn lối sống & chế độ ăn"
   },
+  "서브시전": {
+    "en": "Subcision",
+    "zh": "皮下剥离术",
+    "ja": "サブシジョン",
+    "ru": "Субцизия",
+    "vi": "Cắt đáy sẹo Subcision"
+  },
   "서성락 대표원장": {
     "en": "Head Doctor Sung-rak Seo",
     "zh": "徐成洛 代表院长",
@@ -7143,6 +7479,13 @@ export const KO_LABELS = {
     "ru": "Керамель (виниры)",
     "vi": "Ceramel (Veneer)"
   },
+  "세르프": {
+    "en": "XERF",
+    "zh": "XERF",
+    "ja": "XERF",
+    "ru": "XERF",
+    "vi": "XERF"
+  },
   "세르프 XERF": {
     "en": "XERF",
     "zh": "XERF",
@@ -7380,6 +7723,13 @@ export const KO_LABELS = {
     "ja": "シェイプ",
     "ru": "Контурирование",
     "vi": "Định hình vóc dáng"
+  },
+  "소노포레시스": {
+    "en": "Sonophoresis",
+    "zh": "超声导入",
+    "ja": "ソノフォレシス",
+    "ru": "Сонофорез",
+    "vi": "Điện di siêu âm"
   },
   "소비자평가 3년 연속 1등급": {
     "en": "Grade 1 Consumer Rating for 3 Consecutive Years",
@@ -7773,6 +8123,13 @@ export const KO_LABELS = {
     "ru": "1 мин. пешком от вых. 8 ст. Ханти (линия Суин-Бундан)",
     "vi": "1 phút đi bộ từ Cửa 8 ga Hanti (tuyến Suin-Bundang)"
   },
+  "수입 필러 (벨로테로/쥬비덤/아말리안)": {
+    "en": "Imported Fillers (Belotero/Juvederm/Amalian)",
+    "zh": "进口玻尿酸 (Belotero/Juvederm/Amalian)",
+    "ja": "輸入フィラー (ベロテロ/ジュビダーム/アマリアン)",
+    "ru": "Импортные филлеры (Belotero/Juvederm/Amalian)",
+    "vi": "Filler nhập khẩu (Belotero/Juvederm/Amalian)"
+  },
   "순환기": {
     "en": "Cardiovascular / Circulatory",
     "zh": "心血管 / 循环内科",
@@ -7786,6 +8143,13 @@ export const KO_LABELS = {
     "ja": "シュリンク",
     "ru": "Shurink",
     "vi": "Shurink"
+  },
+  "슈링크 유니버스": {
+    "en": "Shurink Universe",
+    "zh": "Shurink Universe超声刀",
+    "ja": "シュリンクユニバース",
+    "ru": "Shurink Universe",
+    "vi": "Shurink Universe"
   },
   "스마일라식": {
     "en": "SMILE LASIK",
@@ -7899,6 +8263,13 @@ export const KO_LABELS = {
     "ru": "Скинбустер · Стволовые клетки",
     "vi": "Skin Booster · Tế bào gốc"
   },
+  "스킨부스터·콜라겐": {
+    "en": "Skin Booster · Collagen",
+    "zh": "水光针·胶原蛋白",
+    "ja": "スキンブースター・コラーゲン",
+    "ru": "Скинбустеры · Коллаген",
+    "vi": "Skin Booster · Collagen"
+  },
   "스킨부스터·콜라겐부스터": {
     "en": "Skin Booster · Collagen Booster",
     "zh": "水光针·胶原蛋白促进剂",
@@ -7996,6 +8367,13 @@ export const KO_LABELS = {
     "ja": "シグネチャー",
     "ru": "Фирменный",
     "vi": "Signature"
+  },
+  "시그니처 레이저 플랜": {
+    "en": "Signature Laser Plan",
+    "zh": "招牌激光方案",
+    "ja": "シグネチャーレーザープラン",
+    "ru": "Фирменный лазерный план",
+    "vi": "Phác đồ laser độc quyền"
   },
   "시그니처 리프팅": {
     "en": "Signature Lifting",
@@ -8150,6 +8528,13 @@ export const KO_LABELS = {
     "ja": "施術前疼痛緩和注射オプション",
     "ru": "Опция инъекции обезболивания перед процедурой",
     "vi": "Tùy chọn tiêm giảm đau trước trị liệu"
+  },
+  "시술 효과와 회복 기간, 부작용은 개인의 피부 상태에 따라 다를 수 있습니다. 시술 여부와 방법, 비용은 진료·상담 후 결정됩니다.": {
+    "en": "Results, recovery, and side effects vary by skin condition. Procedure, method, and cost are determined after consultation.",
+    "zh": "疗效、恢复期及副作用因人而异。是否治疗、方案及费用经面诊后确定。",
+    "ja": "効果、回復期間、副作用には個人差があります。施術の可否、方法、費用は診察・相談後に決定します。",
+    "ru": "Эффект, период восстановления и побочные эффекты индивидуальны. План и стоимость определяются на консультации.",
+    "vi": "Hiệu quả, hồi phục và tác dụng phụ tùy thuộc cơ địa. Chỉ định, phương pháp và chi phí được quyết định sau khi khám."
   },
   "시술 후 관리": {
     "en": "Post-procedure Care",
@@ -8318,6 +8703,13 @@ export const KO_LABELS = {
     "ja": "新沙駅4番出口近く",
     "ru": "Рядом с вых. 4 ст. Синса",
     "vi": "Gần Ga Sinsa Lối ra 4"
+  },
+  "신사역 5번 출구 도보 1~2분": {
+    "en": "Sinsa Station Exit 5, 1–2 min walk",
+    "zh": "新沙站5号出口步行1~2分钟",
+    "ja": "新沙駅5番出口 徒歩1〜2分",
+    "ru": "Станция Синса, вых. 5, 1-2 мин пешком",
+    "vi": "Ga Sinsa lối ra 5, đi bộ 1-2 phút"
   },
   "신사역 인근": {
     "en": "Near Sinsa Station",
@@ -8809,6 +9201,13 @@ export const KO_LABELS = {
     "ru": "Комплексное обследование глаз",
     "vi": "Khám mắt tổng quát"
   },
+  "안주혜 원장": {
+    "en": "Dr. Ahn Ju-hye",
+    "zh": "安珠慧 院长",
+    "ja": "アン・ジュヘ院長",
+    "ru": "Доктор Ан Джухе",
+    "vi": "Bác sĩ Ahn Ju-hye"
+  },
   "안질환": {
     "en": "Eye Diseases",
     "zh": "眼部疾病",
@@ -9257,12 +9656,40 @@ export const KO_LABELS = {
     "ru": "Любимое место aespa",
     "vi": "Tiệm quen của aespa"
   },
+  "에어녹스": {
+    "en": "AirNox",
+    "zh": "AirNox镇痛",
+    "ja": "エアナックス",
+    "ru": "AirNox",
+    "vi": "AirNox"
+  },
+  "에어녹스 (산소/아산화질소)": {
+    "en": "AirNox (Oxygen/Nitrous Oxide)",
+    "zh": "AirNox (氧气/笑气)",
+    "ja": "エアナックス (酸素/笑気)",
+    "ru": "AirNox (Кислород/Закись азота)",
+    "vi": "AirNox (Oxy/Khí cười N2O)"
+  },
+  "에어녹스 통증 완화 시스템": {
+    "en": "AirNox Pain Relief System",
+    "zh": "AirNox 镇痛系统",
+    "ja": "エアナックス疼痛緩和システム",
+    "ru": "Система обезболивания AirNox",
+    "vi": "Hệ thống giảm đau AirNox"
+  },
   "에이블주사": {
     "en": "ABLE Injection",
     "zh": "ABLE注射",
     "ja": "エイブル注射",
     "ru": "Инъекция ABLE",
     "vi": "Tiêm ABLE"
+  },
+  "에토좀 PTT": {
+    "en": "Ethosome PTT",
+    "zh": "Ethosome PTT",
+    "ja": "エトソームPTT",
+    "ru": "Ethosome PTT",
+    "vi": "Ethosome PTT"
   },
   "엑소좀": {
     "en": "Exosome",
@@ -9305,6 +9732,13 @@ export const KO_LABELS = {
     "ja": "ニキビ",
     "ru": "Акне",
     "vi": "Mụn trứng cá"
+  },
+  "여드름 스케일링": {
+    "en": "Acne Scaling",
+    "zh": "祛痘水杨酸焕肤",
+    "ja": "ニキビスケーリング",
+    "ru": "Лечебная чистка от акне",
+    "vi": "Lấy nhân mụn & peel da trị mụn"
   },
   "여드름 치료": {
     "en": "Acne Treatment",
@@ -9697,6 +10131,13 @@ export const KO_LABELS = {
     "ja": "栄養・点滴ケア",
     "ru": "Питательные капельницы",
     "vi": "Chăm sóc truyền dịch & dinh dưỡng"
+  },
+  "영양주사": {
+    "en": "Nutrient Injections",
+    "zh": "营养针",
+    "ja": "栄養注射",
+    "ru": "Витаминные капельницы",
+    "vi": "Tiêm truyền dinh dưỡng"
   },
   "영어": {
     "en": "English",
@@ -10139,6 +10580,13 @@ export const KO_LABELS = {
     "ru": "Сертификация для иностранных пациентов",
     "vi": "Cơ sở tiếp nhận bệnh nhân quốc tế"
   },
+  "외국인환자 유치 의료기관 등록 (보건복지부)": {
+    "en": "Ministry of Health Certified for Foreign Patients",
+    "zh": "保健福祉部外籍患者定点医疗机构",
+    "ja": "外国人患者誘致医療機関登録 (保健福祉部)",
+    "ru": "Сертификат Минздрава для приема иностранцев",
+    "vi": "Chứng nhận tiếp nhận bệnh nhân quốc tế (Bộ Y tế)"
+  },
   "외국인환자 유치 의료기관 등록(M-2022-01-08-6738)": {
     "en": "Registered Foreign Patient Facilitator (M-2022-01-08-6738)",
     "zh": "外籍患者招引登记医疗机构 (M-2022-01-08-6738)",
@@ -10278,6 +10726,13 @@ export const KO_LABELS = {
     "ja": "ウルセラピープライム (MERZ、ドイツ)",
     "ru": "Ultherapy Prime (MERZ, Германия)",
     "vi": "Ultherapy Prime (MERZ, Đức)"
+  },
+  "울트라콜": {
+    "en": "Ultracol",
+    "zh": "Ultracol",
+    "ja": "ウルトラコール",
+    "ru": "Ultracol",
+    "vi": "Ultracol"
   },
   "울트라클리어": {
     "en": "UltraClear",
@@ -10502,6 +10957,13 @@ export const KO_LABELS = {
     "ja": "月〜金 10:00〜20:00 · 土 09:30〜15:00 · 水・日休診 · 昼休み 13:00〜14:00 (土曜除く)",
     "ru": "Пн-Пт 10:00~20:00 · Сб 09:30~15:00 · Ср/Вс: вых. · Обед 13:00~14:00 (кроме Сб)",
     "vi": "T2~T6 10:00~20:00 · T7 09:30~15:00 · T4/CN nghỉ · Nghỉ trưa 13:00~14:00 (Trừ T7)"
+  },
+  "월~금 10:00~20:00 · 토요일 10:00~16:00 · 점심시간 없음 · 일요일·공휴일 휴진": {
+    "en": "Mon–Fri 10:00–20:00 · Sat 10:00–16:00 · No Lunch Break · Closed Sun & Holidays",
+    "zh": "周一至周五 10:00~20:00 · 周六 10:00~16:00 · 无午休 · 周日及公休日休诊",
+    "ja": "月〜金 10:00〜20:00・土 10:00〜16:00・昼休みなし・日祝休診",
+    "ru": "Пн–Пт 10:00–20:00 · Сб 10:00–16:00 · Без перерыва · Вс и праздники: выходной",
+    "vi": "T2–T6 10:00–20:00 · T7 10:00–16:00 · Không nghỉ trưa · Nghỉ CN & Ngày lễ"
   },
   "월~금 10:30~20:00 · 토요일 10:00~17:00 · 공휴일 10:00~17:00 · 일요일 휴진 (방문 전 확인 권장)": {
     "en": "Mon-Fri 10:30~20:00 · Sat 10:00~17:00 · Holidays 10:00~17:00 · Closed Sun (Check before visit)",
@@ -10930,6 +11392,13 @@ export const KO_LABELS = {
     "ru": "Главврач Ли Гван Хун",
     "vi": "Viện trưởng Lee Kwan-hoon"
   },
+  "이다영 대표원장": {
+    "en": "Head Director Dr. Lee Da-young",
+    "zh": "李多英 代表院长",
+    "ja": "イ・ダヨン代表院長",
+    "ru": "Главврач Ли Даён",
+    "vi": "Viện trưởng Lee Da-young"
+  },
   "이마 라인 디자인": {
     "en": "Forehead Hairline Design",
     "zh": "发际线设计",
@@ -11069,6 +11538,13 @@ export const KO_LABELS = {
     "ja": "イ・ジュンヒョク代表院長",
     "ru": "Главврач Ли Джун Хёк",
     "vi": "Viện trưởng Lee Jun-hyuk"
+  },
+  "이중무 원장": {
+    "en": "Dr. Lee Jung-moo",
+    "zh": "李仲武 院长",
+    "ja": "イ・ジュンム院長",
+    "ru": "Доктор Ли Чжунму",
+    "vi": "Bác sĩ Lee Jung-moo"
   },
   "이중턱": {
     "en": "Double Chin",
@@ -11868,6 +12344,13 @@ export const KO_LABELS = {
     "ru": "Метод разреза",
     "vi": "Phương pháp cắt (rạch)"
   },
+  "점 제거": {
+    "en": "Mole Removal",
+    "zh": "激光点痣",
+    "ja": "ほくろ除去",
+    "ru": "Удаление родинок",
+    "vi": "Tẩy nốt ruồi"
+  },
   "점심 13:00~14:00(일부 과 12:00~13:00) · 일요일·공휴일 휴진": {
     "en": "Lunch 13:00~14:00 (Some Depts 12:00~13:00) · Closed Sun & Holidays",
     "zh": "午休 13:00~14:00(部分科室 12:00~13:00) · 周日·公休日休诊",
@@ -12092,6 +12575,13 @@ export const KO_LABELS = {
     "ru": "Эпиляция",
     "vi": "Triệt lông"
   },
+  "제모·바디": {
+    "en": "Hair Removal · Body",
+    "zh": "脱毛·身体塑形",
+    "ja": "脱毛・ボディ",
+    "ru": "Эпиляция · Тело",
+    "vi": "Triệt lông · Body"
+  },
   "제왕절개": {
     "en": "C-Section",
     "zh": "剖腹产",
@@ -12105,6 +12595,20 @@ export const KO_LABELS = {
     "ja": "済州",
     "ru": "Чеджу",
     "vi": "Jeju"
+  },
+  "젠틀맥스 프로 플러스": {
+    "en": "GentleMax Pro Plus",
+    "zh": "GentleMax Pro Plus",
+    "ja": "ジェントルマックスプロプラス",
+    "ru": "GentleMax Pro Plus",
+    "vi": "GentleMax Pro Plus"
+  },
+  "젠틀맥스 프로 플러스 제모 (얼굴/상체/하체)": {
+    "en": "GentleMax Pro Plus Hair Removal (Face/Upper/Lower Body)",
+    "zh": "GentleMax Pro Plus脱毛 (面部/上半身/下半身)",
+    "ja": "ジェントルマックスプロプラス脱毛 (顔/上半身/下半身)",
+    "ru": "Эпиляция GentleMax Pro Plus (лицо/верх/низ тела)",
+    "vi": "Triệt lông GentleMax Pro Plus (Mặt/Thân trên/Thân dưới)"
   },
   "조루": {
     "en": "Premature Ejaculation",
@@ -12316,6 +12820,13 @@ export const KO_LABELS = {
     "ru": "Инъекции · Контуринг · Лазер",
     "vi": "Tiêm · Tạo viền · Laser"
   },
+  "주요 장비": {
+    "en": "Key Equipment",
+    "zh": "核心设备",
+    "ja": "主な医療機器",
+    "ru": "Основное оборудование",
+    "vi": "Thiết bị chính"
+  },
   "주차 무료": {
     "en": "Free Parking",
     "zh": "免费停车",
@@ -12519,6 +13030,13 @@ export const KO_LABELS = {
     "ru": "Juvelook",
     "vi": "Juvelook"
   },
+  "쥬베룩 (스킨/볼륨/오리지널/아이)": {
+    "en": "Juvelook (Skin/Volume/Original/Eye)",
+    "zh": "Juvelook (Skin/Volume/Original/Eye)",
+    "ja": "ジュベルック (スキン/ボリューム/オリジナル/アイ)",
+    "ru": "Juvelook (Skin/Volume/Original/Eye)",
+    "vi": "Juvelook (Skin/Volume/Original/Eye)"
+  },
   "지르코니아": {
     "en": "Zirconia",
     "zh": "氧化锆 (全瓷)",
@@ -12659,6 +13177,13 @@ export const KO_LABELS = {
     "ru": "Диагностика · Профилактика",
     "vi": "Chẩn đoán · Phòng ngừa"
   },
+  "진단·통증 케어": {
+    "en": "Diagnostics · Pain Care",
+    "zh": "精准诊断·疼痛管理",
+    "ja": "診断・疼痛ケア",
+    "ru": "Диагностика · Контроль боли",
+    "vi": "Chẩn đoán · Giảm đau"
+  },
   "진료": {
     "en": "Medical Care",
     "zh": "诊疗",
@@ -12700,6 +13225,13 @@ export const KO_LABELS = {
     "ja": "予約は代表電話またはHPにて案内",
     "ru": "Запись по общему телефону или на сайте",
     "vi": "Đặt hẹn qua hotline hoặc website"
+  },
+  "진료 원장": {
+    "en": "Attending Physician",
+    "zh": "诊疗院长",
+    "ja": "診療院長",
+    "ru": "Лечащий врач",
+    "vi": "Bác sĩ điều trị"
   },
   "진료 철학을 공유하는 전문 의료진이 모인 드림메디컬그룹의 대표 성형외과": {
     "en": "Flagship plastic surgery clinic of Dream Medical Group with unified medical philosophy",
@@ -13464,6 +13996,20 @@ export const KO_LABELS = {
     "ru": "Консультации в KakaoTalk, WhatsApp, WeChat и LINE. Уточняйте наличие переводчика при записи.",
     "vi": "Tư vấn qua KakaoTalk, WhatsApp, WeChat & LINE. Vui lòng xác nhận dịch vụ thông dịch khi đặt lịch."
   },
+  "카프리": {
+    "en": "Capri",
+    "zh": "Capri",
+    "ja": "カプリ",
+    "ru": "Capri",
+    "vi": "Capri"
+  },
+  "카프리 레이저": {
+    "en": "Capri Laser",
+    "zh": "Capri 激光",
+    "ja": "カプリレーザー",
+    "ru": "Лазер Capri",
+    "vi": "Laser Capri"
+  },
   "캣치영 솔루션": {
     "en": "Catch Young Solution",
     "zh": "Catch Young抗衰方案",
@@ -13604,6 +14150,13 @@ export const KO_LABELS = {
     "ru": "CoCo&Sil",
     "vi": "CoCo&Sil"
   },
+  "코트라 플러스 (CO2 프락셔널)": {
+    "en": "Cotra Plus (CO2 Fractional)",
+    "zh": "Cotra Plus (CO2点阵)",
+    "ja": "コトラプラス (CO2フラクショナル)",
+    "ru": "Cotra Plus (фракционный CO2)",
+    "vi": "Cotra Plus (CO2 Fractional)"
+  },
   "콘택트렌즈 전문 진료": {
     "en": "Specialized Contact Lens Care",
     "zh": "隐形眼镜专业门诊",
@@ -13624,6 +14177,13 @@ export const KO_LABELS = {
     "ja": "コルキジフリー（持ち込み無料）",
     "ru": "Бесплатный пробковый сбор",
     "vi": "Miễn phí mở chai (Corkage Free)"
+  },
+  "콤보웨이브": {
+    "en": "ComboWave",
+    "zh": "ComboWave",
+    "ja": "コンボウェーブ",
+    "ru": "ComboWave",
+    "vi": "ComboWave"
   },
   "콧대 보형물": {
     "en": "Nasal Bridge Implant",
@@ -13680,6 +14240,20 @@ export const KO_LABELS = {
     "ja": "クラウン（被せ物）",
     "ru": "Зубная коронка",
     "vi": "Bọc răng sứ (Crown)"
+  },
+  "크라이오 진정재생": {
+    "en": "Cryo Soothing & Regeneration",
+    "zh": "冷冻镇静再生",
+    "ja": "クライオ鎮静・再生",
+    "ru": "Крио-успокоение и регенерация",
+    "vi": "Cryo làm dịu & tái tạo"
+  },
+  "크림 마취": {
+    "en": "Numbing Cream",
+    "zh": "麻醉膏",
+    "ja": "麻酔クリーム",
+    "ru": "Анестезирующий крем",
+    "vi": "Ủ tê bằng kem"
   },
   "클라리티": {
     "en": "Clarity",
@@ -14304,6 +14878,20 @@ export const KO_LABELS = {
     "ru": "Титановый лифтинг",
     "vi": "Nâng cơ Titanium"
   },
+  "티투오 (티타늄+리투오)": {
+    "en": "TiTwoO (Titanium + ReTwoO)",
+    "zh": "TiTwoO (钛提升+ReTwoO)",
+    "ja": "TiTwoO (チタニウム+ReTwoO)",
+    "ru": "TiTwoO (Титан + ReTwoO)",
+    "vi": "TiTwoO (Titanium + ReTwoO)"
+  },
+  "파우더룸": {
+    "en": "Powder Room",
+    "zh": "化妆室",
+    "ja": "パウダールーム",
+    "ru": "Косметическая комната",
+    "vi": "Phòng trang điểm"
+  },
   "팔꿈치": {
     "en": "Elbows",
     "zh": "手肘",
@@ -14605,6 +15193,13 @@ export const KO_LABELS = {
     "ru": "Будни: прием до 19:00",
     "vi": "Ngày thường khám đến 19h"
   },
+  "평일 20시까지 점심시간 없이 진료": {
+    "en": "Weekdays open till 20:00 (No lunch break)",
+    "zh": "平日接诊至20点·无午休",
+    "ja": "平日20時まで昼休みなし診療",
+    "ru": "В будни до 20:00 без перерыва на обед",
+    "vi": "Mở đến 20:00 ngày thường không nghỉ trưa"
+  },
   "평일 20시까지 진료": {
     "en": "Open until 20:00 on Weekdays",
     "zh": "工作日营业至20:00",
@@ -14709,6 +15304,13 @@ export const KO_LABELS = {
     "ja": "プライムスキャン口腔内スキャナー",
     "ru": "Сканер полости рта Primescan",
     "vi": "Máy quét khoang miệng Primescan"
+  },
+  "프락셀": {
+    "en": "Fraxel",
+    "zh": "飞梭镭射 (Fraxel)",
+    "ja": "フラクセル",
+    "ru": "Фраксель (Fraxel)",
+    "vi": "Fraxel"
   },
   "프락셀 듀얼": {
     "en": "Fraxel Dual",
@@ -15053,6 +15655,13 @@ export const KO_LABELS = {
     "ru": "Пико-тонирование",
     "vi": "Pico Toning"
   },
+  "피코플러스": {
+    "en": "PicoPlus",
+    "zh": "PicoPlus皮秒",
+    "ja": "ピコプラス (PicoPlus)",
+    "ru": "PicoPlus",
+    "vi": "PicoPlus"
+  },
   "피트니스 무료 이용": {
     "en": "Free Gym Access",
     "zh": "免费使用健身房",
@@ -15150,6 +15759,13 @@ export const KO_LABELS = {
     "ja": "ハイドラフェイシャル",
     "ru": "HydraFacial",
     "vi": "HydraFacial"
+  },
+  "하이쿡스 인젝터": {
+    "en": "Hycoox Injector",
+    "zh": "Hycoox注射仪",
+    "ja": "ハイコックスインジェクター",
+    "ru": "Инжектор Hycoox",
+    "vi": "Máy tiêm Hycoox"
   },
   "하재선 대표원장": {
     "en": "Head Director Dr. Ha Jae-sun",
