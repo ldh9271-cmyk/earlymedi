@@ -40,13 +40,13 @@ export const HAIR_SHOP_I18N: Record<
     en: {
       title: 'Riahn Hair — Gangnam Station',
       description:
-        'A one-minute walk from Gangnam Station Exit 3, this is the Gangnam branch of Riahn Hair, a nationwide salon franchise. It holds 4.7 stars across 598 reviews on Kakao Hairshop, one of the larger verified review counts among Gangnam salons. A men’s cut is ₩18,000 and a women’s cut ₩23,000 including shampoo and blow-dry, with perms from ₩25,000 and colour from ₩35,000 — well under the average for major Gangnam franchises. That makes it the value option right in the middle of Gangnam, and a comfortable first stop for visitors who find Cheongdam celebrity salons daunting. Cuts, cold and heat perms (magic straightening and digital), colour, bleach, treatments and blow-dry styling are offered for both men and women, each after a one-to-one consultation with your designer. Note that everything except cuts carries a length surcharge, from ₩20,000 at bob length to ₩40,000 past chest length, so if your hair is long it is worth confirming the total in advance. Book ahead through the Kakao Hairshop app.',
-      locationLabel: 'Yeoksam-dong (Gangnam Station)',
+        'A two-minute walk from Gangnam Station Exit 9, this is the Gangnam branch of Riahn Hair, a nationwide salon franchise. It holds 4.7 stars across 598 reviews on Kakao Hairshop, one of the larger verified review counts among Gangnam salons. A men’s cut is ₩18,000 and a women’s cut ₩23,000 including shampoo and blow-dry, with perms from ₩25,000 and colour from ₩35,000 — well under the average for major Gangnam franchises. That makes it the value option right in the middle of Gangnam, and a comfortable first stop for visitors who find Cheongdam celebrity salons daunting. Cuts, cold and heat perms (magic straightening and digital), colour, bleach, treatments and blow-dry styling are offered for both men and women, each after a one-to-one consultation with your designer. Note that everything except cuts carries a length surcharge, from ₩20,000 at bob length to ₩40,000 past chest length, so if your hair is long it is worth confirming the total in advance. Book ahead through the Kakao Hairshop app.',
+      locationLabel: 'Seocho-dong (Gangnam Station)',
       seoTitle: 'Riahn Hair Gangnam | Affordable Seoul Hair Salon | GlowUpTour',
       seoDescription:
-        '1 min from Gangnam Station Exit 3. Cuts from ₩18,000, perms from ₩25,000, colour from ₩35,000. 4.7 stars, 598 reviews. Book on GlowUpTour.',
+        '2 min from Gangnam Station Exit 9. Cuts from ₩18,000, perms from ₩25,000, colour from ₩35,000. 4.7 stars, 598 reviews. Book on GlowUpTour.',
       shopInfo: {
-        station: '1 min walk from Gangnam Station Exit 3',
+        station: '2 min walk from Gangnam Station Exit 9',
         services:
           'Cut · Cold perm · Heat perm (magic straightening / digital) · Colour · Bleach · Treatment · Blow-dry styling',
         priceRange:
@@ -109,13 +109,13 @@ export const HAIR_SHOP_I18N: Record<
     zh: {
       title: 'RIAHN HAIR 江南站店',
       description:
-        '距江南站3号出口步行1分钟，是全国连锁美发品牌 RIAHN HAIR 的江南站分店。在 Kakao Hairshop 上获得4.7分、598条真实评价，是江南地区评价数量较为可靠的美发店之一。男士剪发 ₩18,000、女士剪发 ₩23,000（含洗发与吹干），烫发 ₩25,000起、染发 ₩35,000起，低于江南主要连锁品牌的平均价格。对于觉得清潭洞明星沙龙门槛较高的首次到访客人来说，这里是位于江南核心地段的高性价比选择。剪发、普通烫、热烫（离子烫／数码烫）、染发、漂发、护理及吹风造型等男女全项目，均由发型师一对一咨询后施作。需注意，除剪发外的项目会按发长加收 ₩20,000（齐下巴）至 ₩40,000（胸线以下）的费用，头发较长时建议提前确认总价。可通过 Kakao Hairshop 应用提前预约。',
-      locationLabel: '驿三洞（江南站）',
+        '距江南站9号出口步行2分钟，是全国连锁美发品牌 RIAHN HAIR 的江南站分店。在 Kakao Hairshop 上获得4.7分、598条真实评价，是江南地区评价数量较为可靠的美发店之一。男士剪发 ₩18,000、女士剪发 ₩23,000（含洗发与吹干），烫发 ₩25,000起、染发 ₩35,000起，低于江南主要连锁品牌的平均价格。对于觉得清潭洞明星沙龙门槛较高的首次到访客人来说，这里是位于江南核心地段的高性价比选择。剪发、普通烫、热烫（离子烫／数码烫）、染发、漂发、护理及吹风造型等男女全项目，均由发型师一对一咨询后施作。需注意，除剪发外的项目会按发长加收 ₩20,000（齐下巴）至 ₩40,000（胸线以下）的费用，头发较长时建议提前确认总价。可通过 Kakao Hairshop 应用提前预约。',
+      locationLabel: '瑞草洞（江南站）',
       seoTitle: 'RIAHN HAIR 江南站店 | 江南高性价比美发 | GlowUpTour',
       seoDescription:
-        '江南站3号出口步行1分钟。剪发 ₩18,000起、烫发 ₩25,000起、染发 ₩35,000起。Kakao Hairshop 4.7分·598条评价。在 GlowUpTour 预约。',
+        '江南站9号出口步行2分钟。剪发 ₩18,000起、烫发 ₩25,000起、染发 ₩35,000起。Kakao Hairshop 4.7分·598条评价。在 GlowUpTour 预约。',
       shopInfo: {
-        station: '江南站3号出口步行1分钟',
+        station: '江南站9号出口步行2分钟',
         services: '剪发 · 普通烫 · 热烫（离子烫·数码烫）· 染发 · 漂发 · 头发护理 · 吹风造型',
         priceRange:
           '剪发 ₩18,000起 / 烫发 ₩25,000起 / 染发 ₩35,000起 / 护理 ₩50,000起（长度附加费 ₩20,000~40,000 另计）',
@@ -177,13 +177,13 @@ export const HAIR_SHOP_I18N: Record<
     ja: {
       title: 'リアンヘア 江南駅店',
       description:
-        '江南（カンナム）駅3番出口から徒歩1分、全国展開のヘアサロンチェーン「リアンヘア」の江南駅店。Kakao Hairshop で4.7点・598件のレビューを持ち、江南エリアでも検証済みレビュー数の多いサロンのひとつです。メンズカット ₩18,000、レディースカット ₩23,000（シャンプー・ブロー込み）、パーマ ₩25,000～、カラー ₩35,000～ と、江南の主要チェーン平均より手頃。清潭洞のセレブサロンは敷居が高いと感じる初訪問の方に向いた、江南中心部のコスパ重視の選択肢です。カット、普通パーマ、熱パーマ（縮毛矯正・デジタル）、カラー、ブリーチ、トリートメント、ブロースタイリングまでメンズ・レディース全メニューを、担当デザイナーとのマンツーマン カウンセリングで進めます。ただしカット以外は髪の長さに応じて ₩20,000（ボブ）～₩40,000（胸下）が加算されるため、髪が長い方は事前に総額の確認をおすすめします。Kakao Hairshop アプリから事前予約が可能です。',
-      locationLabel: '駅三洞（江南駅）',
+        '江南（カンナム）駅9番出口から徒歩2分、全国展開のヘアサロンチェーン「リアンヘア」の江南駅店。Kakao Hairshop で4.7点・598件のレビューを持ち、江南エリアでも検証済みレビュー数の多いサロンのひとつです。メンズカット ₩18,000、レディースカット ₩23,000（シャンプー・ブロー込み）、パーマ ₩25,000～、カラー ₩35,000～ と、江南の主要チェーン平均より手頃。清潭洞のセレブサロンは敷居が高いと感じる初訪問の方に向いた、江南中心部のコスパ重視の選択肢です。カット、普通パーマ、熱パーマ（縮毛矯正・デジタル）、カラー、ブリーチ、トリートメント、ブロースタイリングまでメンズ・レディース全メニューを、担当デザイナーとのマンツーマン カウンセリングで進めます。ただしカット以外は髪の長さに応じて ₩20,000（ボブ）～₩40,000（胸下）が加算されるため、髪が長い方は事前に総額の確認をおすすめします。Kakao Hairshop アプリから事前予約が可能です。',
+      locationLabel: '瑞草洞（江南駅）',
       seoTitle: 'リアンヘア江南駅店 | 江南のコスパ美容室 | GlowUpTour',
       seoDescription:
-        '江南駅3番出口から徒歩1分。カット ₩18,000～、パーマ ₩25,000～、カラー ₩35,000～。4.7点・598件のレビュー。GlowUpTour で予約。',
+        '江南駅9番出口から徒歩2分。カット ₩18,000～、パーマ ₩25,000～、カラー ₩35,000～。4.7点・598件のレビュー。GlowUpTour で予約。',
       shopInfo: {
-        station: '江南（カンナム）駅3番出口から徒歩1分',
+        station: '江南（カンナム）駅9番出口から徒歩2分',
         services:
           'カット · 普通パーマ · 熱パーマ（縮毛矯正・デジタル）· カラー · ブリーチ · トリートメント · ブロー スタイリング',
         priceRange:
@@ -246,13 +246,13 @@ export const HAIR_SHOP_I18N: Record<
     ru: {
       title: 'Riahn Hair — Каннам',
       description:
-        'В одной минуте ходьбы от выхода 3 станции Каннам — филиал Riahn Hair, общенациональной сети парикмахерских. Рейтинг 4,7 и 598 отзывов на Kakao Hairshop: одно из самых больших количеств проверенных отзывов среди салонов Каннама. Мужская стрижка стоит ₩18,000, женская — ₩23,000 вместе с мытьём и укладкой, завивка от ₩25,000, окрашивание от ₩35,000, что заметно ниже среднего по крупным сетям Каннама. Это выгодный вариант в самом центре Каннама и спокойный первый визит для тех, кому салоны знаменитостей в Чхондаме кажутся слишком дорогими. Стрижки, химическая и термозавивка (кератиновое выпрямление и цифровая), окрашивание, осветление, уходы и укладка феном доступны и мужчинам, и женщинам — всё после личной консультации с мастером. Учтите: на всё, кроме стрижки, действует доплата за длину — от ₩20,000 при длине до подбородка до ₩40,000 ниже груди, поэтому при длинных волосах стоит заранее уточнить итоговую сумму. Записаться можно через приложение Kakao Hairshop.',
-      locationLabel: 'Ёксам-дон (ст. Каннам)',
+        'В двух минутах ходьбы от выхода 9 станции Каннам — филиал Riahn Hair, общенациональной сети парикмахерских. Рейтинг 4,7 и 598 отзывов на Kakao Hairshop: одно из самых больших количеств проверенных отзывов среди салонов Каннама. Мужская стрижка стоит ₩18,000, женская — ₩23,000 вместе с мытьём и укладкой, завивка от ₩25,000, окрашивание от ₩35,000, что заметно ниже среднего по крупным сетям Каннама. Это выгодный вариант в самом центре Каннама и спокойный первый визит для тех, кому салоны знаменитостей в Чхондаме кажутся слишком дорогими. Стрижки, химическая и термозавивка (кератиновое выпрямление и цифровая), окрашивание, осветление, уходы и укладка феном доступны и мужчинам, и женщинам — всё после личной консультации с мастером. Учтите: на всё, кроме стрижки, действует доплата за длину — от ₩20,000 при длине до подбородка до ₩40,000 ниже груди, поэтому при длинных волосах стоит заранее уточнить итоговую сумму. Записаться можно через приложение Kakao Hairshop.',
+      locationLabel: 'Сочхо-дон (ст. Каннам)',
       seoTitle: 'Riahn Hair Каннам | Доступный салон в Сеуле | GlowUpTour',
       seoDescription:
-        '1 минута от выхода 3 ст. Каннам. Стрижка от ₩18,000, завивка от ₩25,000, окрашивание от ₩35,000. Рейтинг 4,7, 598 отзывов. Бронь на GlowUpTour.',
+        '2 минуты от выхода 9 ст. Каннам. Стрижка от ₩18,000, завивка от ₩25,000, окрашивание от ₩35,000. Рейтинг 4,7, 598 отзывов. Бронь на GlowUpTour.',
       shopInfo: {
-        station: '1 минута пешком от станции Каннам, выход 3',
+        station: '1 минута пешком от станции Каннам, выход 9',
         services:
           'Стрижка · Химическая завивка · Термозавивка (кератиновое выпрямление / цифровая) · Окрашивание · Осветление · Уход · Укладка феном',
         priceRange:
@@ -325,13 +325,13 @@ export const HAIR_SHOP_I18N: Record<
     vi: {
       title: 'Riahn Hair — Chi nhánh ga Gangnam',
       description:
-        'Cách lối ra số 3 ga Gangnam một phút đi bộ, đây là chi nhánh ga Gangnam của Riahn Hair, chuỗi salon tóc có mặt trên toàn Hàn Quốc. Salon đạt 4,7 sao với 598 đánh giá trên Kakao Hairshop — một trong những lượng đánh giá đã xác thực lớn nhất khu Gangnam. Cắt tóc nam ₩18,000, cắt tóc nữ ₩23,000 (đã gồm gội và sấy), uốn từ ₩25,000, nhuộm từ ₩35,000, thấp hơn mức trung bình của các chuỗi lớn ở Gangnam. Đây là lựa chọn hợp túi tiền ngay giữa Gangnam, phù hợp cho khách lần đầu thấy các salon ngôi sao ở Cheongdam quá đắt đỏ. Cắt tóc, uốn lạnh, uốn nhiệt (duỗi/uốn kỹ thuật số), nhuộm, tẩy, hấp phục hồi và sấy tạo kiểu đều có cho cả nam và nữ, thực hiện sau khi tư vấn riêng với nhà tạo mẫu. Lưu ý mọi dịch vụ ngoài cắt tóc đều có phụ phí độ dài, từ ₩20,000 (ngang cằm) đến ₩40,000 (dài quá ngực), nên nếu tóc dài bạn hãy hỏi trước tổng chi phí. Có thể đặt lịch trước qua ứng dụng Kakao Hairshop.',
-      locationLabel: 'Yeoksam-dong (ga Gangnam)',
+        'Cách lối ra số 9 ga Gangnam hai phút đi bộ, đây là chi nhánh ga Gangnam của Riahn Hair, chuỗi salon tóc có mặt trên toàn Hàn Quốc. Salon đạt 4,7 sao với 598 đánh giá trên Kakao Hairshop — một trong những lượng đánh giá đã xác thực lớn nhất khu Gangnam. Cắt tóc nam ₩18,000, cắt tóc nữ ₩23,000 (đã gồm gội và sấy), uốn từ ₩25,000, nhuộm từ ₩35,000, thấp hơn mức trung bình của các chuỗi lớn ở Gangnam. Đây là lựa chọn hợp túi tiền ngay giữa Gangnam, phù hợp cho khách lần đầu thấy các salon ngôi sao ở Cheongdam quá đắt đỏ. Cắt tóc, uốn lạnh, uốn nhiệt (duỗi/uốn kỹ thuật số), nhuộm, tẩy, hấp phục hồi và sấy tạo kiểu đều có cho cả nam và nữ, thực hiện sau khi tư vấn riêng với nhà tạo mẫu. Lưu ý mọi dịch vụ ngoài cắt tóc đều có phụ phí độ dài, từ ₩20,000 (ngang cằm) đến ₩40,000 (dài quá ngực), nên nếu tóc dài bạn hãy hỏi trước tổng chi phí. Có thể đặt lịch trước qua ứng dụng Kakao Hairshop.',
+      locationLabel: 'Seocho-dong (ga Gangnam)',
       seoTitle: 'Riahn Hair ga Gangnam | Salon giá tốt ở Gangnam | GlowUpTour',
       seoDescription:
-        'Cách lối ra 3 ga Gangnam 1 phút. Cắt từ ₩18,000, uốn từ ₩25,000, nhuộm từ ₩35,000. 4,7 sao · 598 đánh giá. Đặt lịch tại GlowUpTour.',
+        'Cách lối ra 9 ga Gangnam 2 phút. Cắt từ ₩18,000, uốn từ ₩25,000, nhuộm từ ₩35,000. 4,7 sao · 598 đánh giá. Đặt lịch tại GlowUpTour.',
       shopInfo: {
-        station: 'Đi bộ 1 phút từ lối ra số 3 ga Gangnam',
+        station: 'Đi bộ 1 phút từ lối ra số 9 ga Gangnam',
         services:
           'Cắt tóc · Uốn lạnh · Uốn nhiệt (duỗi · uốn kỹ thuật số) · Nhuộm · Tẩy · Hấp phục hồi · Sấy tạo kiểu',
         priceRange:
