@@ -5,8 +5,8 @@
  *
  *  - 범위: 기본은 이 컴포넌트의 **부모 요소** 안(같은 부모에 있는 목록만). `scope` 에
  *    CSS 셀렉터를 주면 그 요소 안으로 바꿀 수 있다.
- *  - 행: `rowSelector` (기본 `tbody > tr` 과 `[data-search-row]`). 행에 `data-search-text`
- *    가 있으면 그 값으로, 없으면 화면 글자(textContent) 전체로 비교한다.
+ *  - 행: `rowSelector` (기본 `tbody > tr` 과 `[data-search-row]`). 화면 글자(textContent) 전체로
+ *    비교하고, 행에 `data-search-text` 가 있으면 그 값도 더해 찾는다(주소·slug 같은 숨은 키워드용).
  *  - 매칭: 대소문자·공백 무시, 띄어쓰기로 나눈 단어를 모두 포함해야 한다(AND).
  *    예) "피부과 신사" → 피부과이면서 신사가 들어간 행.
  *  - `[data-search-group]` 요소는 안에 보이는 행이 하나도 없으면 통째로 숨긴다
@@ -85,7 +85,7 @@ export default function ListSearch({
         .filter((r) => !(self && self.contains(r)) && !r.closest('thead') && !r.hasAttribute('data-search-skip'));
       let shown = 0;
       for (const r of rows) {
-        const text = normalize(r.getAttribute('data-search-text') ?? r.textContent ?? '');
+        const text = normalize(`${r.getAttribute('data-search-text') ?? ''} ${r.textContent ?? ''}`);
         const match = terms.every((t) => text.includes(t));
         if (match) shown += 1;
         setHidden(r, !match);
@@ -128,7 +128,9 @@ export default function ListSearch({
         </svg>
         <input
           ref={input}
-          type="search"
+          type="text"
+          inputMode="search"
+          enterKeyHint="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onFocus={() => setFocus(true)}

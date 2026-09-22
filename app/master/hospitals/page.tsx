@@ -235,7 +235,7 @@ export default async function MasterHospitalsPage({
         })}
       </div>
 
-      <ListSearch placeholder="병원명 · 카테고리 · Agency 로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 병원만 남습니다 (예: 피부과 신사)." />
+      <ListSearch placeholder="병원명 · 카테고리 · Agency 로 찾기" hint="병원명·카테고리·Agency·slug 로 찾습니다. 띄어쓰기로 여러 단어를 넣으면 모두 포함된 병원만 남습니다 (예: 피부과 명동)." />
 
       {loadError ? (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
@@ -265,7 +265,7 @@ export default async function MasterHospitalsPage({
             </thead>
             <tbody className="divide-y">
               {filtered.map((h) => (
-                <tr key={h.id} className="hover:bg-muted/30">
+                <tr key={h.id} className="hover:bg-muted/30" data-search-text={h.slug}>
                   <td className="px-3 py-2 align-middle">
                     <form
                       action={updateHospitalSortOrderAction}
