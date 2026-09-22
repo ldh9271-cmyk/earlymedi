@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { requireAccess } from '@/lib/auth/route-guards';
 import { withRls } from '@/lib/auth/rls-context';
@@ -135,6 +136,8 @@ export default async function AgencyLeadsPage({
           </Link>
         ))}
       </div>
+
+      <ListSearch placeholder="이름 · 연락처 · 단계로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 항목만 남습니다." />
 
       {rows.length === 0 ? (
         <Card>

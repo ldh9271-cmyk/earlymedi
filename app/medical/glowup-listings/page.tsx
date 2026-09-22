@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { desc, eq } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
@@ -121,6 +122,8 @@ export default async function MedicalGlowupListingsPage({
           </button>
         </div>
       </form>
+
+      <ListSearch placeholder="상품명 · 카테고리로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 항목만 남습니다." />
 
       {dbError ? (
         <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { redirect } from 'next/navigation';
 import { desc, eq, inArray } from 'drizzle-orm';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
@@ -89,6 +90,8 @@ export default async function MasterAiTripsPage({ searchParams }: { searchParams
       {searchParams.error ? <p style={{ color: '#dc2626', fontSize: 13, marginTop: 16 }}>처리에 실패했습니다: {searchParams.error}</p> : null}
       {dbError ? <p style={{ color: '#dc2626', fontSize: 13, marginTop: 16 }}>목록을 불러오지 못했습니다: {dbError}</p> : null}
 
+      <ListSearch placeholder="이메일 · 이름 · 인보이스 · 출발일로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 항목만 남습니다." />
+
       <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
         {rows.length === 0 ? (
           <div style={{ border: '1px dashed #dddddd', borderRadius: 12, padding: 28, textAlign: 'center', color: '#6a6a6a', fontSize: 13 }}>해당 상태의 일정이 없습니다.</div>
@@ -98,7 +101,7 @@ export default async function MasterAiTripsPage({ searchParams }: { searchParams
           const open = searchParams.plan === r.id || r.status === 'help_requested';
           const contact = [r.contact?.name, r.contact?.phone, r.contact?.messenger].filter(Boolean).join(' · ');
           return (
-            <details key={r.id} open={open} style={{ border: `1px solid ${searchParams.plan === r.id ? '#ff385c' : '#ebebeb'}`, borderRadius: 12, background: '#fff' }}>
+            <details key={r.id} data-search-row open={open} style={{ border: `1px solid ${searchParams.plan === r.id ? '#ff385c' : '#ebebeb'}`, borderRadius: 12, background: '#fff' }}>
               <summary style={{ cursor: 'pointer', listStyle: 'none', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 13 }}>
                 <span style={{ background: s.bg, color: s.fg, borderRadius: 9999, padding: '3px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{s.text}</span>
                 <b>{TRIP_TYPE_KO[r.tripType ?? ''] ?? '여행'}</b>

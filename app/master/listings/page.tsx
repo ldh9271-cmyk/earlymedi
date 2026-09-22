@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { redirect } from 'next/navigation';
 import { asc, desc, eq } from 'drizzle-orm';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
@@ -799,6 +800,8 @@ export default async function MasterListingsPage({
         ))}
       </div>
 
+      <ListSearch placeholder="상품명 · 카테고리 · 조직으로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 항목만 남습니다." />
+
       {dbError ? (
         <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <p className="font-semibold">DB 마이그레이션이 아직 실행되지 않았습니다.</p>
@@ -882,7 +885,7 @@ function CategoryGroupedTable({ rows }: { rows: Row[] }): JSX.Element {
         if (group.length === 0) return null; // 빈 카테고리는 숨김
         const label = key === '__other__' ? '기타' : categoryLabel(key);
         return (
-          <section key={key}>
+          <section key={key} data-search-group>
             <div className="mb-2 flex items-baseline justify-between">
               <h2 className="text-sm font-semibold">
                 {label}
@@ -916,7 +919,7 @@ function TravelGroupedTable({ rows }: { rows: Row[] }): JSX.Element {
   return (
     <div className="space-y-6">
       {Array.from(buckets.entries()).map(([key, group]) => (
-        <section key={key}>
+        <section key={key} data-search-group>
           <div className="mb-2 flex items-baseline justify-between">
             <h2 className="text-sm font-semibold">
               {key === '__unset__' ? '미분류' : travelSubTypeLabel(key)}

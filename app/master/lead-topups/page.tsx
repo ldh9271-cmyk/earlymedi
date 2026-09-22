@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { redirect } from 'next/navigation';
 import { desc, eq } from 'drizzle-orm';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
@@ -103,6 +104,8 @@ export default async function MasterLeadTopupsPage({
       <h2 style={{ fontSize: 16, fontWeight: 700, margin: '28px 0 10px' }}>
         충전 신청 {pending.length > 0 ? `— 대기 ${pending.length}건` : ''}
       </h2>
+      <ListSearch placeholder="병원 · 상태로 찾기" />
+
       <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
         <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>

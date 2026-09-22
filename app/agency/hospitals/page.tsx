@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { Plus, MapPin, Stethoscope, CheckCircle2, XCircle } from 'lucide-react';
 import { requireAccess } from '@/lib/auth/route-guards';
 import { withRls } from '@/lib/auth/rls-context';
@@ -47,6 +48,8 @@ export default async function HospitalsPage({
         </div>
       ) : null}
 
+      <ListSearch placeholder="병원명 · 카테고리 · 지역으로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 항목만 남습니다." />
+
       {data.length === 0 ? (
         <EmptyState
           icon={Stethoscope}
@@ -61,7 +64,7 @@ export default async function HospitalsPage({
       ) : (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {data.map((h) => (
-            <Card key={h.id} className="transition-shadow hover:shadow-md">
+            <Card key={h.id} data-search-row className="transition-shadow hover:shadow-md">
               <CardContent className="space-y-2 p-4">
                 <div className="flex items-center justify-between">
                   <Link

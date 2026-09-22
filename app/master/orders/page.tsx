@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { redirect } from 'next/navigation';
 import { desc, eq, sql } from 'drizzle-orm';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
@@ -126,6 +127,8 @@ export default async function MasterOrdersPage({
       {dbError ? (
         <p style={{ color: '#dc2626', fontSize: 13, marginTop: 16 }}>목록을 불러오지 못했습니다: {dbError}</p>
       ) : null}
+
+      <ListSearch placeholder="인보이스 번호 · 상품 · 이름으로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 항목만 남습니다." />
 
       <div style={{ marginTop: 18, border: '1px solid #ebebeb', borderRadius: 12, overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>

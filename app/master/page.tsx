@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { redirect } from 'next/navigation';
 import { asc, eq, count } from 'drizzle-orm';
 import { ShieldAlert, Building2, Users, Stethoscope, Briefcase, UserCheck, Plus, Hospital, Globe2, Receipt, QrCode, ContactRound, BarChart3 } from 'lucide-react';
@@ -407,13 +408,15 @@ export default async function MasterPage({
         </div>
       ) : null}
 
+      <ListSearch placeholder="조직 이름으로 찾기" />
+
       {/* Sections — one per account_type */}
       <div className="space-y-10">
         {SECTIONS.map((s) => {
           const Icon = s.icon;
           const orgs = grouped[s.type];
           return (
-            <section key={s.type}>
+            <section key={s.type} data-search-group>
               <div className="mb-3 flex items-center justify-between border-b pb-2">
                 <div className="flex items-center gap-2">
                   <Icon className="h-4 w-4 text-muted-foreground" />
@@ -434,13 +437,14 @@ export default async function MasterPage({
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {orgs.map((o) => (
-                    <MasterOrgCard
-                      key={o.orgId}
-                      orgId={o.orgId}
-                      orgName={o.orgName}
-                      accountType={o.accountType}
-                      memberCount={o.memberCount}
-                    />
+                    <div key={o.orgId} data-search-row className="min-w-0">
+                      <MasterOrgCard
+                        orgId={o.orgId}
+                        orgName={o.orgName}
+                        accountType={o.accountType}
+                        memberCount={o.memberCount}
+                      />
+                    </div>
                   ))}
                 </div>
               )}

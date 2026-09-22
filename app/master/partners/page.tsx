@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { redirect } from 'next/navigation';
 import { eq, sql } from 'drizzle-orm';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
@@ -64,6 +65,8 @@ export default async function MasterPartnersPage({
 
       {searchParams.error ? <p style={{ color: '#dc2626', fontSize: 13, marginTop: 14 }}>{searchParams.error}</p> : null}
       {searchParams.ok ? <p style={{ color: '#047857', fontSize: 13, marginTop: 14 }}>{searchParams.ok}</p> : null}
+
+      <ListSearch placeholder="파트너 · 코드 · 국가로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 항목만 남습니다." />
 
       <div style={{ marginTop: 20, border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
         <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 13 }}>

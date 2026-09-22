@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { redirect } from 'next/navigation';
 import { eq, inArray } from 'drizzle-orm';
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/auth/supabase-server';
@@ -198,6 +199,8 @@ export default async function MasterMembersPage({
           회원 목록을 불러오지 못했습니다: {loadError}
         </p>
       ) : null}
+
+      <ListSearch placeholder="이메일 · 이름 · 국가로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 항목만 남습니다." />
 
       <div style={{ marginTop: 18, border: '1px solid #ebebeb', borderRadius: 12, overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>

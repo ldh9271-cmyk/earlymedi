@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { requireAccess } from '@/lib/auth/route-guards';
 import { fetchTossSettlements, tossConfigured } from '@/lib/payments/toss';
 import { Badge } from '@/components/shared/ui/badge';
@@ -128,6 +129,8 @@ export default async function TossSettlementsPage({
         <StatCard label="수수료" value={`- ${won(totals.fee)}`} />
         <StatCard label="지급액 (입금)" value={won(totals.payOut)} highlight />
       </div>
+
+      <ListSearch placeholder="정산 · 인보이스 · 상태로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 항목만 남습니다." />
 
       {!configured ? (
         <Notice title="토스 키가 설정되지 않았습니다">

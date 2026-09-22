@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ListSearch from '@/components/shared/list-search';
 import { desc, eq } from 'drizzle-orm';
 import { requireAccess } from '@/lib/auth/route-guards';
 import { withRls } from '@/lib/auth/rls-context';
@@ -138,6 +139,8 @@ export default async function AgencyCommissionsPage(): Promise<JSX.Element> {
       </Card>
 
       {/* 원장 */}
+      <ListSearch placeholder="파트너 · 인보이스 · 상태로 찾기" hint="띄어쓰기로 여러 단어를 넣으면 모두 포함된 항목만 남습니다." />
+
       {ledger.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-sm">
