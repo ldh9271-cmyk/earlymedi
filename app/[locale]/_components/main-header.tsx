@@ -1003,11 +1003,10 @@ function AiSubIcon({ kind, stroke }: { kind: AiSubKey; stroke: string }): JSX.El
   };
   switch (kind) {
     case 'trip':
-      // 비행기 + 반짝임
+      // 비행기
       return (
         <svg {...common}>
-          <path d="M10.5 13.5 3 11l1.5-1.5 8 .5 4-4a1.8 1.8 0 0 1 2.5 2.5l-4 4 .5 8L14 22l-2.5-7.5" />
-          <path d="M5 3.5 5.6 5l1.4.6-1.4.6L5 7.6l-.6-1.4L3 5.6 4.4 5z" />
+          <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
         </svg>
       );
     case 'analyze':
@@ -1028,13 +1027,11 @@ function AiSubIcon({ kind, stroke }: { kind: AiSubKey; stroke: string }): JSX.El
         </svg>
       );
     case 'sim':
-      // 전·후 나눈 얼굴 + 요술봉
+      // 요술봉 + 반짝임 (미리 입혀 보기)
       return (
         <svg {...common}>
-          <circle cx="10" cy="11" r="6.5" />
-          <path d="M10 4.5v13" strokeDasharray="1.6 1.8" />
-          <path d="M16.5 17.5 21 22" />
-          <path d="M19.5 3.5l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5z" />
+          <path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72" />
+          <path d="m14 7 3 3M5 6v4M19 14v4M10 2v2M7 8H3M21 16h-4M11 3H9" />
         </svg>
       );
   }
