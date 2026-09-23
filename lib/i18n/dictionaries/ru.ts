@@ -424,6 +424,8 @@ const ru: Dictionary = {
     badgeNew: 'NEW',
     catAll: 'Все',
     catAi: 'AI-анализ',
+    // AI 페이지 전용 아이콘 줄 (헤더) — /ai-trip · /ai-consult#ai-analyzer · #ai-chat · #ai-sim
+    aiSubs: { trip: 'AI-маршрут', analyze: 'AI-анализ Glow-Up', chat: 'AI-консультант', sim: 'AI-примерка стиля', home: 'Все категории' },
     myBookings: 'Мои бронирования',
     referralMenu: "Реферальная программа",
     adminPage: "Админ-панель",

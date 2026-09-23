@@ -421,6 +421,8 @@ const zh: Dictionary = {
     badgeNew: 'NEW',
     catAll: '全部',
     catAi: 'AI 分析',
+    // AI 페이지 전용 아이콘 줄 (헤더) — /ai-trip · /ai-consult#ai-analyzer · #ai-chat · #ai-sim
+    aiSubs: { trip: 'AI旅行规划', analyze: 'AI焕颜分析', chat: 'AI实时咨询', sim: 'AI造型模拟', home: '全部分类' },
     myBookings: '我的预订',
     referralMenu: "推荐计划",
     adminPage: "管理后台",

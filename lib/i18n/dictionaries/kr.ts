@@ -447,6 +447,8 @@ const kr = {
     badgeNew: 'NEW',
     catAll: '전체',
     catAi: 'AI 분석',
+    // AI 페이지 전용 아이콘 줄 (헤더) — /ai-trip · /ai-consult#ai-analyzer · #ai-chat · #ai-sim
+    aiSubs: { trip: 'AI 여행하기', analyze: 'AI 글로우업 분석', chat: 'AI 실시간 상담', sim: 'AI 스타일 시뮬레이션', home: '전체 카테고리' },
     myBookings: '내 예약',
     referralMenu: "추천 프로그램",
     adminPage: "관리자 페이지",

@@ -424,6 +424,8 @@ const vi: Dictionary = {
     badgeNew: 'NEW',
     catAll: 'Tất cả',
     catAi: 'Phân tích AI',
+    // AI 페이지 전용 아이콘 줄 (헤더) — /ai-trip · /ai-consult#ai-analyzer · #ai-chat · #ai-sim
+    aiSubs: { trip: 'AI lịch trình', analyze: 'AI phân tích Glow-Up', chat: 'AI tư vấn trực tiếp', sim: 'AI mô phỏng phong cách', home: 'Tất cả danh mục' },
     myBookings: 'Đặt chỗ của tôi',
     referralMenu: "Chương trình giới thiệu",
     adminPage: "Trang quản trị",

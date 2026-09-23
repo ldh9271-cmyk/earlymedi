@@ -28,6 +28,8 @@ const AI_CSS =
   // 끄고 그리드 gap 이 간격을 담당한다.
   '.m-ai-analyzer-slot .m-ai-upload { margin-top: 0 !important; }'
   + '.m-ai-chat-slot #ai-chat { margin-top: 0 !important; }'
+  // 헤더 아이콘 줄의 AI 하위 메뉴(#ai-analyzer · #ai-chat · #ai-sim)로 이동할 때 sticky 헤더 높이(--mh-h)만큼 띄운다
+  + '#ai-analyzer, #ai-chat, #ai-sim { scroll-margin-top: calc(var(--mh-h, 230px) + 12px); }'
   + '@media (max-width: 768px) {'
   + '.m-ai-section { padding: 28px 16px 72px !important; }'
   + '.m-ai-h1 { font-size: 24px !important; letter-spacing: -0.5px !important; }'

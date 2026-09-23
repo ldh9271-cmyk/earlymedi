@@ -423,6 +423,8 @@ const ja: Dictionary = {
     badgeNew: 'NEW',
     catAll: 'すべて',
     catAi: 'AI 分析',
+    // AI 페이지 전용 아이콘 줄 (헤더) — /ai-trip · /ai-consult#ai-analyzer · #ai-chat · #ai-sim
+    aiSubs: { trip: 'AI旅行プラン', analyze: 'AIグローアップ分析', chat: 'AIリアルタイム相談', sim: 'AIスタイルシミュレーション', home: '全カテゴリー' },
     myBookings: '予約履歴',
     referralMenu: "紹介プログラム",
     adminPage: "管理者ページ",

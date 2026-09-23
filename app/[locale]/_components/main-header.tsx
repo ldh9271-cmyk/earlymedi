@@ -40,6 +40,7 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   // AI 분석 항목 — 모바일에서만 노출 (특이도를 높여 아래의 데스크톱
   // 기본 display:none 을 이긴다).
   + '.m-mh-cat-strip .m-mh-cat-ai { display: flex !important; }'
+  + '.m-mh-cat-strip .m-mh-cat-home { display: flex !important; }'
 
   + '.m-mh-filter { display: none !important; }'
   + '.m-mh-account-email { display: none !important; }'
@@ -58,6 +59,7 @@ const MOBILE_CSS = '@media (max-width: 768px) {'
   + '.m-mh-quick-item { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 9999px; border: 1px solid #ebebeb; background: #fff; color: #222; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; box-shadow: rgba(0,0,0,0.04) 0 1px 3px; }'
   + '.m-mh-quick-item:hover { border-color: #222; }'
   + '.m-mh-cat-ai { display: none !important; }'
+  + '.m-mh-cat-home { display: none !important; }'
 
   // 태블릿~좁은 데스크톱 (769~1279px) — 상단 탭(여행 패키지·AI 상담·
   // 병원 찾기)과 로그인이 세로로 꺾이지 않도록 줄바꿈 금지 + 검색
@@ -151,6 +153,18 @@ const MAIN_CATEGORY_DICT_KEY: Record<MainCategoryKey, CatDictKey> = {
   hotel: 'catHotel',
 };
 
+/** AI 페이지 전용 아이콘 줄 — /ai-consult·/ai-trip 에서는 카테고리 대신 이 네 개가 나온다. */
+type AiSubKey = 'trip' | 'analyze' | 'chat' | 'sim';
+const AI_SUB_KEYS: ReadonlyArray<AiSubKey> = ['trip', 'analyze', 'chat', 'sim'];
+const AI_SUB_HASH: Record<Exclude<AiSubKey, 'trip'>, string> = { analyze: '#ai-analyzer', chat: '#ai-chat', sim: '#ai-sim' };
+function hrefForAiSub(locale: PublicLocale, key: AiSubKey): string {
+  return key === 'trip' ? `/${locale}/ai-trip` : `/${locale}/ai-consult${AI_SUB_HASH[key]}`;
+}
+/** 경로가 AI 페이지인지 — /[locale]/ai-consult(/…) · /[locale]/ai-trip(/…) */
+function isAiPath(pathname: string): boolean {
+  return /^\/[^/]+\/(ai-consult|ai-trip)(\/|$)/.test(pathname);
+}
+
 function hrefForCategory(locale: PublicLocale, key: MainCategoryKey): string {
   switch (key) {
     case 'all':      return `/${locale}/clinics`;
@@ -182,6 +196,32 @@ export function MainHeader({
   // 통합 검색어 — 데스크톱 pill·모바일 pill 이 같은 상태를 공유하고
   // submit 시 /[locale]/search?q= 로 이동한다.
   const [searchQ, setSearchQ] = useState('');
+  // AI 페이지면 상단 'AI 상담' 탭을 켜고 아이콘 줄을 AI 기능 4개로 바꾼다 (레이아웃이 activeTab 을 몰라도 경로로 판단).
+  const aiMode = isAiPath(pathname);
+  const tab = aiMode ? 'ai' : activeTab;
+  // /ai-consult 안의 어느 기능을 보고 있는지 — 해시(#ai-chat …)로 판단. Next 링크의 해시 이동은
+  // hashchange 가 안 나므로 클릭 때도 직접 갱신한다.
+  const [aiHash, setAiHash] = useState('');
+  useEffect(() => {
+    const read = (): void => setAiHash(window.location.hash);
+    read();
+    window.addEventListener('hashchange', read);
+    return () => window.removeEventListener('hashchange', read);
+  }, [pathname]);
+  const activeAi: AiSubKey | null = !aiMode ? null
+    : /\/ai-trip(\/|$)/.test(pathname) ? 'trip'
+    : aiHash === '#ai-chat' ? 'chat' : aiHash === '#ai-sim' ? 'sim' : aiHash === '#ai-analyzer' ? 'analyze' : null;
+  const headerRef = useRef<HTMLElement | null>(null);
+  // sticky 헤더 높이를 --mh-h 로 알려 준다 — 해시로 이동한 섹션이 헤더 밑에 가려지지 않게 (scroll-margin-top 에 사용)
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const set = (): void => document.documentElement.style.setProperty('--mh-h', `${el.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const accountRef = useRef<HTMLDivElement | null>(null);
   const filterRef = useRef<HTMLDivElement | null>(null);
   const langRef = useRef<HTMLDivElement | null>(null);
@@ -208,9 +248,10 @@ export function MainHeader({
     mq.addEventListener('change', apply);
     return () => mq.removeEventListener('change', apply);
   }, []);
+  const loopOn = loopStrip && !aiMode;
   useEffect(() => {
     const el = stripRef.current;
-    if (!loopStrip || !el) return;
+    if (!loopOn || !el) return;
     const copyWidth = (): number => el.scrollWidth / 3;
     el.scrollLeft = copyWidth(); // 가운데 벌에서 시작
     let settle: number | undefined;
@@ -243,7 +284,7 @@ export function MainHeader({
       window.clearTimeout(settle);
       if (timer) window.clearInterval(timer);
     };
-  }, [loopStrip]);
+  }, [loopOn]);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -337,6 +378,7 @@ export function MainHeader({
 
   return (
     <header
+      ref={headerRef}
       style={{
         position: 'sticky',
         top: 0,
@@ -370,7 +412,7 @@ export function MainHeader({
           <TopTab
             href={`/${locale}/glowup/pc`}
             label={t.tabGlowup}
-            active={activeTab === 'glowup'}
+            active={tab === 'glowup'}
             badge={t.badgeNew}
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
@@ -383,7 +425,7 @@ export function MainHeader({
           <TopTab
             href={`/${locale}/ai-consult`}
             label={t.tabAi}
-            active={activeTab === 'ai'}
+            active={tab === 'ai'}
             accent
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
@@ -395,7 +437,7 @@ export function MainHeader({
           <TopTab
             href={`/${locale}/clinics`}
             label={t.tabClinics}
-            active={activeTab === 'clinics'}
+            active={tab === 'clinics'}
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
                 <path d="M4 21V8l8-5 8 5v13" />
@@ -785,16 +827,54 @@ export function MainHeader({
             gap: 34,
           }}
         >
-          {/* 모바일이면 같은 묶음을 세 벌(0·1·2) 그린다 — 무한 루프용. 화면 낭독기·탭 이동은 가운데 벌만. */}
-          {(loopStrip ? [0, 1, 2] : [1]).map((copy) => (
+          {aiMode ? (
+            <>
+              {/* 모바일 전용 — 상단 탭이 없는 모바일에서 일반 카테고리로 돌아가는 길 */}
+              <Link
+                href={`/${locale}`}
+                className="m-mh-cat-item m-mh-cat-home"
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '14px 0', borderBottom: '2px solid transparent', color: '#6a6a6a', textDecoration: 'none', flexShrink: 0 }}
+              >
+                <svg className="m-mh-cat-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6a6a6a" strokeWidth="1.5">
+                  <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+                  <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+                </svg>
+                <span className="m-mh-cat-label" style={{ fontSize: 12, fontWeight: 500 }}>{t.aiSubs.home}</span>
+              </Link>
+              {AI_SUB_KEYS.map((k) => {
+                const isActive = k === activeAi;
+                const stroke = isActive ? '#ff385c' : '#6a6a6a';
+                return (
+                  <Link
+                    key={`ai-${k}`}
+                    href={hrefForAiSub(locale, k)}
+                    onClick={() => { if (k !== 'trip') setAiHash(AI_SUB_HASH[k]); }}
+                    aria-current={isActive ? 'page' : undefined}
+                    className="m-mh-cat-item"
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                      padding: '14px 0',
+                      borderBottom: isActive ? '2px solid #ff385c' : '2px solid transparent',
+                      color: stroke, textDecoration: 'none', flexShrink: 0,
+                    }}
+                  >
+                    <AiSubIcon kind={k} stroke={stroke} />
+                    <span className="m-mh-cat-label" style={{ fontSize: 12, fontWeight: isActive ? 700 : 500 }}>
+                      {t.aiSubs[k]}
+                    </span>
+                  </Link>
+                );
+              })}
+            </>
+          ) : (loopOn ? [0, 1, 2] : [1]).map((copy) => (
             <Fragment key={copy}>
             {/* 모바일 전용 AI 분석 진입점 — 데스크톱은 상단 AI 상담 탭이
                 담당하므로 CSS 로 숨김. 스트립 맨 앞에 브랜드 컬러로 강조. */}
             <Link
               href={`/${locale}/ai-consult`}
               className="m-mh-cat-item m-mh-cat-ai"
-              aria-hidden={loopStrip && copy !== 1 ? true : undefined}
-              tabIndex={loopStrip && copy !== 1 ? -1 : undefined}
+              aria-hidden={loopOn && copy !== 1 ? true : undefined}
+              tabIndex={loopOn && copy !== 1 ? -1 : undefined}
               style={{
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', gap: 8,
@@ -827,8 +907,8 @@ export function MainHeader({
                 <Link
                   key={`${copy}-${cKey}`}
                   href={hrefForCategory(locale, cKey)}
-                  aria-hidden={loopStrip && copy !== 1 ? true : undefined}
-                  tabIndex={loopStrip && copy !== 1 ? -1 : undefined}
+                  aria-hidden={loopOn && copy !== 1 ? true : undefined}
+                  tabIndex={loopOn && copy !== 1 ? -1 : undefined}
                   className="m-mh-cat-item"
                   style={{
                     display: 'flex', flexDirection: 'column',
@@ -848,7 +928,7 @@ export function MainHeader({
             })}
             </Fragment>
           ))}
-          <FilterPill
+          {aiMode ? null : <FilterPill
             open={filterOpen}
             setOpen={setFilterOpen}
             wrapperRef={filterRef}
@@ -856,7 +936,7 @@ export function MainHeader({
             searchParams={searchParams}
             router={router}
             t={t}
-          />
+          />}
         </div>
         {/* 2026-09-07: 카테고리 아래 '전국 … 찾기' 칩은 모두 제거 (사용자 요청 — 각 카테고리 페이지가 이미 레지스트리를 품음) */}
       </div>
@@ -912,6 +992,52 @@ function TopTab({
       ) : null}
     </Link>
   );
+}
+
+/** AI 하위 메뉴 아이콘 — 카테고리 아이콘과 같은 22px·1.5 선 굵기. */
+function AiSubIcon({ kind, stroke }: { kind: AiSubKey; stroke: string }): JSX.Element {
+  const common = {
+    width: 22, height: 22, viewBox: '0 0 24 24',
+    fill: 'none' as const, stroke, strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
+    className: 'm-mh-cat-icon',
+  };
+  switch (kind) {
+    case 'trip':
+      // 비행기 + 반짝임
+      return (
+        <svg {...common}>
+          <path d="M10.5 13.5 3 11l1.5-1.5 8 .5 4-4a1.8 1.8 0 0 1 2.5 2.5l-4 4 .5 8L14 22l-2.5-7.5" />
+          <path d="M5 3.5 5.6 5l1.4.6-1.4.6L5 7.6l-.6-1.4L3 5.6 4.4 5z" />
+        </svg>
+      );
+    case 'analyze':
+      // 얼굴 + 스캔 모서리
+      return (
+        <svg {...common}>
+          <path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3" />
+          <circle cx="12" cy="12" r="4.5" />
+          <path d="M10.3 11.2h.01M13.7 11.2h.01M10.4 13.6c.9.8 2.3.8 3.2 0" />
+        </svg>
+      );
+    case 'chat':
+      // 말풍선 + 반짝임
+      return (
+        <svg {...common}>
+          <path d="M20 12.5a7.5 7.5 0 0 1-11.2 6.5L4 20l1-4.6A7.5 7.5 0 1 1 20 12.5z" />
+          <path d="M12.5 8.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z" />
+        </svg>
+      );
+    case 'sim':
+      // 전·후 나눈 얼굴 + 요술봉
+      return (
+        <svg {...common}>
+          <circle cx="10" cy="11" r="6.5" />
+          <path d="M10 4.5v13" strokeDasharray="1.6 1.8" />
+          <path d="M16.5 17.5 21 22" />
+          <path d="M19.5 3.5l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5z" />
+        </svg>
+      );
+  }
 }
 
 function MainCategoryIcon({
