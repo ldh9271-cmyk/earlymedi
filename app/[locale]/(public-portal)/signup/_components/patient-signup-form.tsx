@@ -12,6 +12,7 @@ import WhatsAppLogin from '@/components/shared/whatsapp-login';
 import FacebookLoginButton from '@/components/shared/facebook-login-button';
 import { PHONE_COUNTRIES } from '@/lib/phone/countries';
 import { startGoogleSignIn } from '@/lib/auth/google-signin';
+import { appOAuthBridge } from '@/lib/auth/app-bridge';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import type { PublicLocale } from '@/lib/i18n/locales';
@@ -139,18 +140,23 @@ export function PatientSignupForm({
         setError('Supabase not connected (demo mode).');
         return;
       }
+      // 안드로이드 앱: 구글이 내장 WebView 로그인을 막으므로 외부 브라우저로 (lib/auth/app-bridge)
+      const appBridge = appOAuthBridge();
       // 우리 도메인 구글 OAuth (동의 화면에 glowuptour.com 표시) — 미설정이면 Supabase OAuth 폴백
-      if (startGoogleSignIn(returnTo)) return;
+      if (!appBridge && startGoogleSignIn(returnTo)) return;
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', returnTo);
-      const { error: e } = await supabase.auth.signInWithOAuth({
+      if (appBridge) redirectTo.searchParams.set('app', '1');
+      const { data: oauth, error: e } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectTo.toString(),
           queryParams: { access_type: 'offline', prompt: 'consent' },
+          skipBrowserRedirect: Boolean(appBridge),
         },
       });
       if (e) setError(e.message);
+      else if (appBridge && oauth?.url) appBridge(oauth.url);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Google sign-up failed');
     } finally {
@@ -370,7 +376,7 @@ export function PatientSignupForm({
         type="button"
         onClick={onGoogle}
         disabled={!agreed || googleLoading || submitting}
-        className="gu-hide-in-app inline-flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60 disabled:cursor-not-allowed"
+        className="gu-needs-oauth inline-flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <GoogleIcon className="h-4 w-4" />
         {googleLoading ? '…' : dict.googleCta}
@@ -383,7 +389,7 @@ export function PatientSignupForm({
         <div style={{ marginTop: 10 }}>
           <WhatsAppLogin next={returnTo} label={dict.whatsappCta} dict={waDict} disabled={!agreed || googleLoading || submitting} />
         </div>
-        <div className="gu-hide-in-app" style={{ marginTop: 10 }}>
+        <div className="gu-needs-oauth" style={{ marginTop: 10 }}>
           <FacebookLoginButton next={returnTo} label={dict.facebookCta} disabled={!agreed || googleLoading || submitting} onError={setError} />
         </div>
       </div>

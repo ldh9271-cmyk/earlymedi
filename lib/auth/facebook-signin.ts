@@ -12,6 +12,7 @@
  * 프로바이더를 켜기 전에 버튼이 보이면 눌러도 실패하므로, 설정이 끝난 뒤 켠다.
  */
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
+import { appOAuthBridge } from '@/lib/auth/app-bridge';
 
 export function facebookLoginEnabled(): boolean {
   return process.env.NEXT_PUBLIC_FACEBOOK_LOGIN === '1';
@@ -23,11 +24,15 @@ export async function startFacebookSignIn(next: string): Promise<string | null> 
   if (!supabase) return 'Supabase not connected (demo mode).';
   const redirectTo = new URL('/api/auth/callback', window.location.origin);
   redirectTo.searchParams.set('next', next);
-  const { error } = await supabase.auth.signInWithOAuth({
+  // 안드로이드 앱: 페이스북도 내장 WebView 로그인을 막으므로 외부 브라우저로 (lib/auth/app-bridge)
+  const appBridge = appOAuthBridge();
+  if (appBridge) redirectTo.searchParams.set('app', '1');
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'facebook',
     // Supabase 기본값이 public_profile + email 이다. 카카오 때 배운 대로
     // scopes 를 덧붙이면 Meta 앱에 설정되지 않은 권한까지 요청해 막히므로 건드리지 않는다.
-    options: { redirectTo: redirectTo.toString() },
+    options: { redirectTo: redirectTo.toString(), skipBrowserRedirect: Boolean(appBridge) },
   });
+  if (!error && appBridge && data?.url) appBridge(data.url);
   return error ? error.message : null;
 }

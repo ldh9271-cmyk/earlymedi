@@ -13,6 +13,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const code = url.searchParams.get('code');
   const next = url.searchParams.get('next') ?? '/select-org';
 
+  // 안드로이드 앱이 외부 브라우저(커스텀 탭)로 연 OAuth — 여기엔 PKCE code_verifier 쿠키가 없으므로
+  // 교환하지 않고 앱을 깨워 code 를 넘긴다. 앱이 WebView 에서 이 콜백을 (app 없이) 다시 열면 교환된다.
+  if (url.searchParams.get('app') === '1') {
+    const back = new URL('glowuptour://auth-callback');
+    if (code) back.searchParams.set('code', code);
+    back.searchParams.set('next', next.startsWith('/') && !next.startsWith('//') ? next : '/');
+    const err = url.searchParams.get('error_description') ?? url.searchParams.get('error');
+    if (err) back.searchParams.set('error', err.slice(0, 300));
+    return NextResponse.redirect(back.toString(), 302);
+  }
+
   if (code) {
     const supabase = createSupabaseServerClient();
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);

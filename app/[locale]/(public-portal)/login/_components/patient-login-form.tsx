@@ -12,6 +12,7 @@ import LineLoginButton from '@/components/shared/line-login-button';
 import WhatsAppLogin from '@/components/shared/whatsapp-login';
 import FacebookLoginButton from '@/components/shared/facebook-login-button';
 import { startGoogleSignIn } from '@/lib/auth/google-signin';
+import { appOAuthBridge } from '@/lib/auth/app-bridge';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 
@@ -96,18 +97,23 @@ export function PatientLoginForm({
         setError('Supabase not connected (demo mode).');
         return;
       }
+      // 안드로이드 앱: 구글이 내장 WebView 로그인을 막으므로 외부 브라우저로 (lib/auth/app-bridge)
+      const appBridge = appOAuthBridge();
       // 우리 도메인 구글 OAuth (동의 화면에 glowuptour.com 표시) — 미설정이면 Supabase OAuth 폴백
-      if (startGoogleSignIn(returnTo)) return;
+      if (!appBridge && startGoogleSignIn(returnTo)) return;
       const redirectTo = new URL('/api/auth/callback', window.location.origin);
       redirectTo.searchParams.set('next', returnTo);
-      const { error: e } = await supabase.auth.signInWithOAuth({
+      if (appBridge) redirectTo.searchParams.set('app', '1');
+      const { data: oauth, error: e } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectTo.toString(),
           queryParams: { access_type: 'offline', prompt: 'consent' },
+          skipBrowserRedirect: Boolean(appBridge),
         },
       });
       if (e) setError(e.message);
+      else if (appBridge && oauth?.url) appBridge(oauth.url);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Google sign-in failed');
     } finally {
@@ -167,10 +173,10 @@ export function PatientLoginForm({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Google OAuth — primary path. 앱(WebView)에서는 구글이 로그인을 막으므로 숨김 */}
+      {/* Google OAuth — primary path. 앱(WebView)은 외부 브라우저로 돌린다 — 브릿지 없는 구버전 앱에서만 숨김 */}
       <button
         type="button"
-        className="gu-hide-in-app"
+        className="gu-needs-oauth"
         onClick={onGoogle}
         disabled={anyLoading}
         style={{
@@ -195,7 +201,7 @@ export function PatientLoginForm({
         <div style={{ marginTop: 10 }}>
           <WhatsAppLogin next={returnTo} label={dict.whatsappCta} dict={waDict} disabled={anyLoading} />
         </div>
-        <div className="gu-hide-in-app" style={{ marginTop: 10 }}>
+        <div className="gu-needs-oauth" style={{ marginTop: 10 }}>
           <FacebookLoginButton next={returnTo} label={dict.facebookCta} disabled={anyLoading} onError={setError} />
         </div>
       </div>

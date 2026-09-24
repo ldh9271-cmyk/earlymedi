@@ -198,4 +198,6 @@
    .gu-hide-in-app : 앱에서 동작하지 않거나 스토어 정책상 숨길 것 (구글·페이스북 로그인, AI 포인트 충전)
    .gu-only-in-app : 앱에서만 보일 안내 */
 html[data-gu-app] .gu-hide-in-app { display: none !important; }
+/* 외부 브라우저 OAuth 브릿지(data-gu-app-caps 에 oauth)가 없는 구버전 앱에서만 숨김 — 구글·페이스북 로그인 */
+html[data-gu-app]:not([data-gu-app-caps~="oauth"]) .gu-needs-oauth { display: none !important; }
 html:not([data-gu-app]) .gu-only-in-app { display: none !important; }
