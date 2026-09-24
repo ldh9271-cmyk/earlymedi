@@ -149,7 +149,7 @@ export default function Simulator({ locale, t, userEmail, note }: {
           <div style={{ fontSize: 13, color: '#222', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={{ background: '#ecfdf5', color: '#047857', borderRadius: 999, padding: '4px 10px', fontWeight: 700 }}>{costLabel}</span>
             {userEmail ? <span>{t.balance}: <b>{wallet.balance.toLocaleString('ko-KR')}P</b></span> : null}
-            {userEmail ? <button type="button" onClick={() => setCharge('open')} style={{ ...btn(false), padding: '5px 10px' }}>{t.charge}</button> : null}
+            {userEmail ? <button type="button" className="gu-hide-in-app" onClick={() => setCharge('open')} style={{ ...btn(false), padding: '5px 10px' }}>{t.charge}</button> : null}
           </div>
         ) : null}
       </div>
@@ -261,15 +261,17 @@ export default function Simulator({ locale, t, userEmail, note }: {
 
       {/* 첫 충전 프로모 — 무료 1회를 다 쓴 회원이 아직 충전 전이면 */}
       {userEmail && wallet && wallet.freeLeft === 0 && (wallet.firstBonusPct ?? 0) > 0 && wallet.balance < wallet.runCost && charge === 'closed' ? (
-        <div style={{ marginTop: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 12, padding: '12px 16px' }}>
+        <div className="gu-hide-in-app" style={{ marginTop: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 12, padding: '12px 16px' }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: '#047857' }}>{t.firstChargePromo.replace('{pct}', String(wallet.firstBonusPct))}</span>
           <button type="button" onClick={() => setCharge('open')} style={{ background: '#047857', color: '#fff', border: 'none', borderRadius: 10, padding: '9px 16px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>{t.charge}</button>
         </div>
       ) : null}
 
       {/* 충전 */}
+      {/* 앱(Google Play)에서는 디지털 상품(포인트)을 외부 결제로 팔 수 없어 충전 패널 대신 안내만 */}
+      {charge !== 'closed' ? <p className="gu-only-in-app" style={{ marginTop: 16, fontSize: 13, color: '#6a6a6a', lineHeight: 1.55 }}>{t.appNoCharge}</p> : null}
       {charge !== 'closed' && wallet ? (
-        <div style={{ marginTop: 20, background: '#fff', border: '1px solid #ebebeb', borderRadius: 14, padding: 18, maxWidth: 560 }}>
+        <div className="gu-hide-in-app" style={{ marginTop: 20, background: '#fff', border: '1px solid #ebebeb', borderRadius: 14, padding: 18, maxWidth: 560 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <b style={{ fontSize: 15 }}>{t.chargeTitle}</b>
             <button type="button" onClick={() => setCharge('closed')} style={{ background: 'none', border: 'none', color: '#717171', cursor: 'pointer', fontFamily: 'inherit' }}>{t.close}</button>

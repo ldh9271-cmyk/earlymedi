@@ -370,7 +370,7 @@ export function PatientSignupForm({
         type="button"
         onClick={onGoogle}
         disabled={!agreed || googleLoading || submitting}
-        className="inline-flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60 disabled:cursor-not-allowed"
+        className="gu-hide-in-app inline-flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <GoogleIcon className="h-4 w-4" />
         {googleLoading ? '…' : dict.googleCta}
@@ -383,7 +383,7 @@ export function PatientSignupForm({
         <div style={{ marginTop: 10 }}>
           <WhatsAppLogin next={returnTo} label={dict.whatsappCta} dict={waDict} disabled={!agreed || googleLoading || submitting} />
         </div>
-        <div style={{ marginTop: 10 }}>
+        <div className="gu-hide-in-app" style={{ marginTop: 10 }}>
           <FacebookLoginButton next={returnTo} label={dict.facebookCta} disabled={!agreed || googleLoading || submitting} onError={setError} />
         </div>
       </div>

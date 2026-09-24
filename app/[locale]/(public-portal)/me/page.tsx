@@ -310,6 +310,10 @@ export default async function MyPage({
         {t.footNote}
         {' '}<Link href={`/${locale}/policy/refund`} style={{ color: '#1d4ed8', fontWeight: 600 }}>{tr.policyLink} →</Link>
       </p>
+      {/* Google Play 계정 삭제 정책 — 앱 안에서 찾을 수 있는 삭제 요청 경로 */}
+      <p style={{ fontSize: 12, marginTop: 10 }}>
+        <Link href={`/${locale}/account/delete`} style={{ color: '#9c9c9c', textDecoration: 'underline' }}>{t.deleteAccount}</Link>
+      </p>
     </section>
   );
 }

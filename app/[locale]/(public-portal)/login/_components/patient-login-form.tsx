@@ -167,9 +167,10 @@ export function PatientLoginForm({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Google OAuth — primary path */}
+      {/* Google OAuth — primary path. 앱(WebView)에서는 구글이 로그인을 막으므로 숨김 */}
       <button
         type="button"
+        className="gu-hide-in-app"
         onClick={onGoogle}
         disabled={anyLoading}
         style={{
@@ -194,7 +195,7 @@ export function PatientLoginForm({
         <div style={{ marginTop: 10 }}>
           <WhatsAppLogin next={returnTo} label={dict.whatsappCta} dict={waDict} disabled={anyLoading} />
         </div>
-        <div style={{ marginTop: 10 }}>
+        <div className="gu-hide-in-app" style={{ marginTop: 10 }}>
           <FacebookLoginButton next={returnTo} label={dict.facebookCta} disabled={anyLoading} onError={setError} />
         </div>
       </div>

@@ -1,7 +1,7 @@
 {
-  "name": "KoreaGlowUp AI Concierge",
-  "short_name": "K-Glowup",
-  "description": "환자의 첫 문의부터 귀국 후 케어까지, 한 손에서 끝나는 의료관광",
+  "name": "글로우업투어 GlowUpTour",
+  "short_name": "GlowUpTour",
+  "description": "한국에서 놀면서, 예뻐지자 — 병원·뷰티·여행 예약과 AI 상담",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -23,14 +23,14 @@
   ],
   "shortcuts": [
     {
-      "name": "케이스",
-      "url": "/agency/cases",
-      "description": "케이스 라이프사이클 관리"
+      "name": "AI 상담",
+      "url": "/kr/ai-consult",
+      "description": "AI 글로우업 분석 · 실시간 상담"
     },
     {
-      "name": "인박스",
-      "url": "/agency/inbox",
-      "description": "다국어 통합 인박스"
+      "name": "병원 찾기",
+      "url": "/kr/clinics",
+      "description": "글로우 인증 병원"
     }
   ]
 }

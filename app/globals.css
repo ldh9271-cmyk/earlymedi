@@ -193,3 +193,9 @@
     scrollbar-width: none;
   }
 }
+
+/* 안드로이드 앱(WebView) — 앱이 페이지 시작 때 <html data-gu-app> 를 붙인다.
+   .gu-hide-in-app : 앱에서 동작하지 않거나 스토어 정책상 숨길 것 (구글·페이스북 로그인, AI 포인트 충전)
+   .gu-only-in-app : 앱에서만 보일 안내 */
+html[data-gu-app] .gu-hide-in-app { display: none !important; }
+html:not([data-gu-app]) .gu-only-in-app { display: none !important; }
