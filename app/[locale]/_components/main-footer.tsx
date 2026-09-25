@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import type { PublicLocale } from '@/lib/i18n/locales';
 
@@ -123,6 +124,17 @@ export function MainFooter({
           <p style={{ margin: 0, flexBasis: '100%', fontSize: 12, color: '#8a8a8a', lineHeight: 1.6 }}>
             {t.business}
           </p>
+          {/* 구매안전서비스(KB에스크로 이체) 가입 표시 — 전자상거래법·통신판매업 신고용. 누르면 KB 가 판매자 정보를 보여 준다.
+              KB 가 준 스크립트의 마크 이미지 주소(img1.kbstar.com)는 접근 거부라 받은 화면의 마크를 public 에 둔다. */}
+          <a
+            href="https://okbfex.kbstar.com/quics?page=C016760&mHValue=20bd033a98aba6e4551067bcf8aa4c1f"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ flexBasis: '100%', display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#8a8a8a', textDecoration: 'none' }}
+          >
+            <Image src="/images/badges/kb-escrow.png" alt="KB에스크로 이체 인증마크" width={40} height={40} style={{ flexShrink: 0 }} />
+            <span style={{ textDecoration: 'underline' }}>{t.escrow}</span>
+          </a>
           {/* 저작권 줄 — 개인정보처리방침 / 이용약관을 실제 법적 고지
               페이지로 연결. dict.copy 는 "… · A · B" 형태라 마지막 두
               토큰만 링크로 치환한다. 그 위에 사업자 정보 한 줄 —

@@ -409,6 +409,7 @@ const ja: Dictionary = {
     brand3: 'K-POP 聖地',
     brand4: 'ビジネス会員登録',
     business: "Shareart · 代表者 Seokho Moon · 事業者登録番号 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
+    escrow: "購入安全サービス加入確認 · KBエスクロー",
     copy: '© 2026 Shareart Co., Ltd. · GlowUpTour · プライバシーポリシー · 利用規約',
   },
   header: {

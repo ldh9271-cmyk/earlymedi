@@ -410,6 +410,7 @@ const ru: Dictionary = {
     brand3: 'K-pop места',
     brand4: 'Регистрация для бизнеса',
     business: "Shareart · Представитель: Seokho Moon · Рег. номер 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
+    escrow: "Защита покупателя: KB Escrow — проверить",
     copy: '© 2026 Shareart Co., Ltd. · GlowUpTour · Политика конфиденциальности · Условия использования',
   },
   header: {
