@@ -409,8 +409,9 @@ const vi: Dictionary = {
     brand2: 'Hướng dẫn quán ngon bản xứ',
     brand3: 'Thánh địa K-pop',
     brand4: 'Đăng ký doanh nghiệp',
-    business: "Shareart · Người đại diện: Seokho Moon · Số ĐKKD 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
+    business: "Shareart Co., Ltd. · Người đại diện: Seokho Moon · Số ĐKKD 507-81-16147 · Số khai báo bán hàng trực tuyến 2026-Seoul Seocho-3278 · 426, 4F, BNK Digital Tower, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
     escrow: "Bảo vệ người mua: KB Escrow — kiểm tra",
+    bizCheck: "Tra cứu doanh nghiệp (FTC)",
     copy: '© 2026 Shareart Co., Ltd. · GlowUpTour · Chính sách bảo mật · Điều khoản sử dụng',
   },
   header: {

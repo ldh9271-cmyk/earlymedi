@@ -122,7 +122,8 @@ export function MainFooter({
           }}
         >
           <p style={{ margin: 0, flexBasis: '100%', fontSize: 12, color: '#8a8a8a', lineHeight: 1.6 }}>
-            {t.business}
+            {t.business}{' '}
+            <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=5078116147" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline', whiteSpace: 'nowrap' }}>{t.bizCheck}</a>
           </p>
           {/* 구매안전서비스(KB에스크로 이체) 가입 표시 — 전자상거래법·통신판매업 신고용. 누르면 KB 가 판매자 정보를 보여 준다.
               KB 가 준 스크립트의 마크 이미지 주소(img1.kbstar.com)는 접근 거부라 받은 화면의 마크를 public 에 둔다. */}

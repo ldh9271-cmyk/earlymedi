@@ -409,8 +409,9 @@ const ru: Dictionary = {
     brand2: 'Гид по местной еде',
     brand3: 'K-pop места',
     brand4: 'Регистрация для бизнеса',
-    business: "Shareart · Представитель: Seokho Moon · Рег. номер 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
+    business: "Shareart Co., Ltd. · Представитель: Seokho Moon · Рег. номер 507-81-16147 · Рег. № дистанционной торговли 2026-Сеул Сочхо-3278 · 426, 4F, BNK Digital Tower, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
     escrow: "Защита покупателя: KB Escrow — проверить",
+    bizCheck: "Сведения о компании (FTC)",
     copy: '© 2026 Shareart Co., Ltd. · GlowUpTour · Политика конфиденциальности · Условия использования',
   },
   header: {

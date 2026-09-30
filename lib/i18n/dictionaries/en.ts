@@ -421,8 +421,9 @@ const en: Dictionary = {
     brand2: 'Local food guide',
     brand3: 'K-pop landmarks',
     brand4: 'Business sign-up',
-    business: "Shareart · Representative: Seokho Moon · Business Registration No. 507-81-16147 · 426, 4F, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
+    business: "Shareart Co., Ltd. · Representative: Seokho Moon · Business Registration No. 507-81-16147 · Mail-order Business Report No. 2026-Seoul Seocho-3278 · 426, 4F, BNK Digital Tower, 398 Seocho-daero, Seocho-gu, Seoul, Republic of Korea",
     escrow: "Buyer protection: KB Escrow — verify",
+    bizCheck: "Business info (FTC)",
     copy: '© 2026 Shareart Co., Ltd. · GlowUpTour · Privacy policy · Terms of service',
   },
   header: {

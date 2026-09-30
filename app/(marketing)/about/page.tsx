@@ -36,7 +36,8 @@ export default function AboutPage(): JSX.Element {
         <li>상호: 주식회사 쉐어아트 (Shareart Co., Ltd.)</li>
         <li>대표: 문석호</li>
         <li>사업자등록번호: 507-81-16147</li>
-        <li>주소: 서울특별시 서초구 서초대로 398 4층 426호</li>
+        <li>통신판매업신고번호: 제2026-서울서초-3278호 (서초구청)</li>
+        <li>주소: 서울특별시 서초구 서초대로 398, 4층 426호 (서초동, BNK디지털타워)</li>
         <li>문의: <a href="mailto:ldh9271@gmail.com">ldh9271@gmail.com</a></li>
       </ul>
       <p>
