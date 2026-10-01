@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { submitPublicInquiryAction } from '@/app/[locale]/(public-portal)/inquiry/actions';
+import { clinicRecTitles } from '@/lib/ai/clinic-recs';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -111,7 +112,8 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   // 2. 이메일 리포트 발송 (계정 이메일로만)
   const catTitles: Record<string, string> = {
-    clinic: dict.header.catHospital, personal_color: dict.pcCategory.color.title, hair: dict.pcCategory.hair.title,
+    ...clinicRecTitles(dict.clinicsPage.categories, dict.header.catHospital),
+    personal_color: dict.pcCategory.color.title, hair: dict.pcCategory.hair.title,
     nail: dict.pcCategory.nail.title, pmu: dict.pcCategory.pmu.title,
   };
   const html = buildEmailHtml(a, row.recs, { resultTitle: dict.ai.upload.resultTitle, recTitle: dict.ai.upload.recTitle, catTitles });

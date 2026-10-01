@@ -8,6 +8,7 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import FaceAnalyzer, { type FaceInitialResult } from './_components/face-analyzer';
 import Simulator from './_components/simulator';
 import AiChat from './_components/ai-chat';
+import { clinicRecTitles } from '@/lib/ai/clinic-recs';
 
 export const dynamic = 'force-dynamic';
 
@@ -157,7 +158,7 @@ export default async function AiConsultPage({
             initialResult={initialResult}
             autoSend={searchParams.send === '1'}
             catTitles={{
-              clinic: dict.header.catHospital,
+              ...clinicRecTitles(dict.clinicsPage.categories, dict.header.catHospital),
               personal_color: dict.pcCategory.color.title,
               hair: dict.pcCategory.hair.title,
               nail: dict.pcCategory.nail.title,

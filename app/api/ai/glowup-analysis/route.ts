@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { coverByLocale, localesForMedia } from '@/lib/i18n/locale-cover';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, notIlike, notLike, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { hospitals } from '@/drizzle/schema/hospitals';
 import { categoryListings } from '@/drizzle/schema/category-listings';
@@ -9,6 +9,10 @@ import { aiFaceAnalyses } from '@/drizzle/schema/ai-face-analyses';
 import { fetchFeaturedListings } from '@/lib/listings/query';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
+import {
+  CLINIC_REC_CATEGORIES, CLINIC_REC_EXCLUDED_NAME, CLINIC_REC_EXCLUDED_SLUG_PREFIX,
+  CLINIC_REC_PER_CATEGORY, clinicRecKey, clinicRecOrder,
+} from '@/lib/ai/clinic-recs';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -16,8 +20,8 @@ export const maxDuration = 60;
 /**
  * AI Glow-Up 얼굴 분석 — 사진 1장을 Gemini 비전으로 분석해
  * 퍼스널컬러 톤·피부·헤어·눈썹 코멘트를 만들고, 분석 결과에 맞춰
- * 마켓플레이스에서 카테고리별 추천 1~2개(퍼스널컬러·헤어·네일·
- * 반영구 + 병원)를 골라 돌려준다.
+ * 마켓플레이스에서 카테고리별 추천(퍼스널컬러·헤어·네일·반영구 2개씩 +
+ * 병원은 모든 카테고리 1~6위, lib/ai/clinic-recs.ts 규칙)을 골라 돌려준다.
  *
  * 개인정보: 이미지는 Gemini 호출에만 사용하고 저장하지 않는다
  * (dict.ai.note 문구와 일치). 의료 진단이 아닌 뷰티 추천 용도로만
@@ -112,33 +116,48 @@ All note fields MUST be written in ${language}, warm and encouraging, 1-2 short 
 
 type RecItem = { title: string; href: string; img: string | null; promo: string | null };
 
-async function pickClinics(cat: string, locale: PublicLocale): Promise<RecItem[]> {
+type ClinicSection = { key: string; items: RecItem[] };
+
+/**
+ * 병원 추천 — 모든 카테고리에서 노출 순위 1~6위 (AI 가 고른 카테고리가 먼저).
+ * 순위는 category_listings.sort_order → hospitals.sort_order → 이름 순으로,
+ * 마스터에서 정한 카테고리 순서가 그대로 1위부터다. 제외 병원은 순위에서 빼고
+ * 다음 병원이 올라온다.
+ */
+async function pickClinics(primaryCat: string, locale: PublicLocale): Promise<ClinicSection[]> {
   try {
-    const rows = await db
+    const all = await db
       .select({
         id: hospitals.id,
         slug: hospitals.slug,
         name: hospitals.name,
         coverImageUrl: hospitals.coverImageUrl,
         promoLabel: categoryListings.promoLabel,
+        categoryKey: categoryListings.categoryKey,
       })
       .from(categoryListings)
       .innerJoin(hospitals, eq(categoryListings.hospitalId, hospitals.id))
       .where(
         and(
-          eq(categoryListings.categoryKey, cat),
+          inArray(categoryListings.categoryKey, [...CLINIC_REC_CATEGORIES]),
           eq(hospitals.isActiveForMatching, true),
+          notLike(hospitals.slug, `${CLINIC_REC_EXCLUDED_SLUG_PREFIX}%`),
+          notIlike(hospitals.name, `%${CLINIC_REC_EXCLUDED_NAME}%`),
         ),
       )
-      // 카테고리별 노출 순서(category_listings.sort_order)를 1순위 기준으로
-      // 사용 — 마스터에서 파트너 병원을 코드 수정 없이 상단에 고정할 수
-      // 있다. 동률이면 병원 자체 sortOrder → 이름 순.
       .orderBy(
         sql`${categoryListings.sortOrder} asc`,
         sql`${hospitals.sortOrder} asc`,
         sql`${hospitals.name} asc`,
-      )
-      .limit(2);
+      );
+    // 카테고리별 상위 N — 한 병원이 여러 카테고리에 있으면 각 카테고리에서 따로 센다.
+    const byCat = new Map<string, typeof all>();
+    for (const r of all) {
+      const list = byCat.get(r.categoryKey) ?? [];
+      if (list.length < CLINIC_REC_PER_CATEGORY && !list.some((x) => x.id === r.id)) list.push(r);
+      byCat.set(r.categoryKey, list);
+    }
+    const rows = clinicRecOrder(primaryCat).flatMap((c) => byCat.get(c) ?? []);
     if (rows.length === 0) return [];
     const overrides = new Map<string, { name: string | null; coverImageUrl: string | null }>();
     let covers = new Map<string, string>();
@@ -166,7 +185,7 @@ async function pickClinics(cat: string, locale: PublicLocale): Promise<RecItem[]
         locale,
       );
     } catch { /* keep base */ }
-    return rows.map((r) => {
+    const toRec = (r: (typeof rows)[number]): RecItem => {
       const o = overrides.get(r.id);
       return {
         title: o?.name?.trim() || r.name,
@@ -174,7 +193,10 @@ async function pickClinics(cat: string, locale: PublicLocale): Promise<RecItem[]
         img: covers.get(r.id) || o?.coverImageUrl || r.coverImageUrl,
         promo: r.promoLabel ? localizeKoLabel(r.promoLabel, locale) : null,
       };
-    });
+    };
+    return clinicRecOrder(primaryCat)
+      .map((c) => ({ key: clinicRecKey(c), items: (byCat.get(c) ?? []).map(toRec) }))
+      .filter((s) => s.items.length > 0);
   } catch {
     return [];
   }
@@ -223,7 +245,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   });
 
   const recs = [
-    { key: 'clinic', items: clinics },
+    ...clinics,
     { key: 'personal_color', items: colors.map(toItem) },
     { key: 'hair', items: hairs.map(toItem) },
     { key: 'nail', items: nails.map(toItem) },
