@@ -377,6 +377,7 @@ const ru: Dictionary = {
     forgotNeedEmail: "Сначала введите e-mail, указанный при регистрации.",
     forgotTooMany: "Попробуйте снова через минуту.",
     forgotFailed: "Не удалось отправить временный пароль. Попробуйте позже.",
+    forgotNoAccount: "Аккаунт с таким e-mail не найден. Если вы регистрировались через Google, Kakao или LINE, войдите этой кнопкой.",
     cta: 'Прислать Magic Link',
     sending: 'Отправка…',
     invalidCreds: 'Неверный email или пароль.',

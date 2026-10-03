@@ -167,6 +167,7 @@ export function PatientLoginForm({
         body: JSON.stringify({ email, locale }),
       });
       if (res.status === 429) { setError(dict.forgotTooMany); return; }
+      if (res.status === 404) { setError(dict.forgotNoAccount); return; }
       if (!res.ok) { setError(dict.forgotFailed); return; }
       toast.success(dict.tempSent, { duration: 8000 });
     } catch {

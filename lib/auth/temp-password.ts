@@ -15,7 +15,7 @@ import type { PublicLocale } from '@/lib/i18n/locales';
  *   2) 그 비밀번호로 로그인하면 user_metadata.must_change_password 가 켜져 있어
  *      /[locale]/account/password 로 보내 새 비밀번호를 받는다
  *
- * 계정이 없는 이메일에도 같은 응답을 돌려준다 (가입 여부 노출 방지). 메일 인증을 안 끝낸
+ * 계정이 없는 이메일은 'no_user' 로 돌려주고 호출부가 안내한다. 메일 인증을 안 끝낸
  * 계정은 이 메일을 받은 것으로 인증을 완료 처리해 로그인이 막히지 않게 한다.
  */
 
@@ -137,7 +137,7 @@ export async function issueTempPassword(email: string, locale: PublicLocale): Pr
     email_confirm: true,
     user_metadata: { ...meta, must_change_password: true, temp_password_issued_at: new Date().toISOString() },
   });
-  if (error) return 'update_failed';
+  if (error) { console.error('[temp-password] updateUserById', error.message); return 'update_failed'; }
 
   const name = String(meta.full_name ?? meta.name ?? meta.nickname ?? user.email.split('@')[0] ?? '').trim() || user.email;
   const { subject, html } = buildTempPasswordEmail(locale, name, tempPassword);

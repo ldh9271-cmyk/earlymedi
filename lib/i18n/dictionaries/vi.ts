@@ -377,6 +377,7 @@ const vi: Dictionary = {
     forgotNeedEmail: "Vui lòng nhập email đã đăng ký trước.",
     forgotTooMany: "Vui lòng thử lại sau một phút.",
     forgotFailed: "Không gửi được mật khẩu tạm thời. Vui lòng thử lại sau.",
+    forgotNoAccount: "Không có tài khoản nào dùng email này. Nếu bạn đăng ký bằng Google, Kakao hoặc LINE, hãy đăng nhập bằng nút đó.",
     cta: 'Gửi Magic Link',
     sending: 'Đang gửi…',
     invalidCreds: 'Email hoặc mật khẩu không đúng.',

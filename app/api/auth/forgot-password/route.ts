@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 
 /**
  * 비밀번호 찾기 — 임시 비밀번호를 회원 언어로 메일 발송 (lib/auth/temp-password.ts).
- * 가입 여부를 드러내지 않도록 항상 { ok: true } 를 돌려준다.
+ * 가입되지 않은 이메일은 404 no_account 로 알려 준다 (2026-10-03: 소셜 가입자가 다른 이메일로
+ * 시도하고 "보냈다"는 안내만 보는 혼란이 있어, 가입 여부 노출보다 안내를 택함).
  * 같은 이메일은 60초에 1번, 같은 IP 는 60초에 5번까지 (공용 IP 를 생각한 가벼운 제한, 인스턴스 메모리 기준).
  */
 const Body = z.object({
@@ -42,6 +43,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
   try {
     const result = await issueTempPassword(body.email, locale);
+    if (result === 'no_user') return NextResponse.json({ error: 'no_account' }, { status: 404 });
     if (result === 'update_failed' || result === 'mail_failed') {
       console.error('[forgot-password]', result);
       return NextResponse.json({ error: 'send_failed' }, { status: 502 });

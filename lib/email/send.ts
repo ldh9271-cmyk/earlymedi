@@ -13,8 +13,10 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ from: process.env.RESEND_FROM ?? 'GlowUpTour <noreply@glowuptour.com>', to: [to], subject, html }),
     });
+    if (!res.ok) console.error('[sendEmail] resend', res.status, (await res.text().catch(() => '')).slice(0, 300));
     return res.ok;
-  } catch {
+  } catch (e) {
+    console.error('[sendEmail]', e instanceof Error ? e.message : e);
     return false;
   }
 }

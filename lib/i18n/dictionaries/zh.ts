@@ -374,6 +374,7 @@ const zh: Dictionary = {
     forgotNeedEmail: "请先输入注册邮箱。",
     forgotTooMany: "请稍后再试（每分钟 1 次）。",
     forgotFailed: "无法发送临时密码，请稍后重试。",
+    forgotNoAccount: "没有使用此邮箱注册的账户。如果您是通过 Google、Kakao 或 LINE 注册的，请使用相应按钮登录。",
     cta: '发送魔法链接',
     sending: '发送中…',
     invalidCreds: '邮箱或密码错误。',

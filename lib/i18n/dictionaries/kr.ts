@@ -388,6 +388,7 @@ const kr = {
     forgotNeedEmail: "가입한 이메일 주소를 먼저 입력해 주세요.",
     forgotTooMany: "잠시 후 다시 시도해 주세요. (1분에 1회)",
     forgotFailed: "임시 비밀번호를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    forgotNoAccount: "이 이메일로 가입된 계정이 없습니다. 구글·카카오·라인으로 가입하셨다면 그 버튼으로 로그인해 주세요.",
     cta: '매직링크 받기',
     sending: '전송 중…',
     invalidCreds: '이메일 또는 비밀번호가 올바르지 않습니다.',

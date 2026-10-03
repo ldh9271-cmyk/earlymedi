@@ -377,6 +377,7 @@ const en: Dictionary = {
     forgotNeedEmail: "Enter your sign-up email address first.",
     forgotTooMany: "Please try again in a minute.",
     forgotFailed: "We could not send the temporary password. Please try again later.",
+    forgotNoAccount: "No account uses this email. If you signed up with Google, Kakao or LINE, please use that button to sign in.",
     cta: 'Send Magic Link',
     sending: 'Sending…',
     invalidCreds: 'Incorrect email or password.',

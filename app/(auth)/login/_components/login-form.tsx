@@ -159,6 +159,7 @@ export function LoginForm({
         body: JSON.stringify({ email, locale: 'kr' }),
       });
       if (res.status === 429) { setError('잠시 후 다시 시도해 주세요. (1분에 1회)'); return; }
+      if (res.status === 404) { setError('이 이메일로 가입된 계정이 없습니다. 가입 시 쓴 이메일을 확인해 주세요.'); return; }
       if (!res.ok) { setError('임시 비밀번호를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.'); return; }
       toast.success(`${email} 주소로 임시 비밀번호를 보냈습니다. 그 비밀번호로 로그인한 뒤 새 비밀번호로 바꿔 주세요.`, { duration: 8000 });
     } catch {

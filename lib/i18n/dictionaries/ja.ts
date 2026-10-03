@@ -376,6 +376,7 @@ const ja: Dictionary = {
     forgotNeedEmail: "登録したメールアドレスを先に入力してください。",
     forgotTooMany: "1分ほど待ってからもう一度お試しください。",
     forgotFailed: "仮パスワードを送信できませんでした。しばらくしてからもう一度お試しください。",
+    forgotNoAccount: "このメールアドレスで登録されたアカウントはありません。Google・Kakao・LINEで登録した場合は、そのボタンからログインしてください。",
     cta: 'マジックリンクを送信',
     sending: '送信中…',
     invalidCreds: 'メールアドレスまたはパスワードが正しくありません。',
