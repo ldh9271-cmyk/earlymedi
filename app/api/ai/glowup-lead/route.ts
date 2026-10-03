@@ -8,6 +8,7 @@ import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { submitPublicInquiryAction } from '@/app/[locale]/(public-portal)/inquiry/actions';
 import { clinicRecTitles } from '@/lib/ai/clinic-recs';
+import { sendEmail } from '@/lib/email/send';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -60,18 +61,6 @@ function buildEmailHtml(
     </div>
     <p style="text-align:center;font-size:11px;color:#9a9a9a;margin:16px 0 0;">© GlowUpTour · glowuptour.com</p>
   </div></body></html>`;
-}
-
-async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return false;
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: process.env.RESEND_FROM ?? 'GlowUpTour <noreply@glowuptour.com>', to: [to], subject, html }),
-    });
-    return res.ok;
-  } catch { return false; }
 }
 
 export async function POST(req: Request): Promise<NextResponse> {

@@ -312,6 +312,7 @@ export default async function MyPage({
       </p>
       {/* Google Play 계정 삭제 정책 — 앱 안에서 찾을 수 있는 삭제 요청 경로 */}
       <p style={{ fontSize: 12, marginTop: 10 }}>
+        <Link href={`/${locale}/account/password`} style={{ color: '#9c9c9c', textDecoration: 'underline', marginRight: 14 }}>{t.changePassword}</Link>
         <Link href={`/${locale}/account/delete`} style={{ color: '#9c9c9c', textDecoration: 'underline' }}>{t.deleteAccount}</Link>
       </p>
     </section>

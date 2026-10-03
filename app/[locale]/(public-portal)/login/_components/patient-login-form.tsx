@@ -22,7 +22,9 @@ import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
  *   1. Google OAuth — single-click return for users who signed up
  *      with Google (most common path).
  *   2. Email + password — for users who used the signup form's
- *      password track. Includes "비밀번호 찾기" → resetPasswordForEmail.
+ *      password track. "비밀번호 찾기" → /api/auth/forgot-password 가 회원 언어로
+ *      임시 비밀번호 메일을 보내고, 그 비밀번호로 로그인하면 비밀번호 변경 화면으로 보낸다
+ *      (lib/auth/temp-password.ts, 2026-10-03).
  *
  * Magic link was removed (2026-06-24) per founder request — too easy
  * for unauthenticated visitors to be confused about which channel to
@@ -84,6 +86,7 @@ export function PatientLoginForm({
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const pwForm = useForm<PasswordValues>({ resolver: zodResolver(passwordSchema) });
@@ -130,7 +133,7 @@ export function PatientLoginForm({
         setError('Supabase not connected (demo mode).');
         return;
       }
-      const { error: e } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: signedIn, error: e } = await supabase.auth.signInWithPassword({ email, password });
       if (e) {
         const m = e.message.toLowerCase();
         if (m.includes('invalid login')) setError(dict.invalidCreds);
@@ -139,7 +142,9 @@ export function PatientLoginForm({
         return;
       }
       void fetch('/api/ref/attribute', { method: 'POST', keepalive: true }).catch(() => undefined);
-      router.replace(returnTo);
+      // 임시 비밀번호로 들어왔으면 새 비밀번호부터 정하게 한다
+      const mustChange = Boolean((signedIn.user?.user_metadata as Record<string, unknown> | undefined)?.must_change_password);
+      router.replace(mustChange ? `/${locale}/account/password?next=${encodeURIComponent(returnTo)}` : returnTo);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-in failed');
     } finally {
@@ -150,22 +155,24 @@ export function PatientLoginForm({
   async function onForgot(): Promise<void> {
     const email = pwForm.getValues('email');
     if (!email || !email.includes('@')) {
-      setError(dict.invalidCreds);
+      setError(dict.forgotNeedEmail);
       return;
     }
+    setError(null);
+    setForgotLoading(true);
     try {
-      const supabase = createSupabaseBrowserClient();
-      if (!supabase) return;
-      const { error: e } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=/account/reset-password`,
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, locale }),
       });
-      if (e) {
-        setError(e.message);
-        return;
-      }
-      toast.success(dict.resetSent);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Reset failed');
+      if (res.status === 429) { setError(dict.forgotTooMany); return; }
+      if (!res.ok) { setError(dict.forgotFailed); return; }
+      toast.success(dict.tempSent, { duration: 8000 });
+    } catch {
+      setError(dict.forgotFailed);
+    } finally {
+      setForgotLoading(false);
     }
   }
 
@@ -253,6 +260,7 @@ export function PatientLoginForm({
             <button
               type="button"
               onClick={onForgot}
+              disabled={forgotLoading}
               style={{
                 background: 'transparent', border: 'none',
                 fontSize: 12, color: '#6a6a6a', cursor: 'pointer',
@@ -260,7 +268,7 @@ export function PatientLoginForm({
                 fontFamily: 'inherit', padding: 0,
               }}
             >
-              {dict.forgotPassword}
+              {forgotLoading ? dict.sending : dict.forgotPassword}
             </button>
           </div>
           <div style={{ position: 'relative' }}>
