@@ -45,6 +45,7 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [magicLoading, setMagicLoading] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -118,7 +119,7 @@ export function LoginForm({
         setError('데모 모드 — Supabase가 아직 연결되지 않았습니다.');
         return;
       }
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: signedIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
         // Friendly Korean messages for common Supabase errors.
         const msg = signInError.message.toLowerCase();
@@ -132,7 +133,9 @@ export function LoginForm({
         return;
       }
       toast.success('로그인 성공');
-      router.replace(nextPath);
+      // 임시 비밀번호로 들어왔으면 새 비밀번호부터 (lib/auth/temp-password.ts)
+      const mustChange = Boolean((signedIn.user?.user_metadata as Record<string, unknown> | undefined)?.must_change_password);
+      router.replace(mustChange ? `/account/password?next=${encodeURIComponent(nextPath)}` : nextPath);
     } catch (e) {
       setError(e instanceof Error ? e.message : '알 수 없는 오류가 발생했습니다.');
     } finally {
@@ -140,26 +143,28 @@ export function LoginForm({
     }
   }
 
-  // ─── Forgot password ────────────────────────────────────────────
+  // ─── Forgot password — 임시 비밀번호 메일 (lib/auth/temp-password.ts) ───
   async function onForgotPassword(): Promise<void> {
     const email = pwForm.getValues('email');
     if (!email || !email.includes('@')) {
-      setError('비밀번호 재설정 메일을 받을 이메일을 먼저 입력해 주세요.');
+      setError('임시 비밀번호를 받을 가입 이메일을 먼저 입력해 주세요.');
       return;
     }
+    setError(null);
+    setForgotLoading(true);
     try {
-      const supabase = createSupabaseBrowserClient();
-      if (!supabase) return;
-      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=/account/reset-password`,
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, locale: 'kr' }),
       });
-      if (resetErr) {
-        setError(resetErr.message);
-        return;
-      }
-      toast.success(`${email} 주소로 비밀번호 재설정 메일을 보냈습니다.`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '재설정 메일 발송 실패');
+      if (res.status === 429) { setError('잠시 후 다시 시도해 주세요. (1분에 1회)'); return; }
+      if (!res.ok) { setError('임시 비밀번호를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.'); return; }
+      toast.success(`${email} 주소로 임시 비밀번호를 보냈습니다. 그 비밀번호로 로그인한 뒤 새 비밀번호로 바꿔 주세요.`, { duration: 8000 });
+    } catch {
+      setError('임시 비밀번호를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setForgotLoading(false);
     }
   }
 
@@ -236,9 +241,10 @@ export function LoginForm({
                 <button
                   type="button"
                   onClick={onForgotPassword}
-                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                  disabled={forgotLoading}
+                  className="text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-60"
                 >
-                  비밀번호 찾기
+                  {forgotLoading ? '보내는 중…' : '비밀번호 찾기'}
                 </button>
               </div>
               <div className="relative">

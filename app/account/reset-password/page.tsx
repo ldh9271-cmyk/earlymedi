@@ -140,21 +140,17 @@ function ResetPasswordInner(): JSX.Element {
   }
 
   // ─── Re-request reset email ──────────────────────────────────────
+  // 링크 방식은 폐기 — 예전 메일의 링크로 들어온 사람에게는 임시 비밀번호 메일을 보낸다 (lib/auth/temp-password.ts)
   async function onResendReset(email: string): Promise<void> {
     try {
-      const supabase = createSupabaseBrowserClient();
-      if (!supabase) {
-        toast.error('데모 모드 — Supabase가 연결되지 않았습니다.');
-        return;
-      }
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=/account/reset-password`,
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, locale: 'kr' }),
       });
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success(`${email} 주소로 새 비밀번호 재설정 메일을 보냈습니다.`);
+      if (res.status === 429) { toast.error('잠시 후 다시 시도해 주세요. (1분에 1회)'); return; }
+      if (!res.ok) { toast.error('임시 비밀번호를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.'); return; }
+      toast.success(`${email} 주소로 임시 비밀번호를 보냈습니다. 그 비밀번호로 로그인한 뒤 새 비밀번호로 바꿔 주세요.`, { duration: 8000 });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '메일 발송 실패');
     }
@@ -304,7 +300,7 @@ function ExpiredCard({
           required
         />
         <Button type="submit" variant="brand" className="w-full" disabled={sending}>
-          {sending ? '발송 중…' : '새 재설정 메일 받기'}
+          {sending ? '발송 중…' : '임시 비밀번호 메일 받기'}
         </Button>
       </form>
 
