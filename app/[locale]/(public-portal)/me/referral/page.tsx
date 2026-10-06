@@ -531,12 +531,12 @@ export default async function ReferralPage({
           <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontVariantNumeric: 'tabular-nums', minWidth: 720 }}>
               <thead><tr style={{ background: '#fafafa', textAlign: 'left' }}>
-                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mJoined}</th>
-                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mMember}</th>
-                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mVia}</th>
-                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mBookings}</th>
-                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.mLast}</th>
-                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right' }}>{t.mUsage}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', whiteSpace: 'nowrap' }}>{t.mJoined}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', whiteSpace: 'nowrap' }}>{t.mMember}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', whiteSpace: 'nowrap' }}>{t.mVia}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', whiteSpace: 'nowrap' }}>{t.mBookings}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', whiteSpace: 'nowrap' }}>{t.mLast}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right', whiteSpace: 'nowrap' }}>{t.mUsage}</th>
               </tr></thead>
               <tbody>
                 {members.map((m) => {
@@ -546,7 +546,7 @@ export default async function ReferralPage({
                   return (
                     <tr key={m.userId} style={{ borderTop: '1px solid #f0f0f0' }}>
                       <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{fmtDate(m.joinedAt)}</td>
-                      <td style={{ padding: '9px 12px', fontWeight: 600, wordBreak: 'break-all' }}>{m.label}</td>
+                      <td style={{ padding: '9px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>{m.label}</td>
                       <td style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', whiteSpace: 'nowrap' }}>
                         {m.via}<span style={{ marginLeft: 6, fontSize: 11, color: '#9c9c9c' }}>{m.source}</span>
                       </td>
@@ -596,12 +596,12 @@ export default async function ReferralPage({
           <div style={{ border: '1px solid #ebebeb', borderRadius: 12, overflowX: 'auto', marginTop: 10 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
               <thead><tr style={{ background: '#fafafa', textAlign: 'left' }}>
-                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a' }}>{t.stmtPartner}</th>
-                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right' }}>{t.stmtCount}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', whiteSpace: 'nowrap' }}>{t.stmtPartner}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right', whiteSpace: 'nowrap' }}>{t.stmtCount}</th>
                 <th style={{ padding: '9px 12px', fontSize: 12, color: '#b45309', textAlign: 'right' }}>{t.pending}</th>
                 <th style={{ padding: '9px 12px', fontSize: 12, color: '#1d4ed8', textAlign: 'right' }}>{t.confirmed}</th>
                 <th style={{ padding: '9px 12px', fontSize: 12, color: '#047857', textAlign: 'right' }}>{t.paid}</th>
-                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right' }}>{t.stmtAmount}</th>
+                <th style={{ padding: '9px 12px', fontSize: 12, color: '#6a6a6a', textAlign: 'right', whiteSpace: 'nowrap' }}>{t.stmtAmount}</th>
               </tr></thead>
               <tbody>
                 {statement.map((s) => (
