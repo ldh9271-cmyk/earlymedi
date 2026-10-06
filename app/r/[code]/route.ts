@@ -54,5 +54,9 @@ export async function GET(req: Request, { params }: { params: { code: string } }
   const existing = req.headers.get('cookie')?.match(new RegExp(`(?:^|; )${REF_COOKIE}=([^;]+)`))?.[1];
   if (!existing) res.cookies.set(REF_COOKIE, partner.code, cookieBase);
   if (join) res.cookies.set(REF_JOIN_COOKIE, partner.code, { ...cookieBase, maxAge: 60 * 60 * 24 * 30 });
+  // 고객 링크(join 없음)로 왔으면 이전에 남은 초대 쿠키를 지운다 — 같은 기기에서 초대 링크를 먼저
+  // 열어 본 뒤 고객 QR 을 쓰면 /me/referral 에 '추천인으로 참여' 폼이 떠서 고객이 추천인으로
+  // 등록되는 것처럼 보였다 (2026-10-06). 마지막에 연 링크의 의도를 따른다.
+  else res.cookies.set(REF_JOIN_COOKIE, '', { ...cookieBase, maxAge: 0 });
   return res;
 }

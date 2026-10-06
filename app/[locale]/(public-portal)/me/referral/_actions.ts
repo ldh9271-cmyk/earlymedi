@@ -4,7 +4,7 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
-import { joinAsReferrer, REF_COOKIE, REF_JOIN_COOKIE } from '@/lib/referral/service';
+import { joinAsReferrer, REF_JOIN_COOKIE } from '@/lib/referral/service';
 
 /**
  * 초대 링크(/r/CODE?join=1)로 들어온 계정을 추천인으로 등록한다.
@@ -17,7 +17,8 @@ export async function joinReferrerAction(fd: FormData): Promise<void> {
   if (!auth.user) redirect(`/${locale}/login?next=${encodeURIComponent(`/${locale}/me/referral`)}`);
 
   const jar = cookies();
-  const parentCode = jar.get(REF_JOIN_COOKIE)?.value ?? jar.get(REF_COOKIE)?.value;
+  // 초대 쿠키(gu_ref_join)가 있을 때만 — 고객 쿠키(gu_ref)로는 추천인이 되지 않는다 (2026-10-06)
+  const parentCode = jar.get(REF_JOIN_COOKIE)?.value;
   if (!parentCode) redirect(`/${locale}/me/referral?error=no_invite`);
 
   const name = String(fd.get('name') ?? '').trim().slice(0, 80) || (auth.user.email ?? 'referrer');
