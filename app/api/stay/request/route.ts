@@ -46,5 +46,5 @@ export async function POST(req: Request): Promise<NextResponse> {
     userId, userEmail,
   });
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.error === 'listing_not_found' ? 404 : 400 });
-  return NextResponse.json({ ok: true, invoiceNo: r.invoiceNo, member: !!userId });
+  return NextResponse.json({ ok: true, invoiceNo: r.invoiceNo, member: !!userId, pay: r.pay, amountWon: r.amountWon });
 }

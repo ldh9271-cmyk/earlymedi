@@ -6,6 +6,7 @@ import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { MainHeader } from './_components/main-header';
 import { MainFooter } from './_components/main-footer';
 import CourseBookingCard from './_components/course-booking-card';
+import { travelSubOf } from '@/lib/stay/request';
 import { LOCALE_TO_BCP47 } from '@/lib/i18n/locales';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { localizePriceUnit } from '@/lib/i18n/price-unit';
@@ -212,7 +213,7 @@ export default async function PublicLandingPage({
             />
           ) : null,
         )}
-        <Course locale={locale} dbCourse={dbCourse} t={dict.landing} checkout={dict.checkout} />
+        <Course locale={locale} dbCourse={dbCourse} t={dict.landing} checkout={dict.checkout} priceAsk={dict.detail.priceAsk} />
         <FinalCta locale={locale} t={dict.landing} />
       </main>
 
@@ -553,12 +554,17 @@ function Course({
   dbCourse,
   t,
   checkout,
+  priceAsk,
 }: {
   locale: PublicLocale;
   dbCourse: ListingCard | null;
   t: Dictionary['landing'];
   checkout: Dictionary['checkout'];
+  priceAsk: string;
 }): JSX.Element {
+  // 자유여행(details.subType 'free')은 가격을 숨기고 견적 문의, 패키지·연수는 정가 즉시 결제
+  const courseSub = dbCourse ? travelSubOf('travel_package', dbCourse.details) : 'package';
+  const courseVariant = courseSub === 'free' ? 'trip' as const : 'pay' as const;
   // 실상품 우선 — 패키지여행 첫 상품(sortOrder ASC)의 제목·이미지·가격·
   // 일정으로 렌더. 예약하기는 해당 상품 checkout 으로 직결. 등록된
   // 패키지가 없으면 기존 가상 코스 콘텐츠로 fallback.
@@ -693,11 +699,10 @@ function Course({
             coverImageUrl: dbCourse ? dbCourse.coverImageUrl : null,
             rating,
             location: dbCourse ? (dbCourse.locationLabel ?? 'Seoul') : 'Seoul',
-            priceWon: dbCourse ? (dbCourse.priceWon ?? 0) : 1890000,
-            priceUnitLabel: t.coursePerPerson,
-            interest: dbCourse ? (dbCourse.interestKey ?? dbCourse.category) : 'travel_package',
           }}
-          checkout={checkout}
+          stayLabels={checkout.stay}
+          variant={courseVariant}
+          priceAsk={priceAsk}
           listingSlug={dbCourse ? dbCourse.slug : undefined}
           priceLabel={priceLabel}
           priceWon={dbCourse ? dbCourse.priceWon : 1890000}

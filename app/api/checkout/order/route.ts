@@ -9,6 +9,7 @@ import { cookies } from 'next/headers';
 import { attributeUser, getAttribution, REF_COOKIE } from '@/lib/referral/service';
 import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 import { RESERVE_DEPOSIT_WON } from '@/lib/checkout/constants';
+import { isRequestCategory, travelSubOf } from '@/lib/stay/request';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -122,12 +123,12 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (input.listingSlug) {
     try {
       const [listing] = await db
-        .select({ category: partnerListings.category })
+        .select({ category: partnerListings.category, details: partnerListings.details })
         .from(partnerListings)
         .where(eq(partnerListings.slug, input.listingSlug))
         .limit(1);
-      // 호텔은 가격 미표시·문의 전용 — 옛 클라이언트가 호출해도 인보이스를 내지 않는다 (2026-10-11)
-      if (listing?.category === 'hotel') return NextResponse.json({ error: 'inquiry_only' }, { status: 400 });
+      // 호텔·예약 요청 카테고리·자유여행은 가격 미표시(또는 안내용)·문의 전용 — 옛 클라이언트가 호출해도 인보이스를 내지 않는다 (2026-10-11)
+      if (listing && (isRequestCategory(listing.category) || travelSubOf(listing.category, listing.details) === 'free')) return NextResponse.json({ error: 'inquiry_only' }, { status: 400 });
       useDeposit = !!listing && listing.category !== 'travel_package';
     } catch {
       /* 조회 실패 시 기존 전액 결제로 폴백 */

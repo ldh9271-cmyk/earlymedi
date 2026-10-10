@@ -10,6 +10,7 @@ import { HeroMobileCarousel } from './_components/hero-mobile-carousel';
 import HeroDesktopGallery from './_components/hero-desktop-gallery';
 import ReserveButton, { type ReserveSummary } from '@/app/[locale]/_components/reserve-modal';
 import StayInquiryButton from '@/app/[locale]/_components/stay-inquiry-modal';
+import { isRequestCategory, travelSubOf, type TravelSub } from '@/lib/stay/request';
 import { BRAND_NAME } from '@/lib/seo/brand';
 
 export const dynamic = 'force-dynamic';
@@ -89,14 +90,23 @@ export default async function ListingDetailPage({
     typeof listing.details.priceRange === 'string' ? listing.details.priceRange : null;
   // 호텔은 요금을 보여주지 않는다 — '예약 문의하기' → 컨시어지 답변 → 금액 확정 시 마이페이지 견적 인보이스(토스) (2026-10-11)
   const isHotelListing = listing.category === 'hotel';
-  const priceLabel = isHotelListing
+  // 맛집·퍼스널컬러·헤어·메이크업·네일·반영구·사진·K-팝 투어: 가격은 안내만, 예약은 요청 → 확인 → 견적 인보이스 (2026-10-11)
+  // 여행 패키지: 자유여행은 호텔처럼 견적, 패키지·연수는 같은 정보를 받고 정가 즉시 결제
+  const travelSub: TravelSub = travelSubOf(listing.category, listing.details);
+  const isFreeTrip = travelSub === 'free';
+  const isFixedTrip = listing.category === 'travel_package' && !isFreeTrip;
+  const isRequestListing = isRequestCategory(listing.category) || listing.category === 'travel_package';
+  // 가격을 보여주지 않는 상품 (호텔·자유여행)
+  const priceHidden = isHotelListing || isFreeTrip;
+  const popupVariant = isHotelListing ? 'stay' as const : isFreeTrip ? 'trip' as const : isFixedTrip ? 'pay' as const : 'booking' as const;
+  const priceLabel = priceHidden
     ? d.priceAsk
     : listing.priceWon
       ? `₩${listing.priceWon.toLocaleString('ko-KR')}`
       : freeformPrice
         ? localizeKoLabel(freeformPrice, params.locale)
         : d.inquire;
-  const priceUnit = !isHotelListing && listing.priceWon
+  const priceUnit = !priceHidden && listing.priceWon
     ? localizePriceUnit(listing.priceUnit, listing.category, d.units, params.locale)
     : '';
   // String concat instead of template literal — SWC's JSX parser
@@ -104,7 +114,8 @@ export default async function ListingDetailPage({
   // the next <div> and throws "Unexpected token `div`". See memory
   // feedback_swc_inline_css for the same family of bug.
   const reserveHref = '/' + params.locale + '/checkout?slug=' + encodeURIComponent(listing.slug);
-  const inquiryHref = '/' + params.locale + '/inquiry?program=' + encodeURIComponent(listing.title) + '&interest=hotel';
+  const inquiryHref = isFixedTrip ? reserveHref : '/' + params.locale + '/inquiry?program=' + encodeURIComponent(listing.title) + '&interest=' + encodeURIComponent(isHotelListing ? 'hotel' : (listing.interestKey ?? listing.category));
+  const guidePrice = priceUnit ? `${priceLabel} / ${priceUnit}` : priceLabel;
   const reserveSummary: ReserveSummary = {
     title: listing.title,
     coverImageUrl: listing.coverImageUrl,
@@ -387,7 +398,7 @@ export default async function ListingDetailPage({
           { label: { kr: '영업시간', en: 'Hours', zh: '营业时间', ja: '営業時間', ru: 'Часы работы', vi: 'Giờ mở cửa' }, value: s('hours') },
           { label: { kr: '오시는 길', en: 'Getting there', zh: '交通', ja: 'アクセス', ru: 'Как добраться', vi: 'Đường đi' }, value: s('station') },
           { label: servicesLabel, value: s('services') },
-          { label: { kr: '가격대', en: 'Price range', zh: '价格区间', ja: '料金目安', ru: 'Цены', vi: 'Khoảng giá' }, value: isHotel ? '' : s('priceRange') },
+          { label: { kr: '가격대', en: 'Price range', zh: '价格区间', ja: '料金目安', ru: 'Цены', vi: 'Khoảng giá' }, value: isHotel || isFreeTrip ? '' : s('priceRange') },
           { label: { kr: '외국인 응대', en: 'Language support', zh: '外语支持', ja: '外国語対応', ru: 'Языки', vi: 'Hỗ trợ ngoại ngữ' }, value: s('foreignerSupport') },
         ].filter((r) => r.value);
         if (rows.length === 0) return null;
@@ -437,7 +448,7 @@ export default async function ListingDetailPage({
       {/* 가격표 — 매장 공식 메뉴판(details.priceTable). 그룹별로 묶어
           시술명과 금액을 나열한다. 없는 상품은 섹션 자체가 숨는다. */}
       {(() => {
-        if (isHotelListing) return null;
+        if (priceHidden) return null;
         const raw = listing.details.priceTable;
         if (!Array.isArray(raw)) return null;
         // 라벨만 로케일별로 갈아끼운다 — 금액은 kr 표가 유일한 출처라
@@ -696,14 +707,36 @@ export default async function ListingDetailPage({
             boxShadow: 'rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.08) 0 8px 24px',
           }}
         >
-          {isHotelListing ? (
+          {isRequestListing ? (
             <>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>{d.priceAsk}</div>
-              <div style={{ fontSize: 13, color: '#3f3f3f', marginTop: 8, lineHeight: 1.6 }}>{d.stayInquiryNote}</div>
+              {priceHidden ? (
+                <>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>{d.priceAsk}</div>
+                  <div style={{ fontSize: 13, color: '#3f3f3f', marginTop: 8, lineHeight: 1.6 }}>{isFreeTrip ? d.tripInquiryNote : d.stayInquiryNote}</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    <span style={{ fontSize: 22, fontWeight: 700 }}>{priceLabel}</span>
+                    {priceUnit ? <span style={{ fontSize: 14, color: '#6a6a6a' }}>/ {priceUnit}</span> : null}
+                  </div>
+                  {isFixedTrip ? (
+                    <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 4 }}>{d.taxNote}</div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 12, color: '#c81e42', fontWeight: 700, marginTop: 4 }}>{dict.checkout.stay.priceGuide}</div>
+                      <div style={{ fontSize: 13, color: '#3f3f3f', marginTop: 8, lineHeight: 1.6 }}>{d.priceGuideNote}</div>
+                    </>
+                  )}
+                </>
+              )}
               <StayInquiryButton
                 locale={params.locale}
                 href={inquiryHref}
-                label={d.inquireStay}
+                label={priceHidden ? d.inquireStay : isFixedTrip ? d.reserve : d.requestBooking}
+                variant={popupVariant}
+                priceLabel={priceHidden ? null : guidePrice}
+                priceWon={listing.priceWon ?? 0}
                 summary={{ title: listing.title, coverImageUrl: listing.coverImageUrl, rating, location: listing.locationLabel ?? 'Seoul' }}
                 listingSlug={listing.slug}
                 labels={dict.checkout.stay}
@@ -771,16 +804,31 @@ export default async function ListingDetailPage({
           gap: 12, zIndex: 40,
         }}
       >
-        {isHotelListing ? (
+        {isRequestListing ? (
           <>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>{d.priceAsk}</div>
-              <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 2 }}>{d.inquireStay}</div>
+              {priceHidden ? (
+                <>
+                  <div style={{ fontSize: 15, fontWeight: 700 }}>{d.priceAsk}</div>
+                  <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 2 }}>{d.inquireStay}</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 15 }}>
+                    <span style={{ fontWeight: 700 }}>{priceLabel}</span>
+                    {priceUnit ? <span style={{ color: '#6a6a6a', fontWeight: 400 }}> / {priceUnit}</span> : null}
+                  </div>
+                  <div style={{ fontSize: 12, color: isFixedTrip ? '#6a6a6a' : '#c81e42', fontWeight: isFixedTrip ? 400 : 700, marginTop: 2 }}>{isFixedTrip ? d.taxNote : dict.checkout.stay.priceGuide}</div>
+                </>
+              )}
             </div>
             <StayInquiryButton
               locale={params.locale}
               href={inquiryHref}
-              label={d.inquireStay}
+              label={priceHidden ? d.inquireStay : isFixedTrip ? d.reserve : d.requestBooking}
+              variant={popupVariant}
+              priceLabel={priceHidden ? null : guidePrice}
+              priceWon={listing.priceWon ?? 0}
               summary={{ title: listing.title, coverImageUrl: listing.coverImageUrl, rating, location: listing.locationLabel ?? 'Seoul' }}
               listingSlug={listing.slug}
               labels={dict.checkout.stay}

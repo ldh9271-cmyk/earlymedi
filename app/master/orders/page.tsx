@@ -9,7 +9,7 @@ import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { markOrderPaidAction, cancelOrderAction, confirmReservationAction, settleHospitalActualAction, setMerchantSettlementStatusAction, masterDeclareSettlementAction, refundCancelOrderAction, confirmHospitalVisitAction, issueQuoteInvoiceAction, issueQuoteFromRequestAction } from './_actions';
 import ConfirmForm from './_components/confirm-form';
 import { payLinkFor } from '@/lib/quote/service';
-import type { StayRequestMeta } from '@/lib/stay/request';
+import { isRequestKind, type StayRequestMeta } from '@/lib/stay/request';
 import { orderEstimate, resolveRefundCategories, type CancelMeta, type CancelRequestMeta } from '@/lib/refund/service';
 import type { RefundCategory } from '@/lib/refund/policy';
 import { SETTLEMENT_STATUS_KO } from '@/lib/voucher/settlement';
@@ -217,8 +217,8 @@ export default async function MasterOrdersPage({
                       </Td>
                       <Td>{r.guests}명</Td>
                       <Td align="right">
-                        {r.kind === 'stay_request' ? <div style={{ fontWeight: 700, color: '#c81e42', whiteSpace: 'nowrap' }}>🏨 호텔 문의 · 견적 대기</div> : r.kind === 'hospital_visit' ? <div style={{ fontWeight: 700, color: '#1d4ed8', whiteSpace: 'nowrap' }}>🏥 진료 예약 · 무료</div> : <div style={{ fontWeight: 700 }}>{r.kind === 'quote' ? '견적 ' : ''}₩{r.totalWon.toLocaleString('ko-KR')}</div>}
-                        {r.kind === 'stay_request' || r.kind === 'quote' || r.kind === 'hospital_visit' ? null : (
+                        {r.kind === 'stay_request' ? <div style={{ fontWeight: 700, color: '#c81e42', whiteSpace: 'nowrap' }}>🏨 호텔 문의 · 견적 대기</div> : r.kind === 'booking_request' ? <div style={{ fontWeight: 700, color: '#c81e42', whiteSpace: 'nowrap' }}>{(r.meta as { subType?: string } | null)?.subType === 'free' ? '🧳 자유여행 견적 대기' : '📩 예약 요청 · 확인 대기'}{r.subtotalWon > 0 ? <div style={{ fontSize: 11, color: '#6a6a6a', fontWeight: 500 }}>표시가 ₩{r.subtotalWon.toLocaleString('ko-KR')}</div> : null}</div> : r.kind === 'hospital_visit' ? <div style={{ fontWeight: 700, color: '#1d4ed8', whiteSpace: 'nowrap' }}>🏥 진료 예약 · 무료</div> : <div style={{ fontWeight: 700 }}>{r.kind === 'quote' ? '견적 ' : ''}₩{r.totalWon.toLocaleString('ko-KR')}</div>}
+                        {r.kind === 'stay_request' || r.kind === 'booking_request' || r.kind === 'quote' || r.kind === 'hospital_visit' ? null : (
                         <div style={{ fontSize: 11, color: '#9c9c9c', marginTop: 2 }}>
                           {r.serviceFeeWon > 0
                             ? `₩${r.subtotalWon.toLocaleString('ko-KR')} + 수수료 ₩${r.serviceFeeWon.toLocaleString('ko-KR')}`
@@ -247,7 +247,7 @@ export default async function MasterOrdersPage({
                               <button type="submit" style={btnStyle('#1d4ed8')}>🏥 예약 확정</button>
                             </ConfirmForm>
                           ) : null}
-                          {r.kind !== 'hospital_visit' && r.kind !== 'stay_request' && r.status !== 'paid' && r.status !== 'cancelled' ? (
+                          {r.kind !== 'hospital_visit' && r.kind !== 'stay_request' && r.kind !== 'booking_request' && r.status !== 'paid' && r.status !== 'cancelled' ? (
                             <ConfirmForm action={markOrderPaidAction} message={`${r.invoiceNo} · ₩${r.totalWon.toLocaleString('ko-KR')}\n입금(결제)이 실제로 확인되었나요? 확인 처리하면 고객에게 결제 완료로 표시되고 QR 바우처가 열립니다.`}>
                               <input type="hidden" name="id" value={r.id} />
                               <button type="submit" style={btnStyle('#047857')}>입금 확인</button>
@@ -519,7 +519,9 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
  */
 function StayQuoteBox({ order }: { order: typeof checkoutOrders.$inferSelect }): JSX.Element | null {
   const r = order;
-  if (r.kind !== 'stay_request' && r.kind !== 'quote') return null;
+  if (!isRequestKind(r.kind) && r.kind !== 'quote') return null;
+  const mcat = (r.meta as { category?: string; subType?: string } | null) ?? {};
+  const isHotel = r.kind === 'stay_request' || mcat.category === 'hotel' || (mcat.category === 'travel_package' && mcat.subType === 'free');
   const meta = (r.meta ?? {}) as Partial<StayRequestMeta> & { quoteNote?: string | null; payToken?: string };
   const s = meta.stay;
   const input: React.CSSProperties = { border: '1px solid #dddddd', borderRadius: 8, padding: '5px 8px', fontSize: 12, fontFamily: 'inherit' };
@@ -529,7 +531,7 @@ function StayQuoteBox({ order }: { order: typeof checkoutOrders.$inferSelect }):
         <div>
           <b>{s.name}</b> · {s.contact}{s.countryCode ? ` (${s.countryCode})` : ''}{s.messengerId ? ` · ${s.messengerKind ?? ''} ${s.messengerId}` : ''}
           {r.userEmail ? <span style={{ color: '#047857' }}> · 회원 {r.userEmail}</span> : <span style={{ color: '#b45309' }}> · 비회원(메신저 결제 링크)</span>}
-          <br />체크인 {s.checkIn} · {s.nights}박{s.arrival ? ` · 도착 ${s.arrival}` : ''} · {r.guests}명{s.note ? <><br />요청: {s.note}</> : null}
+          <br />{isHotel ? '체크인' : '희망일'} {s.checkIn}{s.nights > 0 ? ` · ${s.nights}박` : ''}{s.arrival ? ` · ${isHotel ? '도착' : '시간'} ${s.arrival}` : ''} · {r.guests}명{s.note ? <><br />요청: {s.note}</> : null}
         </div>
       ) : null}
       {meta.partnerQuote ? (
@@ -538,12 +540,12 @@ function StayQuoteBox({ order }: { order: typeof checkoutOrders.$inferSelect }):
       {r.status === 'issued' ? (
         <form action={issueQuoteFromRequestAction} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 8 }}>
           <input type="hidden" name="id" value={r.id} />
-          <input name="amountWon" inputMode="numeric" required placeholder="총 금액(원)" defaultValue={r.kind === 'quote' ? r.totalWon : (meta.partnerQuote?.won ?? '')} style={{ ...input, width: 110 }} />
+          <input name="amountWon" inputMode="numeric" required placeholder="총 금액(원)" defaultValue={r.kind === 'quote' ? r.totalWon : (meta.partnerQuote?.won ?? (r.subtotalWon > 0 ? r.subtotalWon : ''))} style={{ ...input, width: 110 }} />
           <select name="locale" defaultValue={r.locale || 'kr'} style={input}>
             <option value="kr">한국어</option><option value="en">English</option><option value="ja">日本語</option><option value="zh">中文</option><option value="ru">Русский</option><option value="vi">Tiếng Việt</option>
           </select>
           <input name="note" maxLength={1000} placeholder="고객 메모(객실·포함·조건)" defaultValue={meta.quoteNote ?? meta.partnerQuote?.note ?? ''} style={{ ...input, flex: 1, minWidth: 180 }} />
-          <button type="submit" style={btnStyle('#c81e42')}>{r.kind === 'quote' ? '견적 수정·재발송' : '견적 발행 (메일+링크)'}</button>
+          <button type="submit" style={btnStyle('#c81e42')}>{r.kind === 'quote' ? '견적 수정·재발송' : isHotel ? '견적 발행 (메일+링크)' : '예약 확인 · 인보이스 발행'}</button>
         </form>
       ) : null}
       {r.kind === 'quote' && meta.payToken ? (

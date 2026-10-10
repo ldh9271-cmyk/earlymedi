@@ -3,10 +3,12 @@
 // 랜딩 베스트셀러 코스 예약 카드 (클라이언트).
 // 시작일 하나만 고르면 durationDays 기준으로 종료일이 자동 계산되고,
 // 인원(최대 6명)에 따라 요금이 곱해진다.
+// 버튼은 상세 페이지와 같은 예약 팝업(stay-inquiry-modal) — 자유여행은 가격을 숨기고 견적 문의,
+// 패키지·연수여행은 정가 그대로 바로 결제한다. 고른 시작일·인원은 팝업에 미리 들어간다.
 import { useEffect, useMemo, useState } from 'react';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
-import ReserveButton, { type ReserveSummary } from './reserve-modal';
+import StayInquiryButton, { type StaySummary, type StayVariant } from './stay-inquiry-modal';
 
 const MAX_GUESTS = 6;
 
@@ -41,8 +43,10 @@ export default function CourseBookingCard({
   bookHref,
   labels,
   summary,
-  checkout,
+  stayLabels,
   listingSlug,
+  variant,
+  priceAsk,
 }: {
   bcp47: string;
   locale: PublicLocale;
@@ -51,10 +55,16 @@ export default function CourseBookingCard({
   durationDays: number;
   bookHref: string;
   labels: CourseBookingLabels;
-  summary: ReserveSummary;
-  checkout: Dictionary['checkout'];
+  summary: StaySummary;
+  stayLabels: Dictionary['checkout']['stay'];
   listingSlug?: string;
+  /** 'trip' 자유여행(견적) · 'pay' 패키지·연수(정가 결제) */
+  variant: Extract<StayVariant, 'trip' | 'pay'>;
+  /** 자유여행일 때 가격 자리에 보여 줄 문구 */
+  priceAsk: string;
 }): JSX.Element {
+  const isTrip = variant === 'trip';
+  const shownPrice = isTrip ? priceAsk : priceLabel;
   const [start, setStart] = useState('');
   const [guests, setGuests] = useState(1);
   // min 날짜는 서버/클라이언트 시간대가 달라 hydration 이 어긋날 수 있어 mount 후 설정
@@ -108,8 +118,8 @@ export default function CourseBookingCard({
     >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
         <div>
-          <span className="m-course-price" style={{ fontSize: 21, fontWeight: 700 }}>{priceLabel}</span>{' '}
-          <span style={{ fontSize: 15, color: '#6a6a6a' }}>{labels.perPerson}</span>
+          <span className="m-course-price" style={{ fontSize: 21, fontWeight: 700 }}>{shownPrice}</span>{' '}
+          {isTrip ? null : <span style={{ fontSize: 15, color: '#6a6a6a' }}>{labels.perPerson}</span>}
         </div>
         <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="#222">
@@ -160,15 +170,18 @@ export default function CourseBookingCard({
           </select>
         </label>
       </div>
-      <ReserveButton
+      <StayInquiryButton
         locale={locale}
         href={href}
-        label={labels.book}
+        label={isTrip ? stayLabels.cta : labels.book}
         summary={summary}
-        labels={checkout}
-        listingSlug={listingSlug}
-        fixedDateLabel={start && endDate ? fmt(new Date(start + 'T00:00:00')) + ' → ' + fmt(endDate) : undefined}
-        guestCount={guests}
+        labels={stayLabels}
+        listingSlug={listingSlug ?? ''}
+        variant={variant}
+        priceLabel={isTrip ? null : priceLabel + ' ' + labels.perPerson}
+        priceWon={priceWon ?? 0}
+        initialDate={start || undefined}
+        initialGuests={guests}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           width: '100%', marginTop: 16,
@@ -178,23 +191,31 @@ export default function CourseBookingCard({
           cursor: 'pointer', textDecoration: 'none',
         }}
       />
-      <div style={{ textAlign: 'center', fontSize: 14, color: '#6a6a6a', marginTop: 12 }}>
-        {labels.notCharged}
-      </div>
-      <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6a6a6a' }}>
-          <span>{priceLabel} × {guests}</span>
-          <span>{totalLabel}</span>
+      {isTrip ? (
+        <div style={{ textAlign: 'center', fontSize: 14, color: '#6a6a6a', marginTop: 12 }}>
+          {labels.notCharged}
         </div>
+      ) : null}
+      <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
+        {isTrip ? null : (
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6a6a6a' }}>
+            <span>{priceLabel} × {guests}</span>
+            <span>{totalLabel}</span>
+          </div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6a6a6a' }}>
           <span>{labels.thirdRow}</span>
           <span>{labels.included}</span>
         </div>
-        <div style={{ height: 1, background: '#ebebeb', margin: '6px 0' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: 16 }}>
-          <span>{labels.total}</span>
-          <span>{totalLabel}</span>
-        </div>
+        {isTrip ? null : (
+          <>
+            <div style={{ height: 1, background: '#ebebeb', margin: '6px 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: 16 }}>
+              <span>{labels.total}</span>
+              <span>{totalLabel}</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

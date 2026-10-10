@@ -171,11 +171,12 @@ export default async function MyPage({
           {rows.map((r) => {
             // 예약금 주문: 입금 확인 후 컨시어지 확정(meta.reserveConfirmedAt)까지
             // 한 단계가 더 있다 — 확정되면 '예약 확정'으로 표시한다.
-            const orderMeta = (r.meta ?? {}) as { depositWon?: number; reserveConfirmedAt?: string; cancelRequest?: CancelRequestMeta; cancel?: { refundWon?: number }; voucher?: { checkedInAt?: string }; quoteNote?: string | null };
+            const orderMeta = (r.meta ?? {}) as { depositWon?: number; reserveConfirmedAt?: string; cancelRequest?: CancelRequestMeta; cancel?: { refundWon?: number }; voucher?: { checkedInAt?: string }; quoteNote?: string | null; category?: string; subType?: string };
             // 견적 인보이스(호텔 등 가격 미표시 상품): 운영자가 금액을 정해 발행 → 여기서 토스 결제
             const isQuote = r.kind === 'quote';
             // 호텔 예약 문의(가격 미표시) — 견적이 나오면 같은 행이 quote 로 바뀐다
-            const isStayRequest = r.kind === 'stay_request';
+            const isStayRequest = r.kind === 'stay_request' || r.kind === 'booking_request';
+            const isHotelReq = r.kind === 'stay_request' || orderMeta.category === 'hotel' || (orderMeta.category === 'travel_package' && orderMeta.subType === 'free');
             // 병원 진료 예약(무료): issued=요청 중, paid+reserveConfirmedAt=확정, voucher.checkedInAt=방문 확인
             const isHospitalVisit = r.kind === 'hospital_visit';
             const isDeposit = !!orderMeta.depositWon;
@@ -190,9 +191,9 @@ export default async function MyPage({
                 : isHospitalVisit && r.status === 'issued'
                   ? { label: t.statusRequested, bg: '#fffbeb', fg: '#b45309' }
                   : isStayRequest && r.status === 'issued'
-                    ? { label: t.stayRequestBadge, bg: '#fffbeb', fg: '#b45309' }
+                    ? { label: isHotelReq ? t.stayRequestBadge : t.bookingRequestBadge, bg: '#fffbeb', fg: '#b45309' }
                   : isQuote && r.status === 'issued'
-                    ? { label: t.quote.badge, bg: '#fff5f7', fg: '#c81e42' }
+                    ? { label: orderMeta.category && orderMeta.category !== 'hotel' && !(orderMeta.category === 'travel_package' && orderMeta.subType === 'free') ? t.quote.badgeBooking : t.quote.badge, bg: '#fff5f7', fg: '#c81e42' }
                     : statusMeta[r.status] ?? { label: r.status, bg: '#f5f5f5', fg: '#6a6a6a' };
             const highlighted = searchParams.invoice === r.invoiceNo;
             return (
@@ -267,7 +268,7 @@ export default async function MyPage({
                   {isHospitalVisit ? (
                     <div className="m-my-amount" style={{ textAlign: 'right', fontSize: 13, fontWeight: 700, color: '#1d4ed8' }}>🏥 {t.hospitalVisitNote}</div>
                   ) : isStayRequest ? (
-                    <div className="m-my-amount" style={{ textAlign: 'right', fontSize: 12, color: '#6a6a6a', maxWidth: 240, lineHeight: 1.5 }}>{t.stayRequestNote}</div>
+                    <div className="m-my-amount" style={{ textAlign: 'right', fontSize: 12, color: '#6a6a6a', maxWidth: 240, lineHeight: 1.5 }}>{r.subtotalWon > 0 ? <div style={{ fontSize: 14, fontWeight: 700, color: '#222' }}>{dict.checkout.stay.priceGuide} ₩{r.subtotalWon.toLocaleString('ko-KR')}</div> : null}{isHotelReq ? t.stayRequestNote : t.bookingRequestNote}</div>
                   ) : (
                   <div className="m-my-amount" style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 18, fontWeight: 700 }}>
