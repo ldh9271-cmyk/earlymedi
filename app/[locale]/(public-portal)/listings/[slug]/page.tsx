@@ -9,6 +9,7 @@ import { DetailInfo } from './_components/detail-info';
 import { HeroMobileCarousel } from './_components/hero-mobile-carousel';
 import HeroDesktopGallery from './_components/hero-desktop-gallery';
 import ReserveButton, { type ReserveSummary } from '@/app/[locale]/_components/reserve-modal';
+import StayInquiryButton from '@/app/[locale]/_components/stay-inquiry-modal';
 import { BRAND_NAME } from '@/lib/seo/brand';
 
 export const dynamic = 'force-dynamic';
@@ -699,8 +700,13 @@ export default async function ListingDetailPage({
             <>
               <div style={{ fontSize: 20, fontWeight: 700 }}>{d.priceAsk}</div>
               <div style={{ fontSize: 13, color: '#3f3f3f', marginTop: 8, lineHeight: 1.6 }}>{d.stayInquiryNote}</div>
-              <Link
+              <StayInquiryButton
+                locale={params.locale}
                 href={inquiryHref}
+                label={d.inquireStay}
+                summary={{ title: listing.title, coverImageUrl: listing.coverImageUrl, rating, location: listing.locationLabel ?? 'Seoul' }}
+                listingSlug={listing.slug}
+                labels={dict.checkout.stay}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   marginTop: 18, height: 52,
@@ -709,9 +715,7 @@ export default async function ListingDetailPage({
                   fontSize: 16, fontWeight: 700,
                   textDecoration: 'none',
                 }}
-              >
-                {d.inquireStay}
-              </Link>
+              />
             </>
           ) : (
             <>
@@ -773,17 +777,20 @@ export default async function ListingDetailPage({
               <div style={{ fontSize: 15, fontWeight: 700 }}>{d.priceAsk}</div>
               <div style={{ fontSize: 12, color: '#6a6a6a', marginTop: 2 }}>{d.inquireStay}</div>
             </div>
-            <Link
+            <StayInquiryButton
+              locale={params.locale}
               href={inquiryHref}
+              label={d.inquireStay}
+              summary={{ title: listing.title, coverImageUrl: listing.coverImageUrl, rating, location: listing.locationLabel ?? 'Seoul' }}
+              listingSlug={listing.slug}
+              labels={dict.checkout.stay}
               style={{
                 background: '#ff385c', color: '#fff',
                 fontSize: 15, fontWeight: 700,
                 padding: '12px 22px', borderRadius: 12,
                 textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
               }}
-            >
-              {d.inquireStay}
-            </Link>
+            />
           </>
         ) : (
           <>

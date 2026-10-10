@@ -30,7 +30,10 @@ export default function TossSuccessPage(): JSX.Element {
         });
         if (!res.ok) { setState('error'); return; }
         setState('done');
-        window.location.href = `/${locale}/me?invoice=${encodeURIComponent(orderId)}`;
+        // 비회원 결제 링크(/pay)에서 왔으면 그 페이지로 돌아가 '결제 완료'를 보여 준다
+        window.location.href = qs.get('back') === 'pay'
+          ? `/${locale}/pay/${encodeURIComponent(orderId)}?paid=1`
+          : `/${locale}/me?invoice=${encodeURIComponent(orderId)}`;
       } catch {
         setState('error');
       }

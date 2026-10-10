@@ -15,6 +15,7 @@ import { refundAndCancel } from '@/lib/refund/service';
 import { confirmHospitalVisit } from '@/lib/hospital-visit/service';
 import { onRegistryAgencyPaid } from '@/lib/registry/agency';
 import { issueQuoteInvoice } from '@/lib/quote/service';
+import { convertStayRequestToQuote } from '@/lib/stay/request';
 import { PUBLIC_LOCALES, type PublicLocale } from '@/lib/i18n/locales';
 import {
   accrueOrderTravelMargin,
@@ -241,3 +242,19 @@ export async function issueQuoteInvoiceAction(formData: FormData): Promise<void>
   revalidatePath('/master/orders');
   redirect(`/master/orders?ok=${encodeURIComponent(`견적 인보이스 발행 · ${r.invoiceNo}${r.emailSent ? ' · 이메일 발송됨' : ' · 이메일 발송 실패(회원에게 직접 안내)'}`)}`);
 }
+
+/** 호텔 예약 문의 행에 금액을 넣어 그 자리에서 견적 인보이스(토스)로 바꾼다 — 회원 메일 + 메신저용 결제 링크. */
+export async function issueQuoteFromRequestAction(formData: FormData): Promise<void> {
+  await assertMaster();
+  const id = String(formData.get('id') ?? '');
+  const amountWon = Math.round(Number(String(formData.get('amountWon') ?? '').replace(/[^\d]/g, '')));
+  const note = String(formData.get('note') ?? '').trim() || null;
+  const localeRaw = String(formData.get('locale') ?? 'kr');
+  const locale = (PUBLIC_LOCALES as readonly string[]).includes(localeRaw) ? (localeRaw as PublicLocale) : 'kr';
+  if (!id) redirect('/master/orders?error=missing_id');
+  const r = await convertStayRequestToQuote(id, { amountWon, note, locale });
+  if (!r.ok) redirect(`/master/orders?error=${encodeURIComponent(r.error)}`);
+  revalidatePath('/master/orders');
+  redirect(`/master/orders?ok=${encodeURIComponent(`견적 발행 · ${r.invoiceNo} · ${r.member ? (r.emailSent ? '회원 메일 발송됨' : '회원 (메일 발송 실패 — 직접 안내)') : (r.emailSent ? '비회원 메일 발송됨' : '비회원')} · 메신저용 결제 링크: ${r.payLink}`)}`);
+}
+

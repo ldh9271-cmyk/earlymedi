@@ -9,9 +9,11 @@ import { openTossPayment, tossClientKey } from '@/lib/payments/toss-client';
  * (/api/payments/toss/confirm → paid) 뒤 마이페이지로 돌아온다. 금액은 DB 의
  * totalWon 으로 서버가 다시 확인하므로 여기 값은 표시·요청용이다.
  */
-export function PayInvoiceButton({ locale, invoiceNo, amountWon, title, email, labels }: {
+export function PayInvoiceButton({ locale, invoiceNo, amountWon, title, email, labels, back }: {
   locale: string; invoiceNo: string; amountWon: number; title: string; email: string | null;
   labels: { payNow: string; hint: string; failed: string };
+  /** 'pay' 면 승인 후 /[locale]/pay/<no>?paid=1 로 (비회원 결제 링크) — 기본은 마이페이지 */
+  back?: 'pay';
 }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export function PayInvoiceButton({ locale, invoiceNo, amountWon, title, email, l
     setErr(null); setBusy(true);
     const outcome = await openTossPayment({
       amount: amountWon, orderId: invoiceNo, orderName: `${title} · ${invoiceNo}`,
-      successUrl: `${window.location.origin}/${locale}/checkout/toss/success`,
+      successUrl: `${window.location.origin}/${locale}/checkout/toss/success${back ? `?back=${back}` : ''}`,
       failUrl: `${window.location.origin}/${locale}/checkout/toss/fail`,
       customerEmail: email, locale,
     });

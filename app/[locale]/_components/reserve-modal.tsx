@@ -31,15 +31,15 @@ export type ReserveSummary = {
 const MAX_GUESTS = 6;
 
 /** 연락처 수집용 국가 목록 — 공개 포털 문의 폼과 동일한 코드 셋. */
-const COUNTRY_CODES = [
+export const COUNTRY_CODES = [
   'US', 'KR', 'CN', 'JP', 'TW', 'HK', 'SG', 'MY', 'TH', 'VN', 'PH', 'ID',
   'RU', 'KZ', 'UZ', 'IN', 'AE', 'SA', 'AU', 'CA', 'GB', 'DE', 'FR', 'IT',
 ] as const;
-const LOCALE_DEFAULT_COUNTRY: Record<string, string> = {
+export const LOCALE_DEFAULT_COUNTRY: Record<string, string> = {
   kr: 'KR', en: 'US', zh: 'CN', ja: 'JP', ru: 'RU', vi: 'VN',
 };
-const MESSENGER_KINDS = ['kakao', 'whatsapp', 'line', 'wechat', 'telegram'] as const;
-const MESSENGER_LABEL: Record<string, string> = {
+export const MESSENGER_KINDS = ['kakao', 'whatsapp', 'line', 'wechat', 'telegram'] as const;
+export const MESSENGER_LABEL: Record<string, string> = {
   kakao: 'KakaoTalk', whatsapp: 'WhatsApp', line: 'LINE', wechat: 'WeChat', telegram: 'Telegram',
 };
 /** 상담·픽업 가능한 시간대 (24h 기준, 로케일 포맷으로 표시). */

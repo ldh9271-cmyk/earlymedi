@@ -58,6 +58,7 @@ export const PUBLIC_PREFIXES = [
   '/api/voucher',
   '/api/track', // 방문 비콘 — 비로그인 방문자가 대부분이라 공개
   '/api/app', // 안드로이드 앱 첫 실행 설문 — 앱의 네이티브 fetch(세션 없음)
+  '/api/stay', // 호텔 예약 문의 접수 — 비회원도 가능
   // 사업자 공용 QR 스캔 화면 — 페이지 안에서 requireAccess 로 조직 인증
   '/scan',
   // 외부 메신저(Kakao i 오픈빌더, WeChat OA, LINE 등)가 우리 webhook을
