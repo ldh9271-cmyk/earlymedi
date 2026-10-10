@@ -188,6 +188,13 @@ export async function submitPublicInquiryAction(
   //    sequence. Drizzle's HTTP driver doesn't expose proper
   //    transactions, but the ordering is fine: conversation first,
   //    then dependent message.
+  // 로그인 회원이면 계정을 함께 남긴다 — 운영자가 답변·견적 인보이스(/master/orders) 발행 때 이메일을 바로 쓰게 (2026-10-11)
+  let memberId: string | null = null; let memberEmail: string | null = null;
+  try {
+    const { data: auth } = await createSupabaseServerClient().auth.getUser();
+    memberId = auth.user?.id ?? null; memberEmail = auth.user?.email ?? null;
+  } catch { /* 비로그인 */ }
+
   const [conv] = await db
     .insert(conversations)
     .values({
@@ -212,7 +219,7 @@ export async function submitPublicInquiryAction(
     direction: 'inbound',
     senderRole: 'patient',
     contentType: 'text',
-    body: composedBody,
+    body: memberEmail ? `${composedBody}\n\n[회원 계정] ${memberEmail}` : composedBody,
     bodyLocale,
     sentAt: new Date(),
     status: 'delivered',
@@ -225,6 +232,8 @@ export async function submitPublicInquiryAction(
       interests: input.interests,
       hospitalId: input.hospitalId ?? undefined,
       hospitalName: input.hospitalName ?? undefined,
+      memberId: memberId ?? undefined,
+      memberEmail: memberEmail ?? undefined,
     },
   });
 

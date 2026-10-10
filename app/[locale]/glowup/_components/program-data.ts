@@ -161,8 +161,8 @@ export const CATEGORIES_FEED: Array<{
     key: 'hotel',
     title: '프리미엄 호텔',
     items: [
-      { name: '명동 프리미엄 호텔', meta: '명동 · ₩320,000/박', img: `${IMG}/0cdba536-b97c-495d-930f-3f7a12100f8e.jpg`, label: '★ 5성' },
-      { name: '강남 부티크 호텔',   meta: '강남 · ₩280,000/박', img: `${IMG}/02b0819e-3eb7-4368-a2ac-6d094ad005b8.jpg` },
+      { name: '명동 프리미엄 호텔', meta: '명동 · 요금 문의', img: `${IMG}/0cdba536-b97c-495d-930f-3f7a12100f8e.jpg`, label: '★ 5성' },
+      { name: '강남 부티크 호텔',   meta: '강남 · 요금 문의', img: `${IMG}/02b0819e-3eb7-4368-a2ac-6d094ad005b8.jpg` },
     ],
   },
   {

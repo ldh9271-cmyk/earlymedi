@@ -530,12 +530,15 @@ function SearchListingCard({
   d: Dictionary['detail'];
 }): JSX.Element {
   const freeform = typeof hit.details.priceRange === 'string' ? (hit.details.priceRange as string) : null;
-  const price = hit.priceWon
-    ? `₩${hit.priceWon.toLocaleString('ko-KR')}`
-    : freeform
-      ? localizeKoLabel(freeform, locale)
-      : d.inquire;
-  const unit = hit.priceWon ? localizePriceUnit(hit.priceUnit, hit.category, d.units, locale) : '';
+  const isHotel = hit.category === 'hotel'; // 호텔은 요금 미표시 — 문의 후 견적
+  const price = isHotel
+    ? d.priceAsk
+    : hit.priceWon
+      ? `₩${hit.priceWon.toLocaleString('ko-KR')}`
+      : freeform
+        ? localizeKoLabel(freeform, locale)
+        : d.inquire;
+  const unit = !isHotel && hit.priceWon ? localizePriceUnit(hit.priceUnit, hit.category, d.units, locale) : '';
   return (
     <Link
       href={`/${locale}/listings/${hit.slug}`}

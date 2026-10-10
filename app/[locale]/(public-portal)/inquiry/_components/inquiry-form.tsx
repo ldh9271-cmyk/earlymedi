@@ -94,6 +94,7 @@ export function InquiryForm({
     doneReserve: string;
     requiredMissing: string;
     myPage: string;
+    stayPrefill: string;
     categories: Dictionary['categories']['items'];
   };
 }): JSX.Element {
@@ -112,7 +113,10 @@ export function InquiryForm({
     prefillInterest ? [prefillInterest] : [],
   );
   const [memo, setMemo] = useState(
-    prefillProgram ? `[Glow-up 모바일 앱] ${prefillProgram} 예약 문의입니다.` : '',
+    // 호텔(숙박) 문의는 체크인·체크아웃·인원 칸을 현지어로 미리 깔아 준다 — 요금 미표시 상품의 견적 요청 (2026-10-11)
+    prefillProgram && prefillInterest === 'hotel'
+      ? labels.stayPrefill.replace('{program}', prefillProgram)
+      : prefillProgram ? `[Glow-up 모바일 앱] ${prefillProgram} 예약 문의입니다.` : '',
   );
   const [selectedHospitalId, setSelectedHospitalId] = useState<string>(hospitalId ?? '');
   const [submitting, setSubmitting] = useState(false);

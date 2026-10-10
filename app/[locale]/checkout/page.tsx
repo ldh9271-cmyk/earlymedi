@@ -314,6 +314,7 @@ async function resolveSummary({
   if (slug) {
     const listing = await fetchListingBySlug({ locale, slug });
     if (!listing) return null;
+    if (listing.category === 'hotel') return null; // 호텔은 결제 대신 '예약 문의하기' (2026-10-11)
     return {
       source: 'slug',
       id: slug,
@@ -335,7 +336,7 @@ async function resolveSummary({
   const cat = stringParam(searchParams.cat);
   if (cat) {
     const validKeys = new Set<Exclude<PcCategoryKey, 'all'>>([
-      'color', 'skin', 'photo', 'makeup', 'kpop', 'food', 'hotel',
+      'color', 'skin', 'photo', 'makeup', 'kpop', 'food',
     ]);
     if (!validKeys.has(cat as Exclude<PcCategoryKey, 'all'>)) return null;
     const p = CATEGORY_PRODUCTS[cat as Exclude<PcCategoryKey, 'all'>];

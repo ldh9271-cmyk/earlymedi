@@ -64,7 +64,7 @@ export async function buildTripGrounding(locale: PublicLocale): Promise<string> 
        order by (l.category = 'hotel'), l.featured desc, l.sort_order nulls last, l.title limit 60`)) as unknown as Row[];
     const label: Record<string, string> = { hair: '헤어샵', makeup: '메이크업샵', nail: '네일', pmu: '반영구', personal_color: '퍼스널컬러', photo_studio: '사진 스튜디오', food: '맛집', restaurant: '맛집', hotel: '호텔' };
     for (const r of places) {
-      const price = Number(r.price_won) > 0 ? won(r.price_won, r.price_unit) : (r.pr ? String(r.pr) : '가격 문의');
+      const price = String(r.category) === 'hotel' ? '요금 문의(예약 문의 후 안내)' : Number(r.price_won) > 0 ? won(r.price_won, r.price_unit) : (r.pr ? String(r.pr) : '가격 문의');
       lines.push(`[${label[String(r.category)] ?? r.category}] ${r.title} | 위치: ${r.location_label ?? ''} | 가격: ${price} | 링크: /${locale}/listings/${r.slug}`);
     }
     const spots = (await db.execute(sql`

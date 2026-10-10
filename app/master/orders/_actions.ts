@@ -14,6 +14,8 @@ import { declareFinalAmount, masterSetSettlementStatus, type SettlementStatus } 
 import { refundAndCancel } from '@/lib/refund/service';
 import { confirmHospitalVisit } from '@/lib/hospital-visit/service';
 import { onRegistryAgencyPaid } from '@/lib/registry/agency';
+import { issueQuoteInvoice } from '@/lib/quote/service';
+import { PUBLIC_LOCALES, type PublicLocale } from '@/lib/i18n/locales';
 import {
   accrueOrderTravelMargin,
   reverseOrder,
@@ -214,4 +216,28 @@ export async function confirmHospitalVisitAction(formData: FormData): Promise<vo
   if (!r.ok) redirect(`/master/orders?error=${encodeURIComponent(r.reason)}`);
   revalidatePath('/master/orders');
   redirect(`/master/orders?ok=${encodeURIComponent(`${r.invoiceNo} 진료 예약 확정 — 환자 마이페이지에 QR 예약증 생성${r.emailed ? ' · 이메일 발송' : ''}`)}`);
+}
+
+/**
+ * 견적 인보이스 발행 — 가격을 미리 안 보여주는 상품(호텔 등). 문의에 답하며 금액이 정해지면
+ * 회원 이메일 앞으로 토스 인보이스를 만들고 회원 언어로 메일을 보낸다. 회원은 마이페이지에서 결제.
+ */
+export async function issueQuoteInvoiceAction(formData: FormData): Promise<void> {
+  await assertMaster();
+  const email = String(formData.get('email') ?? '').trim();
+  const localeRaw = String(formData.get('locale') ?? 'kr');
+  const locale = (PUBLIC_LOCALES as readonly string[]).includes(localeRaw) ? (localeRaw as PublicLocale) : 'kr';
+  const title = String(formData.get('title') ?? '').trim();
+  const amountWon = Math.round(Number(String(formData.get('amountWon') ?? '').replace(/[^\d]/g, '')));
+  const note = String(formData.get('note') ?? '').trim() || null;
+  const dateRaw = String(formData.get('dateYmd') ?? '').trim();
+  const dateYmd = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : null;
+  const periodLabel = String(formData.get('periodLabel') ?? '').trim() || null;
+  const guests = Math.max(1, Math.round(Number(String(formData.get('guests') ?? '1')) || 1));
+  const listingSlug = String(formData.get('listingSlug') ?? '').trim() || null;
+  const interestKey = String(formData.get('interestKey') ?? 'hotel').trim() || 'hotel';
+  const r = await issueQuoteInvoice({ email, locale, title, amountWon, note, dateYmd, periodLabel, guests, listingSlug, interestKey });
+  if (!r.ok) redirect(`/master/orders?error=${encodeURIComponent(r.error)}`);
+  revalidatePath('/master/orders');
+  redirect(`/master/orders?ok=${encodeURIComponent(`견적 인보이스 발행 · ${r.invoiceNo}${r.emailSent ? ' · 이메일 발송됨' : ' · 이메일 발송 실패(회원에게 직접 안내)'}`)}`);
 }

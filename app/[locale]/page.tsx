@@ -237,12 +237,16 @@ type RowCard = {
 
 function listingRowCard(locale: PublicLocale, l: ListingCard, d: Dictionary['detail']): RowCard {
   const freeform = typeof l.details.priceRange === 'string' ? (l.details.priceRange as string) : null;
-  const price = l.priceWon
-    ? `₩${l.priceWon.toLocaleString('ko-KR')}`
-    : freeform
-      ? localizeKoLabel(freeform, locale)
-      : null;
-  const unit = l.priceWon ? localizePriceUnit(l.priceUnit, l.category, d.units, locale) : '';
+  // 호텔은 요금 미표시 — 문의 후 견적 (2026-10-11)
+  const isHotel = l.category === 'hotel';
+  const price = isHotel
+    ? d.priceAsk
+    : l.priceWon
+      ? `₩${l.priceWon.toLocaleString('ko-KR')}`
+      : freeform
+        ? localizeKoLabel(freeform, locale)
+        : null;
+  const unit = !isHotel && l.priceWon ? localizePriceUnit(l.priceUnit, l.category, d.units, locale) : '';
   return {
     key: l.id,
     href: `/${locale}/listings/${l.slug}`,

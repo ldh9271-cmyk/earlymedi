@@ -126,6 +126,8 @@ export async function POST(req: Request): Promise<NextResponse> {
         .from(partnerListings)
         .where(eq(partnerListings.slug, input.listingSlug))
         .limit(1);
+      // 호텔은 가격 미표시·문의 전용 — 옛 클라이언트가 호출해도 인보이스를 내지 않는다 (2026-10-11)
+      if (listing?.category === 'hotel') return NextResponse.json({ error: 'inquiry_only' }, { status: 400 });
       useDeposit = !!listing && listing.category !== 'travel_package';
     } catch {
       /* 조회 실패 시 기존 전액 결제로 폴백 */

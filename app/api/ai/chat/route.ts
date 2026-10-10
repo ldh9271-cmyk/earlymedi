@@ -325,12 +325,16 @@ async function findListings(
       const price = r.priceWon
         ? `₩${r.priceWon.toLocaleString('ko-KR')}${unit ? ` / ${unit}` : ''}`
         : (typeof d.priceRange === 'string' ? localizeKoLabel(d.priceRange, locale) : '');
-      const desc = (o?.description || r.description || '').replace(/\s+/g, ' ').slice(0, 220);
+      // 호텔은 요금을 공개하지 않는다 — 설명 안의 "1박 ₩…" 도 지운다 (문의 후 견적, 2026-10-11)
+      const isHotel = r.category === 'hotel';
+      const priceText = isHotel ? '요금 미표시 — 예약 문의 후 컨시어지가 안내' : price;
+      const descRaw = (o?.description || r.description || '').replace(/\s+/g, ' ').slice(0, 220);
+      const desc = isHotel ? descRaw.replace(/(1박\s*)?₩\s?[\d,]+(\s?[~\-–]\s?₩?[\d,]+)?\.?/g, '').replace(/\s{2,}/g, ' ').trim() : descRaw;
       const parts = [
         `[상품] ${title}`,
         `카테고리: ${r.category}${d.subType ? `/${d.subType}` : ''}`,
         r.locationLabel ? `위치: ${r.locationLabel}` : '',
-        `가격: ${price}`,
+        `가격: ${priceText}`,
         typeof d.durationDays === 'number' ? `일정: ${d.durationDays}일` : '',
         desc ? `설명: ${desc}` : '',
         `링크: /${locale}/listings/${r.slug}`,
@@ -341,7 +345,7 @@ async function findListings(
           kind: 'listing' as const,
           title,
           href: `/${locale}/listings/${r.slug}`,
-          note: price,
+          note: priceText,
         },
       };
     });

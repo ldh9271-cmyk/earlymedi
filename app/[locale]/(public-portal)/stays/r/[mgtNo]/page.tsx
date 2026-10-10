@@ -117,7 +117,7 @@ export default async function StayDetailPage({ params }: { params: { locale: str
               {row.details.languages?.length ? <p style={{ fontSize: 13, color: '#6a6a6a', margin: '10px 0 0' }}><b>{tr.languages}</b> · {row.details.languages.join(', ')}</p> : null}
               {row.details.checkIn || row.details.checkOut ? <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 0' }}>{[row.details.checkIn ? `Check-in ${row.details.checkIn}` : null, row.details.checkOut ? `Check-out ${row.details.checkOut}` : null].filter(Boolean).join(' · ')}</p> : null}
               {row.details.amenities?.length ? <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 0' }}>{row.details.amenities.join(' · ')}</p> : null}
-              {row.details.priceNote ? <p style={{ fontSize: 13, color: '#6a6a6a', margin: '6px 0 0' }}>{row.details.priceNote}</p> : null}
+              {/* priceNote(요금 문구)는 노출하지 않는다 — 숙박은 문의 후 견적 (2026-10-11) */}
             </div>
           ) : null}
 

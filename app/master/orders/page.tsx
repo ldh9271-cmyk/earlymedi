@@ -6,7 +6,7 @@ import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
-import { markOrderPaidAction, cancelOrderAction, confirmReservationAction, settleHospitalActualAction, setMerchantSettlementStatusAction, masterDeclareSettlementAction, refundCancelOrderAction, confirmHospitalVisitAction } from './_actions';
+import { markOrderPaidAction, cancelOrderAction, confirmReservationAction, settleHospitalActualAction, setMerchantSettlementStatusAction, masterDeclareSettlementAction, refundCancelOrderAction, confirmHospitalVisitAction, issueQuoteInvoiceAction } from './_actions';
 import ConfirmForm from './_components/confirm-form';
 import { orderEstimate, resolveRefundCategories, type CancelMeta, type CancelRequestMeta } from '@/lib/refund/service';
 import type { RefundCategory } from '@/lib/refund/policy';
@@ -124,6 +124,35 @@ export default async function MasterOrdersPage({
       {searchParams.error ? (
         <p style={{ color: '#dc2626', fontSize: 13, marginTop: 16 }}>처리에 실패했습니다: {searchParams.error}</p>
       ) : null}
+
+      {/* 견적 인보이스 발행 — 호텔처럼 가격을 미리 안 보여주는 상품. 문의 답변 뒤 금액이 정해지면 회원 앞으로 토스 인보이스를 보낸다 */}
+      <details style={{ marginTop: 18, border: '1px solid #fecdd3', background: '#fff5f7', borderRadius: 12, padding: '12px 16px' }}>
+        <summary style={{ fontSize: 14, fontWeight: 800, color: '#c81e42', cursor: 'pointer' }}>💌 견적 인보이스 발행 (호텔·가격 미표시 상품) — 회원 이메일로 토스 결제 링크 발송</summary>
+        <form action={issueQuoteInvoiceAction} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8, marginTop: 12, fontSize: 13 }}>
+          <label style={{ display: 'grid', gap: 4 }}>회원 이메일 *<input name="email" type="email" required placeholder="customer@example.com" style={{ padding: 8, border: '1px solid #ddd', borderRadius: 8 }} /></label>
+          <label style={{ display: 'grid', gap: 4 }}>메일 언어
+            <select name="locale" defaultValue="kr" style={{ padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
+              <option value="kr">한국어</option><option value="en">English</option><option value="ja">日本語</option><option value="zh">中文</option><option value="ru">Русский</option><option value="vi">Tiếng Việt</option>
+            </select>
+          </label>
+          <label style={{ display: 'grid', gap: 4, gridColumn: 'span 2' }}>상품명 * (호텔명 · 객실 · 기간)<input name="title" required maxLength={300} placeholder="예: 호텔 라플라스 디럭스 더블 2박" style={{ padding: 8, border: '1px solid #ddd', borderRadius: 8 }} /></label>
+          <label style={{ display: 'grid', gap: 4 }}>결제 금액(원) *<input name="amountWon" required inputMode="numeric" placeholder="350000" style={{ padding: 8, border: '1px solid #ddd', borderRadius: 8 }} /></label>
+          <label style={{ display: 'grid', gap: 4 }}>체크인·이용일<input name="dateYmd" type="date" style={{ padding: 8, border: '1px solid #ddd', borderRadius: 8 }} /></label>
+          <label style={{ display: 'grid', gap: 4 }}>기간 표시 (예: 2박)<input name="periodLabel" maxLength={60} placeholder="2박 3일" style={{ padding: 8, border: '1px solid #ddd', borderRadius: 8 }} /></label>
+          <label style={{ display: 'grid', gap: 4 }}>인원<input name="guests" type="number" min={1} max={20} defaultValue={2} style={{ padding: 8, border: '1px solid #ddd', borderRadius: 8 }} /></label>
+          <label style={{ display: 'grid', gap: 4 }}>분류
+            <select name="interestKey" defaultValue="hotel" style={{ padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
+              <option value="hotel">호텔·숙박</option><option value="travel">여행·투어</option><option value="beauty">뷰티</option><option value="other">기타</option>
+            </select>
+          </label>
+          <label style={{ display: 'grid', gap: 4 }}>리스팅 slug (선택)<input name="listingSlug" maxLength={200} placeholder="/listings/<slug> 의 slug" style={{ padding: 8, border: '1px solid #ddd', borderRadius: 8 }} /></label>
+          <label style={{ display: 'grid', gap: 4, gridColumn: '1 / -1' }}>고객에게 보이는 메모 (포함 사항 · 조건 · 취소 규정)<textarea name="note" rows={3} maxLength={1000} style={{ padding: 8, border: '1px solid #ddd', borderRadius: 8, fontFamily: 'inherit' }} /></label>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button type="submit" style={{ background: '#ff385c', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 18px', fontWeight: 800, cursor: 'pointer' }}>인보이스 발행 + 이메일 보내기</button>
+            <span style={{ fontSize: 12, color: '#6a6a6a' }}>회원(가입 계정)에게만 발행됩니다. 발행 후 아래 목록에 kind=quote · 입금 대기로 보이고, 회원이 마이페이지에서 토스로 결제하면 결제 완료로 바뀝니다.</span>
+          </div>
+        </form>
+      </details>
       {dbError ? (
         <p style={{ color: '#dc2626', fontSize: 13, marginTop: 16 }}>목록을 불러오지 못했습니다: {dbError}</p>
       ) : null}

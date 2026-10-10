@@ -38,6 +38,9 @@ export default function TossFailPage(): JSX.Element {
       <div style={{ fontSize: 13, color: '#6a6a6a' }}>
         No charge was made. You can try again anytime. · 요금은 청구되지 않았습니다. 다시 시도해 주세요.
       </div>
+      <Link href={`/${locale}/me`} style={{ fontSize: 14, fontWeight: 700, color: '#ff385c' }}>
+        Try again on My Page · 마이페이지에서 다시 결제
+      </Link>
       <Link href={`/${locale}`} style={{ fontSize: 14, fontWeight: 600, color: '#ff385c' }}>
         Back to home · 홈으로
       </Link>

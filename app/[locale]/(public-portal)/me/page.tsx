@@ -12,6 +12,7 @@ import { attributeUser, patientPointsBalance, REF_COOKIE } from '@/lib/referral/
 import { cancellableByConsumer, orderEstimate, resolveRefundCategories, type CancelRequestMeta } from '@/lib/refund/service';
 import { REFUND_POLICIES, tierRanges, type RefundCategory } from '@/lib/refund/policy';
 import CancelOrderButton from './_components/cancel-order';
+import { PayInvoiceButton } from './_components/pay-invoice';
 
 export const dynamic = 'force-dynamic';
 
@@ -170,7 +171,9 @@ export default async function MyPage({
           {rows.map((r) => {
             // 예약금 주문: 입금 확인 후 컨시어지 확정(meta.reserveConfirmedAt)까지
             // 한 단계가 더 있다 — 확정되면 '예약 확정'으로 표시한다.
-            const orderMeta = (r.meta ?? {}) as { depositWon?: number; reserveConfirmedAt?: string; cancelRequest?: CancelRequestMeta; cancel?: { refundWon?: number }; voucher?: { checkedInAt?: string } };
+            const orderMeta = (r.meta ?? {}) as { depositWon?: number; reserveConfirmedAt?: string; cancelRequest?: CancelRequestMeta; cancel?: { refundWon?: number }; voucher?: { checkedInAt?: string }; quoteNote?: string | null };
+            // 견적 인보이스(호텔 등 가격 미표시 상품): 운영자가 금액을 정해 발행 → 여기서 토스 결제
+            const isQuote = r.kind === 'quote';
             // 병원 진료 예약(무료): issued=요청 중, paid+reserveConfirmedAt=확정, voucher.checkedInAt=방문 확인
             const isHospitalVisit = r.kind === 'hospital_visit';
             const isDeposit = !!orderMeta.depositWon;
@@ -184,7 +187,9 @@ export default async function MyPage({
                 ? { label: t.statusConfirmed, bg: '#ecfdf5', fg: '#047857' }
                 : isHospitalVisit && r.status === 'issued'
                   ? { label: t.statusRequested, bg: '#fffbeb', fg: '#b45309' }
-                  : statusMeta[r.status] ?? { label: r.status, bg: '#f5f5f5', fg: '#6a6a6a' };
+                  : isQuote && r.status === 'issued'
+                    ? { label: t.quote.badge, bg: '#fff5f7', fg: '#c81e42' }
+                    : statusMeta[r.status] ?? { label: r.status, bg: '#f5f5f5', fg: '#6a6a6a' };
             const highlighted = searchParams.invoice === r.invoiceNo;
             return (
               <article
@@ -265,7 +270,7 @@ export default async function MyPage({
                     <div style={{ fontSize: 11, color: '#9c9c9c', marginTop: 2 }}>
                       {isDeposit
                         ? `${dict.checkout.payOnSiteRow} ₩${r.subtotalWon.toLocaleString('ko-KR')}`
-                        : `₩${r.subtotalWon.toLocaleString('ko-KR')} + ${t.feeLabel} ₩${r.serviceFeeWon.toLocaleString('ko-KR')}`}
+                        : isQuote ? '' : `₩${r.subtotalWon.toLocaleString('ko-KR')} + ${t.feeLabel} ₩${r.serviceFeeWon.toLocaleString('ko-KR')}`}
                     </div>
                   </div>
                   )}
@@ -294,6 +299,20 @@ export default async function MyPage({
                   ) : null}
                   {r.paymentMethod !== 'none' ? <span style={{ textTransform: 'uppercase' }}>{r.paymentMethod}</span> : null}
                 </div>
+
+                {isQuote && (orderMeta.quoteNote || r.status === 'issued') ? (
+                  <div style={{ marginTop: 12, background: '#fff5f7', border: '1px solid #fecdd3', borderRadius: 12, padding: 14 }}>
+                    {orderMeta.quoteNote ? (
+                      <div style={{ fontSize: 13, color: '#3f3f3f', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                        <b>{t.quote.noteLabel}</b><br />{orderMeta.quoteNote}
+                      </div>
+                    ) : null}
+                    {r.status === 'issued' ? (
+                      <PayInvoiceButton locale={locale} invoiceNo={r.invoiceNo} amountWon={r.totalWon} title={r.listingTitle} email={auth.user.email ?? null}
+                        labels={{ payNow: t.quote.payNow, hint: t.quote.payHint, failed: t.quote.payFailed }} />
+                    ) : null}
+                  </div>
+                ) : null}
 
                 {r.status === 'reported' ? (
                   <p style={{ fontSize: 12, color: '#6a6a6a', margin: '10px 0 0', lineHeight: 1.55 }}>

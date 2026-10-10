@@ -54,6 +54,8 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   // 이미 승인된 인보이스 — 새로고침/중복 호출은 성공으로 응답 (멱등)
   if (order.status === 'paid') return NextResponse.json({ ok: true, already: true });
+  // 취소된 인보이스(재발행된 견적 등)는 결제창이 열려 있었어도 승인하지 않는다
+  if (order.status === 'cancelled') return NextResponse.json({ error: 'cancelled' }, { status: 409 });
 
   if (order.totalWon !== input.amount) {
     return NextResponse.json({ error: 'amount_mismatch' }, { status: 400 });

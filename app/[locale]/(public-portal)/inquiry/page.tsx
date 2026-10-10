@@ -72,6 +72,7 @@ export default async function InquiryPage({
         hospitalOptions={hospitalOptions}
         labels={{
           name: dict.inquiryCta.nameLabel,
+          stayPrefill: dict.inquiryCta.stayPrefill,
           country: dict.inquiryCta.countryLabel,
           contact: dict.inquiryCta.contactLabel,
           dob: dict.inquiryCta.dobLabel,
