@@ -3,6 +3,8 @@ import { Badge } from '@/components/shared/ui/badge';
 import { BILLING_PLAN_SEEDS } from '@/drizzle/seeds/billing-plans';
 import { ACCOUNT_TYPE_LABEL_KO } from '@/lib/auth/account-types';
 import type { AccountType } from '@/lib/auth/account-types';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
+import { FreePeriodBanner } from '@/components/shared/billing/free-period-banner';
 
 export const metadata = { title: '요금제' };
 
@@ -13,8 +15,9 @@ export default function PricingPage(): JSX.Element {
     <main className="mx-auto max-w-6xl px-6 py-16">
       <div className="mb-12 text-center">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">글로우업투어 요금제</h1>
-        <p className="mt-2 text-muted-foreground">카테고리별로 적합한 플랜을 선택하세요.</p>
+        <p className="mt-2 text-muted-foreground">{BIZ_FREE_PERIOD ? '지금은 무료 이용 기간입니다. 아래는 유료 전환 뒤 적용될 정가입니다.' : '카테고리별로 적합한 플랜을 선택하세요.'}</p>
       </div>
+      <div className="mx-auto mb-10 max-w-3xl"><FreePeriodBanner /></div>
 
       <div className="space-y-12">
         {ACCOUNT_ORDER.map((accountType) => {
@@ -36,7 +39,7 @@ export default function PricingPage(): JSX.Element {
                       {(p.annualFeeKrw ?? 0) > 0 ? <Row label="연 구독" value={`${fmt(p.annualFeeKrw ?? 0)} / 년`} /> : null}
                       {(p.prepaidChargeMinKrw ?? 0) > 0 ? <Row label="최소 충전" value={fmt(p.prepaidChargeMinKrw ?? 0)} /> : null}
                       <Row label="정산 수수료" value={`${((p.settlementFeeBp ?? 0) / 100).toFixed(2)}%`} />
-                      {(p.trialDays ?? 0) > 0 ? <Badge variant="brand">{p.trialDays}일 무료 체험</Badge> : null}
+                      {BIZ_FREE_PERIOD ? <Badge variant="brand">무료 이용 기간</Badge> : (p.trialDays ?? 0) > 0 ? <Badge variant="brand">{p.trialDays}일 무료 체험</Badge> : null}
                       {p.seatLimit ? <div className="text-xs text-muted-foreground">좌석 {p.seatLimit}</div> : null}
                     </CardContent>
                   </Card>

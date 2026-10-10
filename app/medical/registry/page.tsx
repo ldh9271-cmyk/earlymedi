@@ -9,6 +9,7 @@ import { Button } from '@/components/shared/ui/button';
 import { chooseSelfModeAction, claimHospitalFromConsoleAction, requestAgencyAction, saveRegistryProfileAction } from './_actions';
 import { REGISTRY_LANGS } from './langs';
 import { REGISTRY_AGENCY_FEE_WON } from '@/lib/registry/agency';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
 import { profileCompleteness } from '@/lib/registry/submission';
 import { parseRange, fmtHM } from '@/lib/hours/status';
 import HoursBulkApply from '@/components/shared/hours-bulk-apply';
@@ -21,6 +22,7 @@ const OK_MSG: Record<string, string> = {
   claimed: '연결 요청을 보냈습니다. 아래에서 병원 정보를 채우고 검수를 요청하면 승인과 함께 게시됩니다.',
   self: '직접 등록을 선택했습니다. 아래 양식을 채우고 "검수 요청" 을 눌러 주세요.',
   agency: '대행 인보이스를 발행했습니다. 결제가 확인되면 담당자가 연락드립니다.',
+  agency_free: '대행 신청을 접수했습니다 (무료 이용 기간 · 결제 없음). 담당자가 1~2 영업일 내 연락드리며, 아래에 사진·서류를 올려 두시면 더 빨리 진행됩니다.',
   paid: '대행비 결제가 확인되었습니다. 담당자가 1~2 영업일 내 연락드리며, 아래에 자료를 올려 두시면 더 빨리 진행됩니다.',
   saved: '저장했습니다 (임시 저장). 검수 요청 전까지는 공개 페이지에 반영되지 않습니다.',
   submitted: '검수를 요청했습니다. 관리자가 1~2 영업일 내 확인해 승인하면 정식 게시됩니다.',
@@ -144,8 +146,8 @@ export default async function MedicalRegistryPage({ searchParams }: { searchPara
                   <form action={chooseSelfModeAction} className="mt-3"><Button type="submit" variant="outline">직접 등록하기</Button></form>
                 </div>
                 <div className="rounded-lg border border-[#ffd7de] bg-[#fff8f9] p-4">
-                  <div className="text-sm font-bold">플랫폼 대행 · ₩{REGISTRY_AGENCY_FEE_WON.toLocaleString('ko-KR')}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">대행비를 결제하면 담당자가 연락해 홈페이지·자료를 바탕으로 소개·시술·의료진·사진을 대신 구성하고 검수까지 진행합니다. 사진과 사업자등록증만 올려 주시면 됩니다.</p>
+                  <div className="text-sm font-bold">플랫폼 대행 · {BIZ_FREE_PERIOD ? <>무료 이용 기간 <span className="text-xs font-normal text-muted-foreground line-through">₩{REGISTRY_AGENCY_FEE_WON.toLocaleString('ko-KR')}</span></> : `₩${REGISTRY_AGENCY_FEE_WON.toLocaleString('ko-KR')}`}</div>
+                  <p className="mt-1 text-xs text-muted-foreground">{BIZ_FREE_PERIOD ? '지금은 대행비 없이 신청만 하면 담당자가 연락해' : '대행비를 결제하면 담당자가 연락해'} 홈페이지·자료를 바탕으로 소개·시술·의료진·사진을 대신 구성하고 검수까지 진행합니다. 사진과 사업자등록증만 올려 주시면 됩니다.</p>
                   <form action={requestAgencyAction} className="mt-3"><Button type="submit" variant="brand">대행 신청하기</Button></form>
                 </div>
               </CardContent>
@@ -159,7 +161,7 @@ export default async function MedicalRegistryPage({ searchParams }: { searchPara
                 <CardTitle className="text-base">플랫폼 대행 {agency?.paidAt ? '· 진행 중' : '· 결제 대기'}</CardTitle>
                 <CardDescription className="text-xs">
                   {agency?.paidAt
-                    ? `대행비 결제 확인 ${new Date(agency.paidAt).toLocaleString('ko-KR')} · 담당자가 1~2 영업일 내 연락드립니다. 아래 양식에 사진·서류를 올려 두시면 바로 착수합니다.`
+                    ? `${agency.amountWon > 0 ? '대행비 결제 확인' : '대행 신청 접수 (무료 이용 기간)'} ${new Date(agency.paidAt).toLocaleString('ko-KR')} · 담당자가 1~2 영업일 내 연락드립니다. 아래 양식에 사진·서류를 올려 두시면 바로 착수합니다.`
                     : `인보이스 ${agency?.invoiceNo ?? ''} · 대행비 ₩${(agency?.amountWon ?? REGISTRY_AGENCY_FEE_WON).toLocaleString('ko-KR')} (카드·간편결제). 결제가 확인되면 담당자가 연락드립니다.`}
                 </CardDescription>
               </CardHeader>

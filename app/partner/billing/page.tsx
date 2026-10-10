@@ -8,6 +8,8 @@ import { Badge } from '@/components/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { formatLocal } from '@/lib/utils/date';
 import { BillingContactForm } from '@/app/agency/billing/_components/billing-contact-form';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
+import { FreePeriodBanner } from '@/components/shared/billing/free-period-banner';
 
 export const metadata = { title: '청구서' };
 export const dynamic = 'force-dynamic';
@@ -98,6 +100,8 @@ export default async function PartnerBillingPage(): Promise<JSX.Element> {
         </p>
       </div>
 
+      <FreePeriodBanner />
+
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -120,14 +124,15 @@ export default async function PartnerBillingPage(): Promise<JSX.Element> {
           <div>
             <div className="text-xs text-muted-foreground">월 요금</div>
             <div className="text-xl font-bold">
-              {account.monthlyFeeKrw > 0 ? won(account.monthlyFeeKrw) : '없음'}
+              {BIZ_FREE_PERIOD ? '무료 기간' : account.monthlyFeeKrw > 0 ? won(account.monthlyFeeKrw) : '없음'}
             </div>
           </div>
           <div>
             <div className="text-xs text-muted-foreground">정산 수수료</div>
             <div className="text-xl font-bold">
-              {account.settlementFeeBp > 0 ? `${(account.settlementFeeBp / 100).toFixed(1)}%` : '없음'}
+              {BIZ_FREE_PERIOD ? '0%' : account.settlementFeeBp > 0 ? `${(account.settlementFeeBp / 100).toFixed(1)}%` : '없음'}
             </div>
+            {BIZ_FREE_PERIOD && account.settlementFeeBp > 0 ? <div className="text-[11px] text-muted-foreground">무료 기간 · 정가 {(account.settlementFeeBp / 100).toFixed(1)}%</div> : null}
           </div>
           <div>
             <div className="text-xs text-muted-foreground">팀 시트</div>

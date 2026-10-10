@@ -2,6 +2,7 @@ import 'server-only';
 import { and, eq, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { billingAccounts } from '@/drizzle/schema/billing';
+import { BIZ_FREE_PERIOD } from './free-period';
 
 /**
  * 무료 체험 게이트 — 기간(1개월) 기준.
@@ -66,7 +67,8 @@ export async function getTrialStatus(organizationId: string): Promise<TrialStatu
   const now = Date.now();
   const daysRemaining =
     endsAt === null ? null : Math.max(0, Math.ceil((endsAt.getTime() - now) / DAY_MS));
-  const blocked = !isPaid && endsAt !== null && endsAt.getTime() <= now;
+  // 비즈니스 무료 이용 기간(lib/billing/free-period) 동안은 체험이 끝나도 막지 않는다
+  const blocked = !BIZ_FREE_PERIOD && !isPaid && endsAt !== null && endsAt.getTime() <= now;
 
   return { isPaid, endsAt, daysRemaining, used: row.trialUsesCount, blocked };
 }
@@ -77,6 +79,7 @@ export async function getTrialStatus(organizationId: string): Promise<TrialStatu
  * expiry (free plans).
  */
 export async function assertTrialQuotaAvailable(organizationId: string): Promise<void> {
+  if (BIZ_FREE_PERIOD) return; // 무료 이용 기간 — 과금 게이트 없음
   const status = await getTrialStatus(organizationId);
   if (!status) return; // No billing account yet — treat as unmetered (shouldn't happen post-signup).
   if (!status.blocked) return;

@@ -20,6 +20,8 @@ import { Badge } from '@/components/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { formatLocal } from '@/lib/utils/date';
 import { TopupForm, UnlockButton } from './_components/leads-client';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
+import { FreePeriodBanner } from '@/components/shared/billing/free-period-banner';
 
 export const metadata = { title: '리드 마켓' };
 export const dynamic = 'force-dynamic';
@@ -136,7 +138,8 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
       birthDate?: string;
     };
     const interests = meta.interests ?? [];
-    const { priceWon } = leadPriceWon(interests);
+    const { priceWon: listPriceWon } = leadPriceWon(interests);
+    const priceWon = BIZ_FREE_PERIOD ? 0 : listPriceWon;
     return {
       id: l.id,
       name: l.name ?? '',
@@ -171,7 +174,10 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
         </p>
       </div>
 
-      {/* 지갑 + 충전 */}
+      <FreePeriodBanner />
+
+      {/* 지갑 + 충전 — 무료 기간에는 충전이 필요 없다 */}
+      {BIZ_FREE_PERIOD ? null : (
       <Card>
         <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
           <div className="flex flex-wrap items-center gap-8">
@@ -192,6 +198,7 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {topups.length > 0 ? (
         <Card>
@@ -225,7 +232,7 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
       {/* 가격표 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">열람 가격표</CardTitle>
+          <CardTitle className="text-base">열람 가격표{BIZ_FREE_PERIOD ? ' (유료 전환 후 정가 · 지금은 무료)' : ''}</CardTitle>
           <CardDescription className="text-xs">관심 분야(상품 카테고리) 기준 · 리드 1건당</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">

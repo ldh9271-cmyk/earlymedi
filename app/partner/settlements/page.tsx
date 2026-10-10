@@ -1,4 +1,5 @@
 import { Wallet } from 'lucide-react';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { requireAccess } from '@/lib/auth/route-guards';
 import { withRls } from '@/lib/auth/rls-context';
@@ -99,7 +100,8 @@ export default async function PartnerSettlementsPage(): Promise<JSX.Element> {
   const otherCurrencies = [...new Set(bookings.filter((b) => b.currency !== 'KRW').map((b) => b.currency))];
   const ordersKrw = orders.reduce((s, o) => s + o.subtotalWon, 0);
 
-  const feeBp = account?.settlementFeeBp ?? 0;
+  // 비즈니스 무료 이용 기간(lib/billing/free-period)에는 수수료 0
+  const feeBp = BIZ_FREE_PERIOD ? 0 : (account?.settlementFeeBp ?? 0);
   const grossKrw = completedKrw + ordersKrw;
   const feeKrw = Math.round((grossKrw * feeBp) / 10000);
 
@@ -142,7 +144,7 @@ export default async function PartnerSettlementsPage(): Promise<JSX.Element> {
           ['확정(예정) 부킹', `${money(confirmedKrw)} · ${confirmed.length}건`],
           ['상품 직판 누계', `${money(ordersKrw)} · ${orders.length}건`],
           [
-            `플랜 정산 수수료 (${feeBp > 0 ? `${(feeBp / 100).toFixed(1)}%` : '없음'})`,
+            `플랜 정산 수수료 (${BIZ_FREE_PERIOD ? '무료 이용 기간 · 0%' : feeBp > 0 ? `${(feeBp / 100).toFixed(1)}%` : '없음'})`,
             feeBp > 0 ? `차감 예상 ${money(feeKrw)}` : '—',
           ],
         ].map(([label, v]) => (

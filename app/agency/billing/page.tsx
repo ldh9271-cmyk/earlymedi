@@ -10,6 +10,8 @@ import { Button } from '@/components/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { formatLocal } from '@/lib/utils/date';
 import { BillingContactForm } from './_components/billing-contact-form';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
+import { FreePeriodBanner } from '@/components/shared/billing/free-period-banner';
 
 export const metadata = { title: '요금제 · 청구서' };
 export const dynamic = 'force-dynamic';
@@ -120,6 +122,8 @@ export default async function AgencyBillingPage(): Promise<JSX.Element> {
         </p>
       </div>
 
+      <FreePeriodBanner />
+
       {/* 현재 플랜 */}
       <Card>
         <CardHeader>
@@ -147,7 +151,7 @@ export default async function AgencyBillingPage(): Promise<JSX.Element> {
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <Metric label="월 요금 (유료 전환 시)" value={won(account.monthlyFeeKrw)} />
-          <Metric label="GMV 정산 수수료" value={`${(account.settlementFeeBp / 100).toFixed(1)}%`} />
+          <Metric label={BIZ_FREE_PERIOD ? 'GMV 정산 수수료 (무료 기간)' : 'GMV 정산 수수료'} value={BIZ_FREE_PERIOD ? `0% · 정가 ${(account.settlementFeeBp / 100).toFixed(1)}%` : `${(account.settlementFeeBp / 100).toFixed(1)}%`} />
           <Metric
             label="팀 시트"
             value={`${seatCount} / ${account.seatLimit ?? '무제한'}`}
@@ -163,9 +167,9 @@ export default async function AgencyBillingPage(): Promise<JSX.Element> {
           <CardHeader>
             <CardTitle className="text-base">무료 체험 기간</CardTitle>
             <CardDescription className="text-xs">
-              가입일부터 {account.trialDays}일간 전체 기능을 무료로 이용합니다 — 기간이 끝나면 신규
-              환자 등록에 유료 전환이 필요합니다. 기간 중 등록한 환자 데이터는 전환 후에도 그대로
-              유지됩니다.
+              {BIZ_FREE_PERIOD
+                ? '지금은 비즈니스 회원 무료 이용 기간이라 체험 종료일이 지나도 기능이 제한되지 않습니다. 유료 전환 시점은 미리 안내드립니다.'
+                : `가입일부터 ${account.trialDays}일간 전체 기능을 무료로 이용합니다 — 기간이 끝나면 신규 환자 등록에 유료 전환이 필요합니다. 기간 중 등록한 환자 데이터는 전환 후에도 그대로 유지됩니다.`}
             </CardDescription>
           </CardHeader>
           <CardContent>

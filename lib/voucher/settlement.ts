@@ -1,4 +1,5 @@
 import 'server-only';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
 import { desc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import type { checkoutOrders } from '@/drizzle/schema/checkout-orders';
@@ -31,6 +32,7 @@ export function feeOf(amountWon: number, feeBp: number): number {
 }
 
 export async function resolveMerchantFeeBp(orgId: string | null | undefined): Promise<number> {
+  if (BIZ_FREE_PERIOD) return 0; // 비즈니스 무료 이용 기간 — 수수료 없음 (lib/billing/free-period)
   if (orgId && orgId !== 'master') {
     const [a] = await db
       .select({ bp: billingPlans.settlementFeeBp })

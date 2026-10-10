@@ -10,6 +10,8 @@ import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
 import { ACCOUNT_TYPE_LABEL_KO } from '@/lib/auth/account-types';
 import { getTrialStatus } from '@/lib/billing/trial-quota';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
+import { FreePeriodBanner } from '@/components/shared/billing/free-period-banner';
 
 export const metadata = { title: '유료 플랜으로 전환' };
 export const dynamic = 'force-dynamic';
@@ -53,9 +55,11 @@ export default async function UpgradePage(): Promise<JSX.Element> {
     <div className="space-y-6">
       <div>
         <Badge variant="hospitality" className="mb-2">유료 플랜으로 전환</Badge>
-        <h1 className="text-2xl font-bold tracking-tight">1개월 무료 체험이 끝났습니다</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{BIZ_FREE_PERIOD ? '지금은 무료 이용 기간입니다' : '1개월 무료 체험이 끝났습니다'}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {activeOrg ? (
+          {BIZ_FREE_PERIOD ? (
+            '비즈니스 회원 무료 이용 기간에는 체험이 끝나도 기능이 제한되지 않습니다. 아래 플랜은 유료 전환 뒤 적용될 정가입니다.'
+          ) : activeOrg ? (
             <>
               <strong>{activeOrg.name}</strong> ({ACCOUNT_TYPE_LABEL_KO[activeOrg.accountType]}) 의 1개월
               무료 체험 기간이 종료되었습니다. 계속 이용하시려면 유료 플랜으로 전환해 주세요.
@@ -65,6 +69,8 @@ export default async function UpgradePage(): Promise<JSX.Element> {
           )}
         </p>
       </div>
+
+      <FreePeriodBanner />
 
       {status && status.endsAt ? (
         <Card>

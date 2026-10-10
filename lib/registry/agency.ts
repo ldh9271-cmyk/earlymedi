@@ -4,6 +4,7 @@ import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { hospitalRegistry, type RegistryAgency, type RegistryDetails } from '@/drizzle/schema/hospital-registry';
 import { sendAdminTelegram } from '@/lib/notify/admin-alert';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
 
 /**
  * 병원 정보 등록 대행 — 콘솔에서 '플랫폼 대행' 을 고르면 인보이스(checkout_orders, kind registry_agency)를
@@ -22,6 +23,17 @@ function makeInvoiceNo(): string {
 export async function createAgencyOrder(input: { registryId: string; ykiho: string; name: string; orgId: string; userId: string; userEmail: string }): Promise<{ invoiceNo: string; orderId: string; amountWon: number }> {
   const [row] = await db.select({ details: hospitalRegistry.details }).from(hospitalRegistry).where(eq(hospitalRegistry.id, input.registryId)).limit(1);
   const existing = row?.details.agency;
+  // 비즈니스 무료 이용 기간(lib/billing/free-period): 결제 없이 바로 검수 큐(mode agency, submitted)에 올린다
+  if (BIZ_FREE_PERIOD) {
+    if (existing?.paidAt) return { invoiceNo: existing.invoiceNo, orderId: existing.orderId, amountWon: existing.amountWon };
+    const now = new Date().toISOString();
+    const agency: RegistryAgency = { requestedAt: now, orderId: '', invoiceNo: '', amountWon: 0, paidAt: now, status: 'paid' };
+    const prev = row?.details.submission;
+    const submission = prev?.status === 'approved' ? prev : { ...(prev ?? { status: 'draft' as const }), status: 'submitted' as const, mode: 'agency' as const, submittedAt: prev?.submittedAt ?? now };
+    await db.execute(sql`update hospital_registry set details = coalesce(details,'{}'::jsonb) || ${JSON.stringify({ agency, submission })}::jsonb, updated_at = now() where id = ${input.registryId}`);
+    await sendAdminTelegram(`<b>🧾 등록 대행 신청 (무료 이용 기간 · 결제 없음)</b>\n${esc(input.name)}\n${esc(input.userEmail)}\n→ 마스터 레지스트리 '병원 등록 검수' 에서 자료 확인 후 대신 등록`).catch(() => false);
+    return { invoiceNo: '', orderId: '', amountWon: 0 };
+  }
   if (existing?.orderId) {
     const [o] = await db.select({ id: checkoutOrders.id, status: checkoutOrders.status, invoiceNo: checkoutOrders.invoiceNo, totalWon: checkoutOrders.totalWon }).from(checkoutOrders).where(eq(checkoutOrders.id, existing.orderId)).limit(1);
     if (o && o.status !== 'cancelled') return { invoiceNo: o.invoiceNo, orderId: o.id, amountWon: o.totalWon };

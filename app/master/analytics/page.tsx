@@ -10,6 +10,7 @@ import {
   trafficByLocale, trafficByMonth, trafficTotals, runLimited, appOnboardingSummary, appOnboardingRecent, type RangePreset,
 } from '@/lib/analytics/report';
 import BarChart from './_components/bar-chart';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
 
 export const dynamic = 'force-dynamic';
 // 쿼리 20개를 한 번에 돌리므로 콜드 스타트까지 겹치면 기본 10초를 넘길 수 있다
@@ -84,6 +85,10 @@ export default async function MasterAnalyticsPage({ searchParams }: { searchPara
           <h1 className="text-xl font-bold">통계 리포트</h1>
           <p className="mt-1 text-xs text-muted-foreground">
             트래픽 · 신규 가입 · 인기 게시물 · 결제. 방문 데이터는 {collecting}. 시각은 모두 서울 기준.
+          </p>
+          <p className="mt-1 text-xs">
+            비즈니스 요금: {BIZ_FREE_PERIOD ? <span className="font-semibold text-[#c81e42]">무료 이용 기간 ON</span> : <span className="font-semibold">과금 중</span>}
+            <span className="text-muted-foreground"> · Vercel 환경변수 BIZ_FREE_PERIOD=0 으로 종료 (등록비·월 요금·정산 수수료·리드 열람·등록 대행비)</span>
           </p>
         </div>
         <Link href="/master" className="text-xs underline">마스터 홈</Link>

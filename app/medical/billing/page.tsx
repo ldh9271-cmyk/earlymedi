@@ -8,6 +8,8 @@ import { Badge } from '@/components/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { formatLocal } from '@/lib/utils/date';
 import { BillingContactForm } from '@/app/agency/billing/_components/billing-contact-form';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
+import { FreePeriodBanner } from '@/components/shared/billing/free-period-banner';
 
 export const metadata = { title: '잔액 · 사용량' };
 export const dynamic = 'force-dynamic';
@@ -102,6 +104,8 @@ export default async function MedicalBillingPage(): Promise<JSX.Element> {
         </p>
       </div>
 
+      <FreePeriodBanner />
+
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -129,12 +133,13 @@ export default async function MedicalBillingPage(): Promise<JSX.Element> {
           <div>
             <div className="text-xs text-muted-foreground">월 요금</div>
             <div className="text-xl font-bold">
-              {account.monthlyFeeKrw > 0 ? won(account.monthlyFeeKrw) : '없음 (PAYG)'}
+              {BIZ_FREE_PERIOD ? '무료 기간' : account.monthlyFeeKrw > 0 ? won(account.monthlyFeeKrw) : '없음 (PAYG)'}
             </div>
           </div>
           <div>
             <div className="text-xs text-muted-foreground">정산 수수료</div>
-            <div className="text-xl font-bold">{(account.settlementFeeBp / 100).toFixed(1)}%</div>
+            <div className="text-xl font-bold">{BIZ_FREE_PERIOD ? '0%' : `${(account.settlementFeeBp / 100).toFixed(1)}%`}</div>
+            {BIZ_FREE_PERIOD ? <div className="text-[11px] text-muted-foreground">무료 기간 · 정가 {(account.settlementFeeBp / 100).toFixed(1)}%</div> : null}
           </div>
           <div>
             <div className="text-xs text-muted-foreground">팀 시트</div>
@@ -147,7 +152,7 @@ export default async function MedicalBillingPage(): Promise<JSX.Element> {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">의료기관 플랜</CardTitle>
+          <CardTitle className="text-base">의료기관 플랜{BIZ_FREE_PERIOD ? ' (유료 전환 후 정가)' : ''}</CardTitle>
           <CardDescription className="text-xs">
             플랜 변경·충전은 담당 매니저 또는 청구 이메일로 요청해 주세요.
           </CardDescription>

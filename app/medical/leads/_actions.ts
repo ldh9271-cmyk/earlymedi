@@ -12,6 +12,7 @@ import { messages } from '@/drizzle/schema/messages';
 import { auditLogs } from '@/drizzle/schema/audit';
 import { organizations } from '@/drizzle/schema/organizations';
 import { notifyLeadUnlockEvent } from '@/lib/notify/admin-alert';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
 import {
   LEAD_TOPUP_OPTIONS_WON,
   LEAD_TOPUP_UNIT_WON,
@@ -120,10 +121,12 @@ export async function unlockLeadAction(input: {
     .orderBy(messages.sentAt)
     .limit(1);
   const meta = (inbound[0]?.metadata ?? {}) as { interests?: string[] };
-  const { priceWon, interestKey } = leadPriceWon(meta.interests ?? []);
+  const { priceWon: listPriceWon, interestKey } = leadPriceWon(meta.interests ?? []);
+  // 비즈니스 무료 이용 기간(lib/billing/free-period)에는 0원으로 열람 — 잔액을 건드리지 않는다
+  const priceWon = BIZ_FREE_PERIOD ? 0 : listPriceWon;
 
   // 잔액 차감 — 조건부 UPDATE 로 동시성 안전하게 (잔액 부족이면 0행)
-  const deducted = await db
+  const deducted = priceWon === 0 ? [{ balance: 0 }] : await db
     .update(billingAccounts)
     .set({
       prepaidBalanceKrw: sql`${billingAccounts.prepaidBalanceKrw} - ${priceWon}`,

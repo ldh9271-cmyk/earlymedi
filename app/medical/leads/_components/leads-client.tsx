@@ -68,7 +68,9 @@ export function UnlockButton({
         toast.success(
           r.already
             ? '이미 열람한 리드입니다 — 무료로 다시 열었습니다.'
-            : `리드를 열람했습니다 (₩${r.priceWon.toLocaleString('ko-KR')} 차감).`,
+            : r.priceWon === 0
+              ? '리드를 열람했습니다 (무료 이용 기간 · 차감 없음).'
+              : `리드를 열람했습니다 (₩${r.priceWon.toLocaleString('ko-KR')} 차감).`,
         );
         router.refresh();
       } catch (err) {
@@ -79,7 +81,7 @@ export function UnlockButton({
 
   return (
     <Button variant="brand" size="sm" onClick={onUnlock} disabled={pending}>
-      {pending ? '열람 중…' : `₩${priceWon.toLocaleString('ko-KR')} 열람`}
+      {pending ? '열람 중…' : priceWon === 0 ? '무료 열람' : `₩${priceWon.toLocaleString('ko-KR')} 열람`}
     </Button>
   );
 }

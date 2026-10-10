@@ -9,6 +9,7 @@ import { db } from '@/lib/db/client';
 import { hospitalRegistry, type RegistryDetails, type RegistryDoc, type RegistryHours, type RegistryProfile } from '@/drizzle/schema/hospital-registry';
 import { uploadRegistryDoc, uploadRegistryImage } from '@/lib/storage/registry-files';
 import { createAgencyOrder } from '@/lib/registry/agency';
+import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
 import { markSubmitted, profileCompleteness } from '@/lib/registry/submission';
 import { REGISTRY_LANGS } from './langs';
 
@@ -45,7 +46,7 @@ export async function requestAgencyAction(): Promise<void> {
     back({ error: e instanceof Error ? e.message : '인보이스 발행 실패' });
   }
   revalidatePath('/medical/registry');
-  back({ ok: 'agency' });
+  back({ ok: BIZ_FREE_PERIOD ? 'agency_free' : 'agency' });
 }
 
 const lines = (v: unknown, max = 30): string[] => String(v ?? '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean).slice(0, max);
