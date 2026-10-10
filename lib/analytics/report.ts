@@ -309,12 +309,12 @@ function seoulDate(d: Date): Date {
 // ── 안드로이드 앱 첫 실행 설문 (app_onboarding) ──────────────────────────────
 export type OnboardingSummary = {
   total: number; devices: number; skipped: number;
-  byLocale: SplitRow[]; byInterest: SplitRow[]; byVisit: SplitRow[];
+  byLocale: SplitRow[]; byInterest: SplitRow[]; byVisit: SplitRow[]; byAge: SplitRow[];
 };
 
 /** 앱 온보딩 응답 요약 — views = 응답 수, sessions = 기기 수. 테이블이 아직 없으면 빈 값. */
 export async function appOnboardingSummary(from: Date, to: Date): Promise<OnboardingSummary> {
-  const empty: OnboardingSummary = { total: 0, devices: 0, skipped: 0, byLocale: [], byInterest: [], byVisit: [] };
+  const empty: OnboardingSummary = { total: 0, devices: 0, skipped: 0, byLocale: [], byInterest: [], byVisit: [], byAge: [] };
   try {
     const where = sql`ts >= ${ts(from)} and ts < ${ts(to)}`;
     const [tot] = await q<{ total: number; devices: number; skipped: number }>(sql`
@@ -329,8 +329,37 @@ export async function appOnboardingSummary(from: Date, to: Date): Promise<Onboar
     const byVisit = await q<SplitRow>(sql`
       select visit as key, count(*)::int as views, count(distinct device_id)::int as sessions
       from app_onboarding where ${where} and visit is not null group by 1 order by 2 desc`);
-    return { total: tot?.total ?? 0, devices: tot?.devices ?? 0, skipped: tot?.skipped ?? 0, byLocale, byInterest, byVisit };
+    // age 컬럼은 2026-10-11 추가 — 컬럼이 없는 DB 면 빈 표
+    const byAge = await q<SplitRow>(sql`
+      select age as key, count(*)::int as views, count(distinct device_id)::int as sessions
+      from app_onboarding where ${where} and age is not null group by 1 order by 2 desc`).catch(() => [] as SplitRow[]);
+    return { total: tot?.total ?? 0, devices: tot?.devices ?? 0, skipped: tot?.skipped ?? 0, byLocale, byInterest, byVisit, byAge };
   } catch {
     return empty;
   }
+}
+
+export type OnboardingRow = {
+  id: number; ts: Date; country: string | null; locale: string | null; deviceLang: string | null;
+  interests: string[]; visit: string | null; age: string | null; skipped: boolean; appVersion: string | null; deviceId: string | null;
+};
+
+/** 앱 온보딩 개별 응답 — 최근 것부터. age 컬럼이 없는 DB 면 age 없이 다시 조회한다. */
+export async function appOnboardingRecent(from: Date, to: Date, limit = 30): Promise<OnboardingRow[]> {
+  type R = { id: number; ts: string | Date; country: string | null; locale: string | null; device_lang: string | null; interests: string[] | null; visit: string | null; age?: string | null; skipped: boolean; app_version: string | null; device_id: string | null };
+  const where = sql`ts >= ${ts(from)} and ts < ${ts(to)}`;
+  let rows: R[] = [];
+  try {
+    rows = await q<R>(sql`select id, ts, country, locale, device_lang, interests, visit, age, skipped, app_version, device_id
+      from app_onboarding where ${where} order by ts desc limit ${limit}`);
+  } catch {
+    try {
+      rows = await q<R>(sql`select id, ts, country, locale, device_lang, interests, visit, skipped, app_version, device_id
+        from app_onboarding where ${where} order by ts desc limit ${limit}`);
+    } catch { return []; }
+  }
+  return rows.map((r) => ({
+    id: Number(r.id), ts: new Date(r.ts), country: r.country, locale: r.locale, deviceLang: r.device_lang,
+    interests: Array.isArray(r.interests) ? r.interests : [], visit: r.visit, age: r.age ?? null, skipped: !!r.skipped, appVersion: r.app_version, deviceId: r.device_id,
+  }));
 }

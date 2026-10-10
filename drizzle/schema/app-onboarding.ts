@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { bigserial, boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 /**
- * app_onboarding — 안드로이드 앱 첫 실행 설문(언어 · 관심 분야 · 방문 예정 시기).
+ * app_onboarding — 안드로이드 앱 첫 실행 설문(언어 · 관심 분야 · 방문 예정 시기 · 연령대).
  *
  * 앱(glowuptour-app)이 온보딩을 마치면 /api/app/onboarding 으로 한 줄 보낸다.
  * 건너뛰기도 한 줄(skipped=true) — 응답률을 보기 위해. 개인정보는 없다:
@@ -25,6 +25,8 @@ export const appOnboarding = pgTable(
     interests: text('interests').array().notNull().default(sql`'{}'::text[]`),
     /** within1m | within3m | within6m | undecided */
     visit: text('visit'),
+    /** 20s | 30s | 40s | 50s | 60plus — 앱 1.1.1 부터 (2026-10-11 추가 컬럼) */
+    age: text('age'),
     skipped: boolean('skipped').notNull().default(false),
     country: text('country'),
   },

@@ -7,7 +7,7 @@ import {
   classifyPath, firstViewAt, orderSummary, PROVIDER_KO, recentSignups, resolveRange,
   signupsByDay, signupsByLocale, signupsByMonth, signupsByProvider, signupTotals,
   topPages, topReferrers, trafficByCountry, trafficByDay, trafficByDevice, trafficByHour,
-  trafficByLocale, trafficByMonth, trafficTotals, runLimited, appOnboardingSummary, type RangePreset,
+  trafficByLocale, trafficByMonth, trafficTotals, runLimited, appOnboardingSummary, appOnboardingRecent, type RangePreset,
 } from '@/lib/analytics/report';
 import BarChart from './_components/bar-chart';
 
@@ -39,6 +39,7 @@ const ONB_INTEREST_KO: Record<string, string> = {
   plastic: '성형외과', skin: '피부과', dental: '치과', eye: '안과', hair: '모발·탈모', checkup: '건강검진', oriental: '한방', beauty: '헤어·메이크업·네일', travel: '숙박·맛집·투어',
 };
 const ONB_VISIT_KO: Record<string, string> = { within1m: '1개월 안에', within3m: '3개월 안에', within6m: '6개월 안에', undecided: '아직 미정' };
+const ONB_AGE_KO: Record<string, string> = { '20s': '20대', '30s': '30대', '40s': '40대', '50s': '50대', '60plus': '60대 이상' };
 
 export default async function MasterAnalyticsPage({ searchParams }: { searchParams: { range?: string } }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
@@ -66,7 +67,7 @@ export default async function MasterAnalyticsPage({ searchParams }: { searchPara
   const [signupsLoc, recent, orders, ordersPrev] = await runLimited([
     () => signupsByLocale(r.from, r.to), () => recentSignups(20), () => orderSummary(r.from, r.to), () => orderSummary(r.prevFrom, r.prevTo),
   ] as const);
-  const [onb] = await runLimited([() => appOnboardingSummary(r.from, r.to)] as const);
+  const [onb, onbRows] = await runLimited([() => appOnboardingSummary(r.from, r.to), () => appOnboardingRecent(r.from, r.to, 30)] as const);
   // 인기 페이지 전체 / 게시물만 — 한 번 조회해서 둘로 나눈다
   const pages = pagesAll.slice(0, 15);
   const posts = pagesAll.filter((p) => DETAIL_KINDS.has(p.kind)).slice(0, 15);
@@ -207,13 +208,43 @@ export default async function MasterAnalyticsPage({ searchParams }: { searchPara
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {onb.total === 0 ? <Empty note="앱에서 언어·관심 분야를 고르면 여기에 쌓입니다. 숫자는 응답 수 / 기기 수입니다." /> : (
+            {onb.total === 0 ? <Empty note="앱에서 언어·관심 분야·방문 시기·연령대를 고르면 여기에 쌓입니다. 숫자는 응답 수 / 기기 수입니다." /> : (
               <div className="grid gap-4 md:grid-cols-3">
                 <SplitTable title="고른 언어" rows={onb.byLocale} />
                 <SplitTable title="관심 분야 (복수 선택)" rows={onb.byInterest.map((d) => ({ ...d, key: ONB_INTEREST_KO[d.key] ?? d.key }))} />
                 <SplitTable title="방문 예정" rows={onb.byVisit.map((d) => ({ ...d, key: ONB_VISIT_KO[d.key] ?? d.key }))} />
+                <SplitTable title="연령대" rows={onb.byAge.map((d) => ({ ...d, key: ONB_AGE_KO[d.key] ?? d.key }))} />
               </div>
             )}
+            {onbRows.length > 0 ? (
+              <div className="mt-5">
+                <div className="mb-1 text-[11px] font-semibold text-muted-foreground">최근 응답 {onbRows.length}건 (이 구간, 최신순)</div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="text-muted-foreground"><tr>
+                      <th className="py-1 text-left font-medium">시각</th><th className="py-1 text-left font-medium">국가</th><th className="py-1 text-left font-medium">언어</th>
+                      <th className="py-1 text-left font-medium">기기 언어</th><th className="py-1 text-left font-medium">관심 분야</th><th className="py-1 text-left font-medium">방문 예정</th>
+                      <th className="py-1 text-left font-medium">연령대</th><th className="py-1 text-left font-medium">앱</th><th className="py-1 text-left font-medium">기기</th>
+                    </tr></thead>
+                    <tbody style={{ fontVariantNumeric: 'tabular-nums' }}>
+                      {onbRows.map((x) => (
+                        <tr key={x.id} className="border-t">
+                          <td className="whitespace-nowrap py-1">{fmtDateTime(x.ts)}</td>
+                          <td className="whitespace-nowrap py-1">{x.country ? (COUNTRY_KO[x.country] ?? x.country) : '-'}</td>
+                          <td className="py-1">{x.locale ?? '-'}</td>
+                          <td className="py-1 text-muted-foreground">{x.deviceLang ?? '-'}</td>
+                          <td className="py-1">{x.skipped ? <span className="text-muted-foreground">건너뜀</span> : x.interests.map((k) => ONB_INTEREST_KO[k] ?? k).join(', ') || '-'}</td>
+                          <td className="whitespace-nowrap py-1">{x.visit ? (ONB_VISIT_KO[x.visit] ?? x.visit) : '-'}</td>
+                          <td className="whitespace-nowrap py-1">{x.age ? (ONB_AGE_KO[x.age] ?? x.age) : '-'}</td>
+                          <td className="py-1 text-muted-foreground">{x.appVersion ?? '-'}</td>
+                          <td className="py-1 text-muted-foreground" title={x.deviceId ?? ''}>{x.deviceId ? x.deviceId.slice(0, 6) : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </section>
