@@ -7,7 +7,7 @@ import {
   classifyPath, firstViewAt, orderSummary, PROVIDER_KO, recentSignups, resolveRange,
   signupsByDay, signupsByLocale, signupsByMonth, signupsByProvider, signupTotals,
   topPages, topReferrers, trafficByCountry, trafficByDay, trafficByDevice, trafficByHour,
-  trafficByLocale, trafficByMonth, trafficTotals, runLimited, type RangePreset,
+  trafficByLocale, trafficByMonth, trafficTotals, runLimited, appOnboardingSummary, type RangePreset,
 } from '@/lib/analytics/report';
 import BarChart from './_components/bar-chart';
 
@@ -35,6 +35,11 @@ const COUNTRY_KO: Record<string, string> = {
   KZ: '카자흐스탄', MN: '몽골', IN: '인도', MO: '마카오', '??': '미상',
 };
 
+const ONB_INTEREST_KO: Record<string, string> = {
+  plastic: '성형외과', skin: '피부과', dental: '치과', eye: '안과', hair: '모발·탈모', checkup: '건강검진', oriental: '한방', beauty: '헤어·메이크업·네일', travel: '숙박·맛집·투어',
+};
+const ONB_VISIT_KO: Record<string, string> = { within1m: '1개월 안에', within3m: '3개월 안에', within6m: '6개월 안에', undecided: '아직 미정' };
+
 export default async function MasterAnalyticsPage({ searchParams }: { searchParams: { range?: string } }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -61,6 +66,7 @@ export default async function MasterAnalyticsPage({ searchParams }: { searchPara
   const [signupsLoc, recent, orders, ordersPrev] = await runLimited([
     () => signupsByLocale(r.from, r.to), () => recentSignups(20), () => orderSummary(r.from, r.to), () => orderSummary(r.prevFrom, r.prevTo),
   ] as const);
+  const [onb] = await runLimited([() => appOnboardingSummary(r.from, r.to)] as const);
   // 인기 페이지 전체 / 게시물만 — 한 번 조회해서 둘로 나눈다
   const pages = pagesAll.slice(0, 15);
   const posts = pagesAll.filter((p) => DETAIL_KINDS.has(p.kind)).slice(0, 15);
@@ -185,6 +191,29 @@ export default async function MasterAnalyticsPage({ searchParams }: { searchPara
           <CardHeader className="pb-2"><CardTitle className="text-sm">인기 페이지 전체 ({rangeLabel})</CardTitle></CardHeader>
           <CardContent>
             {pages.length === 0 ? <Empty /> : <PagesTable rows={pages} />}
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* 안드로이드 앱 첫 실행 설문 */}
+      <section className="mb-6 grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-3">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">
+              앱 첫 실행 설문 ({rangeLabel})
+              <span className="ml-2 text-[11px] font-normal text-muted-foreground">
+                응답 {onb.total.toLocaleString('ko-KR')} · 기기 {onb.devices.toLocaleString('ko-KR')} · 건너뜀 {onb.skipped.toLocaleString('ko-KR')}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {onb.total === 0 ? <Empty note="앱에서 언어·관심 분야를 고르면 여기에 쌓입니다. 숫자는 응답 수 / 기기 수입니다." /> : (
+              <div className="grid gap-4 md:grid-cols-3">
+                <SplitTable title="고른 언어" rows={onb.byLocale} />
+                <SplitTable title="관심 분야 (복수 선택)" rows={onb.byInterest.map((d) => ({ ...d, key: ONB_INTEREST_KO[d.key] ?? d.key }))} />
+                <SplitTable title="방문 예정" rows={onb.byVisit.map((d) => ({ ...d, key: ONB_VISIT_KO[d.key] ?? d.key }))} />
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>

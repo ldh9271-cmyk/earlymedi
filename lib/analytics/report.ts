@@ -305,3 +305,32 @@ function seoulDate(d: Date): Date {
   const get = (t: string): number => Number(p.find((x) => x.type === t)?.value ?? 0);
   return new Date(Date.UTC(get('year'), get('month') - 1, get('day')));
 }
+
+// ── 안드로이드 앱 첫 실행 설문 (app_onboarding) ──────────────────────────────
+export type OnboardingSummary = {
+  total: number; devices: number; skipped: number;
+  byLocale: SplitRow[]; byInterest: SplitRow[]; byVisit: SplitRow[];
+};
+
+/** 앱 온보딩 응답 요약 — views = 응답 수, sessions = 기기 수. 테이블이 아직 없으면 빈 값. */
+export async function appOnboardingSummary(from: Date, to: Date): Promise<OnboardingSummary> {
+  const empty: OnboardingSummary = { total: 0, devices: 0, skipped: 0, byLocale: [], byInterest: [], byVisit: [] };
+  try {
+    const where = sql`ts >= ${ts(from)} and ts < ${ts(to)}`;
+    const [tot] = await q<{ total: number; devices: number; skipped: number }>(sql`
+      select count(*)::int as total, count(distinct device_id)::int as devices, count(*) filter (where skipped)::int as skipped
+      from app_onboarding where ${where}`);
+    const byLocale = await q<SplitRow>(sql`
+      select coalesce(locale, '?') as key, count(*)::int as views, count(distinct device_id)::int as sessions
+      from app_onboarding where ${where} group by 1 order by 2 desc`);
+    const byInterest = await q<SplitRow>(sql`
+      select i as key, count(*)::int as views, count(distinct device_id)::int as sessions
+      from app_onboarding, unnest(interests) as i where ${where} group by 1 order by 2 desc`);
+    const byVisit = await q<SplitRow>(sql`
+      select visit as key, count(*)::int as views, count(distinct device_id)::int as sessions
+      from app_onboarding where ${where} and visit is not null group by 1 order by 2 desc`);
+    return { total: tot?.total ?? 0, devices: tot?.devices ?? 0, skipped: tot?.skipped ?? 0, byLocale, byInterest, byVisit };
+  } catch {
+    return empty;
+  }
+}

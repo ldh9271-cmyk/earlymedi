@@ -89,4 +89,5 @@ export * from './tour-spots';
 
 // 공개 포털 방문 기록 — 마스터 통계 리포트 원천
 export * from './page-views';
+export * from './app-onboarding';
 export * from './ai-sim';
