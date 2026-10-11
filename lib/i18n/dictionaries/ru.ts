@@ -360,6 +360,7 @@ const ru: Dictionary = {
     title: 'Вход для гостя',
     subtitle: 'Войдите через Google или по паролю.',
     googleCta: 'Продолжить с Google',
+    appleCta: 'Продолжить с Apple',
     kakaoCta: "Продолжить с Kakao",
     lineCta: "Продолжить с LINE",
     whatsappCta: "Продолжить с WhatsApp",

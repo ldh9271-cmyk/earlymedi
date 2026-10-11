@@ -357,6 +357,7 @@ const zh: Dictionary = {
     title: '客人登录',
     subtitle: '可使用 Google 或密码登录。',
     googleCta: '使用 Google 继续',
+    appleCta: '通过 Apple 继续',
     kakaoCta: "使用 Kakao 继续",
     lineCta: "使用 LINE 继续",
     whatsappCta: "使用 WhatsApp 继续",

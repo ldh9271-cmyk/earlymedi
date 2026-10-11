@@ -371,6 +371,7 @@ const kr = {
     title: '게스트 로그인',
     subtitle: 'Google 또는 비밀번호로 접속하세요.',
     googleCta: 'Google로 계속하기',
+    appleCta: 'Apple로 계속하기',
     kakaoCta: "카카오로 계속하기",
     lineCta: "라인으로 계속하기",
     whatsappCta: "왓츠앱으로 계속하기",

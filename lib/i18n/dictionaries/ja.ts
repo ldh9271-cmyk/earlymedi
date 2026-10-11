@@ -359,6 +359,7 @@ const ja: Dictionary = {
     title: 'ゲストログイン',
     subtitle: 'Google またはパスワードでログイン。',
     googleCta: 'Googleで続行',
+    appleCta: 'Appleで続ける',
     kakaoCta: "カカオで続ける",
     lineCta: "LINEで続ける",
     whatsappCta: "WhatsAppで続ける",

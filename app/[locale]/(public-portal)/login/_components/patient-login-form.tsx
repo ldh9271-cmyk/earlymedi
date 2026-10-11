@@ -85,6 +85,7 @@ export function PatientLoginForm({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -121,6 +122,34 @@ export function PatientLoginForm({
       setError(e instanceof Error ? e.message : 'Google sign-in failed');
     } finally {
       setGoogleLoading(false);
+    }
+  }
+
+  /**
+   * Sign in with Apple — App Store 심사 4.8: 구글·카카오·라인 같은 제3자 로그인을 제공하면 Apple 로그인도 있어야 한다.
+   * Supabase Apple provider(Services ID·키는 Apple Developer 계정 승인 뒤 등록)로 웹 OAuth. 앱(WebView)은 구글과 같은
+   * 외부 브라우저 브릿지로 돌린다. Supabase 쪽 설정 전에는 NEXT_PUBLIC_APPLE_LOGIN 을 켜지 않아 버튼이 숨겨진다.
+   */
+  async function onApple(): Promise<void> {
+    setError(null);
+    setAppleLoading(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) { setError('Supabase not connected (demo mode).'); return; }
+      const appBridge = appOAuthBridge();
+      const redirectTo = new URL('/api/auth/callback', window.location.origin);
+      redirectTo.searchParams.set('next', returnTo);
+      if (appBridge) redirectTo.searchParams.set('app', '1');
+      const { data: oauth, error: e } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: { redirectTo: redirectTo.toString(), skipBrowserRedirect: Boolean(appBridge) },
+      });
+      if (e) setError(e.message);
+      else if (appBridge && oauth?.url) appBridge(oauth.url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Apple sign-in failed');
+    } finally {
+      setAppleLoading(false);
     }
   }
 
@@ -177,7 +206,8 @@ export function PatientLoginForm({
     }
   }
 
-  const anyLoading = googleLoading || pwLoading;
+  const anyLoading = googleLoading || appleLoading || pwLoading;
+  const appleEnabled = process.env.NEXT_PUBLIC_APPLE_LOGIN === '1';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -201,6 +231,27 @@ export function PatientLoginForm({
         <GoogleIcon />
         {googleLoading ? '…' : dict.googleCta}
       </button>
+      {appleEnabled ? (
+        <button
+          type="button"
+          className="gu-needs-oauth"
+          onClick={onApple}
+          disabled={anyLoading}
+          style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            width: '100%', height: 50, marginTop: -6,
+            background: '#000', color: '#fff',
+            border: '1px solid #000', borderRadius: 10,
+            fontSize: 15, fontWeight: 600,
+            cursor: anyLoading ? 'wait' : 'pointer',
+            fontFamily: 'inherit',
+            opacity: anyLoading ? 0.6 : 1,
+          }}
+        >
+          <AppleIcon />
+          {appleLoading ? '…' : dict.appleCta}
+        </button>
+      ) : null}
       <div style={{ marginTop: 10 }}>
         <KakaoLoginButton next={returnTo} label={dict.kakaoCta} disabled={anyLoading} onError={setError} />
         <div style={{ marginTop: 10 }}>
@@ -321,6 +372,14 @@ export function PatientLoginForm({
         </button>
       </form>
     </div>
+  );
+}
+
+function AppleIcon(): JSX.Element {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+      <path d="M16.37 12.7c.03 2.9 2.54 3.86 2.57 3.87-.02.07-.4 1.38-1.33 2.73-.8 1.17-1.63 2.33-2.94 2.35-1.29.02-1.7-.76-3.17-.76-1.47 0-1.93.74-3.15.79-1.26.05-2.22-1.26-3.03-2.42-1.65-2.39-2.91-6.75-1.22-9.69.84-1.46 2.35-2.39 3.98-2.41 1.24-.02 2.41.84 3.17.84.76 0 2.18-1.04 3.68-.88.63.03 2.39.25 3.52 1.91-.09.06-2.1 1.23-2.08 3.67zM13.95 5.6c.67-.81 1.12-1.94 1-3.07-.97.04-2.14.65-2.83 1.46-.62.72-1.17 1.87-1.02 2.97 1.08.08 2.18-.55 2.85-1.36z" />
+    </svg>
   );
 }
 

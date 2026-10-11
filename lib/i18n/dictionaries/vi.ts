@@ -360,6 +360,7 @@ const vi: Dictionary = {
     title: 'Đăng nhập khách',
     subtitle: 'Đăng nhập bằng Google hoặc mật khẩu.',
     googleCta: 'Tiếp tục với Google',
+    appleCta: 'Tiếp tục với Apple',
     kakaoCta: "Tiếp tục với Kakao",
     lineCta: "Tiếp tục với LINE",
     whatsappCta: "Tiếp tục với WhatsApp",

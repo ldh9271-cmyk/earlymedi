@@ -360,6 +360,7 @@ const en: Dictionary = {
     title: 'Guest sign in',
     subtitle: 'Sign in with Google or password.',
     googleCta: 'Continue with Google',
+    appleCta: 'Continue with Apple',
     kakaoCta: "Continue with Kakao",
     lineCta: "Continue with LINE",
     whatsappCta: "Continue with WhatsApp",
