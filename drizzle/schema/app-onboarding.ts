@@ -16,6 +16,7 @@ export const appOnboarding = pgTable(
     ts: timestamp('ts', { withTimezone: true }).notNull().defaultNow(),
     deviceId: text('device_id'),
     appVersion: text('app_version'),
+    /** android | ios (앱 1.1.2 부터 iOS 전송) */
     platform: text('platform').notNull().default('android'),
     /** 앱에서 고른 사이트 언어 kr | en | ja | zh | ru | vi */
     locale: text('locale'),

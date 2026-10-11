@@ -5,7 +5,7 @@ import { db } from '@/lib/db/client';
 import { appOnboarding } from '@/drizzle/schema/app-onboarding';
 
 /**
- * 안드로이드 앱 첫 실행 설문 수신 — glowuptour-app 의 src/onboarding.ts 가 보낸다.
+ * 앱(안드로이드·iOS) 첫 실행 설문 수신 — glowuptour-app 의 src/onboarding.ts 가 보낸다.
  *
  * 값은 전부 화이트리스트로 거른다(언어·관심 분야·방문 시기·연령대는 정해진 키만). 나라는
  * Vercel 의 x-vercel-ip-country 로 서버가 붙인다. 어떤 경우에도 204 — 설문 저장이
@@ -30,12 +30,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       : [];
     const visit = typeof body.visit === 'string' && VISITS.has(body.visit) ? body.visit : null;
     const age = typeof body.age === 'string' && AGES.has(body.age) ? body.age : null;
+    // 플랫폼: 앱 1.1.2 부터 보냄 (ios | android). 없으면 안드로이드(구버전).
+    const platform = body.platform === 'ios' ? 'ios' : 'android';
     const country = (request.headers.get('x-vercel-ip-country') ?? '').toUpperCase().slice(0, 2) || null;
 
     const row = {
       deviceId: clean(body.deviceId, 64),
       appVersion: clean(body.appVersion, 20),
-      platform: 'android',
+      platform,
       locale,
       deviceLang: clean(body.deviceLang, 20),
       interests,

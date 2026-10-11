@@ -263,7 +263,7 @@ export default function Simulator({ locale, t, userEmail, note }: {
       {userEmail && wallet && wallet.freeLeft === 0 && (wallet.firstBonusPct ?? 0) > 0 && wallet.balance < wallet.runCost && charge === 'closed' ? (
         <div className="gu-hide-in-app" style={{ marginTop: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 12, padding: '12px 16px' }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: '#047857' }}>{t.firstChargePromo.replace('{pct}', String(wallet.firstBonusPct))}</span>
-          <button type="button" onClick={() => setCharge('open')} style={{ background: '#047857', color: '#fff', border: 'none', borderRadius: 10, padding: '9px 16px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>{t.charge}</button>
+          <button type="button" className="gu-hide-in-app" onClick={() => setCharge('open')} style={{ background: '#047857', color: '#fff', border: 'none', borderRadius: 10, padding: '9px 16px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>{t.charge}</button>
         </div>
       ) : null}
 
