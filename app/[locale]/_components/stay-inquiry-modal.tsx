@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import { openTossPayment } from '@/lib/payments/toss-client';
+import { bookingWindow } from '@/lib/booking/window';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import CountrySelect from './country-select';
 import { COUNTRY_CODES, LOCALE_DEFAULT_COUNTRY, MESSENGER_KINDS, MESSENGER_LABEL } from './reserve-modal';
@@ -64,6 +65,8 @@ export default function StayInquiryButton({ locale, href, label, summary, listin
   const [guests, setGuests] = useState(isStay ? 2 : 1);
   const [note, setNote] = useState('');
   const [minDate, setMinDate] = useState('');
+  // 예약 가능 상한 — 오늘 + 3개월 (lib/booking/window, 서버도 같은 규칙으로 검증)
+  const [maxDate, setMaxDate] = useState('');
   const [member, setMember] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
   const [missing, setMissing] = useState(false);
@@ -96,11 +99,12 @@ export default function StayInquiryButton({ locale, href, label, summary, listin
   useEffect(() => { if (initialGuests && initialGuests > 0) setGuests(Math.min(10, initialGuests)); }, [initialGuests]);
 
   useEffect(() => {
-    const d = new Date(); const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    setMinDate(ymd);
+    const w = bookingWindow();
+    setMinDate(w.min); setMaxDate(w.max);
   }, []);
 
-  const valid = name.trim().length > 0 && contact.trim().length >= 3 && !!msgKind && msgId.trim().length > 0 && !!date;
+  const dateInRange = !!date && (!minDate || date >= minDate) && (!maxDate || date <= maxDate);
+  const valid = name.trim().length > 0 && contact.trim().length >= 3 && !!msgKind && msgId.trim().length > 0 && dateInRange;
   const subtotal = Math.max(0, priceWon) * guests;
   const fee = feeFor(subtotal);
   const total = subtotal + fee;
@@ -139,7 +143,7 @@ export default function StayInquiryButton({ locale, href, label, summary, listin
         }),
       });
       const j = (await res.json().catch(() => ({}))) as { ok?: boolean; invoiceNo?: string; member?: boolean; pay?: boolean; amountWon?: number };
-      if (!res.ok || !j.ok || !j.invoiceNo) { setErr(labels.failed); return; }
+      if (!res.ok || !j.ok || !j.invoiceNo) { setErr((j as { error?: string }).error === 'date_out_of_range' ? labels.dateRange : labels.failed); return; }
       if (j.pay && j.amountWon && j.amountWon > 0) { await openPay(j.invoiceNo, j.amountWon); return; }
       setDone({ invoiceNo: j.invoiceNo, amountWon: 0, pay: false, paidWindow: 'none' });
     } catch { setErr(labels.failed); } finally { setBusy(false); }
@@ -250,9 +254,9 @@ export default function StayInquiryButton({ locale, href, label, summary, listin
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: hasNights ? '1.4fr 1fr' : '1fr', gap: 10, marginBottom: 10 }}>
-                    <label style={{ ...fieldBox, ...(missing && !date ? bad : {}) }}>
+                    <label style={{ ...fieldBox, ...((missing && !date) || (date && !dateInRange) ? bad : {}) }}>
                       <span style={fieldLabel}>{T.date}</span>
-                      <input type="date" value={date} min={minDate} onChange={(e) => { setDate(e.target.value); setMissing(false); }} style={{ ...fieldInput, cursor: 'pointer' }} />
+                      <input type="date" value={date} min={minDate} max={maxDate} onChange={(e) => { setDate(e.target.value); setMissing(false); }} style={{ ...fieldInput, cursor: 'pointer' }} />
                     </label>
                     {hasNights ? (
                       <label style={fieldBox}>
@@ -291,7 +295,8 @@ export default function StayInquiryButton({ locale, href, label, summary, listin
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 800, marginTop: 4 }}><span>{labels.total}</span><span>{won(total)}</span></div>
                     </div>
                   ) : null}
-                  {missing ? <p style={{ color: '#dc2626', fontSize: 12, fontWeight: 600, margin: '8px 0 0 2px' }}>{labels.required}</p> : null}
+                  {date && !dateInRange ? <p style={{ color: '#dc2626', fontSize: 12, fontWeight: 600, margin: '8px 0 0 2px' }}>{labels.dateRange}</p> : null}
+                  {missing && !(date && !dateInRange) ? <p style={{ color: '#dc2626', fontSize: 12, fontWeight: 600, margin: '8px 0 0 2px' }}>{labels.required}</p> : null}
                   {err ? <p style={{ color: '#dc2626', fontSize: 12, fontWeight: 600, margin: '8px 0 0 2px' }}>{err}</p> : null}
                 </>
               )}

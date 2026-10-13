@@ -1196,6 +1196,7 @@ const kr = {
   },
   checkout: {
     stay: {
+      dateRange: '예약은 오늘부터 3개월 이내 날짜만 가능합니다.',
       tripDate: "여행 시작일",
       period: "기간",
       payTitle: "예약 · 결제",

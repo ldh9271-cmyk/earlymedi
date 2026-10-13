@@ -1177,6 +1177,7 @@ const vi: Dictionary = {
   },
   checkout: {
     stay: {
+      dateRange: 'Chỉ có thể đặt trong vòng 3 tháng kể từ hôm nay.',
       tripDate: "Ngày bắt đầu chuyến đi",
       period: "Số ngày",
       payTitle: "Đặt chỗ · Thanh toán",

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isWithinBookingWindow } from '@/lib/booking/window';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { createStayRequest } from '@/lib/stay/request';
@@ -31,6 +32,8 @@ export async function POST(req: Request): Promise<NextResponse> {
   let input: z.infer<typeof Schema>;
   try { input = Schema.parse(await req.json()); } catch { return NextResponse.json({ error: 'bad_request' }, { status: 400 }); }
   if (!isPublicLocale(input.locale)) return NextResponse.json({ error: 'bad_locale' }, { status: 400 });
+  // 예약 가능 기간: 오늘부터 3개월 이내 (lib/booking/window) — 클라이언트 max 와 같은 규칙
+  if (!isWithinBookingWindow(input.checkIn)) return NextResponse.json({ error: 'date_out_of_range' }, { status: 400 });
 
   let userId: string | null = null; let userEmail: string | null = null;
   try {

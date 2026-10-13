@@ -10,6 +10,7 @@ import { attributeUser, getAttribution, REF_COOKIE } from '@/lib/referral/servic
 import { notifyOrderEvent } from '@/lib/notify/admin-alert';
 import { RESERVE_DEPOSIT_WON } from '@/lib/checkout/constants';
 import { isRequestCategory, travelSubOf } from '@/lib/stay/request';
+import { isWithinBookingWindow } from '@/lib/booking/window';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 20;
@@ -100,6 +101,9 @@ export async function POST(req: Request): Promise<NextResponse> {
   } catch {
     /* 비로그인 예약도 허용 */
   }
+
+  // 예약 가능 기간: 오늘부터 3개월 이내 (lib/booking/window)
+  if (input.reserveYmd && !isWithinBookingWindow(input.reserveYmd)) return NextResponse.json({ error: 'date_out_of_range' }, { status: 400 });
 
   // 추천 QR 로 들어온 계정이면 귀속을 기록하고 주문에 파트너를 남긴다.
   // 수당 원장은 여기서 만들지 않는다 — 운영자가 시술·투어 완료를 확인한

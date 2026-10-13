@@ -1177,6 +1177,7 @@ const en: Dictionary = {
   },
   checkout: {
     stay: {
+      dateRange: 'Bookings can be made up to 3 months ahead.',
       tripDate: "Trip start date",
       period: "Length",
       payTitle: "Book & pay",

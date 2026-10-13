@@ -1176,6 +1176,7 @@ const ja: Dictionary = {
   },
   checkout: {
     stay: {
+      dateRange: '予約は本日から3か月以内の日付のみ可能です。',
       tripDate: "旅行開始日",
       period: "期間",
       payTitle: "予約・お支払い",

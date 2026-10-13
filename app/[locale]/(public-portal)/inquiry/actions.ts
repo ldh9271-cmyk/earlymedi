@@ -1,5 +1,6 @@
 'use server';
 
+import { isWithinBookingWindow } from '@/lib/booking/window';
 import 'server-only';
 import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -113,6 +114,10 @@ export async function submitPublicInquiryAction(
   const reserveMode = Boolean(input.hospitalId);
   if (reserveMode && (!input.gender || !input.phone?.trim() || !input.messengerType || !input.messengerId?.trim() || !input.birthDate || !input.visitYmd || !input.visitTime || !input.memo.trim())) {
     return { ok: false, error: '예약 요청에는 이름·성별·국가·전화번호·메신저·생년월일·희망 예약 일시·문의 내용이 모두 필요합니다.' };
+  }
+  // 예약 가능 기간: 오늘부터 3개월 이내 (lib/booking/window) — 예약 팝업·주문 API 와 같은 규칙
+  if (input.visitYmd && !isWithinBookingWindow(input.visitYmd)) {
+    return { ok: false, error: '예약은 오늘부터 3개월 이내 날짜만 가능합니다. Bookings can be made up to 3 months ahead.' };
   }
 
   // 1. Decide which agency receives this inquiry.

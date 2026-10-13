@@ -1174,6 +1174,7 @@ const zh: Dictionary = {
   },
   checkout: {
     stay: {
+      dateRange: '仅可预订自今日起 3 个月内的日期。',
       tripDate: "出发日期",
       period: "天数",
       payTitle: "预订 · 付款",

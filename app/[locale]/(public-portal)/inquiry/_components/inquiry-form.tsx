@@ -1,5 +1,6 @@
 'use client';
 
+import { bookingWindow } from '@/lib/booking/window';
 import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -51,10 +52,6 @@ const labelStyle: React.CSSProperties = {
 
 const Req = (): JSX.Element => <span style={{ color: '#ff385c' }}> *</span>;
 
-/** 오늘(서울) 날짜 — 희망 예약일 최소값. */
-function todaySeoul(): string {
-  return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
-}
 
 export function InquiryForm({
   locale,
@@ -305,7 +302,7 @@ export function InquiryForm({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
         <div>
           <label htmlFor="inq-visit-date" style={labelStyle}>{labels.visitDate}{reserveMode ? <Req /> : null}</label>
-          <input id="inq-visit-date" type="date" value={visitYmd} onChange={(e) => setVisitYmd(e.target.value)} min={todaySeoul()} required={reserveMode} style={inputStyle} />
+          <input id="inq-visit-date" type="date" value={visitYmd} onChange={(e) => setVisitYmd(e.target.value)} min={bookingWindow().min} max={bookingWindow().max} required={reserveMode} style={inputStyle} />
         </div>
         <div>
           <label htmlFor="inq-visit-time" style={labelStyle}>{labels.visitTime}{reserveMode ? <Req /> : null}</label>

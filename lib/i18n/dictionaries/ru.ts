@@ -1177,6 +1177,7 @@ const ru: Dictionary = {
   },
   checkout: {
     stay: {
+      dateRange: 'Бронирование возможно не более чем на 3 месяца вперёд.',
       tripDate: "Дата начала поездки",
       period: "Длительность",
       payTitle: "Бронирование и оплата",
