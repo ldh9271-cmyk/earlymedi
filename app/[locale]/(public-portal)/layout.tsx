@@ -49,7 +49,7 @@ export default async function PublicPortalLayout({
       <MainHeader locale={params.locale} activeKey="all" activeTab="clinics" t={dict.header} />
       <main style={{ flex: 1 }}>{children}</main>
       <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[params.locale].native} locale={params.locale} />
-      <ChatBubble locale={params.locale} t={dict.ai.chat} />
+      <ChatBubble locale={params.locale} t={dict.ai.chat} h={dict.chat} />
     </div>
   );
 }

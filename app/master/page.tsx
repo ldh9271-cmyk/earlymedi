@@ -290,6 +290,20 @@ export default async function MasterPage({
         </Link>
 
         <Link
+          href="/master/chats"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 text-rose-700">
+            <Receipt className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold">고객 채팅</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              소비자·업체·플랫폼 3자 채팅 인박스 — 예약 건별 대화, 일반 문의 답변
+            </p>
+          </div>
+        </Link>
+        <Link
           href="/master/orders"
           className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
         >

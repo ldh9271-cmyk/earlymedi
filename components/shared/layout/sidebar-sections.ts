@@ -159,6 +159,7 @@ export const partnerSections: SidebarSection[] = [
       { href: '/partner/channels', label: '채널 연결', icon: Plug },
       { href: '/partner/bookings', label: '부킹', icon: TicketCheck },
       { href: '/partner/requests', label: '예약 요청 · 견적', icon: Hotel },
+      { href: '/partner/chats', label: '고객 채팅', icon: Inbox },
       { href: '/partner/facilities', label: '시설 등록', icon: Hospital },
       { href: '/partner/availability', label: '가용성 캘린더', icon: Calendar },
     ],
@@ -193,7 +194,7 @@ export const partnerSections: SidebarSection[] = [
  */
 const SIMPLE_ALLOW: Record<'agency' | 'medical' | 'partner' | 'freelancer', string[]> = {
   medical: ['/medical/dashboard', '/scan', '/medical/registry', '/medical/inbox', '/medical/leads', '/medical/glowup-listings', '/medical/settlements', '/medical/settings'],
-  partner: ['/partner/dashboard', '/scan', '/partner/registry', '/partner/lodging', '/partner/eats', '/partner/listings', '/partner/requests', '/partner/bookings', '/partner/inbox', '/partner/settlements', '/partner/settings'],
+  partner: ['/partner/dashboard', '/scan', '/partner/registry', '/partner/lodging', '/partner/eats', '/partner/listings', '/partner/requests', '/partner/chats', '/partner/bookings', '/partner/inbox', '/partner/settlements', '/partner/settings'],
   agency: ['/agency/dashboard', '/scan', '/agency/inbox', '/agency/hospitals', '/agency/listings', '/agency/partners', '/agency/visa', '/agency/payments', '/agency/settings'],
   freelancer: ['/freelancer/dashboard', '/freelancer/inbox', '/freelancer/referral-codes', '/freelancer/commissions', '/freelancer/disputes', '/freelancer/settings'],
 };

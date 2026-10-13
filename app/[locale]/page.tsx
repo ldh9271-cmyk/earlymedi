@@ -218,7 +218,7 @@ export default async function PublicLandingPage({
       </main>
 
       <MainFooter t={dict.siteFooter} localeNative={LOCALE_LABELS[locale].native} locale={locale} />
-      <ChatBubble locale={locale} t={dict.ai.chat} />
+      <ChatBubble locale={locale} t={dict.ai.chat} h={dict.chat} />
     </div>
   );
 }

@@ -241,6 +241,10 @@ export default async function MyPage({
                         category={cat} estimate={est} tiers={tierRanges(cat)} sameDayHours={sameDayHours} labels={tr} />
                     </span>
                   ) : null}
+                  {/* 채팅 문의 — 같은 페이지의 챗 위젯이 ?chat=<orderId> 를 읽어 이 예약 방을 연다 (업체·플랫폼이 함께 답함) */}
+                  <Link href={`/${locale}/me?chat=${r.id}`} style={{ fontSize: 11, fontWeight: 700, color: '#c81e42', background: '#fff5f7', border: '1px solid #ffd7de', borderRadius: 999, padding: '4px 10px', textDecoration: 'none' }}>
+                    💬 {dict.chat.orderChat}
+                  </Link>
                 </div>
 
                 <div
