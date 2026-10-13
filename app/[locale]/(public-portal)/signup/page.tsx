@@ -77,6 +77,24 @@ export default async function PatientSignupPage({
         </p>
       </div>
 
+
+      {/* 2026-10-13: 기존 회원이 먼저 보도록 로그인 안내를 가입 폼 위로 (예약은 회원만 → 비회원이 가입 페이지로 오는 흐름) */}
+      <div
+        style={{
+          border: '1px solid #ffd7de', borderRadius: 14,
+          background: '#fff8f9', padding: '14px 20px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+          fontSize: 14, color: '#222',
+        }}
+      >
+        <span style={{ fontWeight: 600 }}>{dict.signup.haveAccount}</span>
+        <Link
+          href={nextPath ? `/${locale}/login?next=${encodeURIComponent(nextPath)}` : `/${locale}/login`}
+          style={{ display: 'inline-block', background: '#222', color: '#fff', borderRadius: 10, padding: '9px 16px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}
+        >
+          {dict.signup.goLogin}
+        </Link>
+      </div>
       <div
         style={{
           border: '1px solid #dddddd', borderRadius: 14,
@@ -87,21 +105,6 @@ export default async function PatientSignupPage({
         <PatientSignupForm locale={locale} dict={dict.signup} waDict={dict.whatsapp} nextPath={nextPath} />
       </div>
 
-      <div
-        style={{
-          border: '1px solid #ebebeb', borderRadius: 14,
-          background: '#fafafa', padding: '16px 20px',
-          textAlign: 'center', fontSize: 13, color: '#6a6a6a',
-        }}
-      >
-        <p style={{ margin: '0 0 4px' }}>{dict.signup.haveAccount}</p>
-        <Link
-          href={nextPath ? `/${locale}/login?next=${encodeURIComponent(nextPath)}` : `/${locale}/login`}
-          style={{ color: '#222', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}
-        >
-          {dict.signup.goLogin}
-        </Link>
-      </div>
 
       <p style={{ textAlign: 'center', fontSize: 11, color: '#9c9c9c', margin: 0 }}>
         {dict.signup.privacy}
