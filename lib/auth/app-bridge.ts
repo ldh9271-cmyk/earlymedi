@@ -17,7 +17,7 @@ function rn(): RNWebView | null {
 }
 
 /** 이 앱 버전이 해당 기능을 지원하는지 (구버전 앱에서는 false). */
-export function appHas(cap: 'oauth' | 'pickimage' | 'geo'): boolean {
+export function appHas(cap: 'oauth' | 'pickimage' | 'geo' | 'push'): boolean {
   if (!rn()) return false;
   const caps = document.documentElement.getAttribute('data-gu-app-caps') ?? '';
   return caps.split(/\s+/).includes(cap);
@@ -28,4 +28,23 @@ export function appOAuthBridge(): ((url: string) => void) | null {
   if (!appHas('oauth')) return null;
   const bridge = rn();
   return bridge ? (url: string) => bridge.postMessage(JSON.stringify({ type: 'gu:oauth', url })) : null;
+}
+
+/** 앱 WebView 안인지 (앱이 window.ReactNativeWebView 를 둔다). */
+export function inApp(): boolean {
+  return rn() !== null;
+}
+
+/**
+ * 로그인 상태를 앱에 알린다 — 앱은 회원 id 가 오면 알림 권한을 받고 Expo 푸시 토큰을
+ * /api/app/push/register 에 등록하고(WebView fetch, 쿠키 세션), null 이 오면(로그아웃) 토큰을 지운다.
+ * (app/[locale]/_components/app-bridge-auth.tsx 가 세션 변화 때마다 부른다)
+ */
+export function appPostUser(id: string | null, locale: string): void {
+  rn()?.postMessage(JSON.stringify({ type: 'gu:user', id, locale }));
+}
+
+/** 앱의 네이티브 알림 설정 시트를 연다 (앱 1.2.0+, caps 'push'). 헤더 계정 메뉴의 앱 전용 항목이 부른다. */
+export function appOpenSettings(): void {
+  rn()?.postMessage(JSON.stringify({ type: 'gu:openSettings' }));
 }

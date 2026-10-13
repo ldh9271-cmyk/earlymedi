@@ -9,6 +9,7 @@ import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { notifyOrderEvent } from '@/lib/notify/admin-alert';
+import { fill, sendPushToUser } from '@/lib/push/expo';
 import { onTripOrderPaid } from '@/lib/ai/trip-workflow';
 import { declareFinalAmount, masterSetSettlementStatus, type SettlementStatus } from '@/lib/voucher/settlement';
 import { refundAndCancel } from '@/lib/refund/service';
@@ -159,7 +160,7 @@ export async function confirmReservationAction(formData: FormData): Promise<void
   if (!id) redirect('/master/orders?error=missing_id');
   try {
     const [order] = await db
-      .select({ id: checkoutOrders.id, status: checkoutOrders.status, meta: checkoutOrders.meta })
+      .select({ id: checkoutOrders.id, status: checkoutOrders.status, meta: checkoutOrders.meta, userId: checkoutOrders.userId, invoiceNo: checkoutOrders.invoiceNo, listingTitle: checkoutOrders.listingTitle, reserveDate: checkoutOrders.reserveDate, reserveTime: checkoutOrders.reserveTime, locale: checkoutOrders.locale })
       .from(checkoutOrders)
       .where(eq(checkoutOrders.id, id))
       .limit(1);
@@ -174,6 +175,15 @@ export async function confirmReservationAction(formData: FormData): Promise<void
         updatedAt: new Date(),
       })
       .where(eq(checkoutOrders.id, order.id));
+    // 회원이면 앱 푸시 '예약이 확정되었어요' — 누르면 마이페이지의 그 예약으로
+    await sendPushToUser(order.userId, {
+      category: 'booking', fallbackLocale: order.locale, collapseId: `confirmed:${order.invoiceNo}`, data: { invoiceNo: order.invoiceNo },
+      content: (locale, t) => ({
+        title: t.confirmedTitle,
+        body: fill(t.confirmedBody, { title: order.listingTitle, date: `${order.reserveDate ?? ''} ${order.reserveTime && order.reserveTime !== '-' ? order.reserveTime : ''}`.trim() }),
+        url: `/${locale}/me?invoice=${encodeURIComponent(order.invoiceNo)}`,
+      }),
+    }).catch(() => 0);
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'confirm_failed';
     if (msg.includes('NEXT_REDIRECT')) throw err;

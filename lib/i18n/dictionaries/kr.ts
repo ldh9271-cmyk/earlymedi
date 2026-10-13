@@ -527,6 +527,8 @@ const kr = {
       myInquiry: '내 문의',
       chat: '채팅 문의',
       signOut: '로그아웃',
+      /** 앱에서만 보이는 메뉴 — 네이티브 알림 설정 시트를 연다 (gu:openSettings) */
+      appSettings: '알림 설정',
       langSelect: '언어 선택',
       logoAlt: 'glow-up 홈',
     },
@@ -1060,6 +1062,17 @@ const kr = {
     loading: '불러오는 중…',
     orderChat: '채팅 문의',
     hint: '예약 건마다 업체와 글로우업투어 담당자가 함께 답합니다. 보통 영업시간 내 회신합니다.',
+  },
+  push: {
+    // 앱 푸시 알림 (lib/push/expo.ts). {title}·{amount}·{date} 는 자리표시자. 제목은 보낸 쪽(상담원/업체명).
+    fromPlatform: '글로우업투어 상담원',
+    fromBusiness: '업체',
+    quoteTitle: '견적 인보이스가 도착했어요',
+    quoteBody: '{title} · {amount} — 마이페이지에서 확인하고 결제할 수 있어요.',
+    confirmedTitle: '예약이 확정되었어요',
+    confirmedBody: '{title} · {date}',
+    visitConfirmedTitle: '진료 예약이 확정되었어요',
+    visitConfirmedBody: '{title} · {date} — QR 예약증을 마이페이지에서 확인하세요.',
   },
   pay: {
     title: "결제",

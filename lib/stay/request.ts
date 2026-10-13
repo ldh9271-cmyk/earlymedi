@@ -5,6 +5,7 @@ import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { partnerListings } from '@/drizzle/schema/partner-listings';
 import { notifyOrderEvent, sendAdminTelegram } from '@/lib/notify/admin-alert';
+import { fill, sendPushToUser, wonLabel } from '@/lib/push/expo';
 import { SITE_URL } from '@/lib/seo/brand';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { makeInvoiceNo, makePayToken, payLinkFor, sendQuoteEmail } from '@/lib/quote/service';
@@ -235,5 +236,12 @@ export async function convertStayRequestToQuote(orderId: string, input: { amount
     invoiceNo: o.invoiceNo, listingTitle: `[${meta.category === 'hotel' || o.kind === STAY_REQUEST_KIND ? '호텔 견적' : '예약 견적'}] ${o.listingTitle}`, totalWon: amount, guests: o.guests,
     reserveDate: o.reserveDate, reserveTime: o.reserveTime, userEmail: o.userEmail ?? stay?.contact ?? null,
   }).catch(() => false);
+  // 회원이면 앱 푸시 — 누르면 마이페이지의 그 인보이스로
+  if (member) {
+    await sendPushToUser(o.userId, {
+      category: 'booking', fallbackLocale: input.locale, collapseId: `quote:${o.invoiceNo}`, data: { invoiceNo: o.invoiceNo },
+      content: (locale, t) => ({ title: t.quoteTitle, body: fill(t.quoteBody, { title: o.listingTitle, amount: wonLabel(amount) }), url: `/${locale}/me?invoice=${encodeURIComponent(o.invoiceNo)}` }),
+    }).catch(() => 0);
+  }
   return { ok: true, invoiceNo: o.invoiceNo, payLink, emailSent, member };
 }

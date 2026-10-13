@@ -5,6 +5,7 @@ import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { sendEmail } from '@/lib/email/send';
 import { notifyOrderEvent } from '@/lib/notify/admin-alert';
+import { fill, sendPushToUser, wonLabel } from '@/lib/push/expo';
 import { getAttribution } from '@/lib/referral/service';
 import { SITE_URL } from '@/lib/seo/brand';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
@@ -147,6 +148,11 @@ export async function issueQuoteInvoice(input: IssueQuoteInput): Promise<{ ok: t
     invoiceNo, listingTitle: `[견적] ${title}`, totalWon: input.amountWon, guests: input.guests,
     reserveDate: dateLabel, reserveTime: input.periodLabel ?? '-', userEmail: user.email,
   }).catch(() => false);
+  // 회원 앱 푸시 — 누르면 마이페이지의 그 인보이스로 (예약 알림 스위치가 켜진 기기만)
+  await sendPushToUser(user.id, {
+    category: 'booking', fallbackLocale: input.locale, collapseId: `quote:${invoiceNo}`, data: { invoiceNo },
+    content: (locale, t) => ({ title: t.quoteTitle, body: fill(t.quoteBody, { title, amount: wonLabel(input.amountWon) }), url: `/${locale}/me?invoice=${encodeURIComponent(invoiceNo)}` }),
+  }).catch(() => 0);
 
   return { ok: true, invoiceNo, emailSent, payLink: payLinkFor(input.locale, invoiceNo, payToken) };
 }

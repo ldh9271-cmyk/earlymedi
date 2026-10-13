@@ -9,6 +9,7 @@ import {
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { BRAND_ALIASES, BRAND_NAME, brandJsonLd, withBrandSuffix } from '@/lib/seo/brand';
 import TrackView from '@/components/shared/track-view';
+import AppBridgeAuth from './_components/app-bridge-auth';
 
 /**
  * Per-locale metadata (title / description / openGraph). Overrides the
@@ -94,6 +95,8 @@ export default function PublicLocaleRootLayout({
       />
       {/* 방문 비콘 — 마스터 통계 리포트(트래픽·인기 게시물)의 원천. 개인정보 없음. */}
       <TrackView />
+      {/* 앱(WebView) 전용 — 로그인 상태를 앱에 알려 푸시 토큰을 등록/해제하게 한다. 브라우저에서는 무동작. */}
+      <AppBridgeAuth locale={params.locale as PublicLocale} />
       {children}
     </>
   );

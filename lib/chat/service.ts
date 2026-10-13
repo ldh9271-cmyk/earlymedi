@@ -5,6 +5,7 @@ import { chatMessages, chatRooms, type ChatMessage, type ChatRole, type ChatRoom
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { organizations } from '@/drizzle/schema/organizations';
 import { sendAdminTelegram } from '@/lib/notify/admin-alert';
+import { sendPushToUser } from '@/lib/push/expo';
 
 /**
  * 글로우업 채팅 서비스 — 방 만들기·목록·메시지·읽음·알림. 권한 판단은 호출자(API/서버 액션)가 한다.
@@ -14,7 +15,8 @@ import { sendAdminTelegram } from '@/lib/notify/admin-alert';
  *   support 회원의 일반 문의(주문 없음). 사업자 없이 플랫폼이 응대. 회원당 열린 방 하나를 재사용.
  *
  *  읽지 않음: 보낸 쪽을 제외한 두 쪽의 unread 를 +1, 각자 방을 열면 0 으로.
- *  알림: 소비자·사업자가 쓰면 마스터 텔레그램. (사업자·소비자에게 가는 푸시/메일은 2단계)
+ *  알림: 소비자·사업자가 쓰면 마스터 텔레그램. 상담원·사업자가 쓰면 회원 앱 푸시(lib/push/expo, 채팅 알림 스위치가 켜진 기기만).
+ *        (사업자에게 가는 푸시/메일은 다음 단계)
  */
 export const CHAT_PREVIEW_LEN = 80;
 const esc = (s: string): string => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c] ?? c);
@@ -103,6 +105,18 @@ export async function postMessage(roomId: string, sender: { role: ChatRole; user
   if (sender.role !== 'platform') {
     const who = sender.role === 'consumer' ? '🙋 고객' : '🏪 사업자';
     await sendAdminTelegram(`<b>💬 채팅 ${who}</b> ${esc(room.title)}\n${esc(sender.name ?? room.userEmail ?? '')}: ${esc(text.slice(0, 300))}\n→ /master/chats`).catch(() => false);
+  }
+  // 상담원·업체가 답하면 회원의 앱으로 푸시 — 누르면 그 방이 열린다 (/me?chat=<orderId|support>)
+  if (sender.role === 'platform' || sender.role === 'business') {
+    const target = room.kind === 'order' && room.orderId ? room.orderId : 'support';
+    await sendPushToUser(room.userId, {
+      category: 'chat', fallbackLocale: room.locale, collapseId: `chat:${room.id}`, data: { roomId: room.id },
+      content: (locale, t) => ({
+        title: sender.role === 'platform' ? t.fromPlatform : (room.orgName ?? t.fromBusiness),
+        body: text.slice(0, 200),
+        url: `/${locale}/me?chat=${target}`,
+      }),
+    }).catch(() => 0);
   }
   return msg ?? null;
 }

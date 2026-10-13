@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { sendAdminTelegram } from '@/lib/notify/admin-alert';
+import { fill, sendPushToUser } from '@/lib/push/expo';
 import { sendTripEmail } from '@/lib/ai/trip-planner';
 import { voucherUrl } from '@/lib/voucher/token';
 
@@ -127,6 +128,15 @@ export async function confirmHospitalVisit(orderId: string, patch: { visitYmd?: 
   await sendAdminTelegram(
     `<b>🏥 진료 예약 확정</b>\n<code>${o.invoiceNo}</code> · ${esc(o.hospitalName ?? '')}\n환자: ${esc(o.guestName ?? '')} (${esc(o.guestCountryCode ?? '')}) · ${esc(o.guestContact ?? '')}\n예약: ${esc(visitYmd)} ${esc(visitTime)}\nQR: ${url}`,
   ).catch(() => false);
+  // 회원이면 앱 푸시 — 누르면 마이페이지의 QR 예약증으로 (예약 알림 스위치가 켜진 기기만)
+  await sendPushToUser(o.userId, {
+    category: 'booking', fallbackLocale: o.locale, collapseId: `visit:${o.invoiceNo}`, data: { invoiceNo: o.invoiceNo },
+    content: (locale, t) => ({
+      title: t.visitConfirmedTitle,
+      body: fill(t.visitConfirmedBody, { title: o.hospitalName ?? o.listingTitle, date: `${visitYmd} ${visitTime}`.trim() }),
+      url: `/${locale}/me/voucher/${encodeURIComponent(o.invoiceNo)}`,
+    }),
+  }).catch(() => 0);
 
   const to = o.userEmail || meta.email || null;
   let emailed = false;

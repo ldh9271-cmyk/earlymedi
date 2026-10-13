@@ -83,6 +83,7 @@ import {
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { BrandLockup } from './brand-mark';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
+import { appOpenSettings } from '@/lib/auth/app-bridge';
 
 /**
  * Patient-portal main header — sticky Airbnb-style nav for /[locale].
@@ -703,6 +704,23 @@ export function MainHeader({
                 >
                   {t.account.myInquiry}
                 </Link>
+                {/* 알림 설정 — 앱(WebView, 1.2.0+)에서만 보인다(.gu-only-in-app .gu-needs-push). 앱의 네이티브 알림 설정 시트를 연다. */}
+                <button
+                  type="button"
+                  className="gu-only-in-app gu-needs-push"
+                  onClick={() => { setAccountOpen(false); appOpenSettings(); }}
+                  style={{
+                    width: '100%', textAlign: 'left',
+                    padding: '10px 14px',
+                    fontSize: 14, color: '#222', fontWeight: 600,
+                    border: 'none', background: 'transparent',
+                    borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f7f7f7'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                >
+                  🔔 {t.account.appSettings}
+                </button>
                 <button
                   type="button"
                   onClick={onSignOut}
