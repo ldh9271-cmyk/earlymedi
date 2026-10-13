@@ -98,15 +98,6 @@ export function InquiryForm({
     categories: Dictionary['categories']['items'];
   };
 }): JSX.Element {
-  // 예약 모드(병원 지정)는 회원만 — 비회원이면 폼 대신 가입 안내 (2026-10-13)
-  const [authed, setAuthed] = useState<boolean | null>(null);
-  useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-    if (!supabase) { setAuthed(false); return; }
-    let mounted = true;
-    void supabase.auth.getUser().then(({ data }) => { if (mounted) setAuthed(!!data.user); }).catch(() => { if (mounted) setAuthed(false); });
-    return () => { mounted = false; };
-  }, []);
   const [name, setName] = useState('');
   const [gender, setGender] = useState('');
   const [country, setCountry] = useState('US');
@@ -130,6 +121,35 @@ export function InquiryForm({
   const [selectedHospitalId, setSelectedHospitalId] = useState<string>(hospitalId ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ invoiceNo: string | null } | null>(null);
+
+  // 예약 모드(병원 지정)는 회원만 — 비회원이면 폼 대신 가입 안내 (2026-10-13)
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setAuthed(false); return; }
+    let mounted = true;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!mounted) return;
+      setAuthed(!!data.user);
+      if (!data.user) return;
+      // 회원이면 가입 정보로 미리 채운다 (비어 있는 칸만) — 2026-10-13 사용자 요청
+      const um = (data.user.user_metadata ?? {}) as { full_name?: string; username?: string; gender?: string; country_code?: string; phone?: string; messenger_kind?: string; messenger_id?: string; birth_date?: string };
+      const GENDER: Record<string, string> = { F: 'female', M: 'male', X: 'other' };
+      const MSG: Record<string, string> = { whatsapp: 'WhatsApp', kakao: 'KakaoTalk', line: 'LINE', wechat: 'WeChat', telegram: 'Telegram', instagram: 'Instagram' };
+      setName((v) => v || um.full_name || um.username || '');
+      setGender((v) => v || (um.gender && GENDER[um.gender]) || '');
+      const cc = um.country_code;
+      if (cc) setCountry((v) => (v === 'US' ? cc : v));
+      setPhone((v) => v || um.phone || '');
+      const mk = um.messenger_kind ? MSG[um.messenger_kind] : undefined;
+      if (mk) setMessengerType((v) => (v === 'WhatsApp' ? mk : v));
+      setMessengerId((v) => v || um.messenger_id || '');
+      setEmail((v) => v || data.user?.email || '');
+      setContact((v) => v || data.user?.email || um.messenger_id || '');
+      setBirthDate((v) => v || um.birth_date || '');
+    }).catch(() => { if (mounted) setAuthed(false); });
+    return () => { mounted = false; };
+  }, []);
 
   const selectedHospital = selectedHospitalId
     ? hospitalOptions.find((h) => h.id === selectedHospitalId)
