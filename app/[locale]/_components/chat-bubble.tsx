@@ -112,8 +112,8 @@ export default function ChatBubble({
       if (target) {
         setMode('human'); setOpen(true);
         try {
-          // 'support' = 일반 문의 방, 그 외는 예약(주문) id
-          const payload = target === 'support' ? { locale, title: h.supportTitle } : { orderId: target, locale };
+          // 'support' = 일반 문의 방, 'listing:<slug>' = 상품 문의 방, 그 외는 예약(주문) id
+          const payload = target === 'support' ? { locale, title: h.supportTitle } : target.startsWith('listing:') ? { listingSlug: target.slice(8), locale } : { orderId: target, locale };
           const res = await fetch('/api/chat/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
           if (res.ok) { const j = (await res.json()) as { room: Room }; await openRoom(j.room); }
         } catch { /* 목록으로 */ }

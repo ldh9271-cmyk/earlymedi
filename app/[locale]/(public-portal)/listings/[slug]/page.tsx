@@ -749,6 +749,11 @@ export default async function ListingDetailPage({
                   textDecoration: 'none',
                 }}
               />
+              {/* 상품별 실시간 채팅 문의 — 같은 페이지의 챗 위젯이 ?chat=listing:<slug> 를 읽어 회원×상품 방을 연다 (2026-10-13) */}
+              <Link href={`/${params.locale}/listings/${listing.slug}?chat=listing:${listing.slug}`}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 10, height: 44, border: '1px solid #ffd7de', background: '#fff5f7', color: '#c81e42', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+                💬 {dict.chat.orderChat}
+              </Link>
             </>
           ) : (
             <>
@@ -839,6 +844,10 @@ export default async function ListingDetailPage({
                 textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
               }}
             />
+            <Link href={`/${params.locale}/listings/${listing.slug}?chat=listing:${listing.slug}`} aria-label={dict.chat.orderChat}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, border: '1px solid #ffd7de', background: '#fff5f7', borderRadius: 12, textDecoration: 'none', fontSize: 18, flexShrink: 0 }}>
+              💬
+            </Link>
           </>
         ) : (
           <>
