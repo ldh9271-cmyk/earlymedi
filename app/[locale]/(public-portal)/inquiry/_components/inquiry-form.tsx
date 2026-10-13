@@ -1,7 +1,8 @@
 'use client';
 
+import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import { bookingWindow } from '@/lib/booking/window';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import type { PublicLocale } from '@/lib/i18n/locales';
@@ -92,9 +93,20 @@ export function InquiryForm({
     requiredMissing: string;
     myPage: string;
     stayPrefill: string;
+    loginRequired: string;
+    loginCta: string;
     categories: Dictionary['categories']['items'];
   };
 }): JSX.Element {
+  // 예약 모드(병원 지정)는 회원만 — 비회원이면 폼 대신 가입 안내 (2026-10-13)
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setAuthed(false); return; }
+    let mounted = true;
+    void supabase.auth.getUser().then(({ data }) => { if (mounted) setAuthed(!!data.user); }).catch(() => { if (mounted) setAuthed(false); });
+    return () => { mounted = false; };
+  }, []);
   const [name, setName] = useState('');
   const [gender, setGender] = useState('');
   const [country, setCountry] = useState('US');
@@ -209,7 +221,16 @@ export function InquiryForm({
   >;
 
   return (
+    <>
+    {reserveMode && authed === false ? (
+      <div style={{ border: '1px solid #ffd7de', background: '#fff8f9', borderRadius: 14, padding: '18px 20px', marginBottom: 18 }}>
+        <p style={{ margin: 0, fontSize: 14, color: '#222', lineHeight: 1.6 }}>{labels.loginRequired}</p>
+        <a href={`/${locale}/signup?next=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname + window.location.search : `/${locale}/inquiry`)}`}
+          style={{ display: 'inline-block', marginTop: 12, background: '#ff385c', color: '#fff', borderRadius: 10, padding: '10px 16px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>{labels.loginCta}</a>
+      </div>
+    ) : null}
     <form
+      hidden={reserveMode && authed === false}
       onSubmit={onSubmit}
       style={{
         border: '1px solid #dddddd', borderRadius: 14,
@@ -376,5 +397,6 @@ export function InquiryForm({
         {labels.privacy}
       </p>
     </form>
+    </>
   );
 }

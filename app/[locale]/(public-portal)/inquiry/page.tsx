@@ -73,6 +73,8 @@ export default async function InquiryPage({
         labels={{
           name: dict.inquiryCta.nameLabel,
           stayPrefill: dict.inquiryCta.stayPrefill,
+          loginRequired: dict.checkout.stay.loginRequired,
+          loginCta: dict.checkout.stay.loginCta,
           country: dict.inquiryCta.countryLabel,
           contact: dict.inquiryCta.contactLabel,
           dob: dict.inquiryCta.dobLabel,

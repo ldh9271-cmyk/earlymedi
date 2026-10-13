@@ -39,7 +39,9 @@ export async function POST(req: Request): Promise<NextResponse> {
   try {
     const { data } = await createSupabaseServerClient().auth.getUser();
     userId = data.user?.id ?? null; userEmail = data.user?.email ?? null;
-  } catch { /* 비회원 */ }
+  } catch { /* 세션 조회 실패 = 비회원 취급 */ }
+  // 회원만 예약 (2026-10-13 사용자 결정)
+  if (!userId) return NextResponse.json({ error: 'login_required' }, { status: 401 });
 
   const r = await createStayRequest({
     locale: input.locale, listingSlug: input.listingSlug,

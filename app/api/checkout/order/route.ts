@@ -99,8 +99,10 @@ export async function POST(req: Request): Promise<NextResponse> {
       messengerId: contact.messengerId ?? um.messenger_id ?? null,
     };
   } catch {
-    /* 비로그인 예약도 허용 */
+    /* 세션 조회 실패 = 비회원 취급 */
   }
+  // 회원만 예약 (2026-10-13 사용자 결정) — 결제 팝업도 비회원은 가입 페이지로 보낸다
+  if (!userId) return NextResponse.json({ error: 'login_required' }, { status: 401 });
 
   // 예약 가능 기간: 오늘부터 3개월 이내 (lib/booking/window)
   if (input.reserveYmd && !isWithinBookingWindow(input.reserveYmd)) return NextResponse.json({ error: 'date_out_of_range' }, { status: 400 });

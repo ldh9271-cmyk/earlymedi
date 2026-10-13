@@ -1177,6 +1177,8 @@ const en: Dictionary = {
   },
   checkout: {
     stay: {
+      loginRequired: 'Bookings are for members only. Please sign up or sign in to continue.',
+      loginCta: 'Sign up / Sign in',
       dateRange: 'Bookings can be made up to 3 months ahead.',
       tripDate: "Trip start date",
       period: "Length",

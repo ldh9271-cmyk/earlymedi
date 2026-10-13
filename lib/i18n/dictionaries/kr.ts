@@ -1196,6 +1196,8 @@ const kr = {
   },
   checkout: {
     stay: {
+      loginRequired: '예약은 회원만 할 수 있습니다. 가입 또는 로그인 후 이용해 주세요.',
+      loginCta: '가입·로그인하기',
       dateRange: '예약은 오늘부터 3개월 이내 날짜만 가능합니다.',
       tripDate: "여행 시작일",
       period: "기간",

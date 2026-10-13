@@ -1176,6 +1176,8 @@ const ja: Dictionary = {
   },
   checkout: {
     stay: {
+      loginRequired: 'ご予約は会員のみ可能です。登録またはログインしてください。',
+      loginCta: '登録・ログイン',
       dateRange: '予約は本日から3か月以内の日付のみ可能です。',
       tripDate: "旅行開始日",
       period: "期間",

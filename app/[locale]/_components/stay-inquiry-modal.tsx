@@ -18,7 +18,8 @@ import { COUNTRY_CODES, LOCALE_DEFAULT_COUNTRY, MESSENGER_KINDS, MESSENGER_LABEL
  *   'booking' 맛집·퍼스널컬러·헤어·메이크업·네일·반영구·사진·K-팝 투어: 표시 가격은 안내용 · 희망 날짜·시간 → 요청 접수 → 확인 후 견적 인보이스
  *   'pay'     패키지·연수여행: 정가 상품 · 여행 시작일(시간 없음) · 같은 정보를 받고 바로 토스 결제 (서버가 금액을 다시 계산)
  *
- *   공통: 이름 · 국가 · 연락처 · 메신저 · 인원 · 요청. 비회원도 보낼 수 있다(이름·연락처·메신저·날짜 필수).
+ *   공통: 이름 · 국가 · 연락처 · 메신저 · 인원 · 요청. **회원만 예약할 수 있다(2026-10-13 사용자 결정)** — 비회원이 버튼을
+ *   누르면 가입 페이지로 보내고(next=현재 페이지), 서버(/api/stay/request)도 세션 없으면 401.
  *   로그인 회원은 가입 정보(이름·이메일·국가·전화·메신저)로 미리 채우고 수정만 하게 한다.
  */
 type Labels = Dictionary['checkout']['stay'];
@@ -68,6 +69,8 @@ export default function StayInquiryButton({ locale, href, label, summary, listin
   // 예약 가능 상한 — 오늘 + 3개월 (lib/booking/window, 서버도 같은 규칙으로 검증)
   const [maxDate, setMaxDate] = useState('');
   const [member, setMember] = useState(false);
+  // 로그인 여부 — null 은 확인 전. 비회원은 팝업을 열지 않고 가입 페이지로 보낸다.
+  const [authed, setAuthed] = useState<boolean | null>(null);
   const [prefilled, setPrefilled] = useState(false);
   const [missing, setMissing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -80,7 +83,9 @@ export default function StayInquiryButton({ locale, href, label, summary, listin
     if (!supabase) return;
     let mounted = true;
     void supabase.auth.getUser().then(({ data }) => {
-      if (!mounted || !data.user) return;
+      if (!mounted) return;
+      setAuthed(!!data.user);
+      if (!data.user) return;
       const um = (data.user.user_metadata ?? {}) as {
         full_name?: string; username?: string; name?: string; country_code?: string; phone?: string; messenger_kind?: string; messenger_id?: string;
       };
@@ -104,6 +109,19 @@ export default function StayInquiryButton({ locale, href, label, summary, listin
   }, []);
 
   const dateInRange = !!date && (!minDate || date >= minDate) && (!maxDate || date <= maxDate);
+  const signupHref = (): string => `/${locale}/signup?next=${encodeURIComponent(window.location.pathname)}`;
+  /** 세션을 확정한다 — 마운트 직후(확인 전)에 눌러도 비회원이 팝업에 들어가지 않게 */
+  const resolveAuthed = async (): Promise<boolean> => {
+    if (authed !== null) return authed;
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return false;
+    try { const { data } = await supabase.auth.getUser(); const ok = !!data.user; setAuthed(ok); if (ok) setMember(true); return ok; } catch { return false; }
+  };
+  const openOrSignup = (): void => {
+    if (authed === true) { setOpen(true); return; }
+    void resolveAuthed().then((ok) => { if (ok) setOpen(true); else window.location.href = signupHref(); });
+  };
+
   const valid = name.trim().length > 0 && contact.trim().length >= 3 && !!msgKind && msgId.trim().length > 0 && dateInRange;
   const subtotal = Math.max(0, priceWon) * guests;
   const fee = feeFor(subtotal);
@@ -143,6 +161,7 @@ export default function StayInquiryButton({ locale, href, label, summary, listin
         }),
       });
       const j = (await res.json().catch(() => ({}))) as { ok?: boolean; invoiceNo?: string; member?: boolean; pay?: boolean; amountWon?: number };
+      if (res.status === 401) { window.location.href = signupHref(); return; }
       if (!res.ok || !j.ok || !j.invoiceNo) { setErr((j as { error?: string }).error === 'date_out_of_range' ? labels.dateRange : labels.failed); return; }
       if (j.pay && j.amountWon && j.amountWon > 0) { await openPay(j.invoiceNo, j.amountWon); return; }
       setDone({ invoiceNo: j.invoiceNo, amountWon: 0, pay: false, paidWindow: 'none' });
@@ -162,7 +181,7 @@ export default function StayInquiryButton({ locale, href, label, summary, listin
         href={href}
         className={className}
         style={style}
-        onClick={(e) => { if (typeof window === 'undefined') return; e.preventDefault(); setOpen(true); }}
+        onClick={(e) => { if (typeof window === 'undefined') return; e.preventDefault(); openOrSignup(); }}
       >
         {label}
       </Link>

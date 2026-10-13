@@ -1177,6 +1177,8 @@ const vi: Dictionary = {
   },
   checkout: {
     stay: {
+      loginRequired: 'Chỉ thành viên mới đặt được. Vui lòng đăng ký hoặc đăng nhập.',
+      loginCta: 'Đăng ký / Đăng nhập',
       dateRange: 'Chỉ có thể đặt trong vòng 3 tháng kể từ hôm nay.',
       tripDate: "Ngày bắt đầu chuyến đi",
       period: "Số ngày",

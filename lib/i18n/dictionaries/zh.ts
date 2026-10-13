@@ -1174,6 +1174,8 @@ const zh: Dictionary = {
   },
   checkout: {
     stay: {
+      loginRequired: '仅会员可预订，请先注册或登录。',
+      loginCta: '注册 / 登录',
       dateRange: '仅可预订自今日起 3 个月内的日期。',
       tripDate: "出发日期",
       period: "天数",
