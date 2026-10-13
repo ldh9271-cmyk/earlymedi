@@ -501,6 +501,7 @@ const ja: Dictionary = {
       login: 'ログイン',
       signedIn: 'ログイン中',
       myInquiry: 'マイお問い合わせ',
+      chat: 'チャットで相談',
       signOut: 'ログアウト',
       langSelect: '言語選択',
       logoAlt: 'glow-up ホーム',

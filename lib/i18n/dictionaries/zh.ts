@@ -499,6 +499,7 @@ const zh: Dictionary = {
       login: '登录',
       signedIn: '已登录',
       myInquiry: '我的咨询',
+      chat: '聊天咨询',
       signOut: '退出',
       langSelect: '选择语言',
       logoAlt: 'glow-up 首页',

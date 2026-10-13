@@ -502,6 +502,7 @@ const ru: Dictionary = {
       login: 'Войти',
       signedIn: 'Вход выполнен',
       myInquiry: 'Мои запросы',
+      chat: 'Чат с нами',
       signOut: 'Выйти',
       langSelect: 'Выбор языка',
       logoAlt: 'glow-up главная',

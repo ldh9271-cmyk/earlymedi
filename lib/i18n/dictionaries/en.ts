@@ -514,6 +514,7 @@ const en: Dictionary = {
       login: 'Sign in',
       signedIn: 'Signed in as',
       myInquiry: 'My inquiries',
+      chat: 'Chat with us',
       signOut: 'Sign out',
       langSelect: 'Select language',
       logoAlt: 'glow-up home',

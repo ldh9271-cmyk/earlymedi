@@ -676,6 +676,20 @@ export function MainHeader({
                 >
                   {t.referralMenu}
                 </Link>
+                {/* 채팅 문의 — 마이페이지로 가서 챗 위젯의 상담원 탭(일반 문의 방)을 연다 (?chat=support) */}
+                <Link
+                  href={`/${locale}/me?chat=support`}
+                  onClick={() => setAccountOpen(false)}
+                  style={{
+                    display: 'block', padding: '10px 14px',
+                    fontSize: 14, color: '#222', fontWeight: 600,
+                    borderRadius: 8, textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#f7f7f7'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
+                >
+                  💬 {t.account.chat}
+                </Link>
                 <Link
                   href={`/${locale}/inquiry`}
                   onClick={() => setAccountOpen(false)}

@@ -525,6 +525,7 @@ const kr = {
       login: '로그인',
       signedIn: '로그인됨',
       myInquiry: '내 문의',
+      chat: '채팅 문의',
       signOut: '로그아웃',
       langSelect: '언어 선택',
       logoAlt: 'glow-up 홈',

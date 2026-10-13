@@ -108,11 +108,13 @@ export default function ChatBubble({
       const ok = await checkAuth();
       if (!ok) return;
       const qs = new URLSearchParams(window.location.search);
-      const orderId = qs.get('chat');
-      if (orderId) {
+      const target = qs.get('chat');
+      if (target) {
         setMode('human'); setOpen(true);
         try {
-          const res = await fetch('/api/chat/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId, locale }) });
+          // 'support' = 일반 문의 방, 그 외는 예약(주문) id
+          const payload = target === 'support' ? { locale, title: h.supportTitle } : { orderId: target, locale };
+          const res = await fetch('/api/chat/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
           if (res.ok) { const j = (await res.json()) as { room: Room }; await openRoom(j.room); }
         } catch { /* 목록으로 */ }
         qs.delete('chat');

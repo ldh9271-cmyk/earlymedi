@@ -113,6 +113,13 @@ export default async function MyPage({
       <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
         {t.subtitle.replace('{email}', auth.user.email ?? '')}
       </p>
+      {/* 채팅 문의 — 주문이 없어도 상담원(플랫폼)과 바로 대화. 같은 페이지의 챗 위젯이 ?chat=support 를 읽어 일반 문의 방을 연다 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginTop: 14, border: '1px solid #ffd7de', background: '#fff8f9', borderRadius: 14, padding: '12px 16px' }}>
+        <Link href={`/${locale}/me?chat=support`} style={{ display: 'inline-block', background: '#ff385c', color: '#fff', borderRadius: 10, padding: '9px 16px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+          💬 {dict.chat.orderChat}
+        </Link>
+        <span style={{ fontSize: 12, color: '#6a6a6a', lineHeight: 1.5 }}>{dict.chat.hint}</span>
+      </div>
 
       <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
         <SummaryCard label={t.countLabel} value={t.countValue.replace('{n}', String(rows.length))} />

@@ -502,6 +502,7 @@ const vi: Dictionary = {
       login: 'Đăng nhập',
       signedIn: 'Đã đăng nhập',
       myInquiry: 'Yêu cầu của tôi',
+      chat: 'Chat với chúng tôi',
       signOut: 'Đăng xuất',
       langSelect: 'Chọn ngôn ngữ',
       logoAlt: 'glow-up trang chủ',
