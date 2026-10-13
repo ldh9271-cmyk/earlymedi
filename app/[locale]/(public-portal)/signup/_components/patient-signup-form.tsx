@@ -73,6 +73,9 @@ const schema = z
     password: z.string().min(8).max(128),
     passwordConfirm: z.string(),
     fullName: z.string().min(2).max(80),
+    // 기본 가입 양식(2026-10-13 사용자): 이름·이메일·국가·생년월일·성별·전화·메신저 — 생년월일·성별 추가
+    birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD'),
+    gender: z.enum(['F', 'M', 'X']),
     countryCode: z.string().min(2),
     phone: z
       .string()
@@ -187,6 +190,8 @@ export function PatientSignupForm({
           data: {
             username: values.username,
             full_name: values.fullName,
+            birth_date: values.birthDate,
+            gender: values.gender,
             country_code: values.countryCode,
             phone: values.phone,
             messenger_kind: values.messengerKind,
@@ -469,6 +474,35 @@ export function PatientSignupForm({
           error={errs.fullName?.message}
         >
           <Input id="s-name" autoComplete="name" {...form.register('fullName')} />
+        </Field>
+
+        {/* Date of birth */}
+        <Field
+          id="s-birth"
+          label={dict.dobLabel}
+          hint={dict.dobHint}
+          error={errs.birthDate?.message}
+        >
+          <Input id="s-birth" type="date" min="1900-01-01" max={new Date().toISOString().slice(0, 10)} autoComplete="bday" {...form.register('birthDate')} />
+        </Field>
+
+        {/* Gender */}
+        <Field
+          id="s-gender"
+          label={dict.genderLabel}
+          error={errs.gender?.message}
+        >
+          <select
+            id="s-gender"
+            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            defaultValue=""
+            {...form.register('gender')}
+          >
+            <option value="" disabled>—</option>
+            <option value="F">{dict.genderF}</option>
+            <option value="M">{dict.genderM}</option>
+            <option value="X">{dict.genderX}</option>
+          </select>
         </Field>
 
         {/* Country */}
