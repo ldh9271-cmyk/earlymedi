@@ -1,6 +1,7 @@
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { pushTokens, type PushToken } from '@/drizzle/schema/push-tokens';
+import { pushTickets } from '@/drizzle/schema/push-tickets';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
@@ -12,6 +13,8 @@ import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
  *  · 제목·본문은 토큰이 알린 사이트 언어(없으면 호출부가 준 언어)의 사전(push.*)으로 만든다 — 기기마다 언어가 다를 수 있어
  *    메시지는 locale → {title, body, url} 함수로 받는다.
  *  · 한 요청에 최대 100개. 티켓이 DeviceNotRegistered 면(앱 삭제·토큰 만료) 그 토큰 행을 지운다.
+ *  · ok 티켓은 push_tickets 에 {ticket_id, token} 으로 적어 둔다 — 티켓은 ok 인데 영수증(getReceipts)이
+ *    DeviceNotRegistered 로 오는 경우(재설치로 남은 옛 토큰)를 크론(/api/cron/push-receipts)이 정리한다.
  *  · 실패해도 던지지 않는다 — 알림이 채팅·예약 흐름을 막으면 안 된다. 호출부는 .catch(() => 0) 로 한 번 더 감싼다.
  *
  * 환경 변수(선택): EXPO_ACCESS_TOKEN — EAS 대시보드에서 'Enhanced push security' 를 켰을 때만 필요.
@@ -72,6 +75,7 @@ export async function sendExpoMessages(messages: ExpoMessage[]): Promise<number>
   if (process.env.EXPO_ACCESS_TOKEN) headers.authorization = `Bearer ${process.env.EXPO_ACCESS_TOKEN}`;
   let ok = 0;
   const dead: string[] = [];
+  const issued: { ticketId: string; token: string }[] = [];
   for (let i = 0; i < messages.length; i += BATCH) {
     const chunk = messages.slice(i, i + BATCH);
     const controller = new AbortController();
@@ -82,8 +86,13 @@ export async function sendExpoMessages(messages: ExpoMessage[]): Promise<number>
       const json = (await res.json()) as { data?: ExpoTicket[] };
       const tickets = json.data ?? [];
       tickets.forEach((tk, idx) => {
-        if (tk.status === 'ok') { ok += 1; return; }
-        if (tk.details?.error === 'DeviceNotRegistered') { const m = chunk[idx]; if (m) dead.push(m.to); }
+        const m = chunk[idx];
+        if (tk.status === 'ok') {
+          ok += 1;
+          if (m && tk.id) issued.push({ ticketId: tk.id, token: m.to });
+          return;
+        }
+        if (tk.details?.error === 'DeviceNotRegistered' && m) dead.push(m.to);
       });
     } catch {
       /* 네트워크·타임아웃 — 다음 묶음 계속 */
@@ -92,6 +101,14 @@ export async function sendExpoMessages(messages: ExpoMessage[]): Promise<number>
     }
   }
   if (dead.length) await db.delete(pushTokens).where(inArray(pushTokens.token, dead)).catch(() => undefined);
+  // 영수증 조회용 티켓 기록 — 테이블 미적용(drizzle/sql/push-tickets.sql) 등으로 실패해도 발송 결과엔 영향 없음
+  if (issued.length) {
+    try {
+      await db.insert(pushTickets).values(issued).onConflictDoNothing();
+    } catch {
+      /* 조용히 */
+    }
+  }
   return ok;
 }
 

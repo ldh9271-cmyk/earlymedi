@@ -94,3 +94,5 @@ export * from './ai-sim';
 
 // 앱 푸시 토큰 (Expo Push) — 채팅 답장·견적·예약 확정 알림
 export * from './push-tokens';
+// 앱 푸시 발송 티켓 — 영수증(receipt) 조회로 죽은 토큰 정리 (/api/cron/push-receipts)
+export * from './push-tickets';

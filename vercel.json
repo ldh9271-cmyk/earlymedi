@@ -190,6 +190,10 @@
     {
       "path": "/api/cron/registry-details",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/push-receipts",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
