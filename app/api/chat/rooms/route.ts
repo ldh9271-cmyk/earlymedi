@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
-import { getOrCreateOrderRoom, getOrCreateSupportRoom, listRoomsForUser } from '@/lib/chat/service';
+import { getOrCreateOrderRoom, getOrCreateSupportRoom, listRoomsForUser, publicRoom } from '@/lib/chat/service';
 import { getOrCreateListingRoom } from '@/lib/chat/listing-room';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +24,7 @@ export async function GET(): Promise<NextResponse> {
   const u = await sessionUser();
   if (!u) return NextResponse.json({ error: 'login_required' }, { status: 401 });
   const rooms = await listRoomsForUser(u.id);
-  return NextResponse.json({ rooms });
+  return NextResponse.json({ rooms: rooms.map(publicRoom) });
 }
 
 const CreateSchema = z.object({ orderId: z.string().uuid().nullable().optional(), listingSlug: z.string().max(200).nullable().optional(), locale: z.string().max(5).optional(), title: z.string().max(120).optional() });
@@ -37,13 +37,13 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (input.orderId) {
     const room = await getOrCreateOrderRoom(input.orderId, u);
     if (!room) return NextResponse.json({ error: 'not_found' }, { status: 404 });
-    return NextResponse.json({ room });
+    return NextResponse.json({ room: publicRoom(room) });
   }
   if (input.listingSlug) {
     const room = await getOrCreateListingRoom(input.listingSlug, u, input.locale ?? 'kr');
     if (!room) return NextResponse.json({ error: 'not_found' }, { status: 404 });
-    return NextResponse.json({ room });
+    return NextResponse.json({ room: publicRoom(room) });
   }
   const room = await getOrCreateSupportRoom(u, input.locale ?? 'kr', input.title?.trim() || 'Support');
-  return NextResponse.json({ room });
+  return NextResponse.json({ room: publicRoom(room) });
 }

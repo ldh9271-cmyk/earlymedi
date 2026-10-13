@@ -50,7 +50,7 @@ export default async function MasterChatsPage({ searchParams }: { searchParams: 
                 <span style={{ fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.kind === 'support' ? `일반 문의 · ${r.userName || r.userEmail || ''}` : r.title}</span>
                 {r.platformUnread > 0 ? <span style={{ background: '#ff385c', color: '#fff', borderRadius: 999, padding: '1px 7px', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{r.platformUnread}</span> : null}
               </span>
-              <span style={{ fontSize: 12, color: '#6a6a6a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.userName || r.userEmail || '고객'} · {r.orgName ?? '업체 미지정'} · {r.lastMessagePreview || '대화 없음'}</span>
+              <span style={{ fontSize: 12, color: '#6a6a6a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.userName || r.userEmail || '고객'} · {r.orgName ?? '업체 미지정'} · {r.lastMessagePreviewKo || r.lastMessagePreview || '대화 없음'}</span>
               <span style={{ fontSize: 11, color: '#9c9c9c' }}>{fmt(r.lastMessageAt)}{r.status === 'closed' ? ' · 종료' : ''}{r.businessUnread > 0 ? ` · 업체 미읽음 ${r.businessUnread}` : ''}</span>
             </Link>
           ))}

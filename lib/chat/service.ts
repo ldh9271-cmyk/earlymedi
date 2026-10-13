@@ -6,6 +6,8 @@ import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { organizations } from '@/drizzle/schema/organizations';
 import { sendAdminTelegram } from '@/lib/notify/admin-alert';
 import { sendPushToUser } from '@/lib/push/expo';
+import { detectLocale } from '@/lib/ai/translation';
+import { chatHistoryContext, chatTargetTag, translateChatText } from './translate';
 
 /**
  * 글로우업 채팅 서비스 — 방 만들기·목록·메시지·읽음·알림. 권한 판단은 호출자(API/서버 액션)가 한다.
@@ -17,6 +19,7 @@ import { sendPushToUser } from '@/lib/push/expo';
  *  읽지 않음: 보낸 쪽을 제외한 두 쪽의 unread 를 +1, 각자 방을 열면 0 으로.
  *  알림: 소비자·사업자가 쓰면 마스터 텔레그램. 상담원·사업자가 쓰면 회원 앱 푸시(lib/push/expo, 채팅 알림 스위치가 켜진 기기만).
  *        (사업자에게 가는 푸시/메일은 다음 단계)
+ *  번역: 방 언어가 한국어가 아니면 고객 글은 한국어(body_ko)로, 상담원·업체의 한국어 글은 고객 언어(body)로 자동 번역 (lib/chat/translate).
  */
 export const CHAT_PREVIEW_LEN = 80;
 const esc = (s: string): string => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c] ?? c);
@@ -88,37 +91,84 @@ export async function markRead(roomId: string, role: ChatRole): Promise<void> {
   await db.update(chatRooms).set({ ...col, updatedAt: new Date() }).where(eq(chatRooms.id, roomId));
 }
 
-/** 메시지 보내기 — 방 요약·unread 갱신 + (소비자·사업자 발신이면) 마스터 텔레그램 */
+/**
+ * 메시지 보내기 — 자동 번역 + 방 요약·unread 갱신 + 알림.
+ *  번역(방 언어가 한국어가 아닐 때):
+ *   고객 글        body = 원문(고객 언어), body_ko = 한국어 번역 → 콘솔은 body_ko 를 보여 준다
+ *   상담원·업체 글 body = 고객 언어 번역(고객에게는 이것만 보임), body_ko = 한국어 원문
+ *   번역 실패·시간 초과면 원문 그대로(body_ko null) — 메시지는 항상 전달된다.
+ *  이중 제출 방지: 같은 역할이 같은 글을 10초 안에 다시 보내면 새로 넣지 않고 기존 메시지를 돌려준다.
+ *  알림: 고객·업체가 쓰면 마스터 텔레그램(한국어). 상담원·업체가 쓰면 회원 앱 푸시(고객 언어 본문).
+ */
 export async function postMessage(roomId: string, sender: { role: ChatRole; userId: string | null; name: string | null }, body: string): Promise<ChatMessage | null> {
   const text = body.trim().slice(0, 4000);
   if (!text) return null;
   const room = await getRoom(roomId);
   if (!room || room.status === 'closed') return null;
-  const [msg] = await db.insert(chatMessages).values({ roomId, senderRole: sender.role, senderUserId: sender.userId, senderName: sender.name, body: text }).returning();
+  const recent = await db.select().from(chatMessages).where(eq(chatMessages.roomId, roomId)).orderBy(desc(chatMessages.createdAt)).limit(6);
+  const last = recent[0];
+  if (last && last.senderRole === sender.role && originalOf(last) === text && Date.now() - new Date(last.createdAt).getTime() < 10_000) return last;
+
+  const target = chatTargetTag(room.locale);
+  let deliver = text;
+  let ko: string | null = null;
+  let lang: string | null = null;
+  if (target !== 'ko' && sender.role !== 'system') {
+    const ctx = { history: chatHistoryContext([...recent].reverse()), contact: { displayName: room.userName, locale: target } };
+    if (sender.role === 'consumer') {
+      ko = await translateChatText(text, 'ko', ctx);
+      lang = detectLocale(text);
+    } else {
+      const tr = await translateChatText(text, target, ctx);
+      if (tr) { deliver = tr; ko = text; lang = target; } else lang = detectLocale(text);
+    }
+  }
+  const [msg] = await db.insert(chatMessages).values({ roomId, senderRole: sender.role, senderUserId: sender.userId, senderName: sender.name, body: deliver, bodyKo: ko, bodyLang: lang }).returning();
   const now = new Date();
+  const staffText = ko ?? deliver;
   await db.update(chatRooms).set({
-    lastMessageAt: now, lastMessagePreview: text.slice(0, CHAT_PREVIEW_LEN), lastSenderRole: sender.role, updatedAt: now,
+    lastMessageAt: now, lastMessagePreview: deliver.slice(0, CHAT_PREVIEW_LEN), lastMessagePreviewKo: staffText.slice(0, CHAT_PREVIEW_LEN), lastSenderRole: sender.role, updatedAt: now,
     consumerUnread: sender.role === 'consumer' ? room.consumerUnread : room.consumerUnread + 1,
     businessUnread: sender.role === 'business' ? room.businessUnread : room.businessUnread + 1,
     platformUnread: sender.role === 'platform' ? room.platformUnread : room.platformUnread + 1,
   }).where(eq(chatRooms.id, roomId));
   if (sender.role !== 'platform') {
     const who = sender.role === 'consumer' ? '🙋 고객' : '🏪 사업자';
-    await sendAdminTelegram(`<b>💬 채팅 ${who}</b> ${esc(room.title)}\n${esc(sender.name ?? room.userEmail ?? '')}: ${esc(text.slice(0, 300))}\n→ /master/chats`).catch(() => false);
+    const orig = ko && sender.role === 'consumer' ? `\n(원문: ${esc(text.slice(0, 120))})` : '';
+    await sendAdminTelegram(`<b>💬 채팅 ${who}</b> ${esc(room.title)}\n${esc(sender.name ?? room.userEmail ?? '')}: ${esc(staffText.slice(0, 300))}${orig}\n→ /master/chats`).catch(() => false);
   }
-  // 상담원·업체가 답하면 회원의 앱으로 푸시 — 누르면 그 방이 열린다 (/me?chat=<orderId|support>)
+  // 상담원·업체가 답하면 회원의 앱으로 푸시(고객 언어 본문) — 누르면 그 방이 열린다 (/me?chat=<orderId|support>)
   if (sender.role === 'platform' || sender.role === 'business') {
-    const target = room.kind === 'order' && room.orderId ? room.orderId : 'support';
+    const targetRoom = room.kind === 'order' && room.orderId ? room.orderId : 'support';
     await sendPushToUser(room.userId, {
       category: 'chat', fallbackLocale: room.locale, collapseId: `chat:${room.id}`, data: { roomId: room.id },
       content: (locale, t) => ({
         title: sender.role === 'platform' ? t.fromPlatform : (room.orgName ?? t.fromBusiness),
-        body: text.slice(0, 200),
-        url: `/${locale}/me?chat=${target}`,
+        body: deliver.slice(0, 200),
+        url: `/${locale}/me?chat=${targetRoom}`,
       }),
     }).catch(() => 0);
   }
   return msg ?? null;
+}
+
+/** 보낸 사람이 실제로 친 글 — 고객은 body, 상담원·업체는 한국어 원문(body_ko) */
+export function originalOf(m: ChatMessage): string {
+  return m.senderRole === 'consumer' ? m.body : (m.bodyKo ?? m.body);
+}
+
+export type PublicChatMessage = Omit<ChatMessage, 'bodyKo' | 'bodyLang'>;
+export type PublicChatRoom = Omit<ChatRoom, 'lastMessagePreviewKo'>;
+/** 고객 API 응답용 — 상담원의 한국어 원문·언어 태그는 빼고 고객 언어 본문만 준다 */
+export function publicMessage(m: ChatMessage): PublicChatMessage {
+  const { bodyKo, bodyLang, ...rest } = m;
+  void bodyKo; void bodyLang;
+  return rest;
+}
+export function publicRoom(r: ChatRoom): PublicChatRoom {
+  const { lastMessagePreviewKo, ...rest } = r;
+  void lastMessagePreviewKo;
+  return rest;
 }
 
 export async function setRoomStatus(roomId: string, status: 'open' | 'closed'): Promise<void> {

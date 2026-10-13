@@ -39,7 +39,7 @@ export default async function PartnerChatsPage({ searchParams }: { searchParams:
                 <span style={{ fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</span>
                 {r.businessUnread > 0 ? <span style={{ background: '#1d4ed8', color: '#fff', borderRadius: 999, padding: '1px 7px', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{r.businessUnread}</span> : null}
               </span>
-              <span style={{ fontSize: 12, color: '#6a6a6a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.userName || r.userEmail || '고객'} · {r.lastMessagePreview || '대화 없음'}</span>
+              <span style={{ fontSize: 12, color: '#6a6a6a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.userName || r.userEmail || '고객'} · {r.lastMessagePreviewKo || r.lastMessagePreview || '대화 없음'}</span>
               <span style={{ fontSize: 11, color: '#9c9c9c' }}>{fmt(r.lastMessageAt)}{r.status === 'closed' ? ' · 종료' : ''}</span>
             </Link>
           ))}

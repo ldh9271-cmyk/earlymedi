@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
-import { getRoom, listMessages, markRead, postMessage } from '@/lib/chat/service';
+import { getRoom, listMessages, markRead, postMessage, publicMessage, publicRoom } from '@/lib/chat/service';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * 소비자 채팅 메시지 (회원 전용, 내 방만).
- *   GET  ?after=ISO → { room, messages } (폴링; 열람 시 소비자 unread 0)
+ *   GET  ?after=ISO → { room, messages } (폴링; 열람 시 소비자 unread 0). 본문은 고객 언어(body)만 — 상담원 한국어 원문은 안 보낸다
  *   POST { body }   → { message }
  */
 async function sessionUser(): Promise<{ id: string; email: string | null; name: string | null } | null> {
@@ -28,7 +28,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }):
   const after = afterRaw ? new Date(afterRaw) : null;
   const messages = await listMessages(room.id, after && !Number.isNaN(after.getTime()) ? after : null);
   if (room.consumerUnread > 0) await markRead(room.id, 'consumer');
-  return NextResponse.json({ room: { ...room, consumerUnread: 0 }, messages });
+  return NextResponse.json({ room: publicRoom({ ...room, consumerUnread: 0 }), messages: messages.map(publicMessage) });
 }
 
 const PostSchema = z.object({ body: z.string().min(1).max(4000) });
@@ -42,5 +42,5 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   try { input = PostSchema.parse(await req.json()); } catch { return NextResponse.json({ error: 'bad_request' }, { status: 400 }); }
   const message = await postMessage(room.id, { role: 'consumer', userId: u.id, name: u.name }, input.body);
   if (!message) return NextResponse.json({ error: 'closed' }, { status: 409 });
-  return NextResponse.json({ message });
+  return NextResponse.json({ message: publicMessage(message) });
 }

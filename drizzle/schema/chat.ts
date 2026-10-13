@@ -9,6 +9,8 @@ import { index, integer, pgTable, text, timestamp, uniqueIndex, uuid } from 'dri
  * chat_messages 메시지. sender_role 로 누가 보냈는지 구분하고 UI 색을 나눈다.
  *
  * 실시간은 폴링(5초)으로 한다. RLS 는 enable + 무정책(공개 REST 차단) — 앱 서버가 직결 역할로만 접근.
+ * 자동 번역(2026-10-13, lib/chat/translate): 방 언어가 한국어가 아니면 고객 글은 한국어로(body_ko), 상담원·업체의 한국어 글은
+ * 고객 언어로 번역해 body 에 넣고 원문은 body_ko 에 둔다. 고객은 body 만, 콘솔은 body_ko 를 우선 본다.
  */
 export const chatRooms = pgTable(
   'chat_rooms',
@@ -31,6 +33,8 @@ export const chatRooms = pgTable(
     status: text('status').notNull().default('open'),
     lastMessageAt: timestamp('last_message_at', { withTimezone: true }),
     lastMessagePreview: text('last_message_preview'),
+    /** 콘솔(상담원·업체)용 한국어 미리보기 — 번역이 없으면 last_message_preview 와 같음 */
+    lastMessagePreviewKo: text('last_message_preview_ko'),
     lastSenderRole: text('last_sender_role'),
     consumerUnread: integer('consumer_unread').notNull().default(0),
     businessUnread: integer('business_unread').notNull().default(0),
@@ -56,7 +60,12 @@ export const chatMessages = pgTable(
     senderRole: text('sender_role').notNull(),
     senderUserId: uuid('sender_user_id'),
     senderName: text('sender_name'),
+    /** 고객이 보는 본문(고객 언어). 상담원·업체 글은 번역문이 들어간다 */
     body: text('body').notNull(),
+    /** 고객 글이면 한국어 번역, 상담원·업체 글이면 한국어 원문. 번역이 없으면 null */
+    bodyKo: text('body_ko'),
+    /** body 의 언어 태그(ko/en/zh/ja/ru/vi). 한국어 방은 null */
+    bodyLang: text('body_lang'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
   },
   (t) => ({
