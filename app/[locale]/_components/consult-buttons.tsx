@@ -25,7 +25,7 @@ type Props = {
   style?: CSSProperties;
 };
 
-function openChat(detail: { mode: 'ai' | 'human'; target?: string; prompt?: string }, locale: string): void {
+function openChat(detail: { mode: 'ai' | 'human'; target?: string; prompt?: string; context?: string }, locale: string): void {
   const w = window as unknown as { __guChatReady?: boolean };
   if (w.__guChatReady) {
     window.dispatchEvent(new CustomEvent('gu:open-chat', { detail }));
@@ -37,7 +37,8 @@ function openChat(detail: { mode: 'ai' | 'human'; target?: string; prompt?: stri
 }
 
 export default function ConsultButtons({ locale, aiLabel, humanLabel, aiPrompt, target, variant = 'card', style }: Props): JSX.Element {
-  const onAi = (): void => openChat({ mode: 'ai', prompt: aiPrompt }, locale);
+  // context = 같은 대상 키 — AI 상담 서버가 이 업체를 근거 맨 앞에 두고 답한다(/api/ai/chat contextFocus)
+  const onAi = (): void => openChat({ mode: 'ai', prompt: aiPrompt, context: target }, locale);
   const onHuman = (): void => openChat({ mode: 'human', target }, locale);
 
   if (variant === 'compact') {

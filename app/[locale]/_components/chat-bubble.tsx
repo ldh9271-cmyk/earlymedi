@@ -113,11 +113,13 @@ export default function ChatBubble({
   // 상세 페이지의 'AI 상담'·'상담원' 버튼(consult-buttons.tsx)이 보내는 신호 — 같은 페이지에서 바로 연다.
   //   { mode: 'ai', prompt }  → AI 탭 + 질문 자동 전송   { mode: 'human', target } → 상담원 탭 + 그 방
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+  // AI 상담 문맥(상세 페이지의 대상) — 같은 페이지에 있는 동안만 /api/ai/chat 에 함께 보낸다
+  const aiContextRef = useRef<{ target: string; path: string } | null>(null);
   useEffect(() => {
     const w = window as unknown as { __guChatReady?: boolean };
     w.__guChatReady = true;
     const onOpen = (e: Event): void => {
-      const d = (e as CustomEvent<{ mode?: 'ai' | 'human'; target?: string; prompt?: string }>).detail ?? {};
+      const d = (e as CustomEvent<{ mode?: 'ai' | 'human'; target?: string; prompt?: string; context?: string }>).detail ?? {};
       setOpen(true);
       if (d.mode === 'human') {
         setMode('human');
@@ -135,6 +137,7 @@ export default function ChatBubble({
         })();
       } else {
         setMode('ai');
+        aiContextRef.current = d.context ? { target: d.context, path: window.location.pathname } : null;
         if (d.prompt) setPendingPrompt(d.prompt);
       }
     };
@@ -220,6 +223,7 @@ export default function ChatBubble({
           locale,
           stream: true,
           messages: next.slice(1).map((m) => ({ role: m.role, content: m.content })),
+          context: aiContextRef.current && aiContextRef.current.path === window.location.pathname ? aiContextRef.current.target : undefined,
         }),
       });
       if (!res.ok || !res.body) { setError(t.error); return; }

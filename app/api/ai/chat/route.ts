@@ -10,6 +10,12 @@ import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { localizeKoLabel } from '@/lib/i18n/ko-label';
 import { localizePriceUnit } from '@/lib/i18n/price-unit';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
+import { hospitalRegistry } from '@/drizzle/schema/hospital-registry';
+import { lodgingRegistry } from '@/drizzle/schema/lodging-registry';
+import { foodRegistry } from '@/drizzle/schema/food-registry';
+import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
+import { tourSpots } from '@/drizzle/schema/tour-spots';
+import { parseTopic } from '@/lib/chat/topic-room';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -37,6 +43,8 @@ const BodySchema = z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string().max(2000),
   })).min(1).max(20),
+  /** 상세 페이지 'AI 상담' 버튼에서 연 대화면 그 대상 — 'listing:<slug>' 또는 'topic:<종류>:<id>' (consult-buttons.tsx). 2026-10-14 */
+  context: z.string().max(240).optional(),
 });
 
 const LOCALE_LANGUAGE: Record<PublicLocale, string> = {
@@ -153,9 +161,30 @@ function procedureTokens(q: string): string[] {
   return expandSynonyms(raw);
 }
 
-async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ text: string; card: Card; fallback?: boolean }>> {
+async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ text: string; card: Card; fallback?: boolean; focus?: boolean }>> {
   const cats = matchCats(q, HOSPITAL_CATS).map((m) => m.cat);
   try {
+    // 질문에 병원 이름(기본 또는 언어별 이름)이 그대로 들어 있으면 그 병원을 맨 앞에 — '○○에 대해 알려 주세요' (2026-10-14)
+    // 과(카테고리) 검색은 순서 상위 6곳만 가져와서, 순서가 뒤인 병원은 이름을 말해도 빠지던 문제.
+    const namedRaw = await db
+      .select({
+        id: hospitals.id, name: hospitals.name, slug: hospitals.slug,
+        details: hospitals.details, notes: hospitals.notes,
+        addressJson: hospitals.addressJson,
+        promo: categoryListings.promoLabel, cat: categoryListings.categoryKey,
+      })
+      .from(hospitals)
+      .leftJoin(categoryListings, eq(categoryListings.hospitalId, hospitals.id))
+      .where(and(
+        eq(hospitals.isActiveForMatching, true),
+        or(
+          sql`${q} ILIKE '%' || "hospitals"."name" || '%'`,
+          sql`exists (select 1 from hospital_locale_content l where l.hospital_id = "hospitals"."id" and length(coalesce(l.name, '')) >= 2 and ${q} ILIKE '%' || l.name || '%')`,
+        ) as SQL,
+      ))
+      .limit(6);
+    const namedIds = new Set<string>();
+    const named = namedRaw.filter((r) => (namedIds.has(r.id) ? false : (namedIds.add(r.id), true))).slice(0, 3);
     const rows = cats.length
       ? await db
           .select({
@@ -213,6 +242,11 @@ async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ t
         rows.push(r as (typeof rows)[number]);
       }
     }
+    if (named.length) {
+      const rest = rows.filter((r) => !namedIds.has(r.id));
+      rows.length = 0;
+      rows.push(...(named as Array<(typeof rows)[number]>), ...rest);
+    }
     // 정확히 맞는 병원이 없으면 "없다"고 끝내지 않고, 해당 과의 글로우 인증 병원 1~5위(마스터 순서)를 근거로 준다.
     let fallbackCat: string | null = null;
     if (rows.length === 0) {
@@ -267,9 +301,11 @@ async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ t
         intro ? `소개: ${intro}` : '',
         `링크: /${locale}/clinics/${r.slug}`,
       ].filter(Boolean);
+      const focus = namedIds.has(r.id);
       return {
         fallback: Boolean(fallbackCat),
-        text: (fallbackCat ? '[글로우 인증 추천] ' : '') + parts.join(' | '),
+        focus,
+        text: (focus ? '[질문에 나온 병원] ' : fallbackCat ? '[글로우 인증 추천] ' : '') + parts.join(' | '),
         card: {
           kind: 'clinic' as const,
           title: name,
@@ -288,9 +324,14 @@ async function findListings(
   q: string,
   locale: PublicLocale,
   units: Record<string, string>,
-): Promise<Array<{ text: string; card: Card }>> {
+): Promise<Array<{ text: string; card: Card; focus?: boolean }>> {
   const cats = matchCats(q, LISTING_CATS).flatMap((m) => m.cats);
   try {
+    // 질문에 상품 이름이 그대로 있으면 맨 앞에 (병원과 같은 이유, 2026-10-14)
+    const named = await db.select().from(partnerListings)
+      .where(and(eq(partnerListings.status, 'approved'), sql`length(${partnerListings.title}) >= 2 and ${q} ILIKE '%' || ${partnerListings.title} || '%'`))
+      .limit(3);
+    const namedIds = new Set(named.map((r) => r.id));
     const conds: SQL[] = [eq(partnerListings.status, 'approved')];
     if (cats.length) {
       conds.push(inArray(partnerListings.category, cats));
@@ -303,7 +344,8 @@ async function findListings(
       .from(partnerListings)
       .where(and(...conds))
       .orderBy(sql`(${partnerListings.coverImageUrl} IS NULL)`, sql`${partnerListings.sortOrder} asc`)
-      .limit(6);
+      .limit(6)
+      .then((rs) => [...named, ...rs.filter((r) => !namedIds.has(r.id))].slice(0, 6));
     if (rows.length === 0) return [];
 
     const lc = new Map<string, { title: string | null; description: string | null }>();
@@ -340,7 +382,8 @@ async function findListings(
         `링크: /${locale}/listings/${r.slug}`,
       ].filter(Boolean);
       return {
-        text: parts.join(' | '),
+        focus: namedIds.has(r.id),
+        text: (namedIds.has(r.id) ? '[질문에 나온 상품] ' : '') + parts.join(' | '),
         card: {
           kind: 'listing' as const,
           title,
@@ -352,6 +395,69 @@ async function findListings(
   } catch {
     return [];
   }
+}
+
+/**
+ * 'AI 상담' 버튼 문맥 → 근거. 병원·상품은 이름을 돌려줘 검색어 앞에 붙이고(위 이름 일치 검색이 맨 앞으로 올림),
+ * 레지스트리 병원·숙박·음식·미용·관광지는 그 행을 직접 근거로 만든다(큐레이션 DB 에 없어서).
+ */
+async function contextFocus(context: string | undefined, locale: PublicLocale): Promise<{ name: string | null; evidence: { text: string; card: Card; focus: boolean } | null }> {
+  if (!context) return { name: null, evidence: null };
+  try {
+    if (context.startsWith('listing:')) {
+      const [l] = await db.select({ title: partnerListings.title }).from(partnerListings).where(eq(partnerListings.slug, context.slice(8))).limit(1);
+      return { name: l?.title ?? null, evidence: null };
+    }
+    const t = context.startsWith('topic:') ? parseTopic(context.slice(6)) : null;
+    if (!t) return { name: null, evidence: null };
+    const ev = (kind: Card['kind'], title: string, href: string, parts: Array<string | null | undefined>) => ({
+      text: ['[지금 보고 있는 곳] ' + title, ...parts.filter(Boolean), `링크: ${href}`].join(' | '),
+      card: { kind, title, href, note: '' },
+      focus: true,
+    });
+    switch (t.kind) {
+      case 'clinic': {
+        const [h] = await db.select({ name: hospitals.name }).from(hospitals).where(eq(hospitals.slug, t.id)).limit(1);
+        return { name: h?.name ?? null, evidence: null };
+      }
+      case 'rclinic': {
+        const [r] = await db.select().from(hospitalRegistry).where(eq(hospitalRegistry.ykiho, t.id)).limit(1);
+        if (!r) break;
+        const deps = ((r.details as { departments?: Array<{ name?: string }> } | null)?.departments ?? []).map((d) => d.name).filter(Boolean).join('·');
+        return { name: r.name, evidence: ev('clinic', r.name, `/${locale}/clinics/r/${encodeURIComponent(r.ykiho)}`, [
+          r.clName ? `종별: ${r.clName}` : null, deps ? `진료과: ${deps}` : null, r.addr ? `주소: ${r.addr}` : null,
+          r.tel ? `전화: ${r.tel}` : null, r.drTotal ? `의사 수: ${r.drTotal}` : null, r.foreignLicensed ? '외국인환자 유치 등록 기관' : null,
+          '출처: 건강보험심사평가원 공개 정보(글로우업투어 제휴 상세 정보는 없음)',
+        ]) };
+      }
+      case 'stay':
+      case 'eat':
+      case 'shop': {
+        const tbl = t.kind === 'stay' ? lodgingRegistry : t.kind === 'eat' ? foodRegistry : beautyRegistry;
+        const [r] = await db.select({ name: tbl.name, bizType: tbl.bizType, addrRoad: tbl.addrRoad, addrLot: tbl.addrLot, tel: tbl.tel, statusName: tbl.statusName })
+          .from(tbl).where(eq(tbl.mgtNo, t.id)).limit(1);
+        if (!r) break;
+        const path = t.kind === 'stay' ? 'stays' : t.kind === 'eat' ? 'eats' : 'shops';
+        return { name: r.name, evidence: ev('listing', r.name, `/${locale}/${path}/r/${encodeURIComponent(t.id)}`, [
+          r.bizType ? `업종: ${r.bizType}` : null, (r.addrRoad || r.addrLot) ? `주소: ${r.addrRoad || r.addrLot}` : null,
+          r.tel ? `전화: ${r.tel}` : null, r.statusName ? `영업 상태: ${r.statusName}` : null,
+          '출처: 지자체 인허가 공개 정보(가격·메뉴 등 상세는 없음 — 예약·문의 안내)',
+        ]) };
+      }
+      case 'spot': {
+        const [r] = await db.select().from(tourSpots).where(eq(tourSpots.contentId, t.id)).limit(1);
+        if (!r) break;
+        const i18n = (r.i18n as Record<string, { title?: string; overview?: string }> | null)?.[locale === 'kr' ? 'ko' : locale];
+        return { name: r.title, evidence: ev('listing', i18n?.title || r.title, `/${locale}/attractions/${encodeURIComponent(r.contentId)}`, [
+          r.location ? `위치: ${r.location}` : null, i18n?.overview ? `소개: ${i18n.overview.replace(/\s+/g, ' ').slice(0, 260)}` : null,
+          '출처: 한국관광공사 관광사진 정보',
+        ]) };
+      }
+      default:
+        break;
+    }
+  } catch { /* 문맥 없이 답한다 */ }
+  return { name: null, evidence: null };
 }
 
 async function callGemini(system: string, messages: Array<{ role: string; content: string }>): Promise<string | null> {
@@ -460,14 +566,21 @@ export async function POST(req: Request): Promise<NextResponse> {
   const locale: PublicLocale = isPublicLocale(body.locale) ? (body.locale as PublicLocale) : 'kr';
   const lastUser = [...body.messages].reverse().find((m) => m.role === 'user')?.content ?? '';
 
-  // 최근 2개 사용자 발화를 합쳐 검색 (문맥 유지)
-  const recentUser = body.messages.filter((m) => m.role === 'user').slice(-2).map((m) => m.content).join(' ');
-  const [clinics, listings] = await Promise.all([
+  // 최근 2개 사용자 발화를 합쳐 검색 (문맥 유지). 상세 페이지 버튼 문맥이 있으면 그 이름을 앞에 붙여 후속 질문에도 유지.
+  const focusCtx = await contextFocus(body.context, locale);
+  const recentUser = [focusCtx.name, ...body.messages.filter((m) => m.role === 'user').slice(-2).map((m) => m.content)].filter(Boolean).join(' ');
+  const [clinicsRaw, listings] = await Promise.all([
     findHospitals(recentUser || lastUser, locale),
     findListings(recentUser || lastUser, locale, (await getDictionary(locale)).detail.units),
   ]);
-  const evidence = [...clinics, ...listings];
-  const fallbackMode = clinics.some((c) => c.fallback);
+  const clinics = clinicsRaw;
+  const focusEvidence = [
+    ...(focusCtx.evidence ? [focusCtx.evidence] : []),
+    ...clinics.filter((c) => c.focus),
+    ...listings.filter((l) => l.focus),
+  ];
+  const evidence = [...focusEvidence, ...clinics.filter((c) => !c.focus), ...listings.filter((l) => !l.focus)];
+  const fallbackMode = focusEvidence.length === 0 && clinics.some((c) => c.fallback);
 
   const system = `You are the GlowUpTour concierge assistant for a Korean medical-tourism and K-beauty marketplace.
 
@@ -489,10 +602,16 @@ MEDICAL SAFETY:
 
 If the user wants to book or needs a judgement call, invite them to send an inquiry (the UI shows a concierge button).
 
-DATA (the only facts you may use):
+${focusEvidence.length ? `FOCUS: The user is asking about the DATA entries marked [지금 보고 있는 곳] / [질문에 나온 병원] / [질문에 나온 상품] (they appear first). Answer about that place first and in the most detail, using only its DATA line. Do not switch the answer to other clinics or products unless the user asks for alternatives; at most mention that similar options exist. If a detail is missing for it (price, menu, procedure), say the concierge can confirm it and invite an inquiry or a chat with a concierge.
+
+` : ''}DATA (the only facts you may use):
 ${fallbackMode ? '(No clinic lists this exact procedure. The following are our certified clinics for the inferred specialty, ranked 1-5 — recommend them in this order and suggest an inquiry.)\n' : ''}${evidence.length ? evidence.map((e) => `- ${e.text}`).join('\n') : '(no matching records found — invite the user to send an inquiry so a concierge can help; do not say the database is empty)'}`;
 
   const pickCards = (text: string): Card[] => {
+    if (focusEvidence.length) {
+      const others = evidence.filter((e) => !focusEvidence.includes(e) && text.includes(e.card.title));
+      return [...focusEvidence, ...others].slice(0, 4).map((e) => e.card);
+    }
     const mentioned = evidence.filter((e) => text.includes(e.card.title));
     // 폴백(인증 병원 추천)일 때는 모델이 이름을 안 불러도 1~5위 카드를 전부 보여준다
     if (fallbackMode) return clinics.slice(0, 5).map((e) => e.card);
