@@ -6,6 +6,7 @@ import { getRoom, listMessages, listRoomsForPlatform, markRead } from '@/lib/cha
 import { ConsoleThread } from '@/components/shared/chat/console-thread';
 import { AutoRefresh } from '@/components/shared/chat/auto-refresh';
 import { listOperators, requireChatStaff } from '@/lib/chat/operators';
+import { topicHref } from '@/lib/chat/topic-room';
 import { masterAddOperatorAction, masterAssignOrgAction, masterSendAction, masterSetStatusAction, masterToggleOperatorAction } from './_actions';
 
 export const metadata = { title: '고객 채팅 — 마스터 관리자' };
@@ -73,7 +74,8 @@ export default async function MasterChatsPage({ searchParams }: { searchParams: 
                   <button type="submit" style={{ border: '1px solid #dddddd', background: '#fff', borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{room.status === 'closed' ? '다시 열기' : '대화 종료'}</button>
                 </form>
                 {room.orderId ? <Link href={`/master/orders?q=${encodeURIComponent(room.title.split(' · ').pop() ?? '')}`} style={{ fontSize: 12, textDecoration: 'underline' }}>주문 보기</Link> : null}
-                {room.listingSlug ? <Link href={`/${room.locale}/listings/${room.listingSlug}`} target="_blank" style={{ fontSize: 12, textDecoration: 'underline' }}>상품 보기</Link> : null}
+                {room.kind === 'topic' && room.listingSlug ? <Link href={topicHref(room.listingSlug, room.locale) ?? '#'} target="_blank" style={{ fontSize: 12, textDecoration: 'underline' }}>페이지 보기</Link>
+                  : room.listingSlug ? <Link href={`/${room.locale}/listings/${room.listingSlug}`} target="_blank" style={{ fontSize: 12, textDecoration: 'underline' }}>상품 보기</Link> : null}
               </div>
             ) : undefined} />
         ) : null}

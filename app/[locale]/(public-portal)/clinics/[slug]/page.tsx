@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ConsultButtons from '@/app/[locale]/_components/consult-buttons';
 import { notFound } from 'next/navigation';
 import { and, eq, inArray } from 'drizzle-orm';
 import type { Metadata } from 'next';
@@ -489,19 +490,14 @@ export default async function ClinicDetailPage({
           >
             {dict.inquiryCta.submit}
           </Link>
-          <Link
-            href={`/${params.locale}/ai-consult?hospital=${row.id}`}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: '100%', height: 50, marginTop: 10,
-              background: '#fff', color: '#222',
-              border: '1px solid #222', borderRadius: 8,
-              fontWeight: 500, fontSize: 16,
-              textDecoration: 'none',
-            }}
-          >
-            {dict.nav.aiConsult}
-          </Link>
+          {/* AI 상담 · 상담원 (2026-10-14, 모든 카테고리 상세 공통 — consult-buttons.tsx) */}
+          <ConsultButtons
+            locale={params.locale}
+            aiLabel={dict.nav.aiConsult}
+            humanLabel={dict.chat.tabHuman}
+            aiPrompt={dict.chat.aiAbout.replace('{name}', displayName)}
+            target={`topic:clinic:${row.slug}`}
+          />
           <div
             style={{
               textAlign: 'center', fontSize: 13, color: '#6a6a6a',

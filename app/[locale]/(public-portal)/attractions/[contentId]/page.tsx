@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ConsultButtons from '@/app/[locale]/_components/consult-buttons';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { and, desc, eq, ne, sql } from 'drizzle-orm';
@@ -83,6 +84,8 @@ export default async function AttractionDetailPage({ params }: { params: { local
         <Link href={mapHref} style={{ border: '1px solid #dddddd', borderRadius: 10, padding: '10px 16px', fontSize: 13, fontWeight: 600, color: '#222', textDecoration: 'none' }}>🗺️ {t.mapLink}</Link>
         <Link href={`/${locale}/inquiry?memo=${searchLoc}`} style={{ background: '#ff385c', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>💬 {t.planTrip}</Link>
       </div>
+      {/* AI 상담 · 상담원 (2026-10-14, 모든 카테고리 상세 공통) */}
+      <ConsultButtons locale={locale} aiLabel={dict.nav.aiConsult} humanLabel={dict.chat.tabHuman} aiPrompt={dict.chat.aiAbout.replace('{name}', title)} target={`topic:spot:${row.contentId}`} style={{ maxWidth: 420 }} />
 
       {keywords.length ? (
         <div style={{ display: 'flex', gap: 6, marginTop: 16, flexWrap: 'wrap' }}>

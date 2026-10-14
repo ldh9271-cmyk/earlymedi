@@ -1027,6 +1027,7 @@ const en: Dictionary = {
     title: 'Chat with us',
     tabAi: 'AI',
     tabHuman: 'Concierge',
+    aiAbout: "Tell me about {name}",
     loginRequired: 'Please sign in to chat with our concierge.',
     loginCta: 'Sign in',
     newSupport: 'New inquiry',

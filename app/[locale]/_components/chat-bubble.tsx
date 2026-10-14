@@ -102,6 +102,46 @@ export default function ChatBubble({
 
   useEffect(() => { const el = hScrollRef.current; if (el) el.scrollTop = el.scrollHeight; }, [hmsgs, hloading, room]);
 
+  // 방 열기 요청 → API 본문. 'support' = 일반 문의, 'listing:<slug>' = 상품 문의, 'topic:<종류:id>' = 업체·장소 상담(lib/chat/topic-room), 그 외 = 예약(주문) id
+  const payloadFor = useCallback((target: string): Record<string, unknown> => (
+    target === 'support' ? { locale, title: h.supportTitle }
+      : target.startsWith('listing:') ? { listingSlug: target.slice(8), locale }
+        : target.startsWith('topic:') ? { topic: target.slice(6), locale }
+          : { orderId: target, locale }
+  ), [locale, h.supportTitle]);
+
+  // 상세 페이지의 'AI 상담'·'상담원' 버튼(consult-buttons.tsx)이 보내는 신호 — 같은 페이지에서 바로 연다.
+  //   { mode: 'ai', prompt }  → AI 탭 + 질문 자동 전송   { mode: 'human', target } → 상담원 탭 + 그 방
+  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+  useEffect(() => {
+    const w = window as unknown as { __guChatReady?: boolean };
+    w.__guChatReady = true;
+    const onOpen = (e: Event): void => {
+      const d = (e as CustomEvent<{ mode?: 'ai' | 'human'; target?: string; prompt?: string }>).detail ?? {};
+      setOpen(true);
+      if (d.mode === 'human') {
+        setMode('human');
+        void (async () => {
+          const ok = await checkAuth();
+          if (!ok) return; // 상담원 탭이 로그인 안내를 보여 준다
+          if (d.target) {
+            try {
+              const res = await fetch('/api/chat/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadFor(d.target)) });
+              if (res.ok) { const j = (await res.json()) as { room: Room }; await openRoom(j.room); return; }
+            } catch { /* 목록으로 */ }
+          }
+          setRoom(null);
+          await loadRooms();
+        })();
+      } else {
+        setMode('ai');
+        if (d.prompt) setPendingPrompt(d.prompt);
+      }
+    };
+    window.addEventListener('gu:open-chat', onOpen);
+    return () => { window.removeEventListener('gu:open-chat', onOpen); w.__guChatReady = false; };
+  }, [checkAuth, loadRooms, openRoom, payloadFor]);
+
   // 마운트: 회원이면 배지용 unread, ?chat=<orderId> 딥링크면 그 예약 방으로
   useEffect(() => {
     void (async () => {
@@ -112,9 +152,7 @@ export default function ChatBubble({
       if (target) {
         setMode('human'); setOpen(true);
         try {
-          // 'support' = 일반 문의 방, 'listing:<slug>' = 상품 문의 방, 그 외는 예약(주문) id
-          const payload = target === 'support' ? { locale, title: h.supportTitle } : target.startsWith('listing:') ? { listingSlug: target.slice(8), locale } : { orderId: target, locale };
-          const res = await fetch('/api/chat/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          const res = await fetch('/api/chat/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadFor(target)) });
           if (res.ok) { const j = (await res.json()) as { room: Room }; await openRoom(j.room); }
         } catch { /* 목록으로 */ }
         qs.delete('chat');
@@ -234,6 +272,16 @@ export default function ChatBubble({
       setBusy(false);
     }
   }
+
+  // 'AI 상담' 버튼으로 들어온 질문은 패널이 열린 뒤 한 번 자동 전송
+  useEffect(() => {
+    if (!pendingPrompt || !open || mode !== 'ai' || busy) return;
+    const q = pendingPrompt;
+    setPendingPrompt(null);
+    void send(q);
+    // send 는 매 렌더 새로 만들어지는 함수 — 질문이 들어올 때만 실행하면 된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPrompt, open, mode, busy]);
 
   return (
     <>

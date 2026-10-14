@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ConsultButtons from '@/app/[locale]/_components/consult-buttons';
 import { notFound } from 'next/navigation';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { fetchListingBySlug, type ListingDetail } from '@/lib/listings/query';
@@ -749,11 +750,14 @@ export default async function ListingDetailPage({
                   textDecoration: 'none',
                 }}
               />
-              {/* 상품별 실시간 채팅 문의 — 같은 페이지의 챗 위젯이 ?chat=listing:<slug> 를 읽어 회원×상품 방을 연다 (2026-10-13) */}
-              <Link href={`/${params.locale}/listings/${listing.slug}?chat=listing:${listing.slug}`}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 10, height: 44, border: '1px solid #ffd7de', background: '#fff5f7', color: '#c81e42', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
-                💬 {dict.chat.orderChat}
-              </Link>
+              {/* AI 상담 · 상담원 — 같은 페이지의 챗 위젯을 바로 연다(상담원 = 회원×상품 방). 모든 카테고리 상세 공통 (2026-10-14) */}
+              <ConsultButtons
+                locale={params.locale}
+                aiLabel={dict.nav.aiConsult}
+                humanLabel={dict.chat.tabHuman}
+                aiPrompt={dict.chat.aiAbout.replace('{name}', listing.title)}
+                target={`listing:${listing.slug}`}
+              />
             </>
           ) : (
             <>
@@ -781,6 +785,13 @@ export default async function ListingDetailPage({
               textDecoration: 'none',
             }}
           />
+          <ConsultButtons
+              locale={params.locale}
+              aiLabel={dict.nav.aiConsult}
+              humanLabel={dict.chat.tabHuman}
+              aiPrompt={dict.chat.aiAbout.replace('{name}', listing.title)}
+              target={`listing:${listing.slug}`}
+            />
           <div style={{ textAlign: 'center', fontSize: 12, color: '#6a6a6a', marginTop: 10 }}>
             {d.noChargeYet}
           </div>
@@ -844,10 +855,7 @@ export default async function ListingDetailPage({
                 textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
               }}
             />
-            <Link href={`/${params.locale}/listings/${listing.slug}?chat=listing:${listing.slug}`} aria-label={dict.chat.orderChat}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, border: '1px solid #ffd7de', background: '#fff5f7', borderRadius: 12, textDecoration: 'none', fontSize: 18, flexShrink: 0 }}>
-              💬
-            </Link>
+            <ConsultButtons variant="compact" locale={params.locale} aiLabel={dict.nav.aiConsult} humanLabel={dict.chat.tabHuman} aiPrompt={dict.chat.aiAbout.replace('{name}', listing.title)} target={`listing:${listing.slug}`} />
           </>
         ) : (
           <>
@@ -881,6 +889,7 @@ export default async function ListingDetailPage({
             textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
           }}
         />
+        <ConsultButtons variant="compact" locale={params.locale} aiLabel={dict.nav.aiConsult} humanLabel={dict.chat.tabHuman} aiPrompt={dict.chat.aiAbout.replace('{name}', listing.title)} target={`listing:${listing.slug}`} />
           </>
         )}
       </div>

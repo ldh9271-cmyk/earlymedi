@@ -1024,6 +1024,7 @@ const zh: Dictionary = {
     title: '客服聊天',
     tabAi: 'AI',
     tabHuman: '客服',
+    aiAbout: "请介绍一下{name}",
     loginRequired: '登录后即可与客服聊天。',
     loginCta: '登录',
     newSupport: '新咨询',

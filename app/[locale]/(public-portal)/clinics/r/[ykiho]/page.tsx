@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ConsultButtons from '@/app/[locale]/_components/consult-buttons';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { eq } from 'drizzle-orm';
@@ -197,6 +198,8 @@ export default async function RegistryDetailPage({ params }: { params: { locale:
             <a href={mapHref} target="_blank" rel="noreferrer" style={actionBtn}>📍 {t.mapBtn}</a>
             <Link href={inquiryHref} style={{ ...actionBtn, background: '#ff385c', color: '#fff', border: 'none' }}>💬 {t.inquireBtn}</Link>
           </div>
+          {/* AI 상담 · 상담원 (2026-10-14, 모든 카테고리 상세 공통) */}
+          <ConsultButtons locale={locale} aiLabel={dict.nav.aiConsult} humanLabel={dict.chat.tabHuman} aiPrompt={dict.chat.aiAbout.replace('{name}', row.name)} target={`topic:rclinic:${row.ykiho}`} style={{ marginTop: 0 }} />
           {row.contractedHospitalId && row.partnerSlug ? (
             <Link href={`/${locale}/clinics/${row.partnerSlug}`} style={{ fontSize: 13, fontWeight: 700, color: '#c2143c' }}>→ {t.viewPartnerPage}</Link>
           ) : null}

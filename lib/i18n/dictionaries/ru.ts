@@ -1027,6 +1027,7 @@ const ru: Dictionary = {
     title: 'Чат с консьержем',
     tabAi: 'ИИ',
     tabHuman: 'Консьерж',
+    aiAbout: "Расскажите о {name}",
     loginRequired: 'Войдите, чтобы написать консьержу.',
     loginCta: 'Войти',
     newSupport: 'Новый вопрос',

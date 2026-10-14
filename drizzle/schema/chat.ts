@@ -16,10 +16,10 @@ export const chatRooms = pgTable(
   'chat_rooms',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    /** 'order' (예약 건) | 'listing' (상품 문의) | 'support' (일반 문의) */
+    /** 'order' (예약 건) | 'listing' (상품 문의) | 'topic' (업체·장소 상담 — 병원·레지스트리·관광지, lib/chat/topic-room) | 'support' (일반 문의) */
     kind: text('kind').notNull().default('support'),
     orderId: uuid('order_id'),
-    /** kind='listing' 일 때 상품 slug (회원×상품 당 방 하나) */
+    /** kind='listing' 이면 상품 slug, kind='topic' 이면 'clinic:<slug>' 같은 대상 키 (회원×키 당 방 하나) */
     listingSlug: text('listing_slug'),
     userId: uuid('user_id').notNull(),
     userEmail: text('user_email'),

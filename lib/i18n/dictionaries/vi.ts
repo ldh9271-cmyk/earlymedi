@@ -1027,6 +1027,7 @@ const vi: Dictionary = {
     title: 'Chat với concierge',
     tabAi: 'AI',
     tabHuman: 'Concierge',
+    aiAbout: "Cho tôi biết về {name}",
     loginRequired: 'Đăng nhập để chat với concierge.',
     loginCta: 'Đăng nhập',
     newSupport: 'Câu hỏi mới',

@@ -1026,6 +1026,7 @@ const ja: Dictionary = {
     title: 'コンシェルジュチャット',
     tabAi: 'AI',
     tabHuman: '担当者',
+    aiAbout: "{name}について教えてください",
     loginRequired: '担当者チャットはログイン後にご利用いただけます。',
     loginCta: 'ログイン',
     newSupport: '新しい問い合わせ',

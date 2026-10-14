@@ -1047,6 +1047,7 @@ const kr = {
     title: '상담원 채팅',
     tabAi: 'AI 상담',
     tabHuman: '상담원',
+    aiAbout: "{name}에 대해 알려 주세요",
     loginRequired: '상담원 채팅은 로그인 후 이용할 수 있습니다.',
     loginCta: '로그인',
     newSupport: '새 문의하기',

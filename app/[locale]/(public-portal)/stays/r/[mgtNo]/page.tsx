@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ConsultButtons from '@/app/[locale]/_components/consult-buttons';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { eq } from 'drizzle-orm';
@@ -109,6 +110,8 @@ export default async function StayDetailPage({ params }: { params: { locale: str
               💬 {row.contractedListingId && row.partnerSlug ? tr.viewPartnerPage : tr.inquireBtn}
             </Link>
           </div>
+          {/* AI 상담 · 상담원 (2026-10-14, 모든 카테고리 상세 공통) */}
+          <ConsultButtons locale={locale} aiLabel={dict.nav.aiConsult} humanLabel={dict.chat.tabHuman} aiPrompt={dict.chat.aiAbout.replace('{name}', row.name)} target={`topic:stay:${row.mgtNo}`} style={{ marginTop: 0 }} />
 
           {listed && row.details.intro ? (
             <div style={section}>
