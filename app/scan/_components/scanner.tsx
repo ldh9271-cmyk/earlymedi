@@ -26,6 +26,65 @@ const STATUS_KO: Record<Settlement['status'], string> = {
   declared: '소비자 확인 대기 (72시간 무응답 시 자동 확정)', confirmed: '금액 확정', disputed: '소비자 이의 — 운영팀 확인 중', invoiced: '수수료 청구됨', paid: '수수료 입금 완료',
 };
 
+/**
+ * 스캔 화면 모션 (2026-10-18) — 카메라 위에 '스캔 중' 느낌을 준다.
+ *  대기: 모서리 프레임 + QR 아이콘 위를 스캔 줄이 천천히 오감
+ *  스캔: 로즈색 모서리 4개가 숨 쉬듯 커졌다 작아지고, 빛 꼬리가 달린 스캔 줄이 위아래로 훑음
+ *  인식: 모서리가 초록으로 바뀌며 번쩍 + 체크 표시 → '확인 중…'
+ * prefers-reduced-motion 이면 움직임을 끈다.
+ */
+const SCAN_CSS = `
+.gu-scan-frame { position: absolute; inset: 16% 22%; border-radius: 16px; box-shadow: 0 0 0 9999px rgba(0,0,0,.42); transition: box-shadow .25s; }
+.gu-scan-frame.idle { inset: 20% 30%; box-shadow: none; }
+.gu-scan-corner { position: absolute; width: 28px; height: 28px; border: 4px solid #ff385c; animation: gu-corner-pulse 1.6s ease-in-out infinite; transition: border-color .2s; }
+.gu-scan-corner.tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; border-top-left-radius: 14px; }
+.gu-scan-corner.tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; border-top-right-radius: 14px; }
+.gu-scan-corner.bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; border-bottom-left-radius: 14px; }
+.gu-scan-corner.br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; border-bottom-right-radius: 14px; }
+.gu-scan-frame.idle .gu-scan-corner { border-color: rgba(255,255,255,.55); animation-duration: 2.4s; }
+.gu-scan-frame.hit .gu-scan-corner { border-color: #22c55e; animation: none; }
+.gu-scan-line { position: absolute; left: 6%; right: 6%; height: 3px; border-radius: 3px; background: linear-gradient(90deg, rgba(255,56,92,0), #ff385c 20%, #ff8fa6 50%, #ff385c 80%, rgba(255,56,92,0)); box-shadow: 0 0 12px 2px rgba(255,56,92,.75); animation: gu-scan-sweep 2.2s ease-in-out infinite; }
+.gu-scan-line::after { content: ''; position: absolute; left: 0; right: 0; bottom: 3px; height: 42px; background: linear-gradient(to top, rgba(255,56,92,.28), rgba(255,56,92,0)); pointer-events: none; }
+.gu-scan-frame.idle .gu-scan-line { background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.8) 50%, rgba(255,255,255,0)); box-shadow: 0 0 10px rgba(255,255,255,.5); animation-duration: 3s; }
+.gu-scan-frame.idle .gu-scan-line::after { background: linear-gradient(to top, rgba(255,255,255,.12), rgba(255,255,255,0)); }
+.gu-scan-frame.hit .gu-scan-line { display: none; }
+.gu-scan-flash { position: absolute; inset: 0; border-radius: 16px; background: rgba(34,197,94,.28); animation: gu-flash .7s ease-out forwards; }
+.gu-scan-check { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 999px; background: #22c55e; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 800; animation: gu-pop .45s cubic-bezier(.2,1.6,.4,1) both; box-shadow: 0 6px 20px rgba(34,197,94,.5); }
+.gu-scan-hint { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; color: #fff; font-size: 13px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.gu-scan-dots::after { content: ''; display: inline-block; width: 1.2em; text-align: left; animation: gu-dots 1.2s steps(4) infinite; }
+.gu-scan-qr { position: absolute; inset: 22%; opacity: .32; }
+@keyframes gu-scan-sweep { 0% { top: 4%; } 50% { top: 94%; } 100% { top: 4%; } }
+@keyframes gu-corner-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.12); opacity: .8; } }
+@keyframes gu-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes gu-pop { 0% { transform: scale(.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes gu-dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+@media (prefers-reduced-motion: reduce) { .gu-scan-line, .gu-scan-corner, .gu-scan-check, .gu-scan-flash, .gu-scan-dots::after { animation: none !important; } .gu-scan-line { top: 50%; } }
+`;
+
+function ScanOverlay({ mode, busy }: { mode: 'idle' | 'scan' | 'hit'; busy: boolean }): JSX.Element {
+  return (
+    <>
+      <div className={`gu-scan-frame ${mode === 'idle' ? 'idle' : mode === 'hit' ? 'hit' : ''}`} aria-hidden>
+        {mode === 'idle' ? (
+          // 대기 화면용 QR 모양 그림 (장식)
+          <svg className="gu-scan-qr" viewBox="0 0 29 29" fill="#fff" shapeRendering="crispEdges">
+            <path d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM22 0h7v7h-7zM23 1v5h5V1zM24 2h3v3h-3zM0 22h7v7H0zM1 23v5h5v-5zM2 24h3v3H2zM9 0h2v2H9zM12 1h2v3h-2zM15 0h3v2h-3zM9 4h3v2H9zM14 5h2v2h-2zM17 3h2v3h-2zM9 8h2v3H9zM12 9h3v2h-3zM16 8h2v2h-2zM19 9h3v2h-3zM23 9h2v3h-2zM26 8h3v2h-3zM0 9h2v2H0zM3 10h3v2H3zM1 13h2v3H1zM5 14h3v2H5zM9 13h2v2H9zM13 13h3v3h-3zM18 12h2v3h-2zM21 13h3v2h-3zM26 12h2v3h-2zM10 17h3v2h-3zM15 18h2v2h-2zM19 17h3v3h-3zM24 17h3v2h-3zM9 21h2v3H9zM13 22h3v2h-3zM18 22h2v2h-2zM22 21h3v3h-3zM26 22h3v2h-3zM10 26h3v3h-3zM15 25h2v4h-2zM19 26h3v2h-3zM24 26h2v3h-2zM27 27h2v2h-2z" />
+          </svg>
+        ) : null}
+        <span className="gu-scan-corner tl" /><span className="gu-scan-corner tr" />
+        <span className="gu-scan-corner bl" /><span className="gu-scan-corner br" />
+        <span className="gu-scan-line" />
+        {mode === 'hit' ? <><span className="gu-scan-flash" /><span className="gu-scan-check">✓</span></> : null}
+      </div>
+      {mode !== 'idle' ? (
+        <div className="gu-scan-hint">
+          {mode === 'hit' || busy ? <span className="gu-scan-dots">확인 중</span> : <span className="gu-scan-dots">QR 을 네모 안에 맞춰 주세요</span>}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -41,10 +100,18 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
   const [settleBusy, setSettleBusy] = useState(false);
   const [settleMsg, setSettleMsg] = useState<string | null>(null);
   const lastRef = useRef<string>('');
+  // QR 인식 순간 0.9초 동안 초록 번쩍임 + 체크 표시
+  const [hit, setHit] = useState(false);
+  const hitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashHit = (): void => {
+    setHit(true);
+    if (hitTimer.current) clearTimeout(hitTimer.current);
+    hitTimer.current = setTimeout(() => setHit(false), 900);
+  };
 
   useEffect(() => {
     setSupported(typeof window !== 'undefined' && 'BarcodeDetector' in window && Boolean(navigator.mediaDevices?.getUserMedia));
-    return () => { streamRef.current?.getTracks().forEach((t) => t.stop()); };
+    return () => { streamRef.current?.getTracks().forEach((t) => t.stop()); if (hitTimer.current) clearTimeout(hitTimer.current); };
   }, []);
 
   async function submit(raw: string): Promise<void> {
@@ -99,7 +166,7 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
         try {
           const codes = await det.detect(videoRef.current);
           const v = codes[0]?.rawValue;
-          if (v && v !== lastRef.current) { lastRef.current = v; await submit(v); }
+          if (v && v !== lastRef.current) { lastRef.current = v; flashHit(); await submit(v); }
         } catch { /* 프레임 인식 실패 — 다음 프레임 */ }
         if (streamRef.current) setTimeout(() => { void loop(); }, 350);
       };
@@ -128,13 +195,13 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
       <div style={{ border: '1px solid #ebebeb', borderRadius: 14, padding: 16, background: '#fff' }}>
         {supported ? (
           <>
+            <style dangerouslySetInnerHTML={{ __html: SCAN_CSS }} />
             <div style={{ position: 'relative', background: '#111', borderRadius: 12, overflow: 'hidden', aspectRatio: '4/3', maxHeight: 360 }}>
               <video ref={videoRef} muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: scanning ? 'block' : 'none' }} />
+              <ScanOverlay mode={!scanning ? 'idle' : hit ? 'hit' : 'scan'} busy={busy} />
               {!scanning ? (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14 }}>카메라를 시작하면 QR 을 자동으로 인식합니다</div>
-              ) : (
-                <div style={{ position: 'absolute', inset: '18% 22%', border: '3px solid rgba(255,56,92,.9)', borderRadius: 14, boxShadow: '0 0 0 9999px rgba(0,0,0,.35)' }} />
-              )}
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 18, textAlign: 'center', color: '#fff', fontSize: 14, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,.6)' }}>카메라를 시작하면 QR 을 자동으로 인식합니다</div>
+              ) : null}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
               {!scanning
