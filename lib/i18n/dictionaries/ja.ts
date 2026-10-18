@@ -1067,6 +1067,8 @@ const ja: Dictionary = {
   myPage: {
     title: "予約・お支払い",
     subtitle: "{email} でお申し込みいただいた予約履歴です。",
+    qrScan: "QRスキャン・来店確認",
+    qrScanHint: "事業者アカウント — お客様の決済QRを読み取り、来店を確認します。",
     countLabel: "予約件数",
     countValue: "{n}件",
     paidTotalLabel: "確認済み合計",

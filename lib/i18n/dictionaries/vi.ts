@@ -1068,6 +1068,8 @@ const vi: Dictionary = {
   myPage: {
     title: "Đặt chỗ của tôi",
     subtitle: "Lịch sử đặt chỗ với tài khoản {email}.",
+    qrScan: "Quét QR · Xác nhận đến",
+    qrScanHint: "Tài khoản doanh nghiệp — quét mã QR thanh toán của khách để xác nhận lượt đến.",
     countLabel: "Số đặt chỗ",
     countValue: "{n}",
     paidTotalLabel: "Đã xác nhận",

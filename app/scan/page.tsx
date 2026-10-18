@@ -11,6 +11,7 @@ import { recentCheckIns, recentCheckInsAll } from '@/lib/voucher/service';
 import Scanner from './_components/scanner';
 
 export const dynamic = 'force-dynamic';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const metadata = { title: 'QR 스캔 · 방문 확인' };
 
 /**
@@ -19,34 +20,40 @@ export const metadata = { title: 'QR 스캔 · 방문 확인' };
  * 마스터 주문 목록에 즉시 반영되고 관리자 텔레그램으로도 알린다.
  * /scan 은 미들웨어 공개 경로라 활성 조직을 쿠키에서 직접 읽고, 마스터는 조직 없이도(모든 주문) 쓸 수 있다.
  */
-export default async function ScanPage(): Promise<JSX.Element> {
+export default async function ScanPage({ searchParams }: { searchParams: { org?: string; from?: string } }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login?next=/scan');
   const isMaster = isMasterEmail(auth.user.email ?? '');
-  const orgId = activeOrgId();
+  // ?org= (마이페이지 'QR 스캔' 버튼) → 활성 조직 쿠키 → 소속 조직이 하나뿐이면 그 조직. 여러 곳이면 조직 선택으로.
+  const orgParam = (searchParams.org ?? '').trim();
+  let orgId = (UUID_RE.test(orgParam) ? orgParam : '') || activeOrgId();
 
   let accountType: string | null = null;
   let orgLabel = '';
+  if (!isMaster) {
+    const mine = await db.select({ orgId: orgMemberships.organizationId }).from(orgMemberships)
+      .where(and(eq(orgMemberships.userId, auth.user.id), eq(orgMemberships.status, 'active')));
+    if (!mine.some((m) => m.orgId === orgId)) {
+      if (mine.length === 1 && mine[0]) orgId = mine[0].orgId;
+      else redirect('/select-org?next=/scan');
+    }
+  }
   if (orgId) {
     const [org] = await db.select({ accountType: organizations.accountType, name: organizations.name }).from(organizations).where(eq(organizations.id, orgId)).limit(1);
     if (org) { accountType = org.accountType; orgLabel = org.name; }
-    if (!isMaster) {
-      const [m] = await db.select({ id: orgMemberships.id }).from(orgMemberships)
-        .where(and(eq(orgMemberships.userId, auth.user.id), eq(orgMemberships.organizationId, orgId), eq(orgMemberships.status, 'active'))).limit(1);
-      if (!m) redirect('/select-org?next=/scan');
-    }
-  } else if (!isMaster) {
-    redirect('/select-org?next=/scan');
+    else if (isMaster) orgId = '';
   }
 
   const recent = isMaster ? await recentCheckInsAll(30).catch(() => []) : await recentCheckIns(orgId, 20).catch(() => []);
-  const backHref = isMaster && !orgId ? '/master'
-    : accountType === 'medical' ? '/medical/dashboard' : accountType === 'agency' ? '/agency/dashboard' : accountType === 'freelancer' ? '/freelancer/dashboard' : accountType === 'non_medical' ? '/partner/dashboard' : '/master';
+  // 마이페이지에서 들어왔으면 뒤로가기도 마이페이지로
+  const fromMe = /^\/(kr|en|zh|ja|ru|vi)\/me$/.test(searchParams.from ?? '') ? (searchParams.from as string) : null;
+  const backHref = fromMe ?? (isMaster && !orgId ? '/master'
+    : accountType === 'medical' ? '/medical/dashboard' : accountType === 'agency' ? '/agency/dashboard' : accountType === 'freelancer' ? '/freelancer/dashboard' : accountType === 'non_medical' ? '/partner/dashboard' : '/master');
 
   return (
     <main style={{ maxWidth: 720, margin: '0 auto', padding: '24px 20px 80px' }}>
-      <Link href={backHref} style={{ fontSize: 12, color: '#6a6a6a' }}>← {isMaster && !orgId ? '마스터 관리자' : '대시보드'}</Link>
+      <Link href={backHref} style={{ fontSize: 12, color: '#6a6a6a' }}>← {fromMe ? '마이페이지' : isMaster && !orgId ? '마스터 관리자' : '대시보드'}</Link>
       <h1 style={{ fontSize: 22, fontWeight: 700, margin: '6px 0 4px' }}>QR 스캔 · 방문 확인</h1>
       <p style={{ fontSize: 13, color: '#6a6a6a', margin: '0 0 16px', lineHeight: 1.6 }}>
         고객이 마이페이지에서 보여주는 <b>결제 QR</b>을 카메라로 읽으세요. 예약·결제 정보가 플랫폼 DB에서 바로 조회되고,

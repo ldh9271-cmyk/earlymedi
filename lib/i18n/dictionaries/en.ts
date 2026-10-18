@@ -1068,6 +1068,8 @@ const en: Dictionary = {
   myPage: {
     title: "My bookings",
     subtitle: "Bookings made with {email}.",
+    qrScan: "Scan QR · Check-in",
+    qrScanHint: "Business account — scan a customer's payment QR to confirm the visit.",
     countLabel: "Bookings",
     countValue: "{n}",
     paidTotalLabel: "Confirmed total",

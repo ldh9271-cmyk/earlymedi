@@ -1065,6 +1065,8 @@ const zh: Dictionary = {
   myPage: {
     title: "我的预订与付款",
     subtitle: "使用 {email} 账户完成的预订记录。",
+    qrScan: "扫描二维码 · 到店确认",
+    qrScanHint: "商家账户 — 扫描顾客的付款二维码，确认到店。",
     countLabel: "预订数",
     countValue: "{n} 笔",
     paidTotalLabel: "已确认金额",

@@ -1089,6 +1089,8 @@ const kr = {
   myPage: {
     title: "내 예약·결제",
     subtitle: "{email} 계정으로 진행한 예약 내역입니다.",
+    qrScan: "QR 스캔 · 방문 확인",
+    qrScanHint: "사업자 계정 — 고객의 결제 QR을 바로 읽어 방문을 확인합니다.",
     countLabel: "예약 건수",
     countValue: "{n}건",
     paidTotalLabel: "결제 확인 합계",

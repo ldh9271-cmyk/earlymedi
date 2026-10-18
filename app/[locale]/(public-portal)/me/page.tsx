@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { isPublicLocale, type PublicLocale } from '@/lib/i18n/locales';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { aiTripPlans } from '@/drizzle/schema/ai-trip-plans';
+import { orgMemberships } from '@/drizzle/schema/memberships';
+import { organizations } from '@/drizzle/schema/organizations';
+import { isMasterEmail } from '@/lib/auth/master';
 import { cookies } from 'next/headers';
 import { attributeUser, patientPointsBalance, REF_COOKIE } from '@/lib/referral/service';
 import { cancellableByConsumer, orderEstimate, resolveRefundCategories, type CancelRequestMeta } from '@/lib/refund/service';
@@ -66,6 +69,20 @@ export default async function MyPage({
   if (refCode) await attributeUser(auth.user.id, refCode, 'me').catch(() => null);
   const points = await patientPointsBalance(auth.user.id).catch(() => 0);
 
+  // 사업자 계정(활성 소속 조직) · 마스터 → 'QR 스캔' 버튼. 조직마다 /scan?org= 로 조직 선택 없이 바로 카메라
+  const isMaster = isMasterEmail(auth.user.email ?? '');
+  const scanOrgs = await db
+    .select({ id: organizations.id, name: organizations.name })
+    .from(orgMemberships)
+    .innerJoin(organizations, eq(orgMemberships.organizationId, organizations.id))
+    .where(and(eq(orgMemberships.userId, auth.user.id), eq(orgMemberships.status, 'active')))
+    .limit(4)
+    .catch(() => [] as Array<{ id: string; name: string }>);
+  const scanBack = encodeURIComponent(`/${locale}/me`);
+  const scanLinks = scanOrgs.length > 0
+    ? scanOrgs.map((o) => ({ href: `/scan?org=${o.id}&from=${scanBack}`, label: scanOrgs.length > 1 ? `${t.qrScan} · ${o.name}` : t.qrScan }))
+    : isMaster ? [{ href: `/scan?from=${scanBack}`, label: t.qrScan }] : [];
+
   // AI 여행 일정 (확정·견적·결제 상태)
   let tripPlans: Array<{ id: string; status: string; quoteWon: number | null; updatedAt: Date }> = [];
   try {
@@ -113,6 +130,16 @@ export default async function MyPage({
       <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
         {t.subtitle.replace('{email}', auth.user.email ?? '')}
       </p>
+      {scanLinks.length > 0 ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 14, border: '1px solid #e5e5e5', background: '#fff', borderRadius: 14, padding: '12px 16px' }}>
+          {scanLinks.map((l) => (
+            <Link key={l.href} href={l.href} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#222', color: '#fff', borderRadius: 10, padding: '9px 16px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+              <span aria-hidden>📷</span>{l.label}
+            </Link>
+          ))}
+          <span style={{ fontSize: 12, color: '#6a6a6a', lineHeight: 1.5 }}>{t.qrScanHint}</span>
+        </div>
+      ) : null}
       {/* 채팅 문의 — 주문이 없어도 상담원(플랫폼)과 바로 대화. 같은 페이지의 챗 위젯이 ?chat=support 를 읽어 일반 문의 방을 연다 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginTop: 14, border: '1px solid #ffd7de', background: '#fff8f9', borderRadius: 14, padding: '12px 16px' }}>
         <Link href={`/${locale}/me?chat=support`} style={{ display: 'inline-block', background: '#ff385c', color: '#fff', borderRadius: 10, padding: '9px 16px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>

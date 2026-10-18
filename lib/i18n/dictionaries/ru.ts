@@ -1068,6 +1068,8 @@ const ru: Dictionary = {
   myPage: {
     title: "Мои бронирования",
     subtitle: "Бронирования по аккаунту {email}.",
+    qrScan: "Сканировать QR · визит",
+    qrScanHint: "Бизнес-аккаунт — отсканируйте платёжный QR клиента, чтобы подтвердить визит.",
     countLabel: "Бронирований",
     countValue: "{n}",
     paidTotalLabel: "Подтверждено",
