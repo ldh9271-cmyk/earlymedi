@@ -44,13 +44,12 @@ export const metadata: Metadata = {
     siteName: '글로우업투어',
     title: '글로우업투어 — 한국 의료관광 · K-뷰티 플랫폼',
     description: '병원 · 뷰티 · 호텔 · 여행을 6개 언어로. 상담부터 예약 · 결제 · 통역까지.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    // og:image 는 app/opengraph-image.tsx(파일 기반 메타)가 넣는다 — 예전 /og-image.png 는 존재하지 않아 404 였다.
   },
   twitter: {
     card: 'summary_large_image',
     title: '글로우업투어 — 한국 의료관광 · K-뷰티 플랫폼',
     description: '병원 · 뷰티 · 호텔 · 여행을 6개 언어로. 상담부터 예약 · 결제 · 통역까지.',
-    images: ['/og-image.png'],
   },
   // icons auto-detected from app/icon.svg + app/apple-icon.svg
   // (Next.js 14 convention) — no explicit metadata.icons needed.
