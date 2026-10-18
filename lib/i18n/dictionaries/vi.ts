@@ -403,7 +403,7 @@ const vi: Dictionary = {
   meta: {
     siteTitle: 'GlowUpTour-Vui chơi ở Hàn Quốc, đẹp lên',
     siteDescription: 'Từ phân tích màu cá nhân đến thánh địa K-pop và quán ăn người bản xứ — chuyến du lịch K-beauty trọn gói.',
-    ogTitle: 'glow-up · Concierge AI cho du lịch y tế Hàn Quốc',
+    ogTitle: 'GlowUpTour — Vui chơi ở Hàn Quốc, đẹp lên',
     ogDescription: 'So sánh phòng khám, dịch vụ và hành trình ở một nơi. Concierge AI hỗ trợ 24/7 bằng 6 ngôn ngữ.',
   },
   siteFooter: {

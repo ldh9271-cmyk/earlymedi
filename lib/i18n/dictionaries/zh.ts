@@ -400,7 +400,7 @@ const zh: Dictionary = {
   meta: {
     siteTitle: 'GlowUpTour-在韩国边玩边变美',
     siteDescription: '从个人色彩诊断到 K-pop 圣地与本地人推荐美食 — 边玩边变美的一站式 K-beauty 旅行。',
-    ogTitle: 'glow-up · 韩国医疗旅游 AI 礼宾',
+    ogTitle: 'GlowUpTour — 在韩国边玩边变美',
     ogDescription: '一站对比医院、项目和行程。AI 礼宾以 6 种语言全天候为您服务。',
   },
   siteFooter: {

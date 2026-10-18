@@ -415,7 +415,7 @@ const en: Dictionary = {
   meta: {
     siteTitle: 'GlowUpTour-Play in Korea, glow up',
     siteDescription: 'From personal-color analysis to K-pop landmarks and authentic local restaurants — an all-in-one K-beauty trip.',
-    ogTitle: 'glow-up · AI concierge for Korean medical tourism',
+    ogTitle: 'GlowUpTour — Play in Korea, glow up',
     ogDescription: 'Compare clinics, treatments, and trips in one place. AI concierge guides you 24/7 in 6 languages.',
   },
   siteFooter: {
