@@ -33,7 +33,7 @@ export default async function ScanPassPage({ params }: { params: { pass: string 
       ) : (
         <>
           <div style={{ border: '1px solid #bfdbfe', background: '#eff6ff', borderRadius: 14, padding: '12px 16px', margin: '10px 0 14px' }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#1e3a8a' }}>🔗 {issuer} 에서 보낸 1회용 스캔 링크</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#1e3a8a' }}>🔗 {issuer}에서 보낸 1회용 스캔 링크</div>
             <p style={{ fontSize: 12, color: '#3f5f8a', margin: '4px 0 0', lineHeight: 1.6 }}>
               비즈니스 계정·로그인 없이 <b>고객 1명</b>의 방문 확인과 최종 결제금액 기록을 할 수 있습니다. 고객이 보여주는 글로우업투어 QR 을 스캔하세요. <b>{until}</b> 까지 유효합니다.
               <br />One-time link: scan one customer&apos;s GlowUpTour QR to confirm the visit — no account needed.
