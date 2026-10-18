@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse, type NextRequest } from 'next/server';
 import { and, eq } from 'drizzle-orm';
 import { activeOrgId } from '@/lib/auth/active-org-server';
+import { checkInWithPass } from '@/lib/voucher/scan-pass';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
@@ -15,12 +16,17 @@ import { resolveMerchantFeeBp } from '@/lib/voucher/settlement';
  * POST { token }  →  { ok, already, summary } | { ok:false, reason }
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const body = (await req.json().catch(() => ({}))) as { token?: string; orgId?: string; pass?: string };
+  const token = String(body.token ?? '').trim().replace(/^https?:\/\/[^/]+\/v\//, '');
+  if (!token) return NextResponse.json({ ok: false, reason: 'invalid' }, { status: 400 });
+  // 1회용 비회원 스캔 링크(/scan/p/<pass>) — 로그인 없이, 링크 서명이 권한
+  if (body.pass) {
+    const r = await checkInWithPass(token, String(body.pass));
+    return NextResponse.json(r, { status: r.ok ? 200 : 400 });
+  }
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return NextResponse.json({ ok: false, reason: 'unauthenticated' }, { status: 401 });
-  const body = (await req.json().catch(() => ({}))) as { token?: string; orgId?: string };
-  const token = String(body.token ?? '').trim().replace(/^https?:\/\/[^/]+\/v\//, '');
-  if (!token) return NextResponse.json({ ok: false, reason: 'invalid' }, { status: 400 });
 
   const isMaster = isMasterEmail(auth.user.email ?? '');
   const orgId = body.orgId || activeOrgId();

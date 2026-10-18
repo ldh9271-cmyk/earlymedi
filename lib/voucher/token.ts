@@ -63,5 +63,7 @@ export type VoucherMeta = {
   checkedInByOrgId?: string;
   checkedInByName?: string;
   checkins?: Array<{ at: string; orgId: string; orgName: string }>;
+  /** 1회용 비회원 스캔 링크(lib/voucher/scan-pass)로 확인했으면 그 링크의 nonce — '1회' 판정·금액 입력 권한 */
+  passNonce?: string;
   settlement?: VoucherSettlementMeta;
 };

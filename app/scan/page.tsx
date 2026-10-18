@@ -9,6 +9,7 @@ import { orgMemberships } from '@/drizzle/schema/memberships';
 import { organizations } from '@/drizzle/schema/organizations';
 import { recentCheckIns, recentCheckInsAll } from '@/lib/voucher/service';
 import Scanner from './_components/scanner';
+import ScanPassLink from '@/components/shared/scan-pass-link';
 
 export const dynamic = 'force-dynamic';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -67,6 +68,10 @@ export default async function ScanPage({ searchParams }: { searchParams: { org?:
       ) : null}
 
       <Scanner orgId={orgId} />
+      {/* 계정 없는 실제 방문지(병원·매장)에 보낼 1회용 스캔 링크 */}
+      <div style={{ marginTop: 14 }}>
+        <ScanPassLink orgs={[{ id: orgId || null, name: orgLabel || '글로우업투어 운영 (모든 예약)' }]} />
+      </div>
 
       <h2 style={{ fontSize: 15, fontWeight: 700, margin: '28px 0 8px' }}>최근 방문 확인 ({recent.length}){isMaster ? ' · 전체' : ''}</h2>
       {recent.length === 0 ? (

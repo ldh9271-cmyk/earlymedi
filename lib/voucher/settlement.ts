@@ -86,10 +86,12 @@ export async function declareFinalAmount(
   o: OrderRow,
   org: { id: string; name: string; isMaster?: boolean },
   input: { finalAmountWon: number; note?: string | null },
+  opts: { authorized?: boolean } = {},
 ): Promise<DeclareResult> {
   if (o.status === 'cancelled') return { ok: false, reason: 'cancelled' };
   if (o.status !== 'paid') return { ok: false, reason: 'not_paid' };
-  if (!org.isMaster && !(await orgCanCheckIn(o, org.id))) return { ok: false, reason: 'forbidden' };
+  // authorized = 1회용 스캔 링크(lib/voucher/scan-pass)가 이미 권한을 확인함
+  if (!org.isMaster && !opts.authorized && !(await orgCanCheckIn(o, org.id))) return { ok: false, reason: 'forbidden' };
   const meta = (o.meta ?? {}) as { voucher?: VoucherMeta };
   if (!meta.voucher?.checkedInAt) return { ok: false, reason: 'not_checked_in' };
   const amount = Math.round(Number(input.finalAmountWon));

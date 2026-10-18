@@ -15,6 +15,7 @@ import { attributeUser, patientPointsBalance, REF_COOKIE } from '@/lib/referral/
 import { cancellableByConsumer, orderEstimate, resolveRefundCategories, type CancelRequestMeta } from '@/lib/refund/service';
 import { REFUND_POLICIES, tierRanges, type RefundCategory } from '@/lib/refund/policy';
 import CancelOrderButton from './_components/cancel-order';
+import ScanPassLink from '@/components/shared/scan-pass-link';
 import { PayInvoiceButton } from './_components/pay-invoice';
 
 export const dynamic = 'force-dynamic';
@@ -82,6 +83,11 @@ export default async function MyPage({
   const scanLinks = scanOrgs.length > 0
     ? scanOrgs.map((o) => ({ href: `/scan?org=${o.id}&from=${scanBack}`, label: scanOrgs.length > 1 ? `${t.qrScan} · ${o.name}` : t.qrScan }))
     : isMaster ? [{ href: `/scan?from=${scanBack}`, label: t.qrScan }] : [];
+  // 방문지(계정 없는 병원·매장)에 보낼 1회용 스캔 링크 — 마스터는 '운영(모든 예약)' 링크가 맨 앞
+  const passOrgs: Array<{ id: string | null; name: string }> = [
+    ...(isMaster ? [{ id: null, name: '글로우업투어 운영 (모든 예약)' }] : []),
+    ...scanOrgs,
+  ];
 
   // AI 여행 일정 (확정·견적·결제 상태)
   let tripPlans: Array<{ id: string; status: string; quoteWon: number | null; updatedAt: Date }> = [];
@@ -138,6 +144,7 @@ export default async function MyPage({
             </Link>
           ))}
           <span style={{ fontSize: 12, color: '#6a6a6a', lineHeight: 1.5 }}>{t.qrScanHint}</span>
+          <ScanPassLink orgs={passOrgs} labels={t.scanPass} />
         </div>
       ) : null}
       {/* 채팅 문의 — 주문이 없어도 상담원(플랫폼)과 바로 대화. 같은 페이지의 챗 위젯이 ?chat=support 를 읽어 일반 문의 방을 연다 */}

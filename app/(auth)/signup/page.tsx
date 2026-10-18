@@ -33,9 +33,14 @@ export const dynamic = 'force-dynamic';
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: { next?: string; claim?: string; claimShop?: string; claimStay?: string; claimEat?: string };
+  searchParams: { next?: string; claim?: string; claimShop?: string; claimStay?: string; claimEat?: string; from?: string; orgName?: string; type?: string };
 }): Promise<JSX.Element> {
   const next = searchParams.next ?? null;
+  // 1회용 스캔 링크(/scan/p/…)로 방문 확인을 마친 방문지 → 회사명·업종을 미리 채운다
+  const fromScanPass = searchParams.from === 'scan-pass';
+  const preset = fromScanPass && searchParams.orgName && searchParams.orgName.trim().length >= 2
+    ? { orgName: searchParams.orgName.trim().slice(0, 120), accountType: searchParams.type === 'medical' ? ('medical' as const) : ('non_medical' as const) }
+    : null;
 
   // 공개 뷰티샵 찾기 → 매장 정보 직접 등록: 매장명을 회사명으로 미리 채운다
   let claimShop: { mgtNo: string; name: string; addr: string | null } | null = null;
@@ -232,7 +237,13 @@ export default async function SignupPage({
               <p className="mt-1 text-[13px] leading-relaxed text-rose-900/80"><b>{claimStay.name}</b>{claimStay.addr ? ` · ${claimStay.addr}` : ''} 의 관계자로 가입합니다. 가입 후 마스터 승인이 나면 공개 전국 숙박 찾기에서 컬러 카드로 노출되고 소개·사진·언어를 직접 입력할 수 있습니다.</p>
             </div>
           ) : null}
-          <QuickSignupForm email={presetEmail} alreadyAuthed={alreadyAuthed} claim={claim ? { ykiho: claim.ykiho, name: claim.name } : null} claimShop={claimShop ? { mgtNo: claimShop.mgtNo, name: claimShop.name } : null} claimStay={claimStay ? { mgtNo: claimStay.mgtNo, name: claimStay.name } : null} claimEat={claimEat ? { mgtNo: claimEat.mgtNo, name: claimEat.name } : null} />
+          {fromScanPass ? (
+            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm">
+              <p className="font-bold text-rose-700">링크 없이 바로 QR 스캔하기</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-rose-900/80">가입하면 매번 1회용 링크를 받지 않고 마이페이지의 <b>📷 QR 스캔</b> 버튼으로 고객 방문 확인·최종 결제금액 기록을 바로 할 수 있습니다. 가입·이용 모두 무료입니다.</p>
+            </div>
+          ) : null}
+          <QuickSignupForm preset={preset} email={presetEmail} alreadyAuthed={alreadyAuthed} claim={claim ? { ykiho: claim.ykiho, name: claim.name } : null} claimShop={claimShop ? { mgtNo: claimShop.mgtNo, name: claimShop.name } : null} claimStay={claimStay ? { mgtNo: claimStay.mgtNo, name: claimStay.name } : null} claimEat={claimEat ? { mgtNo: claimEat.mgtNo, name: claimEat.name } : null} />
         </CardContent>
       </Card>
 

@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * QR 스캐너 — 브라우저 BarcodeDetector(안드로이드 크롬·최신 사파리)로 카메라 프레임을
- * 읽고, 지원하지 않으면 코드 직접 입력으로 폴백. 인식 즉시 /api/voucher/checkin 호출.
+ * QR 스캐너 — 브라우저 BarcodeDetector(안드로이드 크롬)로 카메라 프레임을 읽고, 없으면(아이폰 사파리·
+ * 카톡 인앱 등) jsQR 로 캔버스 프레임을 해독한다. 카메라가 없으면 코드 직접 입력. 인식 즉시 /api/voucher/checkin 호출.
  * 체크인 뒤에는 "최종 결제금액" 을 입력해 3자 검증(소비자 확인 → 플랫폼 수수료 확정)으로 넘긴다.
  */
 import { useEffect, useRef, useState } from 'react';
@@ -14,10 +14,10 @@ type Settlement = {
 type Summary = {
   invoiceNo: string; listingTitle: string; reserveDate: string; reserveTime: string; guests: number; status: string;
   totalWon: number; depositWon: number | null; payOnSiteWon: number | null; checkedInAt: string | null; checkedInByName: string | null;
-  guestName?: string | null; guestContact?: string | null; userEmail?: string | null; hospitalName?: string | null;
+  guestName?: string | null; guestContact?: string | null; userEmail?: string | null; hospitalName?: string | null; kind?: string;
   settlement: Settlement | null;
 };
-type Result = { ok: true; already: boolean; summary: Summary; feeBp?: number } | { ok: false; reason: string };
+type Result = { ok: true; already: boolean; summary: Summary; feeBp?: number; canSettle?: boolean } | { ok: false; reason: string };
 
 type Detector = { detect(src: ImageBitmapSource): Promise<Array<{ rawValue: string }>> };
 type DetectorCtor = new (opts: { formats: string[] }) => Detector;
@@ -85,7 +85,39 @@ function ScanOverlay({ mode, busy }: { mode: 'idle' | 'scan' | 'hit'; busy: bool
   );
 }
 
-export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
+/**
+ * pass = 1회용 비회원 스캔 링크(/scan/p/<pass>) — 로그인 없이 링크 서명으로 체크인·금액 기록.
+ * 고객 1명만 되므로 '다음 고객 스캔' 대신 무료 가입 안내를 보여준다.
+ */
+/**
+ * 프레임 → QR 문자열. BarcodeDetector 가 있으면 그것을, 없으면 jsQR(필요할 때만 불러옴)로
+ * 영상 프레임을 가로 최대 640px 캔버스에 그려 해독한다.
+ */
+async function makeDetector(): Promise<(video: HTMLVideoElement) => Promise<string | null>> {
+  const Ctor = (window as unknown as { BarcodeDetector?: DetectorCtor }).BarcodeDetector;
+  if (Ctor) {
+    try {
+      const det = new Ctor({ formats: ['qr_code'] });
+      return async (video) => (await det.detect(video))[0]?.rawValue ?? null;
+    } catch { /* 형식 미지원 — jsQR 로 */ }
+  }
+  const jsQR = (await import('jsqr')).default;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  return async (video) => {
+    const w0 = video.videoWidth; const h0 = video.videoHeight;
+    if (!ctx || !w0 || !h0) return null;
+    const scale = Math.min(1, 640 / w0);
+    const w = Math.round(w0 * scale); const h = Math.round(h0 * scale);
+    if (canvas.width !== w) canvas.width = w;
+    if (canvas.height !== h) canvas.height = h;
+    ctx.drawImage(video, 0, 0, w, h);
+    const img = ctx.getImageData(0, 0, w, h);
+    return jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' })?.data ?? null;
+  };
+}
+
+export default function Scanner({ orgId, pass }: { orgId: string; pass?: string }): JSX.Element {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [supported, setSupported] = useState<boolean | null>(null);
@@ -110,7 +142,7 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
   };
 
   useEffect(() => {
-    setSupported(typeof window !== 'undefined' && 'BarcodeDetector' in window && Boolean(navigator.mediaDevices?.getUserMedia));
+    setSupported(typeof window !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia));
     return () => { streamRef.current?.getTracks().forEach((t) => t.stop()); if (hitTimer.current) clearTimeout(hitTimer.current); };
   }, []);
 
@@ -119,7 +151,7 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
     if (!tk || busy) return;
     setBusy(true); setError(null); setSettleMsg(null);
     try {
-      const res = await fetch('/api/voucher/checkin', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: tk, orgId }) });
+      const res = await fetch('/api/voucher/checkin', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(pass ? { token: tk, pass } : { token: tk, orgId }) });
       const j = (await res.json()) as Result;
       setResult(j); setToken(tk);
       if (j.ok) {
@@ -138,13 +170,14 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
     if (!Number.isFinite(n) || n < 0) { setSettleMsg('금액을 숫자로 입력해 주세요.'); return; }
     setSettleBusy(true); setSettleMsg(null);
     try {
-      const res = await fetch('/api/voucher/settle', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token, orgId, finalAmountWon: n, note }) });
-      const j = (await res.json()) as { ok: true; summary: Summary } | { ok: false; reason: string };
+      const res = await fetch('/api/voucher/settle', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token, ...(pass ? { pass } : { orgId }), finalAmountWon: n, note }) });
+      const j = (await res.json()) as { ok: true; summary: Summary | null } | { ok: false; reason: string };
       if (j.ok) {
-        setResult((prev) => (prev && prev.ok ? { ...prev, summary: j.summary } : prev));
+        const next = j.summary;
+        if (next) setResult((prev) => (prev && prev.ok ? { ...prev, summary: next } : prev));
         setSettleMsg('기록되었습니다. 소비자가 확인하면 수수료가 확정됩니다.');
       } else {
-        const m: Record<string, string> = { locked: '이미 확정·청구된 건이라 정정할 수 없습니다. 운영팀에 문의해 주세요.', bad_amount: '금액이 올바르지 않습니다.', not_checked_in: '먼저 방문 확인이 필요합니다.', forbidden: '이 주문의 사업자가 아닙니다.' };
+        const m: Record<string, string> = { locked: '이미 확정·청구된 건이라 정정할 수 없습니다. 운영팀에 문의해 주세요.', bad_amount: '금액이 올바르지 않습니다.', not_checked_in: '먼저 방문 확인이 필요합니다.', forbidden: pass ? '이 링크로 방문 확인한 예약만 금액을 기록할 수 있습니다.' : '이 주문의 사업자가 아닙니다.', pass_expired: '링크 유효기간이 지났습니다.', pass_invalid: '링크가 올바르지 않습니다.', pass_used: '이미 다른 고객에게 사용한 링크입니다.' };
         setSettleMsg(m[j.reason] ?? '기록하지 못했습니다.');
       }
     } catch (e) {
@@ -159,13 +192,11 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
       streamRef.current = stream;
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play(); }
       setScanning(true);
-      const Ctor = (window as unknown as { BarcodeDetector: DetectorCtor }).BarcodeDetector;
-      const det = new Ctor({ formats: ['qr_code'] });
+      const detect = await makeDetector();
       const loop = async (): Promise<void> => {
         if (!streamRef.current || !videoRef.current) return;
         try {
-          const codes = await det.detect(videoRef.current);
-          const v = codes[0]?.rawValue;
+          const v = await detect(videoRef.current);
           if (v && v !== lastRef.current) { lastRef.current = v; flashHit(); await submit(v); }
         } catch { /* 프레임 인식 실패 — 다음 프레임 */ }
         if (streamRef.current) setTimeout(() => { void loop(); }, 350);
@@ -186,7 +217,10 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
   const pct = (bp: number): string => `${(bp / 100).toFixed(bp % 100 === 0 ? 0 : 2)}%`;
   const reasonText: Record<string, string> = {
     invalid: '유효하지 않은 QR 입니다.', not_paid: '결제가 완료되지 않은 주문입니다.', cancelled: '취소된 주문입니다.',
-    forbidden: '이 주문의 사업자가 아닙니다 (다른 매장/병원의 예약).', no_org: '활성 조직이 없습니다.', unauthenticated: '로그인이 필요합니다.',
+    forbidden: pass ? '이 링크를 보낸 업체의 예약이 아닙니다. 예약을 보낸 업체에 확인해 주세요.' : '이 주문의 사업자가 아닙니다 (다른 매장/병원의 예약).', no_org: '활성 조직이 없습니다.', unauthenticated: '로그인이 필요합니다.',
+    pass_used: '이미 다른 고객에게 사용한 1회용 링크입니다. 다음 고객부터는 무료 비즈니스 계정으로 바로 스캔하세요.',
+    pass_expired: '링크 유효기간이 지났습니다. 링크를 보낸 업체에 새 링크를 요청하거나 무료 비즈니스 계정을 만드세요.',
+    pass_invalid: '링크가 올바르지 않습니다. 받은 주소 전체를 다시 열어 주세요.',
   };
   const inputStyle = { border: '1px solid #dddddd', borderRadius: 10, padding: '10px 12px', fontSize: 14, fontFamily: 'inherit' } as const;
 
@@ -210,7 +244,7 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
             </div>
           </>
         ) : supported === false ? (
-          <p style={{ fontSize: 13, color: '#6a6a6a', margin: 0, lineHeight: 1.6 }}>이 브라우저는 카메라 QR 인식을 지원하지 않습니다. <b>휴대폰 기본 카메라</b>로 QR 을 찍으면 열리는 페이지에서 바로 방문 확인할 수 있고, 아래에 코드를 직접 입력해도 됩니다.</p>
+          <p style={{ fontSize: 13, color: '#6a6a6a', margin: 0, lineHeight: 1.6 }}>이 브라우저에서는 카메라를 열 수 없습니다. 아래에 고객 QR 아래의 코드를 직접 입력해 주세요.</p>
         ) : null}
         <form onSubmit={(e) => { e.preventDefault(); void submit(manual); }} style={{ display: 'flex', gap: 8, marginTop: 12 }}>
           <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="QR 아래 코드 또는 https://…/v/… 주소 붙여넣기"
@@ -236,14 +270,20 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
               </tbody>
             </table>
 
-            <SettleBox
-              s={result.summary.settlement}
-              feeBp={result.summary.settlement?.feeBp ?? result.feeBp ?? 0}
-              amount={amount} setAmount={setAmount} note={note} setNote={setNote}
-              busy={settleBusy} msg={settleMsg} onSubmit={settle} won={won} pct={pct} inputStyle={inputStyle}
-            />
+            {!pass || result.canSettle ? (
+              <SettleBox
+                s={result.summary.settlement}
+                feeBp={result.summary.settlement?.feeBp ?? result.feeBp ?? 0}
+                amount={amount} setAmount={setAmount} note={note} setNote={setNote}
+                busy={settleBusy} msg={settleMsg} onSubmit={settle} won={won} pct={pct} inputStyle={inputStyle}
+              />
+            ) : null}
 
-            <button type="button" onClick={reset} style={{ marginTop: 12, background: '#fff', border: '1px solid #a7f3d0', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>다음 고객 스캔</button>
+            {pass ? (
+              <PassSignupCta summary={result.summary} />
+            ) : (
+              <button type="button" onClick={reset} style={{ marginTop: 12, background: '#fff', border: '1px solid #a7f3d0', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>다음 고객 스캔</button>
+            )}
           </div>
         ) : (
           <div style={{ border: '1px solid #fecdd3', background: '#fffafb', borderRadius: 14, padding: 16 }}>
@@ -252,6 +292,24 @@ export default function Scanner({ orgId }: { orgId: string }): JSX.Element {
           </div>
         )
       ) : null}
+    </div>
+  );
+}
+
+/** 1회용 링크로 확인을 마친 방문지 → 무료 비즈니스 계정 가입 (회사명·업종 미리 채움) */
+function PassSignupCta({ summary }: { summary: Summary }): JSX.Element {
+  const name = summary.hospitalName || summary.listingTitle;
+  const type = summary.hospitalName || summary.kind === 'hospital_visit' ? 'medical' : 'non_medical';
+  const href = `/signup?from=scan-pass&type=${type}&orgName=${encodeURIComponent(name)}`;
+  return (
+    <div style={{ marginTop: 14, border: '1px solid #ffd7de', background: '#fff', borderRadius: 12, padding: 14 }}>
+      <div style={{ fontSize: 14, fontWeight: 800, color: '#222' }}>다음 고객부터는 링크 없이 바로 스캔하세요</div>
+      <p style={{ fontSize: 12, color: '#6a6a6a', margin: '4px 0 10px', lineHeight: 1.55 }}>
+        1회용 링크는 고객 1명만 확인할 수 있습니다. 무료 비즈니스 계정(30초)을 만들면 매번 링크를 받지 않고 마이페이지에서 바로 QR 스캔·방문 확인·정산 내역을 볼 수 있습니다.
+      </p>
+      <a href={href} style={{ display: 'block', textAlign: 'center', background: '#ff385c', color: '#fff', borderRadius: 10, padding: '12px', fontSize: 15, fontWeight: 800, textDecoration: 'none' }}>
+        무료 비즈니스 계정 만들기
+      </a>
     </div>
   );
 }

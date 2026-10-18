@@ -9,6 +9,7 @@ import { db } from '@/lib/db/client';
 import { orgMemberships } from '@/drizzle/schema/memberships';
 import { checkIn, loadOrderByToken, orgName, summarize } from '@/lib/voucher/service';
 import { declareFinalAmount } from '@/lib/voucher/settlement';
+import { settleWithPass } from '@/lib/voucher/scan-pass';
 
 /**
  * 가맹점 최종 결제금액 입력 (3자 검증 2단계) — 체크인과 같은 권한.
@@ -16,12 +17,19 @@ import { declareFinalAmount } from '@/lib/voucher/settlement';
  * POST { token, orgId?, finalAmountWon, note? } → { ok, summary } | { ok:false, reason }
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const body = (await req.json().catch(() => ({}))) as { token?: string; orgId?: string; pass?: string; finalAmountWon?: number | string; note?: string };
+  const token = String(body.token ?? '').trim().replace(/^https?:\/\/[^/]+\/v\//, '');
+  if (!token) return NextResponse.json({ ok: false, reason: 'invalid' }, { status: 400 });
+  // 1회용 비회원 스캔 링크 — 그 링크로 방문 확인한 주문만 금액 기록
+  if (body.pass) {
+    const r = await settleWithPass(token, String(body.pass), { finalAmountWon: Number(body.finalAmountWon), note: body.note ?? null });
+    if (!r.ok) return NextResponse.json(r, { status: 400 });
+    const fresh = await loadOrderByToken(token);
+    return NextResponse.json({ ok: true, summary: fresh ? summarize(fresh, { withPII: true, withFee: true }) : null });
+  }
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return NextResponse.json({ ok: false, reason: 'unauthenticated' }, { status: 401 });
-  const body = (await req.json().catch(() => ({}))) as { token?: string; orgId?: string; finalAmountWon?: number | string; note?: string };
-  const token = String(body.token ?? '').trim().replace(/^https?:\/\/[^/]+\/v\//, '');
-  if (!token) return NextResponse.json({ ok: false, reason: 'invalid' }, { status: 400 });
 
   const isMaster = isMasterEmail(auth.user.email ?? '');
   const orgId = body.orgId || activeOrgId();

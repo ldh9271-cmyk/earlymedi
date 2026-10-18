@@ -130,13 +130,14 @@ export type CheckInResult =
   | { ok: false; reason: 'invalid' | 'not_paid' | 'cancelled' | 'forbidden' };
 
 /** 방문 확인(체크인). 멱등 — 이미 확인된 주문은 already=true 로 그대로 돌려준다. */
-export async function checkIn(token: string, org: { id: string; name: string; isMaster?: boolean }, opts: { viaToken?: boolean } = {}): Promise<CheckInResult> {
+export async function checkIn(token: string, org: { id: string; name: string; isMaster?: boolean }, opts: { viaToken?: boolean; authorized?: boolean; passNonce?: string } = {}): Promise<CheckInResult> {
   const o = await loadOrderByToken(token);
   if (!o) return { ok: false, reason: 'invalid' };
   if (o.status === 'cancelled') return { ok: false, reason: 'cancelled' };
   if (o.status !== 'paid') return { ok: false, reason: 'not_paid' };
   // 병원 진료 예약은 병원에 계정이 없어도 QR 화면(토큰 소지)만으로 방문 확인을 허용한다
-  if (!org.isMaster && !(opts.viaToken && o.kind === 'hospital_visit') && !(await orgCanCheckIn(o, org.id))) return { ok: false, reason: 'forbidden' };
+  // authorized = 호출한 쪽이 이미 권한을 확인함(1회용 스캔 링크 — lib/voucher/scan-pass)
+  if (!org.isMaster && !opts.authorized && !(opts.viaToken && o.kind === 'hospital_visit') && !(await orgCanCheckIn(o, org.id))) return { ok: false, reason: 'forbidden' };
 
   const meta = (o.meta ?? {}) as { voucher?: VoucherMeta };
   if (meta.voucher?.checkedInAt) return { ok: true, already: true, summary: summarize(o, { withPII: true, withFee: true }) };
@@ -145,6 +146,7 @@ export async function checkIn(token: string, org: { id: string; name: string; is
   const voucher: VoucherMeta = {
     checkedInAt: now, checkedInByOrgId: org.id, checkedInByName: org.name,
     checkins: [...(meta.voucher?.checkins ?? []), { at: now, orgId: org.id, orgName: org.name }],
+    ...(opts.passNonce ? { passNonce: opts.passNonce } : {}),
   };
   await db.execute(sql`update checkout_orders set meta = meta || ${JSON.stringify({ voucher })}::jsonb, updated_at = now() where id = ${o.id}`);
   const [fresh] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, o.id)).limit(1);

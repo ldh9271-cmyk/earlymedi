@@ -134,7 +134,7 @@ export default async function VoucherLanding({ params, searchParams }: { params:
             </form>
           ) : null}
           {isOwner ? <p style={{ marginTop: 16, fontSize: 13 }}><Link href={`/${s.locale}/me/voucher/${encodeURIComponent(s.invoiceNo)}`} style={{ color: '#222' }}>→ 내 바우처 화면에서 크게 보기</Link></p> : null}
-          {!auth.user ? <p style={{ marginTop: 16, fontSize: 12, color: '#6a6a6a' }}>사업자이신가요? <Link href={`/login?next=${encodeURIComponent(`/v/${token}`)}`} style={{ color: '#1d4ed8' }}>로그인</Link>하면 이 화면에서 바로 방문 확인을 할 수 있습니다.</p> : null}
+          {!auth.user ? <p style={{ marginTop: 16, fontSize: 12, color: '#6a6a6a', lineHeight: 1.6 }}>사업자이신가요? <Link href={`/login?next=${encodeURIComponent(`/v/${token}`)}`} style={{ color: '#1d4ed8' }}>로그인</Link>하면 이 화면에서 바로 방문 확인을 할 수 있습니다.{isHospitalVisit ? null : <><br />계정이 없는 방문지(병원·매장)라면 예약을 보낸 업체에 <b>1회용 스캔 링크</b>를 요청하세요.</>}</p> : null}
         </>
       )}
     </main>
