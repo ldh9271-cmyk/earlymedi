@@ -29,6 +29,12 @@ const nextConfig = {
   },
   async headers() {
     return [
+      // iOS 유니버설 링크 파일(public/.well-known/apple-app-site-association)은 확장자가 없어
+      // 기본으로 octet-stream 이 나간다 — 애플은 application/json 을 요구한다. assetlinks.json 은 확장자로 충분.
+      {
+        source: '/.well-known/apple-app-site-association',
+        headers: [{ key: 'Content-Type', value: 'application/json' }],
+      },
       {
         source: '/(.*)',
         headers: [

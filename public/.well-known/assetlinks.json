@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.glowuptour.app",
+      "sha256_cert_fingerprints": [
+        "B3:D8:2B:0F:C2:9D:CC:18:9E:C3:26:7F:1E:66:10:82:C6:0E:69:FA:0F:6C:5B:2A:BE:BA:85:26:DC:4F:43:0F"
+      ]
+    }
+  }
+]

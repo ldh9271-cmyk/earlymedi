@@ -1230,6 +1230,19 @@ const vi: Dictionary = {
     pointsHint: "Tích lũy mỗi lần điều trị, dùng cho lần tiếp theo.",
     menu: "Chương trình giới thiệu",
   },
+  refLanding: {
+    metaTitle: 'Đã áp dụng mã giới thiệu — GlowUpTour',
+    title: 'Mã giới thiệu đã được áp dụng',
+    subtitle: 'Bắt đầu đặt lịch bệnh viện, làm đẹp và du lịch Hàn Quốc trên ứng dụng hoặc web. Khi đăng ký, bạn sẽ tự động được liên kết với người đã giới thiệu.',
+    codeLabel: 'Mã giới thiệu',
+    copy: 'Sao chép',
+    copied: 'Đã sao chép',
+    installAndroid: 'Tải ứng dụng trên Google Play',
+    installIos: 'Tải ứng dụng trên App Store',
+    web: 'Tiếp tục trên web',
+    appHint: 'Khi đăng ký trong ứng dụng, hãy nhập mã giới thiệu {code}. Bạn có thể nhập ở màn hình đầu tiên sau khi cài đặt.',
+    webHint: 'Nếu đăng ký trên web, mã sẽ được áp dụng tự động.',
+  },
   checkout: {
     stay: {
       loginRequired: 'Chỉ thành viên mới đặt được. Vui lòng đăng ký hoặc đăng nhập.',

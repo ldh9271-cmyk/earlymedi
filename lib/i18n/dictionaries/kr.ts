@@ -1251,6 +1251,20 @@ const kr = {
     pointsHint: "시술할 때마다 쌓이고 다음 시술에 쓸 수 있습니다.",
     menu: "추천 프로그램",
   },
+  refLanding: {
+    // 추천 QR 모바일 랜딩 (/[locale]/r/[code]) — 앱 설치 또는 웹에서 바로 시작. {code} 는 추천 코드.
+    metaTitle: '추천 코드 적용 — 글로우업투어',
+    title: '추천 코드가 적용되었어요',
+    subtitle: '한국 병원·뷰티·여행 예약을 앱 또는 웹에서 시작하세요. 가입하면 소개해 주신 분께 자동으로 연결됩니다.',
+    codeLabel: '추천 코드',
+    copy: '복사',
+    copied: '복사됨',
+    installAndroid: 'Google Play 에서 앱 설치',
+    installIos: 'App Store 에서 앱 설치',
+    web: '웹에서 바로 시작',
+    appHint: '앱에서 가입할 때 추천 코드 {code} 를 입력해 주세요. 설치 후 첫 화면에서 입력할 수 있어요.',
+    webHint: '웹에서 가입하면 코드가 자동으로 적용됩니다.',
+  },
   checkout: {
     stay: {
       loginRequired: '예약은 회원만 할 수 있습니다. 가입 또는 로그인 후 이용해 주세요.',

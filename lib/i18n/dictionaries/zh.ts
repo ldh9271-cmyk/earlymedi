@@ -1227,6 +1227,19 @@ const zh: Dictionary = {
     pointsHint: "每次治疗累计，可用于下次治疗。",
     menu: "推荐计划",
   },
+  refLanding: {
+    metaTitle: '推荐码已应用 — GlowUpTour',
+    title: '推荐码已应用',
+    subtitle: '在应用或网页上开始预约韩国医院、美容和旅行。注册后将自动关联到推荐您的人。',
+    codeLabel: '推荐码',
+    copy: '复制',
+    copied: '已复制',
+    installAndroid: '在 Google Play 安装应用',
+    installIos: '在 App Store 安装应用',
+    web: '直接在网页上开始',
+    appHint: '在应用中注册时，请输入推荐码 {code}。安装后可在第一个页面输入。',
+    webHint: '在网页上注册时，推荐码会自动应用。',
+  },
   checkout: {
     stay: {
       loginRequired: '仅会员可预订，请先注册或登录。',

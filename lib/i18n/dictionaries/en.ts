@@ -1230,6 +1230,19 @@ const en: Dictionary = {
     pointsHint: "Earned on every procedure, usable on your next one.",
     menu: "Referral program",
   },
+  refLanding: {
+    metaTitle: 'Referral code applied — GlowUpTour',
+    title: 'Your referral code is applied',
+    subtitle: 'Book Korean clinics, beauty and travel in the app or on the web. When you sign up, you stay linked to the person who referred you.',
+    codeLabel: 'Referral code',
+    copy: 'Copy',
+    copied: 'Copied',
+    installAndroid: 'Get the app on Google Play',
+    installIos: 'Get the app on the App Store',
+    web: 'Continue on the web',
+    appHint: 'When you sign up in the app, enter referral code {code}. You can enter it on the first screen after installing.',
+    webHint: 'If you sign up on the web, the code is applied automatically.',
+  },
   checkout: {
     stay: {
       loginRequired: 'Bookings are for members only. Please sign up or sign in to continue.',

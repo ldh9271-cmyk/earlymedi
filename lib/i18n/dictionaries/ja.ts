@@ -1229,6 +1229,19 @@ const ja: Dictionary = {
     pointsHint: "施術のたびに貯まり、次回の施術に使えます。",
     menu: "紹介プログラム",
   },
+  refLanding: {
+    metaTitle: '紹介コード適用 — GlowUpTour',
+    title: '紹介コードが適用されました',
+    subtitle: '韓国の病院・美容・旅行の予約をアプリまたはウェブで始めましょう。登録すると、紹介してくれた方に自動で紐づきます。',
+    codeLabel: '紹介コード',
+    copy: 'コピー',
+    copied: 'コピーしました',
+    installAndroid: 'Google Play でアプリを入手',
+    installIos: 'App Store でアプリを入手',
+    web: 'ウェブでそのまま始める',
+    appHint: 'アプリで登録するときは紹介コード {code} を入力してください。インストール後の最初の画面で入力できます。',
+    webHint: 'ウェブで登録する場合、コードは自動で適用されます。',
+  },
   checkout: {
     stay: {
       loginRequired: 'ご予約は会員のみ可能です。登録またはログインしてください。',

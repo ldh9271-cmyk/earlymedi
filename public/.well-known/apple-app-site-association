@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["XXXXXXXXXX.com.glowuptour.app"],
+        "appID": "XXXXXXXXXX.com.glowuptour.app",
+        "paths": ["/r/*"],
+        "components": [
+          { "/": "/r/*", "comment": "Referral QR landing - opens in the GlowUpTour app" }
+        ]
+      }
+    ]
+  }
+}
