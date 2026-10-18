@@ -427,7 +427,7 @@ const kr = {
     siteTitle: '글로우업투어-한국에서 놀면서, 예뻐지자',
     siteDescription: '퍼스널 컬러 진단부터 K-팝 성지, 현지인 찐맛집까지. 노는 사이 더 예뻐지는 올인원 K-뷰티 여행.',
     ogTitle: '글로우업투어 — 한국에서 놀면서, 예뻐지자',
-    ogDescription: '병원·시술·여행을 한 화면에서 비교. AI 컨시어지가 6개국어로 24/7 안내.',
+    ogDescription: '퍼스널 컬러 진단부터 K-팝 성지, 현지인 찐맛집까지. 노는 사이 더 예뻐지는 올인원 K-뷰티 여행.',
   },
   siteFooter: {
     colSupport: '지원',
