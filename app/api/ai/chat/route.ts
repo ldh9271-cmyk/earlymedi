@@ -16,6 +16,7 @@ import { foodRegistry } from '@/drizzle/schema/food-registry';
 import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { tourSpots } from '@/drizzle/schema/tour-spots';
 import { parseTopic } from '@/lib/chat/topic-room';
+import { KB_RULES, retrieveKnowledge } from '@/lib/ai/knowledge/retrieve';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -479,7 +480,7 @@ async function callGemini(system: string, messages: Array<{ role: string; conten
             contents,
             generationConfig: {
               temperature: 0.5,
-              maxOutputTokens: 900,
+              maxOutputTokens: 1200,
               // 사고 예산을 최소로 (0 은 이 모델에서 400) — 사고 파트는
               // 아래에서 thought 플래그로 걸러 답변에 섞이지 않게 한다.
               thinkingConfig: { thinkingBudget: 128 },
@@ -524,7 +525,7 @@ async function* streamGemini(
         contents,
         generationConfig: {
           temperature: 0.5,
-          maxOutputTokens: 900,
+          maxOutputTokens: 1200,
           thinkingConfig: { thinkingBudget: 128 },
         },
       }),
@@ -569,6 +570,9 @@ export async function POST(req: Request): Promise<NextResponse> {
   // 최근 2개 사용자 발화를 합쳐 검색 (문맥 유지). 상세 페이지 버튼 문맥이 있으면 그 이름을 앞에 붙여 후속 질문에도 유지.
   const focusCtx = await contextFocus(body.context, locale);
   const recentUser = [focusCtx.name, ...body.messages.filter((m) => m.role === 'user').slice(-2).map((m) => m.content)].filter(Boolean).join(' ');
+  // 의료 용어·급여/비급여·시술 가이드(lib/ai/knowledge)에서 질문과 관련된 설명을 고른다 — DB 근거와 별개의 일반 지식 (2026-10-21)
+  const kbQuestion = body.messages.filter((m) => m.role === 'user').slice(-2).map((m) => m.content).join(' ');
+  const kb = retrieveKnowledge(kbQuestion, { cats: matchCats(kbQuestion, HOSPITAL_CATS).map((m) => m.cat) });
   const [clinicsRaw, listings] = await Promise.all([
     findHospitals(recentUser || lastUser, locale),
     findListings(recentUser || lastUser, locale, (await getDictionary(locale)).detail.units),
@@ -585,7 +589,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   const system = `You are the GlowUpTour concierge assistant for a Korean medical-tourism and K-beauty marketplace.
 
 Reply ONLY with the message shown to the user — no preamble, no self-checks, no meta commentary.
-Write in ${LOCALE_LANGUAGE[locale]}, warm and concise (about 150 words), using short bullet lines when listing options.
+Write in ${LOCALE_LANGUAGE[locale]}, warm and concise (about 150 words; up to 230 when KNOWLEDGE below explains the procedure or term the user asked about), using short bullet lines when listing options.
 
 GROUNDING RULES — critical:
 - Recommend ONLY the clinics/products in the DATA block below. Never invent a clinic, price, address, phone or claim.
@@ -602,9 +606,18 @@ MEDICAL SAFETY:
 
 If the user wants to book or needs a judgement call, invite them to send an inquiry (the UI shows a concierge button).
 
-${focusEvidence.length ? `FOCUS: The user is asking about the DATA entries marked [지금 보고 있는 곳] / [질문에 나온 병원] / [질문에 나온 상품] (they appear first). Answer about that place first and in the most detail, using only its DATA line. Do not switch the answer to other clinics or products unless the user asks for alternatives; at most mention that similar options exist. If a detail is missing for it (price, menu, procedure), say the concierge can confirm it and invite an inquiry or a chat with a concierge.
+CONSULTATION RULES (Korean medical-tourism practice):
+${KB_RULES}
 
-` : ''}DATA (the only facts you may use):
+${kb.hit ? `KNOWLEDGE (GlowUpTour internal guide on Korean medical terms, 급여/비급여 and procedures — general reference, NOT about any specific clinic):
+- Use it to explain what the procedure/term is and who it generally suits, 시술 vs 수술, anesthesia, typical downtime and recommended stay, pricing units (shots/cc/units, package contents), what to confirm before booking, and how 급여/비급여 works. Answer the user's actual question with these facts first, then connect to the DATA clinics.
+- Never present KNOWLEDGE as a specific clinic's offering, price or result. Clinic/product facts and prices come only from DATA.
+- Each line below is "[chapter › section] term: fields". Ignore lines unrelated to the question.
+${kb.text}
+
+` : ''}${focusEvidence.length ? `FOCUS: The user is asking about the DATA entries marked [지금 보고 있는 곳] / [질문에 나온 병원] / [질문에 나온 상품] (they appear first). Answer about that place first and in the most detail, using only its DATA line. Do not switch the answer to other clinics or products unless the user asks for alternatives; at most mention that similar options exist. If a detail is missing for it (price, menu, procedure), say the concierge can confirm it and invite an inquiry or a chat with a concierge.
+
+` : ''}DATA (the only clinic/product facts you may use):
 ${fallbackMode ? '(No clinic lists this exact procedure. The following are our certified clinics for the inferred specialty, ranked 1-5 — recommend them in this order and suggest an inquiry.)\n' : ''}${evidence.length ? evidence.map((e) => `- ${e.text}`).join('\n') : '(no matching records found — invite the user to send an inquiry so a concierge can help; do not say the database is empty)'}`;
 
   const pickCards = (text: string): Card[] => {
