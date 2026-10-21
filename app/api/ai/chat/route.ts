@@ -17,7 +17,7 @@ import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { tourSpots } from '@/drizzle/schema/tour-spots';
 import { parseTopic } from '@/lib/chat/topic-room';
 import { KB_RULES, retrieveKnowledge } from '@/lib/ai/knowledge/retrieve';
-import { BOOKING_INTENT, bookingPrompt, resolveBookingDraft, type BookingPayload, type ClinicRef, type MemberProfile } from '@/lib/ai/booking/draft';
+import { BOOKING_INTENT, bookingPrompt, findSentInvoiceNo, resolveBookingDraft, type BookingPayload, type ClinicRef, type MemberProfile } from '@/lib/ai/booking/draft';
 import { extractBookingBlock } from '@/lib/ai/booking/block';
 import { parseKoHours } from '@/lib/hours/parse-ko';
 import { seoulParts, type WeeklyHours } from '@/lib/hours/status';
@@ -171,6 +171,33 @@ function procedureTokens(q: string): string[] {
 }
 
 type ClinicEvidence = { text: string; card: Card; fallback?: boolean; focus?: boolean; booking?: ClinicRef };
+
+/** 예약 블록의 병원 이름(기본 이름 또는 언어별 이름, 부분 일치) → 예약용 병원 참조. 활성 병원만 */
+async function findClinicRefByName(name: string): Promise<ClinicRef | null> {
+  const n = name.replace(/\s+/g, ' ').trim();
+  if (n.length < 2) return null;
+  try {
+    const [r] = await db
+      .select({ id: hospitals.id, name: hospitals.name, details: hospitals.details })
+      .from(hospitals)
+      .where(and(
+        eq(hospitals.isActiveForMatching, true),
+        or(
+          ilike(hospitals.name, `%${n}%`),
+          sql`${n} ILIKE '%' || "hospitals"."name" || '%'`,
+          sql`exists (select 1 from hospital_locale_content l where l.hospital_id = "hospitals"."id" and length(coalesce(l.name, '')) >= 2 and (l.name ILIKE ${'%' + n + '%'} or ${n} ILIKE '%' || l.name || '%'))`,
+        ) as SQL,
+      ))
+      .orderBy(sql`${hospitals.sortOrder} asc`)
+      .limit(1);
+    if (!r) return null;
+    const d = (r.details ?? {}) as Record<string, unknown>;
+    const hoursText = typeof d.hours === 'string' ? d.hours : null;
+    return { hospitalId: r.id, hospitalName: r.name, title: r.name, hours: (d.hoursWeekly as WeeklyHours | undefined) ?? parseKoHours(hoursText), hoursText };
+  } catch {
+    return null;
+  }
+}
 
 async function findHospitals(q: string, locale: PublicLocale): Promise<ClinicEvidence[]> {
   const cats = matchCats(q, HOSPITAL_CATS).map((m) => m.cat);
@@ -589,8 +616,12 @@ export async function POST(req: Request): Promise<NextResponse> {
   const kb = await retrieveKnowledge(kbQuestion, {
     cats: [...matchCats(kbQuestion, HOSPITAL_CATS).map((m) => m.cat), ...matchCats(kbQuestion, LISTING_CATS).flatMap((m) => m.cats)],
   });
+  // 대화로 예약 요청 (2026-10-21): 예약 의도는 대화 전체 사용자 발화로 판정(중간 턴에 지시문이 빠지지 않게),
+  // 병원 검색어에도 전체 발화를 보태 턴이 쌓여도 그 병원이 DATA 에 남게 한다.
+  const allUserText = body.messages.filter((m) => m.role === 'user').map((m) => m.content).join(' ');
+  const bookingMode = BOOKING_INTENT.test(allUserText);
   const [clinicsRaw, listings] = await Promise.all([
-    findHospitals(recentUser || lastUser, locale),
+    findHospitals(bookingMode ? `${recentUser || lastUser} ${allUserText.slice(-800)}` : (recentUser || lastUser), locale),
     findListings(recentUser || lastUser, locale, (await getDictionary(locale)).detail.units),
   ]);
   const clinics = clinicsRaw;
@@ -602,8 +633,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   const evidence = [...focusEvidence, ...clinics.filter((c) => !c.focus), ...listings.filter((l) => !l.focus)];
   const fallbackMode = focusEvidence.length === 0 && clinics.some((c) => c.fallback);
 
-  // 대화로 예약 요청 (2026-10-21): 최근 사용자 발화에 예약 의도가 있으면 BOOKING 지시문 + (회원이면) 프로필을 넣는다.
-  const bookingMode = BOOKING_INTENT.test(body.messages.filter((m) => m.role === 'user').slice(-4).map((m) => m.content).join(' '));
+  // 예약 의도가 있으면 BOOKING 지시문 + (회원이면) 프로필. 이미 접수(✅ 영수 줄)됐으면 상태 안내 모드.
   let bookingBlock = '';
   if (bookingMode) {
     let member = false; let profile: MemberProfile | null = null;
@@ -621,7 +651,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         };
       }
     } catch { /* 비로그인 */ }
-    bookingBlock = bookingPrompt({ todayYmd: seoulParts(new Date()).ymd, member, profile });
+    bookingBlock = bookingPrompt({ todayYmd: seoulParts(new Date()).ymd, member, profile, sentInvoiceNo: findSentInvoiceNo(body.messages) });
   }
   /** 모델 출력 끝의 <booking> 블록 → 검증된 예약 초안(없으면 undefined). 텍스트는 블록을 뺀 것 */
   const finishAnswer = async (raw: string): Promise<{ text: string; booking?: BookingPayload }> => {
@@ -629,7 +659,13 @@ export async function POST(req: Request): Promise<NextResponse> {
     if (!block) return { text };
     const refs = clinics.map((c) => c.booking).filter((b): b is ClinicRef => Boolean(b));
     const holidays = new Set(await loadHolidayYmds().catch(() => [] as string[]));
-    const booking = resolveBookingDraft(block, { clinics: refs, holidays });
+    let booking = resolveBookingDraft(block, { clinics: refs, holidays });
+    if (!booking) {
+      // 이번 턴 DATA 에 그 병원이 없어도(대화가 길어져 검색어에서 빠짐) 이름으로 DB 에서 확정한다
+      const name = typeof (block as { hospital?: unknown }).hospital === 'string' ? (block as { hospital: string }).hospital : '';
+      const ref = await findClinicRefByName(name);
+      if (ref) booking = resolveBookingDraft(block, { clinics: [ref], holidays });
+    }
     return booking ? { text, booking } : { text };
   };
 

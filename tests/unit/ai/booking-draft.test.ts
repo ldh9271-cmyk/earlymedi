@@ -1,7 +1,7 @@
 /** AI 상담 '대화로 예약 요청' — 블록 추출·초안 검증·진료시간 경고 (순수 로직) */
 import { describe, expect, it } from 'vitest';
 import { extractBookingBlock, stripBookingBlock } from '@/lib/ai/booking/block';
-import { bookingPrompt, resolveBookingDraft, type ClinicRef } from '@/lib/ai/booking/draft';
+import { bookingPrompt, findSentInvoiceNo, resolveBookingDraft, type ClinicRef } from '@/lib/ai/booking/draft';
 import { checkVisitSlot } from '@/lib/booking/visit-slot';
 import type { WeeklyHours } from '@/lib/hours/status';
 
@@ -62,5 +62,19 @@ describe('bookingPrompt', () => {
     expect(p).toContain('name=홍길동');
     expect(p).toContain('<booking>');
     expect(bookingPrompt({ todayYmd: '2026-10-21', member: false, profile: null })).toContain('not signed in');
+    expect(p).toContain('STATUS LINE');
+  });
+  it('접수 완료(✅ 영수 줄)면 상태 안내 모드 — 블록을 다시 내지 않는다', () => {
+    const msgs = [
+      { role: 'user', content: '예약하고 싶어요' },
+      { role: 'assistant', content: '✅ 예약 요청을 보냈어요 · 번호 GU-20261021-4821. 병원 확인 후 확정 메일을 드려요.' },
+      { role: 'user', content: '예약 됐어?' },
+    ];
+    expect(findSentInvoiceNo(msgs)).toBe('GU-20261021-4821');
+    expect(findSentInvoiceNo(msgs.slice(0, 1))).toBeNull();
+    const p = bookingPrompt({ todayYmd: '2026-10-21', member: true, profile: null, sentInvoiceNo: 'GU-20261021-4821' });
+    expect(p).toContain('already SENT');
+    expect(p).toContain('GU-20261021-4821');
+    expect(p).not.toContain('<booking>{');
   });
 });

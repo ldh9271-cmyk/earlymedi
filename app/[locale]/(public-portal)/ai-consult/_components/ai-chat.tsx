@@ -238,7 +238,8 @@ export default function AiChat({
             ) : null}
             {m.booking ? (
               <BookingRequestCard locale={locale} booking={m.booking} labels={t.booking}
-                transcript={msgs.slice(1, i + 1).map((x) => ({ role: x.role, content: x.role === 'assistant' ? stripBookingBlock(x.content) : x.content }))} />
+                transcript={msgs.slice(1, i + 1).map((x) => ({ role: x.role, content: x.role === 'assistant' ? stripBookingBlock(x.content) : x.content }))}
+                onSent={(no) => setMsgs((prev) => [...prev, { role: 'assistant', content: `✅ ${t.booking.sent.replace('{no}', no ?? '-')}` }])} />
             ) : null}
           </div>
         ))}

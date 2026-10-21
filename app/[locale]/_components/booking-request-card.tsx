@@ -37,13 +37,15 @@ export function readSavedBookingDraft(): { booking: BookingPayload; transcript: 
 const HARD_ISSUES = new Set(['window', 'past']);
 
 export default function BookingRequestCard({
-  locale, booking, labels, transcript, compact = false,
+  locale, booking, labels, transcript, compact = false, onSent,
 }: {
   locale: PublicLocale;
   booking: BookingPayload;
   labels: Labels;
   transcript: Transcript;
   compact?: boolean;
+  /** 전송 성공 — 부모가 대화에 ✅ 영수 메시지를 남겨 이후 턴에서 AI 가 접수 상태를 알게 한다 */
+  onSent?: (invoiceNo: string | null) => void;
 }): JSX.Element {
   const [phase, setPhase] = useState<'idle' | 'login' | 'sending' | 'sent' | 'error'>('idle');
   const [invoiceNo, setInvoiceNo] = useState<string | null>(null);
@@ -69,7 +71,7 @@ export default function BookingRequestCard({
       const j = (await res.json()) as { ok?: boolean; invoiceNo?: string | null; error?: string };
       if (res.status === 401) { saveBookingDraft(booking, transcript); setPhase('login'); return; }
       if (!res.ok || !j.ok) { setErrText(j.error && /[가-힣]|[a-z]/i.test(j.error) && j.error.length > 12 ? j.error : labels.error); setPhase('error'); return; }
-      setInvoiceNo(j.invoiceNo ?? null); setPhase('sent'); clearBookingDraft();
+      setInvoiceNo(j.invoiceNo ?? null); setPhase('sent'); clearBookingDraft(); onSent?.(j.invoiceNo ?? null);
     } catch { setErrText(labels.error); setPhase('error'); }
   }
 
