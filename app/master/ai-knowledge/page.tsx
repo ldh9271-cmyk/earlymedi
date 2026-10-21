@@ -20,7 +20,7 @@ export const metadata = { title: 'AI 상담 지식 문서 — 마스터 관리�
  *  60초 캐시(변경 시 즉시 무효화)로 읽어 KNOWLEDGE 근거로 쓴다. 활성 문서가 없거나 DB 가 실패하면
  *  빌드에 내장된 청크(lib/ai/knowledge/chunks.generated.ts)로 폴백한다.
  */
-const fmt = (d: Date): string => new Date(d).toLocaleString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+const fmt = (d: Date): string => new Date(d).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 const catSummary = (cats: Record<string, number>, n = 6): string =>
   Object.entries(cats).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${catLabel(k)} ${v}`).join(' · ');
 
