@@ -572,7 +572,9 @@ export async function POST(req: Request): Promise<NextResponse> {
   const recentUser = [focusCtx.name, ...body.messages.filter((m) => m.role === 'user').slice(-2).map((m) => m.content)].filter(Boolean).join(' ');
   // 의료 용어·급여/비급여·시술 가이드(lib/ai/knowledge)에서 질문과 관련된 설명을 고른다 — DB 근거와 별개의 일반 지식 (2026-10-21)
   const kbQuestion = body.messages.filter((m) => m.role === 'user').slice(-2).map((m) => m.content).join(' ');
-  const kb = retrieveKnowledge(kbQuestion, { cats: matchCats(kbQuestion, HOSPITAL_CATS).map((m) => m.cat) });
+  const kb = retrieveKnowledge(kbQuestion, {
+    cats: [...matchCats(kbQuestion, HOSPITAL_CATS).map((m) => m.cat), ...matchCats(kbQuestion, LISTING_CATS).flatMap((m) => m.cats)],
+  });
   const [clinicsRaw, listings] = await Promise.all([
     findHospitals(recentUser || lastUser, locale),
     findListings(recentUser || lastUser, locale, (await getDictionary(locale)).detail.units),

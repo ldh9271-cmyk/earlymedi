@@ -23,12 +23,27 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = path.join(root, 'lib/ai/knowledge/docs');
 const OUT = path.join(root, 'lib/ai/knowledge/chunks.generated.ts');
 
-/** 장 번호 → 카테고리 키 (route.ts HOSPITAL_CATS 의 cat 과 같은 이름을 쓴다). */
-const CHAPTER_CAT = {
-  0: 'common', 1: 'common', 2: 'dermatology', 3: 'plastic_surgery', 4: 'dental', 5: 'ophthalmology',
-  6: 'orthopedics', 7: 'spine', 8: 'health_checkup', 9: 'obgyn', 10: 'urology', 11: 'ent', 12: 'other',
-  13: 'oriental', 14: 'hair', 15: 'rules', 16: 'glossary',
-};
+/**
+ * 장 제목 → 카테고리 키 (route.ts HOSPITAL_CATS·LISTING_CATS 의 키와 같은 이름). 문서마다 장 번호가 다르므로 제목 단어로 정한다.
+ * 특수 키: toc(목차)·appendix(부록)·glossary(대조표→별칭 사전)·rules(상담 원칙)·intro(문서 안내: 문단 제외, 표는 포함)·common.
+ */
+const CHAPTER_RULES = [
+  [/^목차/, 'toc'], [/^부록/, 'appendix'], [/대조표|glossary/i, 'glossary'],
+  [/상담 원칙|필수 원칙|법규|금지 표현/, 'rules'],
+  [/사용 목적|사용 안내|읽는 법|문서의 범위/, 'intro'],
+  [/공통 기초|공통되는|기초 용어/, 'common'],
+  // 의료 (의료용어·급여비급여 가이드)
+  [/피부과|dermatolog/i, 'dermatology'], [/성형외과|plastic surgery/i, 'plastic_surgery'], [/치과|dentist/i, 'dental'],
+  [/안과|ophthalm/i, 'ophthalmology'], [/정형외과|orthoped/i, 'orthopedics'], [/척추|통증의학|신경외과|재활의학/, 'spine'],
+  [/내과|건강검진|영상의학|health screening/i, 'health_checkup'], [/산부인과|gynecolog/i, 'obgyn'], [/비뇨/, 'urology'],
+  [/이비인후과|\bENT\b/, 'ent'], [/정신건강|기타 진료과/, 'other'], [/한의|korean medicine/i, 'oriental'], [/모발이식|탈모|hair transplant/i, 'hair'],
+  // 비의료 뷰티 (K뷰티 비의료 용어 가이드)
+  // (순서 주의: '반영구 화장 (Permanent Makeup)' 은 메이크업보다 먼저, '두피 · 헤드스파' 는 에스테틱(스파)보다 먼저)
+  [/퍼스널컬러|personal color/i, 'personal_color'], [/헤어 ?살롱|hair salon/i, 'hair'], [/반영구|\bPMU\b|permanent makeup/i, 'pmu'],
+  [/메이크업|makeup/i, 'makeup'], [/네일|\bnail/i, 'nail'], [/속눈썹|왁싱|\blash\b|waxing/i, 'lash_brow'], [/두피|헤드스파|scalp/i, 'scalp'],
+  [/에스테틱|스파|피부관리실|esthetic/i, 'esthetic'], [/포토 ?스튜디오|photo studio/i, 'photo_studio'], [/k-?pop/i, 'kpop_tour'], [/패키지|숙박|운영 용어/, 'travel_package'],
+];
+const catForChapter = (title) => (CHAPTER_RULES.find(([re]) => re.test(title)) ?? [null, 'other'])[1];
 const SKIP_CHAPTERS = new Set(['toc', 'appendix', 'glossary']);
 
 const clean = (s) => s.replace(/\s+/g, ' ').trim();
@@ -109,6 +124,9 @@ for (const file of readdirSync(DOCS).filter((f) => f.endsWith('.md')).sort()) {
       return;
     }
     if (SKIP_CHAPTERS.has(chapterKey)) return;
+    // 문서 안내 장의 "문서 구성/다루는 장" 표(사이트 카테고리 개요)는 상담 근거가 아니다 — 업체 수·가격대는 DATA 에서만
+    if (chapterKey === 'intro' && header.some((h) => /다루는 장|문서 구성/.test(h))) return;
+    if (header[0] === '화자') return; // 대화 예시 표(고객/AI) — 원칙은 KB_RULES 에, 예시는 넣지 않는다
     for (const r of rows) {
       const title = r[0] ?? '';
       if (!title) continue;
@@ -139,9 +157,9 @@ for (const file of readdirSync(DOCS).filter((f) => f.endsWith('.md')).sort()) {
       const level = h[1].length, title = clean(h[2]);
       if (level === 1) {
         const num = title.match(/^(\d{1,2})\./);
-        const no = num ? Number(num[1]) : null;
-        chapterKey = /^목차/.test(title) ? 'toc' : /^부록/.test(title) ? 'appendix' : no === 0 || no === null ? 'intro' : (CHAPTER_CAT[no] ?? 'other');
-        chapterTitle = title; chapterCat = no === null ? 'common' : (CHAPTER_CAT[no] ?? 'other'); section = '';
+        const key = catForChapter(title);
+        chapterKey = !num && key === 'other' ? 'intro' : key; // 번호 없는 머리말은 안내로 본다
+        chapterTitle = title; chapterCat = chapterKey === 'intro' ? 'common' : chapterKey; section = '';
       } else {
         section = title;
       }

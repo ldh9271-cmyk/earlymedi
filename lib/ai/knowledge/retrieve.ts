@@ -12,12 +12,16 @@ import { KB_ALIASES, KB_CHUNKS, type KbChunk } from './chunks.generated';
 /** 질문 표현 → 문서 표현 확장 (양쪽 다 검색어로 쓴다). */
 const QUERY_EXPANSIONS: Array<[RegExp, string[]]> = [
   [/보험|insurance|cover|医保|保险|報銷|保険|保険適用/i, ['급여', '비급여', '건강보험']],
-  [/가격|비용|얼마|견적|price|cost|how much|价格|费用|多少钱|料金|費用|いくら/i, ['비용 구조', '비급여', '병원별']],
+  [/가격|비용|얼마|견적|price|cost|how much|价格|费用|多少钱|料金|費用|いくら/i, ['가격', '비용', '추가 요금']],
   [/체류|며칠|몇 일|몇일|머물|일정|stay|days|how long|停留|几天|滞在|何日/i, ['체류', '다운타임', '실밥']],
   [/회복|붓기|멍|downtime|recovery|swelling|恢复|肿|ダウンタイム|腫れ/i, ['다운타임', '회복']],
   [/마취|아프|통증|anesthesia|pain|hurt|麻醉|疼|麻酔|痛/i, ['마취', '통증']],
   [/차이|비교|vs|versus|difference|区别|哪个|違い|どっち/i, ['비교', '설명']],
   [/정품|가짜|genuine|authentic|正品|真假|正規品/i, ['정품', '정량']],
+  // 비의료 뷰티
+  [/유지 ?기간|얼마나 가|오래 가|last|how long does|维持|保持多久|持ち|もつ/i, ['유지', '리터치']],
+  [/제거|지우|오프|removal|remove|卸|オフ|落と/i, ['오프', '제거']],
+  [/시간 얼마나|몇 시간|소요|how long|take|多久|多长时间|時間|何時間/i, ['소요 시간', '시술 시간']],
 ];
 
 /** 영어 질문에서 자주 쓰는 표기 → 한국어 용어 (대조표에 없는 것만 보충). */
@@ -41,23 +45,40 @@ const EXTRA_ALIASES: Array<[string, string[]]> = [
   ['整形', ['성형']], ['美容', ['미용']], ['皮肤', ['피부']], ['皮膚', ['피부']], ['牙', ['치과']], ['歯', ['치과']], ['眼', ['안과']],
   ['激光', ['레이저']], ['レーザー', ['레이저']], ['麻醉', ['마취']], ['麻酔', ['마취']], ['拆线', ['실밥']], ['抜糸', ['실밥']],
   ['植发', ['모발이식']], ['植毛', ['모발이식']], ['脱发', ['탈모']], ['薄毛', ['탈모']], ['体检', ['건강검진']], ['健康診断', ['건강검진']],
+  // 비의료 뷰티 (영어 일반어 — 대조표에 없는 것만)
+  ['perm', ['펌']], ['dye', ['염색']], ['hair color', ['염색']], ['bleach', ['탈색']], ['haircut', ['커트']], ['lash', ['속눈썹']],
+  ['eyelash', ['속눈썹']], ['eyebrow', ['눈썹']], ['brow', ['눈썹']], ['facial', ['피부관리']], ['massage', ['마사지']], ['spa', ['스파']],
+  ['nail', ['네일']], ['gel', ['젤네일']], ['pedicure', ['패디큐어']], ['manicure', ['네일']], ['makeup', ['메이크업']], ['make-up', ['메이크업']],
+  ['tattoo', ['반영구', '문신']], ['microblading', ['엠보']], ['waxing', ['왁싱']], ['wax', ['왁싱']], ['photoshoot', ['촬영']], ['photo', ['촬영']],
+  ['hanbok', ['한복']], ['kpop', ['K-pop']], ['k-pop', ['K-pop']], ['idol', ['아이돌']], ['warm tone', ['웜톤']], ['cool tone', ['쿨톤']],
+  ['scalp', ['두피']], ['head spa', ['헤드스파']], ['jjimjilbang', ['찜질방']], ['sauna', ['사우나']], ['designer', ['디자이너']],
 ];
 
-const ALIASES: Array<[string, string[]]> = [...KB_ALIASES, ...EXTRA_ALIASES].sort((a, b) => b[0].length - a[0].length);
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** 라틴 별칭은 단어 경계로만(‘eye’ 가 ‘eyeliner’ 안에서 걸리지 않게), 한자·가나·한글 별칭은 부분 일치. */
+const ALIASES: Array<{ alias: string; re: RegExp; kos: string[] }> = [...KB_ALIASES, ...EXTRA_ALIASES]
+  .filter(([a]) => a.length >= 2 && !(/^[a-z0-9 .+\-]+$/i.test(a) && a.length < 3))
+  .sort((a, b) => b[0].length - a[0].length)
+  .map(([alias, kos]) => ({
+    alias,
+    re: /^[a-z0-9 .+\-]+$/i.test(alias) ? new RegExp(`(?<![a-z0-9])${escapeRe(alias)}(?![a-z0-9])`, 'i') : new RegExp(escapeRe(alias), 'i'),
+    kos,
+  }));
 
 /** 한국어 조사·어미 제거 (검색어용, 완벽하지 않아도 접두 일치가 보완). */
 const PARTICLES = /(이에요|예요|인가요|인지|나요|까요|어요|아요|해요|하고|에서|으로|부터|까지|이랑|처럼|보다|이나|에게|한테|은|는|이|가|을|를|의|에|도|로|와|과|요|죠|만|랑|께)$/;
 const STOP = new Set(['추천', '알려', '알려줘', '어디', '어때', '잘하는', '좋은', '해줘', '해주세요', '궁금', '질문', '있나요', '있어요', '되나요', '되요', '돼요', '하나요', '할까요', '뭐', '뭔가요', '무엇', '어떤', '어떻게', '그리고', '그런데', '근데', '혹시', '병원', '의원', '클리닉', '한국', '서울', 'please', 'recommend', 'clinic', 'hospital', 'good', 'best', 'korea', 'korean', 'seoul', 'what', 'which', 'about', 'with', 'this', 'that', 'there', 'have', 'does', 'want', 'need', 'the', 'and', 'for', 'are', 'can', 'you', 'get', 'should', 'would', 'like']);
 
-function tokenize(q: string): string[] {
+function tokenize(q: string): { terms: string[]; strong: Set<string> } {
   const out = new Set<string>();
+  const strong = new Set<string>(); // 별칭에서 온 정확한 용어 — 점수 가중
   const lower = q.toLowerCase();
   // 1) 별칭 → 한국어 용어 (긴 것부터, 한 번 잡힌 구간은 지운다)
   let rest = lower;
-  for (const [alias, kos] of ALIASES) {
-    if (rest.includes(alias)) {
-      kos.forEach((k) => out.add(k.toLowerCase()));
-      rest = rest.split(alias).join(' ');
+  for (const { re, kos } of ALIASES) {
+    if (re.test(rest)) {
+      kos.forEach((k) => { out.add(k.toLowerCase()); strong.add(k.toLowerCase()); });
+      rest = rest.replace(new RegExp(re.source, 'gi'), ' ');
     }
   }
   // 2) 질문 표현 확장
@@ -71,7 +92,7 @@ function tokenize(q: string): string[] {
     if (stripped.length >= 2) t = stripped;
     if (t.length >= 2 && !STOP.has(t)) out.add(t);
   }
-  return [...out].slice(0, 16);
+  return { terms: [...out].slice(0, 16), strong };
 }
 
 /** 접두 부분 일치 점수: '임플란트를' 같은 변형, 복합어 대비. 전체 일치 1, 앞 n글자 일치 n/len×0.6 */
@@ -99,7 +120,7 @@ export function retrieveKnowledge(
   const budget = opts.budgetChars ?? 3500;
   const max = opts.max ?? 8;
   const cats = new Set((opts.cats ?? []).map((c) => c.toLowerCase()));
-  const terms = tokenize(question);
+  const { terms, strong: aliasTerms } = tokenize(question);
   if (terms.length === 0 && cats.size === 0) return { hits: [], text: '', hit: false, terms };
 
   const scored: KnowledgeHit[] = [];
@@ -108,10 +129,11 @@ export function retrieveKnowledge(
     const body = c.text.toLowerCase();
     let score = 0, strong = false;
     for (const t of terms) {
+      const w = aliasTerms.has(t) ? 1.5 : 1; // 외국어 별칭으로 확정된 용어는 더 믿는다
       const ts = matchScore(t, title);
-      if (ts > 0) { score += 3 * ts; if (ts === 1) strong = true; continue; }
+      if (ts > 0) { score += 3 * ts * w; if (ts === 1) strong = true; continue; }
       const bs = matchScore(t, body);
-      if (bs > 0) { score += bs; if (bs === 1) strong = true; }
+      if (bs > 0) { score += bs * w; if (bs === 1) strong = true; }
     }
     const sameCat = cats.has(c.cat);
     if (sameCat) {
@@ -157,4 +179,6 @@ export const KB_RULES = `- Korean National Health Insurance (급여) applies onl
 - 비급여 prices are set by each hospital and differ by device generation, shots/cc/units and package contents — always say the exact price is confirmed in the hospital's quote and ask for the unit (e.g. Ulthera 400 shots). Never promise discounts or events.
 - Durations, counts and percentages in KNOWLEDGE are typical ranges: say "generally/typically" and "varies by person"; never guarantee results, recovery time or "no side effects"; never use superlatives (best, No.1, only, 100%, painless, cure).
 - You do not diagnose or prescribe; suitability is decided by the doctor after an in-person consultation. If the user describes emergency symptoms (chest pain, breathing difficulty, loss of consciousness, heavy bleeding), tell them to call 119 in Korea immediately.
-- For stay planning, count: procedure day + follow-up check + suture removal (5–14 days for surgery) + swelling before flying; non-incisional procedures usually allow same-day discharge.`;
+- For stay planning, count: procedure day + follow-up check + suture removal (5–14 days for surgery) + swelling before flying; non-incisional procedures usually allow same-day discharge.
+- Non-medical beauty services (personal color, hair salon, makeup, nail, semi-permanent makeup/PMU, lashes, waxing, esthetic/spa, scalp care, photo studio, K-pop tours) are not medical care: no insurance concept, no doctor. Call them 관리/서비스, never treatment or cure. Shops may not use medical lasers, HIFU/RF, injections, prescription peels or medicines; wrinkle, pigment, acne or hair-loss *treatment* belongs to clinics — offer the shop service as a non-medical option and route medical goals to a clinic. PMU/tattoo is a legal grey area in Korea: explain neutrally, recommend hygiene checks (single-use needles, approved pigments), never for minors.
+- Salon prices shown as "1회 기준" are base prices: designer grade, hair length (기장 추가), design and options add surcharges — say so whenever you mention a salon price. Gel nails, lash extensions, PMU and perms need touch-ups after 2–4 weeks; for short stays recommend one-visit options and explain removal/aftercare at home. Ask about allergies (hair-dye PPD, lash glue, gel, wax, pigments) and pregnancy/breastfeeding before dye, PMU or waxing. Do not relay unverifiable celebrity/idol claims; soften to "known for".`;
