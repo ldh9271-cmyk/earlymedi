@@ -172,6 +172,7 @@ export default async function ClinicDetailPage({
     landingImageUrl?: string | null;
     notes: string | null;
     details?: unknown;
+    isActiveForMatching?: boolean;
   };
   let row: RowShape | undefined;
   try {
@@ -189,6 +190,7 @@ export default async function ClinicDetailPage({
         landingImageUrl: hospitals.landingImageUrl,
         notes: hospitals.notes,
         details: hospitals.details,
+        isActiveForMatching: hospitals.isActiveForMatching,
       })
       .from(hospitals)
       .where(inArray(hospitals.slug, candidates))
@@ -208,6 +210,7 @@ export default async function ClinicDetailPage({
           foreignPatientLicenseNumber: hospitals.foreignPatientLicenseNumber,
           coverImageUrl: hospitals.coverImageUrl,
           notes: hospitals.notes,
+          isActiveForMatching: hospitals.isActiveForMatching,
         })
         .from(hospitals)
         .where(inArray(hospitals.slug, candidates))
@@ -218,7 +221,8 @@ export default async function ClinicDetailPage({
     }
   }
 
-  if (!row) notFound();
+  // 비활성(폐업 등) 병원 상세는 404 — 목록·사이트맵·AI 상담과 같은 기준 (2026-10-21 세라성형외과 폐업)
+  if (!row || row.isActiveForMatching === false) notFound();
 
   let lc: {
     name: string | null;

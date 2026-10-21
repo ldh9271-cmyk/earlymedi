@@ -203,6 +203,7 @@ export default async function ClinicsListPage({
             primaryCategories: hospitals.primaryCategories,
             coverImageUrl: hospitals.coverImageUrl,
             sortOrder: hospitals.sortOrder,
+            isActiveForMatching: hospitals.isActiveForMatching,
           })
           .from(hospitals)
           .where(inArray(hospitals.id, ids));
@@ -210,7 +211,8 @@ export default async function ClinicsListPage({
         filtered = listingRows
           .map((l) => {
             const h = hospitalsById.get(l.hospitalId);
-            if (!h) return null;
+            // 비활성(폐업 등) 병원은 큐레이션 행이 남아 있어도 숨긴다 (2026-10-21 세라성형외과 폐업)
+            if (!h || h.isActiveForMatching === false) return null;
             return {
               id: h.id,
               name: h.name,
