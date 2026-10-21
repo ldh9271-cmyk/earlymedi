@@ -37,6 +37,7 @@ DB: `drizzle/schema/ai-knowledge.ts`, `drizzle/sql/ai-knowledge.sql`(RLS 켜고 
 2. 재생성: `npx tsx scripts/kb-build.ts` → `chunks.generated.ts`
 3. 테스트: `npx vitest run tests/unit/ai/knowledge.test.ts` (청커 동치·기준 질문 3개·DB 소스 동치)
 4. 커밋·푸시. (운영 DB 에도 넣으려면 마스터 콘솔에서 올리거나, 새 DB 라면 `npx tsx scripts/kb-seed-db.ts` 로 `docs/*.md` 를 한 번 시드)
+5. 운영 DB 점검: `npx tsx scripts/kb-check-db.ts ["질문" cat …]` — 문서 목록·활성 청크 로드 시간·내장과의 동치·질문별 청크 (2026-10-21 시드 직후: 483청크·별칭 619, 내장과 동일, 로드 63ms)
 
 ## 장 제목 → 카테고리 매핑
 
