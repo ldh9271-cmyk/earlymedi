@@ -75,7 +75,8 @@ const HOSPITAL_CATS: Array<{ words: string[]; cat: string }> = [
     cat: 'plastic_surgery',
   },
   { words: ['피부', 'skin', 'derma', '皮肤', '皮膚', 'кожа', 'da liễu', '여드름', '흉터', '기미', '잡티', '색소', '미백', '모공', '토닝', '레이저', '제모', '문신제거', '스킨부스터', '리쥬란', '주름', '탄력', '피부관리', 'acne', 'scar', 'pigment', 'laser', 'whitening', 'pore', 'wrinkle', '痘', '色斑', '美白', '脱毛', 'ニキビ', 'シミ', '脱毛', 'акне', 'пигмент', 'mụn', 'nám'], cat: 'dermatology' },
-  { words: ['치과', '임플란트', 'dental', 'implant', '牙', '歯', 'стомат', 'nha khoa', '치아', '교정', '라미네이트', '치아미백', '신경치료', '사랑니', '크라운', '틀니', '충치', '잇몸', 'teeth', 'tooth', 'orthodont', 'veneer', 'braces', '矯正', '正畸', 'зуб', 'răng'], cat: 'dental' },
+  // '矯正' 단독은 縮毛矯正(헤어 매직)과 겹쳐서 치아 교정 표기(歯列矯正·矯正歯科)만 (2026-10-21)
+  { words: ['치과', '임플란트', 'dental', 'implant', '牙', '歯', 'стомат', 'nha khoa', '치아', '교정', '라미네이트', '치아미백', '신경치료', '사랑니', '크라운', '틀니', '충치', '잇몸', 'teeth', 'tooth', 'orthodont', 'veneer', 'braces', '歯列矯正', '矯正歯科', '正畸', 'зуб', 'răng'], cat: 'dental' },
   { words: ['안과', '라식', '라섹', 'eye', 'lasik', 'lasek', '眼', 'глаз', 'mắt', '스마일라식', '렌즈삽입', 'icl', '백내장', '노안', '녹내장', '시력교정', '드림렌즈', '안구건조', '시력', 'cataract', 'presbyopia', 'glaucoma', 'vision', '近视', '白内障', '老花', '視力', 'катаракт', 'зрени', 'cận thị', 'đục thủy tinh thể'], cat: 'ophthalmology' },
   { words: ['모발', '탈모', '모발이식', 'hair transplant', '植发', '植毛', 'волос', 'tóc', '헤어라인', '이마축소', '두피', 'hairline', 'scalp', '脱发', '薄毛', 'rụng tóc'], cat: 'hair' },
   { words: ['검진', '건강검진', 'checkup', 'check-up', '体检', '検診', 'чек-ап', 'khám sức khỏe'], cat: 'health_checkup' },
@@ -89,10 +90,11 @@ const LISTING_CATS: Array<{ words: string[]; cats: string[] }> = [
   { words: ['호텔', '숙소', 'hotel', 'ホテル', '酒店', 'отель', 'khách sạn'], cats: ['hotel'] },
   { words: ['맛집', '식당', 'food', 'restaurant', 'グルメ', '美食', 'ресторан'], cats: ['food', 'restaurant'] },
   { words: ['퍼스널컬러', '퍼스널 컬러', 'personal color', 'パーソナルカラー', '色彩', 'цветотип'], cats: ['personal_color'] },
-  { words: ['헤어', '미용실', 'hair salon', 'ヘア', '美发', 'волосы'], cats: ['hair'] },
-  { words: ['메이크업', 'makeup', 'メイク', '化妆', 'макияж'], cats: ['makeup'] },
-  { words: ['네일', 'nail', 'ネイル', '美甲', 'маникюр'], cats: ['nail'] },
-  { words: ['반영구', '눈썹', 'pmu', 'eyebrow', 'アートメイク', '半永久'], cats: ['pmu'] },
+  // 시술명으로 물어도 살롱 상품이 근거에 들어가게 — 펌·염색·매직(縮毛矯正)·커트 등 (2026-10-21, K뷰티 가이드 반영)
+  { words: ['헤어', '미용실', '헤어샵', '펌', '염색', '탈색', '매직', '커트', '발레아쥬', 'hair salon', 'haircut', 'perm', 'hair color', 'balayage', 'straightening', 'ヘア', '美容室', '美容院', 'パーマ', 'カラー', '縮毛矯正', 'カット', 'ブリーチ', '美发', '理发', '烫发', '染发', '漂发', 'волосы', 'парикмахер'], cats: ['hair'] },
+  { words: ['메이크업', 'makeup', 'make-up', 'メイク', '化妆', 'макияж'], cats: ['makeup'] },
+  { words: ['네일', '젤네일', '패디큐어', 'nail', 'gel', 'pedicure', 'manicure', 'ネイル', 'ジェル', '美甲', '光疗甲', 'маникюр'], cats: ['nail'] },
+  { words: ['반영구', '눈썹', 'pmu', 'eyebrow', 'microblading', 'アートメイク', '半永久', '雾眉', '纹眉'], cats: ['pmu'] },
   { words: ['사진', '스튜디오', 'photo', 'studio', '写真', 'фото'], cats: ['photo_studio'] },
   { words: ['케이팝', 'k팝', 'kpop', 'k-pop', 'アイドル'], cats: ['kpop_tour'] },
 ];
@@ -613,7 +615,7 @@ ${KB_RULES}
 
 ${kb.hit ? `KNOWLEDGE (GlowUpTour internal guide on Korean medical terms, 급여/비급여 and procedures — general reference, NOT about any specific clinic):
 - Use it to explain what the procedure/term is and who it generally suits, 시술 vs 수술, anesthesia, typical downtime and recommended stay, pricing units (shots/cc/units, package contents), what to confirm before booking, and how 급여/비급여 works. Answer the user's actual question with these facts first, then connect to the DATA clinics.
-- Never present KNOWLEDGE as a specific clinic's offering, price or result. Clinic/product facts and prices come only from DATA.
+- Never present KNOWLEDGE as a specific clinic's or shop's offering, price or result. Clinic/product facts and their prices come only from DATA. A price range written in KNOWLEDGE is a general Korean market range from our guide: cite it only as such ("일반적인 시세" / "typical market range"), exactly as written (never rounded or invented), and when a DATA entry has a price, give the DATA price for that entry.
 - Each line below is "[chapter › section] term: fields". Ignore lines unrelated to the question.
 ${kb.text}
 
