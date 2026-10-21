@@ -80,7 +80,7 @@ function closedOnHoliday(h: WeeklyHours): boolean {
 }
 
 /** 오늘 적용할 [시작, 종료] (분). 공휴일·요일 휴진이면 null. */
-function todayWindow(h: WeeklyHours, dayIdx: number, isHoliday: boolean): { win: [number, number] | null; lunch: [number, number] | null } {
+export function todayWindow(h: WeeklyHours, dayIdx: number, isHoliday: boolean): { win: [number, number] | null; lunch: [number, number] | null } {
   const key = dayKeyOf(dayIdx);
   const lunchText = key === 'sat' ? (h.lunchSat ?? undefined) : key === 'sun' ? undefined : h.lunchWeek;
   const lunch = parseRange(lunchText);

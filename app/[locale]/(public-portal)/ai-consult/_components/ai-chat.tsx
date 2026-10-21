@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
+import BookingRequestCard, { readSavedBookingDraft, type BookingPayload } from '@/app/[locale]/_components/booking-request-card';
+import { stripBookingBlock } from '@/lib/ai/booking/block';
 
 const leadInputStyle: React.CSSProperties = {
   height: 42, borderRadius: 10, border: '1px solid #dddddd',
@@ -16,7 +18,7 @@ const leadInputStyle: React.CSSProperties = {
 };
 
 type Card = { kind: 'clinic' | 'listing'; title: string; href: string; note: string };
-type Msg = { role: 'user' | 'assistant'; content: string; cards?: Card[] };
+type Msg = { role: 'user' | 'assistant'; content: string; cards?: Card[]; booking?: BookingPayload };
 
 export default function AiChat({
   locale,
@@ -41,6 +43,15 @@ export default function AiChat({
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [msgs, busy]);
+
+  // 로그인 전에 쓰던 AI 예약 요청 초안이 있으면(booking-request-card 가 저장) 대화와 카드를 되살린다
+  useEffect(() => {
+    const saved = readSavedBookingDraft();
+    if (!saved) return;
+    setMsgs((prev) => [...prev, ...saved.transcript.map((x) => ({ role: x.role, content: x.content })), { role: 'assistant', content: t.booking.restored, booking: saved.booking }]);
+    // 마운트 1회
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function send(text: string): Promise<void> {
     const q = text.trim();
@@ -83,7 +94,7 @@ export default function AiChat({
           const payload = line.slice(5).trim();
           if (!payload) continue;
           try {
-            const ev = JSON.parse(payload) as { delta?: string; done?: boolean; cards?: Card[]; error?: string };
+            const ev = JSON.parse(payload) as { delta?: string; done?: boolean; cards?: Card[]; booking?: BookingPayload; error?: string };
             if (ev.error) { failed = true; continue; }
             if (ev.delta) {
               got = true;
@@ -101,7 +112,7 @@ export default function AiChat({
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
                 if (last && last.role === 'assistant') {
-                  copy[copy.length - 1] = { ...last, cards: ev.cards ?? [] };
+                  copy[copy.length - 1] = { ...last, cards: ev.cards ?? [], booking: ev.booking ?? undefined };
                 }
                 return copy;
               });
@@ -202,7 +213,7 @@ export default function AiChat({
                 boxShadow: m.role === 'user' ? 'none' : 'rgba(0,0,0,0.03) 0 1px 2px',
               }}
             >
-              {m.content}
+              {m.role === 'assistant' ? stripBookingBlock(m.content) : m.content}
             </div>
             {m.cards && m.cards.length > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, maxWidth: '92%' }}>
@@ -224,6 +235,10 @@ export default function AiChat({
                   </Link>
                 ))}
               </div>
+            ) : null}
+            {m.booking ? (
+              <BookingRequestCard locale={locale} booking={m.booking} labels={t.booking}
+                transcript={msgs.slice(1, i + 1).map((x) => ({ role: x.role, content: x.role === 'assistant' ? stripBookingBlock(x.content) : x.content }))} />
             ) : null}
           </div>
         ))}

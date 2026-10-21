@@ -17,6 +17,12 @@ import { beautyRegistry } from '@/drizzle/schema/beauty-registry';
 import { tourSpots } from '@/drizzle/schema/tour-spots';
 import { parseTopic } from '@/lib/chat/topic-room';
 import { KB_RULES, retrieveKnowledge } from '@/lib/ai/knowledge/retrieve';
+import { BOOKING_INTENT, bookingPrompt, resolveBookingDraft, type BookingPayload, type ClinicRef, type MemberProfile } from '@/lib/ai/booking/draft';
+import { extractBookingBlock } from '@/lib/ai/booking/block';
+import { parseKoHours } from '@/lib/hours/parse-ko';
+import { seoulParts, type WeeklyHours } from '@/lib/hours/status';
+import { loadHolidayYmds } from '@/lib/hours/holidays';
+import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -164,7 +170,9 @@ function procedureTokens(q: string): string[] {
   return expandSynonyms(raw);
 }
 
-async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ text: string; card: Card; fallback?: boolean; focus?: boolean }>> {
+type ClinicEvidence = { text: string; card: Card; fallback?: boolean; focus?: boolean; booking?: ClinicRef };
+
+async function findHospitals(q: string, locale: PublicLocale): Promise<ClinicEvidence[]> {
   const cats = matchCats(q, HOSPITAL_CATS).map((m) => m.cat);
   try {
     // 질문에 병원 이름(기본 또는 언어별 이름)이 그대로 들어 있으면 그 병원을 맨 앞에 — '○○에 대해 알려 주세요' (2026-10-14)
@@ -305,7 +313,11 @@ async function findHospitals(q: string, locale: PublicLocale): Promise<Array<{ t
         `링크: /${locale}/clinics/${r.slug}`,
       ].filter(Boolean);
       const focus = namedIds.has(r.id);
+      // 대화 예약 요청 — 모델이 이름으로 고른 병원을 id 로 확정하고 희망 일시를 진료시간과 맞춰 보기 위해 (2026-10-21)
+      const hoursText = typeof d.hours === 'string' ? d.hours : null;
+      const hours: WeeklyHours | null = (d.hoursWeekly as WeeklyHours | undefined) ?? parseKoHours(hoursText);
       return {
+        booking: { hospitalId: r.id, hospitalName: r.name, title: name, hours, hoursText },
         fallback: Boolean(fallbackCat),
         focus,
         text: (focus ? '[질문에 나온 병원] ' : fallbackCat ? '[글로우 인증 추천] ' : '') + parts.join(' | '),
@@ -590,6 +602,37 @@ export async function POST(req: Request): Promise<NextResponse> {
   const evidence = [...focusEvidence, ...clinics.filter((c) => !c.focus), ...listings.filter((l) => !l.focus)];
   const fallbackMode = focusEvidence.length === 0 && clinics.some((c) => c.fallback);
 
+  // 대화로 예약 요청 (2026-10-21): 최근 사용자 발화에 예약 의도가 있으면 BOOKING 지시문 + (회원이면) 프로필을 넣는다.
+  const bookingMode = BOOKING_INTENT.test(body.messages.filter((m) => m.role === 'user').slice(-4).map((m) => m.content).join(' '));
+  let bookingBlock = '';
+  if (bookingMode) {
+    let member = false; let profile: MemberProfile | null = null;
+    try {
+      const { data: auth } = await createSupabaseServerClient().auth.getUser();
+      if (auth.user) {
+        member = true;
+        const um = (auth.user.user_metadata ?? {}) as Record<string, unknown>;
+        const str = (k: string): string | null => (typeof um[k] === 'string' && (um[k] as string).trim() ? (um[k] as string).trim() : null);
+        const GENDER: Record<string, string> = { F: 'female', M: 'male', X: 'other' };
+        const MSG: Record<string, string> = { whatsapp: 'WhatsApp', kakao: 'KakaoTalk', line: 'LINE', wechat: 'WeChat', telegram: 'Telegram', instagram: 'Instagram' };
+        profile = {
+          name: str('full_name') ?? str('username'), gender: GENDER[str('gender') ?? ''] ?? null, countryCode: str('country_code'), phone: str('phone'),
+          messengerType: MSG[str('messenger_kind') ?? ''] ?? null, messengerId: str('messenger_id'), email: auth.user.email ?? null, birthDate: str('birth_date'),
+        };
+      }
+    } catch { /* 비로그인 */ }
+    bookingBlock = bookingPrompt({ todayYmd: seoulParts(new Date()).ymd, member, profile });
+  }
+  /** 모델 출력 끝의 <booking> 블록 → 검증된 예약 초안(없으면 undefined). 텍스트는 블록을 뺀 것 */
+  const finishAnswer = async (raw: string): Promise<{ text: string; booking?: BookingPayload }> => {
+    const { text, raw: block } = extractBookingBlock(raw);
+    if (!block) return { text };
+    const refs = clinics.map((c) => c.booking).filter((b): b is ClinicRef => Boolean(b));
+    const holidays = new Set(await loadHolidayYmds().catch(() => [] as string[]));
+    const booking = resolveBookingDraft(block, { clinics: refs, holidays });
+    return booking ? { text, booking } : { text };
+  };
+
   const system = `You are the GlowUpTour concierge assistant for a Korean medical-tourism and K-beauty marketplace.
 
 Reply ONLY with the message shown to the user — no preamble, no self-checks, no meta commentary.
@@ -608,7 +651,7 @@ MEDICAL SAFETY:
 - Never describe any treatment as curing a disease.
 - Describe clinics only with facts present in DATA. Do not add evaluative or promotional claims that are not in DATA (e.g. "highly skilled", "rich experience", "safe", "best") — Korean medical-advertising rules forbid them.
 
-If the user wants to book or needs a judgement call, invite them to send an inquiry (the UI shows a concierge button).
+${bookingMode ? bookingBlock : 'If the user wants to book or needs a judgement call, invite them to send an inquiry (the UI shows a concierge button).'}
 
 CONSULTATION RULES (Korean medical-tourism practice):
 ${KB_RULES}
@@ -656,7 +699,8 @@ ${fallbackMode ? '(No clinic lists this exact procedure. The following are our c
         if (!full) {
           send({ error: 'ai_unavailable' });
         } else {
-          send({ done: true, cards: pickCards(full) });
+          const fin = await finishAnswer(full);
+          send({ done: true, cards: pickCards(fin.text), booking: fin.booking });
         }
         controller.close();
       },
@@ -675,5 +719,6 @@ ${fallbackMode ? '(No clinic lists this exact procedure. The following are our c
     return NextResponse.json({ error: 'ai_unavailable' }, { status: 502 });
   }
 
-  return NextResponse.json({ text, cards: pickCards(text) });
+  const fin = await finishAnswer(text);
+  return NextResponse.json({ text: fin.text, cards: pickCards(fin.text), booking: fin.booking });
 }

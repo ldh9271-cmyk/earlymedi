@@ -10,9 +10,11 @@ import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
+import BookingRequestCard, { readSavedBookingDraft, type BookingPayload } from './booking-request-card';
+import { stripBookingBlock } from '@/lib/ai/booking/block';
 
 type Card = { kind: 'clinic' | 'listing'; title: string; href: string; note: string };
-type Msg = { role: 'user' | 'assistant'; content: string; cards?: Card[] };
+type Msg = { role: 'user' | 'assistant'; content: string; cards?: Card[]; booking?: BookingPayload };
 type Room = { id: string; kind: string; title: string; status: string; orgName: string | null; consumerUnread: number; lastMessagePreview: string | null; lastMessageAt: string | null };
 type HMsg = { id: string; senderRole: string; senderName: string | null; body: string; createdAt: string };
 
@@ -150,6 +152,13 @@ export default function ChatBubble({
     void (async () => {
       const ok = await checkAuth();
       if (!ok) return;
+      // 로그인 전에 쓰던 AI 예약 요청 초안이 있으면(booking-request-card 가 저장) 그 카드를 다시 띄운다
+      const saved = readSavedBookingDraft();
+      if (saved) {
+        setMode('ai'); setOpen(true);
+        setMsgs((prev) => [...prev, ...saved.transcript.map((x) => ({ role: x.role, content: x.content })), { role: 'assistant', content: t.booking.restored, booking: saved.booking }]);
+        return;
+      }
       const qs = new URLSearchParams(window.location.search);
       const target = qs.get('chat');
       if (target) {
@@ -244,7 +253,7 @@ export default function ChatBubble({
           const payload = line.slice(5).trim();
           if (!payload) continue;
           try {
-            const ev = JSON.parse(payload) as { delta?: string; done?: boolean; cards?: Card[]; error?: string };
+            const ev = JSON.parse(payload) as { delta?: string; done?: boolean; cards?: Card[]; booking?: BookingPayload; error?: string };
             if (ev.error) { failed = true; continue; }
             if (ev.delta) {
               got = true;
@@ -259,7 +268,7 @@ export default function ChatBubble({
               setMsgs((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
-                if (last && last.role === 'assistant') copy[copy.length - 1] = { ...last, cards: ev.cards ?? [] };
+                if (last && last.role === 'assistant') copy[copy.length - 1] = { ...last, cards: ev.cards ?? [], booking: ev.booking ?? undefined };
                 return copy;
               });
             }
@@ -402,7 +411,7 @@ export default function ChatBubble({
                     fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap',
                   }}
                 >
-                  {m.content}
+                  {m.role === 'assistant' ? stripBookingBlock(m.content) : m.content}
                 </div>
                 {m.cards && m.cards.length > 0 ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
@@ -421,6 +430,10 @@ export default function ChatBubble({
                       </Link>
                     ))}
                   </div>
+                ) : null}
+                {m.booking ? (
+                  <BookingRequestCard locale={locale} booking={m.booking} labels={t.booking} compact
+                    transcript={msgs.slice(1, i + 1).map((x) => ({ role: x.role, content: x.role === 'assistant' ? stripBookingBlock(x.content) : x.content }))} />
                 ) : null}
               </div>
             ))}
