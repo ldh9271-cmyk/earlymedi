@@ -1,4 +1,4 @@
-<!-- 출처: GlowUpTour_의료용어_급여비급여_가이드.docx (2026-10-21, 주식회사 쉐어아트 내부 학습용). scripts/kb-import-docx.mjs 로 변환. 수정 후 `node scripts/kb-build.mjs` 로 chunks.generated.ts 재생성. -->
+<!-- 출처: GlowUpTour_의료용어_급여비급여_가이드.docx (2026-10-21, 주식회사 쉐어아트 내부 학습용). lib/ai/knowledge/docx.ts 로 변환. 수정 후 `npx tsx scripts/kb-build.ts` 로 내장 폴백 chunks.generated.ts 재생성(운영 반영은 /master/ai-knowledge 업로드). -->
 
 GlowUpTour AI 상담 학습 자료
 진료과별 의료 용어 · 급여/비급여 · 시술/수술 가이드

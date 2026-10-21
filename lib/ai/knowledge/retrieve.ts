@@ -1,13 +1,23 @@
 /**
- * AI 상담 지식 베이스 검색 — 질문과 관련된 가이드 청크(의료 용어·급여/비급여·시술/수술 설명)를 골라
+ * AI 상담 지식 베이스 검색 — 질문과 관련된 가이드 청크(의료 용어·급여/비급여·시술/수술·K뷰티 서비스 설명)를 골라
  * /api/ai/chat 시스템 프롬프트의 KNOWLEDGE 블록으로 준다. 임베딩 없이 용어 일치로 고른다:
- *   1. 외국어·라틴 표기를 한국어 용어로 바꾼다(KB_ALIASES: 16장 대조표 + 제목 괄호 표기).
+ *   1. 외국어·라틴 표기를 한국어 용어로 바꾼다(별칭 사전: 대조표 + 제목 괄호 표기).
  *   2. 질문을 단어로 나눠 조사를 떼고, 보험→급여 같은 질문 표현을 문서 표현으로 넓힌다.
- *   3. 청크 제목 일치 3점·본문 일치 1점(접두 부분 일치는 비례 감점), 질문의 진료과와 같은 장이면 ×1.3.
+ *   3. 청크 제목 일치 3점·본문 일치 1점(접두 부분 일치는 비례 감점), 질문의 진료과와 같은 장이면 ×1.5.
  *   4. 점수순으로 글자 예산(기본 3,500자) 안에서 최대 8개, 한 절에서 3개까지.
- * 원본 문서·재생성 방법: lib/ai/knowledge/docs/, scripts/kb-build.mjs
+ *
+ * 지식의 출처(2026-10-21 부터): 마스터 콘솔(/master/ai-knowledge)에서 올린 DB 문서의 활성 청크를 60초 캐시로 읽고
+ * (store.ts), 활성 문서가 없거나 DB 가 실패하면 빌드에 내장된 chunks.generated.ts(docs/*.md) 로 폴백한다.
+ *   - rankKnowledge(question, opts, source): 순수 검색(동기). 테스트·마스터 화면 테스트 박스가 쓴다.
+ *   - retrieveKnowledge(question, opts): DB 소스를 읽어 rankKnowledge — route.ts 가 쓴다(await).
  */
-import { KB_ALIASES, KB_CHUNKS, type KbChunk } from './chunks.generated';
+import { KB_ALIASES, KB_CHUNKS } from './chunks.generated';
+import type { AliasPair, KbChunk, KnowledgeSource } from './chunker';
+
+export type { KbChunk, KnowledgeSource } from './chunker';
+
+/** 빌드에 내장된 지식(docs/*.md → scripts/kb-build.ts). DB 폴백 */
+export const BUILTIN_SOURCE: KnowledgeSource = { chunks: KB_CHUNKS, aliases: KB_ALIASES };
 
 /** 질문 표현 → 문서 표현 확장 (양쪽 다 검색어로 쓴다). */
 const QUERY_EXPANSIONS: Array<[RegExp, string[]]> = [
@@ -25,7 +35,7 @@ const QUERY_EXPANSIONS: Array<[RegExp, string[]]> = [
 ];
 
 /** 영어 질문에서 자주 쓰는 표기 → 한국어 용어 (대조표에 없는 것만 보충). */
-const EXTRA_ALIASES: Array<[string, string[]]> = [
+const EXTRA_ALIASES: AliasPair[] = [
   ['hifu', ['울쎄라', '슈링크']], ['botox', ['보톡스']], ['filler', ['필러']], ['lasik', ['라식']], ['lasek', ['라섹']],
   ['smile', ['스마일']], ['icl', ['렌즈삽입술']], ['implant', ['임플란트']], ['veneer', ['라미네이트']], ['whitening', ['미백']],
   ['rhinoplasty', ['코성형']], ['nose job', ['코성형']], ['double eyelid', ['쌍꺼풀']], ['eyelid', ['눈성형', '안검']],
@@ -54,28 +64,39 @@ const EXTRA_ALIASES: Array<[string, string[]]> = [
   ['scalp', ['두피']], ['head spa', ['헤드스파']], ['jjimjilbang', ['찜질방']], ['sauna', ['사우나']], ['designer', ['디자이너']],
 ];
 
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-/** 라틴 별칭은 단어 경계로만(‘eye’ 가 ‘eyeliner’ 안에서 걸리지 않게), 한자·가나·한글 별칭은 부분 일치. */
-const ALIASES: Array<{ alias: string; re: RegExp; kos: string[] }> = [...KB_ALIASES, ...EXTRA_ALIASES]
-  .filter(([a]) => a.length >= 2 && !(/^[a-z0-9 .+\-]+$/i.test(a) && a.length < 3))
-  .sort((a, b) => b[0].length - a[0].length)
-  .map(([alias, kos]) => ({
-    alias,
-    re: /^[a-z0-9 .+\-]+$/i.test(alias) ? new RegExp(`(?<![a-z0-9])${escapeRe(alias)}(?![a-z0-9])`, 'i') : new RegExp(escapeRe(alias), 'i'),
-    kos,
-  }));
+const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+type CompiledAlias = { alias: string; re: RegExp; kos: string[] };
+
+/** 소스별 별칭 사전 컴파일(문서 별칭 + EXTRA_ALIASES, 긴 것부터). 같은 배열이면 재사용 */
+const compiledCache = new WeakMap<AliasPair[], CompiledAlias[]>();
+function compileAliases(pairs: AliasPair[]): CompiledAlias[] {
+  const hit = compiledCache.get(pairs);
+  if (hit) return hit;
+  /** 라틴 별칭은 단어 경계로만(‘eye’ 가 ‘eyeliner’ 안에서 걸리지 않게), 한자·가나·한글 별칭은 부분 일치. */
+  const list: CompiledAlias[] = [...pairs, ...EXTRA_ALIASES]
+    .filter(([a]) => a.length >= 2 && !(/^[a-z0-9 .+\-]+$/i.test(a) && a.length < 3))
+    .sort((a, b) => b[0].length - a[0].length)
+    .map(([alias, kos]) => ({
+      alias,
+      re: /^[a-z0-9 .+\-]+$/i.test(alias) ? new RegExp(`(?<![a-z0-9])${escapeRe(alias)}(?![a-z0-9])`, 'i') : new RegExp(escapeRe(alias), 'i'),
+      kos,
+    }));
+  compiledCache.set(pairs, list);
+  return list;
+}
 
 /** 한국어 조사·어미 제거 (검색어용, 완벽하지 않아도 접두 일치가 보완). */
 const PARTICLES = /(이에요|예요|인가요|인지|나요|까요|어요|아요|해요|하고|에서|으로|부터|까지|이랑|처럼|보다|이나|에게|한테|은|는|이|가|을|를|의|에|도|로|와|과|요|죠|만|랑|께)$/;
 const STOP = new Set(['추천', '알려', '알려줘', '어디', '어때', '잘하는', '좋은', '해줘', '해주세요', '궁금', '질문', '있나요', '있어요', '되나요', '되요', '돼요', '하나요', '할까요', '뭐', '뭔가요', '무엇', '어떤', '어떻게', '그리고', '그런데', '근데', '혹시', '병원', '의원', '클리닉', '한국', '서울', 'please', 'recommend', 'clinic', 'hospital', 'good', 'best', 'korea', 'korean', 'seoul', 'what', 'which', 'about', 'with', 'this', 'that', 'there', 'have', 'does', 'want', 'need', 'the', 'and', 'for', 'are', 'can', 'you', 'get', 'should', 'would', 'like']);
 
-function tokenize(q: string): { terms: string[]; strong: Set<string> } {
+function tokenize(q: string, aliases: CompiledAlias[]): { terms: string[]; strong: Set<string> } {
   const out = new Set<string>();
   const strong = new Set<string>(); // 별칭에서 온 정확한 용어 — 점수 가중
   const lower = q.toLowerCase();
   // 1) 별칭 → 한국어 용어 (긴 것부터, 한 번 잡힌 구간은 지운다)
   let rest = lower;
-  for (const { re, kos } of ALIASES) {
+  for (const { re, kos } of aliases) {
     if (re.test(rest)) {
       kos.forEach((k) => { out.add(k.toLowerCase()); strong.add(k.toLowerCase()); });
       rest = rest.replace(new RegExp(re.source, 'gi'), ' ');
@@ -113,18 +134,18 @@ export type KnowledgeResult = {
   terms: string[];
 };
 
-export function retrieveKnowledge(
-  question: string,
-  opts: { cats?: string[]; budgetChars?: number; max?: number } = {},
-): KnowledgeResult {
+export type KnowledgeOptions = { cats?: string[]; budgetChars?: number; max?: number };
+
+/** 순수 검색 — 주어진 소스(DB 청크 또는 내장 청크)에서 질문과 관련된 청크를 고른다. */
+export function rankKnowledge(question: string, opts: KnowledgeOptions = {}, source: KnowledgeSource = BUILTIN_SOURCE): KnowledgeResult {
   const budget = opts.budgetChars ?? 3500;
   const max = opts.max ?? 8;
   const cats = new Set((opts.cats ?? []).map((c) => c.toLowerCase()));
-  const { terms, strong: aliasTerms } = tokenize(question);
+  const { terms, strong: aliasTerms } = tokenize(question, compileAliases(source.aliases));
   if (terms.length === 0 && cats.size === 0) return { hits: [], text: '', hit: false, terms };
 
   const scored: KnowledgeHit[] = [];
-  for (const c of KB_CHUNKS) {
+  for (const c of source.chunks) {
     const title = (c.title + ' ' + c.aliases.join(' ')).toLowerCase();
     const body = c.text.toLowerCase();
     let score = 0, strong = false;
@@ -163,6 +184,27 @@ export function retrieveKnowledge(
     if (picked.length >= max) break;
   }
   return { hits: picked, text: picked.map((h) => formatChunk(h.chunk)).join('\n'), hit: picked.length > 0, terms };
+}
+
+export type KnowledgeSourceKind = 'db' | 'builtin';
+
+/**
+ * 상담용 검색 — DB 의 활성 문서(60초 캐시, 변경 시 즉시 무효화)를 읽어 검색하고,
+ * 활성 문서가 없거나 DB 를 못 읽으면 내장 청크로 폴백한다. 어느 쪽을 썼는지 `source` 로 알려 준다.
+ */
+export async function retrieveKnowledge(
+  question: string,
+  opts: KnowledgeOptions = {},
+): Promise<KnowledgeResult & { source: KnowledgeSourceKind }> {
+  let live: KnowledgeSource | null = null;
+  try {
+    const { loadActiveKnowledge } = await import('./store');
+    live = await loadActiveKnowledge();
+  } catch (err) {
+    console.warn('[ai-knowledge] store unavailable, using builtin chunks:', err instanceof Error ? err.message : err);
+  }
+  const result = rankKnowledge(question, opts, live ?? BUILTIN_SOURCE);
+  return { ...result, source: live ? 'db' : 'builtin' };
 }
 
 function formatChunk(c: KbChunk): string {

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import ListSearch from '@/components/shared/list-search';
 import { redirect } from 'next/navigation';
 import { asc, eq, count } from 'drizzle-orm';
-import { ShieldAlert, Building2, Users, Stethoscope, Briefcase, UserCheck, Plus, Hospital, Globe2, Receipt, QrCode, ContactRound, BarChart3 } from 'lucide-react';
+import { ShieldAlert, Building2, Users, Stethoscope, Briefcase, UserCheck, Plus, Hospital, Globe2, Receipt, QrCode, ContactRound, BarChart3, BookOpen } from 'lucide-react';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
 import { db } from '@/lib/db/client';
@@ -344,6 +344,21 @@ export default async function MasterPage({
             <div className="text-xs font-semibold">AI 여행 일정 · 검증·견적</div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               고객이 확정한 AI 일정 검증 → 견적 인보이스 발행 → 결제 시 스케줄 완성
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/master/ai-knowledge"
+          className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition hover:bg-muted/50 hover:shadow-sm"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 text-rose-700">
+            <BookOpen className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold">AI 상담 지식 문서</div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              의료용어·K뷰티 가이드 Word 업로드 → 청크 저장 → 재배포 없이 바로 상담 반영 · 활성/비활성
             </p>
           </div>
         </Link>

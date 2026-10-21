@@ -96,3 +96,5 @@ export * from './ai-sim';
 export * from './push-tokens';
 // 앱 푸시 발송 티켓 — 영수증(receipt) 조회로 죽은 토큰 정리 (/api/cron/push-receipts)
 export * from './push-tickets';
+// AI 상담 지식 문서·청크 — 마스터 업로드, /api/ai/chat 60초 캐시 (lib/ai/knowledge)
+export * from './ai-knowledge';

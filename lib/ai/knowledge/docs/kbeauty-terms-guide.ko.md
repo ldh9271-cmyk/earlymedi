@@ -1,4 +1,4 @@
-<!-- 출처: GlowUpTour_K뷰티_비의료_용어_가이드.docx (변환 2026-10-21, scripts/kb-import-docx.mjs). 수정 후 node scripts/kb-build.mjs -->
+<!-- 출처: GlowUpTour_K뷰티_비의료_용어_가이드.docx (변환 2026-10-21, lib/ai/knowledge/docx.ts). 수정 후 npx tsx scripts/kb-build.ts (운영 반영은 /master/ai-knowledge 업로드) -->
 
 GlowUpTour AI 상담 학습 자료 ②
 K-뷰티 비의료 서비스 용어 가이드

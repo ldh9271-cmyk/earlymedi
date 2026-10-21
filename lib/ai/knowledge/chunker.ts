@@ -1,33 +1,48 @@
-#!/usr/bin/env node
 /**
- * AI 상담 지식 베이스 빌드 — lib/ai/knowledge/docs/*.md 를 검색 단위(청크)로 쪼개
- * lib/ai/knowledge/chunks.generated.ts 를 만든다. /api/ai/chat 가 질문마다 관련 청크를 골라
- * 시스템 프롬프트의 KNOWLEDGE 블록에 넣는다(lib/ai/knowledge/retrieve.ts).
+ * AI 상담 지식 문서(마크다운) → 검색 청크 + 외국어 별칭 사전.
  *
- *   node scripts/kb-build.mjs
+ * 파일·DB 를 모르는 순수 함수라, 빌드 스크립트(scripts/kb-build.ts → chunks.generated.ts, 내장 폴백)와
+ * 마스터 콘솔 업로드 API(서버에서 docx→마크다운→청킹 → ai_knowledge_chunks)가 같은 코드를 쓴다.
  *
- * 문서 규칙(의료용어·급여비급여 가이드 기준):
- *   - `# N. 장 제목` → 장(진료과). 번호 → 카테고리(CHAPTER_CAT) 로 질문의 과와 맞춰 가중치.
- *   - `## N.M 소제목`, `### 소제목` → 절.
+ * 문서 규칙:
+ *   - `# 장 제목` → 장. 제목의 단어로 카테고리(CHAPTER_RULES)를 정하고, 질문의 과·업종과 같으면 검색 가중치.
+ *   - `## 소제목`, `### 소제목` → 절.
  *   - 표의 각 행 → 청크 1개 (제목 = 첫 칸, 본문 = "머리글: 값 | …").
  *   - 표 밖 문단 → 절 단위로 묶어 청크 1개.
- *   - 16장 '다국어 핵심 용어 대조표' 표는 청크 대신 별칭 사전(KB_ALIASES)이 된다 — 영어·중국어·일본어 질문을 한국어 용어로.
+ *   - '대조표' 장의 표는 청크 대신 별칭 사전이 된다 — 영어·중국어·일본어 질문을 한국어 용어로.
  *   - 제목의 괄호 안 라틴 표기(예: 울쎄라 (Ulthera / Ultherapy))도 그 청크의 별칭.
- *   - '목차'·'부록'(대화 예시)은 넣지 않는다. 15.1 금지 표현은 retrieve.ts 의 KB_RULES 에 요약돼 있다.
+ *   - '목차'·'부록'·'화자/내용' 대화 예시 표, '사용 안내' 장의 문단과 '문서 구성/다루는 장' 표는 넣지 않는다.
  */
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DOCS = path.join(root, 'lib/ai/knowledge/docs');
-const OUT = path.join(root, 'lib/ai/knowledge/chunks.generated.ts');
+export type KbChunk = {
+  id: string;
+  cat: string;
+  chapter: string;
+  section: string;
+  title: string;
+  text: string;
+  aliases: string[];
+};
+
+/** 별칭(소문자) → 한국어 용어들 */
+export type AliasPair = [string, string[]];
+
+/** 검색이 보는 전체 지식: 청크 + 별칭 사전. DB(활성 문서) 또는 내장(chunks.generated.ts) */
+export type KnowledgeSource = { chunks: KbChunk[]; aliases: AliasPair[] };
+
+export type ChunkResult = {
+  chunks: KbChunk[];
+  /** 이 문서에서 나온 별칭 사전 (등장 순서, 정렬 전). 여러 문서는 mergeAliases 로 합친다 */
+  aliases: AliasPair[];
+  /** 카테고리별 청크 수 */
+  cats: Record<string, number>;
+};
 
 /**
  * 장 제목 → 카테고리 키 (route.ts HOSPITAL_CATS·LISTING_CATS 의 키와 같은 이름). 문서마다 장 번호가 다르므로 제목 단어로 정한다.
  * 특수 키: toc(목차)·appendix(부록)·glossary(대조표→별칭 사전)·rules(상담 원칙)·intro(문서 안내: 문단 제외, 표는 포함)·common.
  */
-const CHAPTER_RULES = [
+export const CHAPTER_RULES: Array<[RegExp, string]> = [
   [/^목차/, 'toc'], [/^부록/, 'appendix'], [/대조표|glossary/i, 'glossary'],
   [/상담 원칙|필수 원칙|법규|금지 표현/, 'rules'],
   [/사용 목적|사용 안내|읽는 법|문서의 범위/, 'intro'],
@@ -43,16 +58,22 @@ const CHAPTER_RULES = [
   [/메이크업|makeup/i, 'makeup'], [/네일|\bnail/i, 'nail'], [/속눈썹|왁싱|\blash\b|waxing/i, 'lash_brow'], [/두피|헤드스파|scalp/i, 'scalp'],
   [/에스테틱|스파|피부관리실|esthetic/i, 'esthetic'], [/포토 ?스튜디오|photo studio/i, 'photo_studio'], [/k-?pop/i, 'kpop_tour'], [/패키지|숙박|운영 용어/, 'travel_package'],
 ];
-const catForChapter = (title) => (CHAPTER_RULES.find(([re]) => re.test(title)) ?? [null, 'other'])[1];
+
+const OTHER: [RegExp, string] = [/$^/, 'other'];
+export const catForChapter = (title: string): string => (CHAPTER_RULES.find(([re]) => re.test(title)) ?? OTHER)[1];
+
 const SKIP_CHAPTERS = new Set(['toc', 'appendix', 'glossary']);
 
-const clean = (s) => s.replace(/\s+/g, ' ').trim();
-const stripParen = (s) => clean(s.replace(/[\(（][^)）]*[\)）]/g, ''));
-const splitAlt = (s) => s.split(/\s*\/\s*|\s*·\s*|\s*、\s*/).map(clean).filter(Boolean);
-const hasLatin = (s) => /[A-Za-z]/.test(s);
+const clean = (s: string): string => s.replace(/\s+/g, ' ').trim();
+const stripParen = (s: string): string => clean(s.replace(/[\(（][^)）]*[\)）]/g, ''));
+const splitAlt = (s: string): string[] => s.split(/\s*\/\s*|\s*·\s*|\s*、\s*/).map(clean).filter(Boolean);
+const hasLatin = (s: string): boolean => /[A-Za-z]/.test(s);
+
 /** 괄호 밖의 '/' 로만 나눈다: "二重(埋没/切開) / 眼瞼下垂手術" → ["二重(埋没/切開)", "眼瞼下垂手術"] */
-function splitTop(s) {
-  const out = []; let depth = 0, cur = '';
+function splitTop(s: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let cur = '';
   for (const ch of s) {
     if (ch === '(' || ch === '（') depth++;
     if (ch === ')' || ch === '）') depth = Math.max(0, depth - 1);
@@ -62,45 +83,50 @@ function splitTop(s) {
   out.push(cur);
   return out.map(clean).filter(Boolean);
 }
-const innerParts = (s) => (s.match(/[\(（]([^)）]+)[\)）]/g) ?? []).flatMap((g) => splitAlt(g.slice(1, -1)));
 
-function parseTableRow(line) {
-  return line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(clean);
-}
+const innerParts = (s: string): string[] => (s.match(/[\(（]([^)）]+)[\)）]/g) ?? []).flatMap((g) => splitAlt(g.slice(1, -1)));
+const parseTableRow = (line: string): string[] => line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(clean);
 
-/** 제목 "울쎄라 (Ulthera / Ultherapy)" → base '울쎄라', aliases ['ulthera','ultherapy'] */
-function titleAliases(title) {
-  const aliases = new Set();
+/** 제목 "울쎄라 (Ulthera / Ultherapy)" → aliases ['ulthera','ultherapy','울쎄라'] */
+export function titleAliases(title: string): string[] {
+  const aliases = new Set<string>();
   const m = title.match(/[\(（]([^)）]+)[\)）]/g) ?? [];
   for (const g of m) for (const part of splitAlt(g.slice(1, -1))) if (part.length >= 3) aliases.add(part.toLowerCase());
   for (const part of splitAlt(stripParen(title))) if (part.length >= 2) aliases.add(part.toLowerCase());
   return [...aliases];
 }
 
-const chunks = [];
-const aliasMap = new Map(); // alias(lower) → Set<koTerm>
-const addAlias = (alias, ko) => {
-  const a = alias.toLowerCase().trim();
-  if (a.length < 2 || !ko) return;
-  if (!aliasMap.has(a)) aliasMap.set(a, new Set());
-  aliasMap.get(a).add(ko);
-};
+/**
+ * 마크다운 한 문서를 청크로 쪼갠다. 청크 id 는 `${docKey}#순번`(1부터) — DB 에서는 문서 slug + seq 로 같은 id 를 만든다.
+ */
+export function chunkMarkdown(markdown: string, docKey: string): ChunkResult {
+  const chunks: KbChunk[] = [];
+  const aliasMap = new Map<string, Set<string>>(); // alias(lower) → Set<koTerm>
+  const addAlias = (alias: string, ko: string | undefined): void => {
+    const a = alias.toLowerCase().trim();
+    if (a.length < 2 || !ko) return;
+    let set = aliasMap.get(a);
+    if (!set) { set = new Set(); aliasMap.set(a, set); }
+    set.add(ko);
+  };
 
-for (const file of readdirSync(DOCS).filter((f) => f.endsWith('.md')).sort()) {
-  const doc = file.replace(/\.md$/, '');
-  const lines = readFileSync(path.join(DOCS, file), 'utf8').split('\n');
-  let chapterKey = 'intro', chapterTitle = '', chapterCat = 'common', section = '';
-  let para = [];
-  let table = null; // { header, rows }
+  let chapterKey = 'intro';
+  let chapterTitle = '';
+  let chapterCat = 'common';
+  let section = '';
+  let para: string[] = [];
+  let table: { header: string[]; rows: string[][] } | null = null;
   let n = 0;
-  const flushPara = () => {
+
+  const flushPara = (): void => {
     const text = clean(para.join(' '));
     para = [];
-    // 제목 앞 머리말과 0장(문서 목적) 문단은 뺀다 — 0장의 표(급여 표기 기준)는 flushTable 에서 들어간다
+    // 제목 앞 머리말과 안내 장(문서 목적) 문단은 뺀다 — 안내 장의 표(급여 표기 기준)는 flushTable 에서 들어간다
     if (!text || !chapterTitle || chapterKey === 'intro' || SKIP_CHAPTERS.has(chapterKey)) return;
-    chunks.push({ id: `${doc}#${++n}`, cat: chapterCat, chapter: chapterTitle, section, title: section || chapterTitle, text, aliases: [] });
+    chunks.push({ id: `${docKey}#${++n}`, cat: chapterCat, chapter: chapterTitle, section, title: section || chapterTitle, text, aliases: [] });
   };
-  const flushTable = () => {
+
+  const flushTable = (): void => {
     if (!table) return;
     const { header, rows } = table;
     table = null;
@@ -132,14 +158,14 @@ for (const file of readdirSync(DOCS).filter((f) => f.endsWith('.md')).sort()) {
       if (!title) continue;
       const body = r.slice(1).map((c, i) => (c ? `${header[i + 1] ?? ''}: ${c}` : '')).filter(Boolean).join(' | ');
       const aliases = titleAliases(title);
-      chunks.push({ id: `${doc}#${++n}`, cat: chapterCat, chapter: chapterTitle, section, title: stripParen(title) || title, text: body, aliases });
+      chunks.push({ id: `${docKey}#${++n}`, cat: chapterCat, chapter: chapterTitle, section, title: stripParen(title) || title, text: body, aliases });
       // 라틴 별칭 → 한국어 제목 (영어 질문이 한국어 청크를 찾게)
       const base = stripParen(title).split(/\s*\/\s*/)[0];
       for (const a of aliases) if (hasLatin(a)) addAlias(a, base);
     }
   };
 
-  for (const raw of lines) {
+  for (const raw of markdown.split('\n')) {
     const line = raw.replace(/\r$/, '');
     if (/^\s*<!--/.test(line)) continue;
     if (line.startsWith('|')) {
@@ -154,12 +180,15 @@ for (const file of readdirSync(DOCS).filter((f) => f.endsWith('.md')).sort()) {
     const h = line.match(/^(#{1,4})\s+(.*)$/);
     if (h) {
       flushPara();
-      const level = h[1].length, title = clean(h[2]);
+      const level = (h[1] ?? '').length;
+      const title = clean(h[2] ?? '');
       if (level === 1) {
-        const num = title.match(/^(\d{1,2})\./);
+        const numbered = /^(\d{1,2})\./.test(title);
         const key = catForChapter(title);
-        chapterKey = !num && key === 'other' ? 'intro' : key; // 번호 없는 머리말은 안내로 본다
-        chapterTitle = title; chapterCat = chapterKey === 'intro' ? 'common' : chapterKey; section = '';
+        chapterKey = !numbered && key === 'other' ? 'intro' : key; // 번호 없는 머리말은 안내로 본다
+        chapterTitle = title;
+        chapterCat = chapterKey === 'intro' ? 'common' : chapterKey;
+        section = '';
       } else {
         section = title;
       }
@@ -170,17 +199,24 @@ for (const file of readdirSync(DOCS).filter((f) => f.endsWith('.md')).sort()) {
   }
   if (table) flushTable();
   flushPara();
+
+  const cats: Record<string, number> = {};
+  for (const c of chunks) cats[c.cat] = (cats[c.cat] ?? 0) + 1;
+  return { chunks, aliases: [...aliasMap.entries()].map(([a, s]) => [a, [...s]] as AliasPair), cats };
 }
 
-const aliases = [...aliasMap.entries()]
-  .map(([a, s]) => [a, [...s]])
-  .filter(([a]) => a.length >= 2)
-  .sort((x, y) => y[0].length - x[0].length);
-
-const header = `/* eslint-disable */
-// 자동 생성 — 편집 금지. 원본: lib/ai/knowledge/docs/*.md, 생성: node scripts/kb-build.mjs (${new Date().toISOString().slice(0, 10)})
-export type KbChunk = { id: string; cat: string; chapter: string; section: string; title: string; text: string; aliases: string[] };
-`;
-writeFileSync(OUT, `${header}export const KB_CHUNKS: KbChunk[] = ${JSON.stringify(chunks)};\n/** 외국어·라틴 표기 → 한국어 용어 (긴 별칭부터) */\nexport const KB_ALIASES: Array<[string, string[]]> = ${JSON.stringify(aliases)};\n`);
-const byCat = chunks.reduce((m, c) => ((m[c.cat] = (m[c.cat] ?? 0) + 1), m), {});
-console.log(`chunks ${chunks.length} (${Object.entries(byCat).map(([k, v]) => `${k}:${v}`).join(' ')}) aliases ${aliases.length} → ${path.relative(root, OUT)} (${(readFileSync(OUT).length / 1024).toFixed(0)} KB)`);
+/** 여러 문서의 별칭 사전을 합친다(문서 순서 = 등장 순서) → 긴 별칭부터. 검색(retrieve.ts)이 쓰는 최종 형태 */
+export function mergeAliases(lists: AliasPair[][]): AliasPair[] {
+  const m = new Map<string, Set<string>>();
+  for (const list of lists) {
+    for (const [a, kos] of list) {
+      let set = m.get(a);
+      if (!set) { set = new Set(); m.set(a, set); }
+      for (const k of kos) set.add(k);
+    }
+  }
+  return [...m.entries()]
+    .map(([a, s]) => [a, [...s]] as AliasPair)
+    .filter(([a]) => a.length >= 2)
+    .sort((x, y) => y[0].length - x[0].length);
+}
