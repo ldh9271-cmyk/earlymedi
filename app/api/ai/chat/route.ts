@@ -118,6 +118,8 @@ const MEDICAL_HINT = /수술|시술|성형|병원|의원|surgery|procedure|clini
 function inferFallbackCat(q: string): string | null {
   const cats = matchCats(q, HOSPITAL_CATS).map((m) => m.cat);
   if (cats[0]) return cats[0];
+  const pc = procedureCats(q);
+  if (pc[0]) return pc[0];
   return MEDICAL_HINT.test(q) ? 'plastic_surgery' : null;
 }
 
@@ -127,47 +129,104 @@ function inferFallbackCat(q: string): string | null {
  * 병원마다 표기가 달라서(울써마 = 울쎄라+써마지 합성어처럼) 사용자가 쓴
  * 말과 DB 표기가 어긋나는 경우를 잡는다.
  */
-const PROCEDURE_SYNONYMS: string[][] = [
-  // 리프팅 장비 — '울써마'는 울쎄라+써마지 합성 표기
-  ['울써마', '울쎄라', '울세라', '써마지', '서마지', '울쎄라리프팅', 'ulthera', 'thermage', 'ultherapy'],
-  // 눈성형
-  ['쌍꺼풀', '쌍커풀', '눈성형', 'double eyelid'],
-  ['트임', '앞트임', '뒤트임', '눈매교정'],
-  // 코성형
-  ['코성형', '코수술', '콧대', '코끝', 'rhinoplasty', 'nose'],
-  // 윤곽
-  ['윤곽', '양악', '광대', '사각턱', 'contour', 'facial contour'],
-  // 체형
-  ['지방흡입', '체형', '바디라인', 'liposuction'],
-  // 주사 시술
-  ['보톡스', '필러', '쁘띠', 'botox', 'filler'],
-  ['지방이식', '나노지방이식', 'fat graft'],
+/**
+ * 시술 동의어 그룹 — 한 단어가 걸리면 그룹 전체로 검색을 넓히고, 그룹의 과(cat)를 질문의 과로 본다.
+ * 병원마다 표기가 달라서(울써마 = 울쎄라+써마지 합성어처럼) 사용자가 쓴 말과 DB 표기가 어긋나는 경우를 잡는다.
+ * 2026-10-21: '코 잘하는 곳'처럼 부위만 말해도(SHORT_FORMS) 시술 그룹으로 간다 — 마스터 순서가 아니라 등록 데이터 일치로 병원을 고른다.
+ */
+const PROCEDURE_GROUPS: Array<{ cat: string; words: string[] }> = [
+  { cat: 'dermatology', words: ['울써마', '울쎄라', '울세라', '울쎄라피', '써마지', '서마지', 'ulthera', 'thermage', 'ultherapy', '슈링크', '인모드', '온다', '소프웨이브', '티타늄', '리프팅 레이저'] },
+  { cat: 'plastic_surgery', words: ['쌍꺼풀', '쌍커풀', '눈성형', '눈 성형', '매몰법', '자연유착', '눈매교정', '트임', '앞트임', '뒤트임', '밑트임', '눈밑지방', '눈밑', '상안검', '하안검', '안검하수', '중년눈', 'double eyelid', 'eyelid', 'blepharoplasty'] },
+  { cat: 'plastic_surgery', words: ['코성형', '코 성형', '코수술', '코재수술', '코 재수술', '콧대', '코끝', '콧볼', '매부리', '기능코', '비중격', '휜코', 'rhinoplasty', 'nose'] },
+  { cat: 'plastic_surgery', words: ['윤곽', '안면윤곽', '양악', '광대', '사각턱', '턱끝', '무턱', 'contour', 'facial contour', 'jaw'] },
+  { cat: 'plastic_surgery', words: ['가슴성형', '가슴확대', '가슴 성형', '가슴', '유방', '모티바', '멘토', 'breast'] },
+  { cat: 'plastic_surgery', words: ['지방흡입', '체형', '바디라인', '바디성형', '복부', '허벅지', '힙업', 'liposuction'] },
+  { cat: 'plastic_surgery', words: ['안면거상', '거상', '미니거상', '실리프팅', '목거상', '이마거상', '동안성형', 'facelift', 'thread lift'] },
+  { cat: 'dermatology', words: ['보톡스', '톡신', '필러', '쁘띠', '윤곽주사', '지방분해주사', 'botox', 'filler'] },
+  { cat: 'plastic_surgery', words: ['지방이식', '나노지방이식', '미세지방이식', '얼굴지방이식', 'fat graft'] },
+  { cat: 'dermatology', words: ['스킨부스터', '리쥬란', '쥬베룩', '스컬트라', '엑소좀', 'skin booster', 'rejuran'] },
+  { cat: 'dermatology', words: ['여드름', '흉터', '기미', '잡티', '색소', '토닝', '피코', '레이저', '모공', '제모', '문신제거', '홍조', 'acne', 'scar', 'pigment', 'laser'] },
+  { cat: 'dental', words: ['임플란트', 'implant', '틀니', '뼈이식', '오버덴처'] },
+  { cat: 'dental', words: ['라미네이트', '치아미백', '미백', '잇몸성형', '심미', 'veneer', 'whitening'] },
+  { cat: 'dental', words: ['치아교정', '투명교정', '인비절라인', '교정', 'orthodont', 'braces', 'aligner', 'invisalign'] },
+  { cat: 'ophthalmology', words: ['라식', '라섹', '스마일라식', '스마일', '렌즈삽입', 'icl', 'lasik', 'lasek', '시력교정'] },
+  { cat: 'ophthalmology', words: ['백내장', '노안', '녹내장', '드림렌즈', 'cataract', 'presbyopia'] },
+  { cat: 'hair', words: ['모발이식', '탈모', '헤어라인', '두피문신', 'smp', 'hair transplant', 'hair loss'] },
+  { cat: 'plastic_surgery', words: ['눈썹문신', '반영구', '아이라인', '입술문신'] },
+  { cat: 'health_checkup', words: ['건강검진', '종합검진', '내시경', '위내시경', '대장내시경', 'checkup', 'endoscopy'] },
+  { cat: 'stem_cell', words: ['줄기세포', 'stem cell'] },
 ];
+/** 부위·짧은 표기 → 대표 시술어 ('코 잘하는 곳' → 코성형 그룹) */
+const SHORT_FORMS: Record<string, string> = {
+  '코': '코성형', '눈': '눈성형', '턱': '윤곽', '가슴': '가슴성형', '이마': '이마거상', '지방': '지방흡입', '눈썹': '눈썹문신', '치아': '치아교정', '리프팅': '거상',
+  '임플': '임플란트', '보톡': '보톡스', '성형': '', '피부': '', '시술': '', '수술': '',
+};
 
-/** 토큰을 동의어 그룹으로 확장 (중복 제거, 최대 10개). */
+/** 토큰을 동의어 그룹으로 확장 (중복 제거, 최대 12개). */
 function expandSynonyms(tokens: string[]): string[] {
-  const out = new Set(tokens);
+  const out = new Set<string>();
   for (const tk of tokens) {
     const lower = tk.toLowerCase();
-    for (const group of PROCEDURE_SYNONYMS) {
-      if (group.some((w) => lower.includes(w.toLowerCase()) || w.toLowerCase().includes(lower))) {
-        group.forEach((w) => out.add(w));
+    let hit = false;
+    for (const g of PROCEDURE_GROUPS) {
+      if (g.words.some((w) => lower.includes(w.toLowerCase()) || (w.length >= 2 && w.toLowerCase().includes(lower)))) {
+        g.words.forEach((w) => out.add(w));
+        hit = true;
       }
     }
+    if (!hit && lower.length >= 2) out.add(tk);
   }
-  return [...out].slice(0, 10);
+  return [...out].slice(0, 12);
 }
 
-/** '잘하는', '병원' 같은 군더더기를 뺀 검색 토큰. */
+/** 질문이 가리키는 시술 그룹의 과들 (앞이 먼저) */
+function procedureCats(q: string): string[] {
+  const cats: string[] = [];
+  for (const tk of procedureTokens(q)) {
+    const lower = tk.toLowerCase();
+    for (const g of PROCEDURE_GROUPS) if (g.words.some((w) => w.toLowerCase() === lower) && !cats.includes(g.cat)) cats.push(g.cat);
+  }
+  return cats;
+}
+
+/** '잘하는', '병원' 같은 군더더기를 뺀 검색 토큰 — 띄어쓰기로 나누고(예전엔 's' 글자로 나누던 버그) 부위 표기는 시술어로. */
 function procedureTokens(q: string): string[] {
-  const STOP = /잘하는|잘하|추천|알려줘|어디|어때|병원|의원|클리닉|좋은|해줘|해주|찾아|please|recommend|clinic|hospital|good|best|for|the|a|an/gi;
+  const STOP = /잘하는|잘하|잘 하는|제일|가장|유명한|추천|알려줘|알려|어디|어떤|어때|병원|의원|클리닉|좋은|곳|데|집|해줘|해주|찾아|주세요|있나요|있어|please|recommend|clinic|hospital|good|best|famous|top|where|which|for|the|an?\b/gi;
   const raw = q
     .replace(STOP, ' ')
-    .split(/[s,·.?!·、，。]+/)
-    .map((t) => t.trim())
+    .split(/[\s,·.?!、，。/()]+/)
+    .map((t) => t.trim().replace(/(은|는|이|가|을|를|의|에|도|로|으로|랑|이랑|와|과)$/, ''))
+    .map((t) => (t in SHORT_FORMS ? SHORT_FORMS[t] ?? '' : t))
     .filter((t) => t.length >= 2)
-    .slice(0, 4);
+    .slice(0, 5);
   return expandSynonyms(raw);
+}
+
+type MatchInfo = { score: number; reasons: string[] };
+
+/** 등록 데이터(대표시술·진료분야·태그라인) 가 질문 시술과 얼마나 맞는지 — 점수와 근거 문구 */
+function matchHospital(details: Record<string, unknown>, tokens: string[]): MatchInfo {
+  const toks = tokens.map((t) => t.toLowerCase()).filter((t) => t.length >= 2);
+  let score = 0;
+  const reasons: string[] = [];
+  const sig = Array.isArray(details.signatureProcedures) ? (details.signatureProcedures as string[]) : [];
+  for (const item of sig) {
+    const low = String(item).toLowerCase();
+    if (toks.some((t) => low.includes(t))) { score += 4; if (reasons.length < 4) reasons.push(`대표시술 '${item}'`); }
+  }
+  const deps = Array.isArray(details.departments) ? (details.departments as Array<{ title?: string; items?: string[] }>) : [];
+  for (const dep of deps) {
+    const title = String(dep.title ?? '');
+    const items = (dep.items ?? []).map(String);
+    const titleHit = toks.some((t) => title.toLowerCase().includes(t));
+    const hitItems = items.filter((it) => toks.some((t) => it.toLowerCase().includes(t)));
+    if (titleHit) score += 3;
+    score += Math.min(hitItems.length, 4) * 2;
+    if ((titleHit || hitItems.length) && reasons.length < 4) reasons.push(`진료분야 ${title}${hitItems.length ? `(${hitItems.slice(0, 4).join('·')})` : ''}`);
+  }
+  const tagline = typeof details.tagline === 'string' ? details.tagline.toLowerCase() : '';
+  if (tagline && toks.some((t) => tagline.includes(t))) score += 1;
+  return { score, reasons };
 }
 
 type ClinicEvidence = { text: string; card: Card; fallback?: boolean; focus?: boolean; booking?: ClinicRef };
@@ -255,30 +314,46 @@ async function findHospitals(q: string, locale: PublicLocale): Promise<ClinicEvi
     // 시술명 검색 — details(진료분야·대표시술) 텍스트에 토큰이 있으면 합류.
     // "쌍꺼풀 잘하는 병원"처럼 카테고리 단어가 없는 질문을 잡는다.
     const tokens = procedureTokens(q);
+    const matchInfo = new Map<string, MatchInfo>();
     if (tokens.length > 0) {
-      const seen = new Set(rows.map((r) => r.id));
-      const byProc = await db
+      // 등록 데이터(details)에 시술어가 있는 병원을 넓게 가져와, 대표시술·진료분야 일치 점수로 줄 세운다 (마스터 순서는 동점 처리에만)
+      const candidates = await db
         .select({
           id: hospitals.id, name: hospitals.name, slug: hospitals.slug,
           details: hospitals.details, notes: hospitals.notes,
           addressJson: hospitals.addressJson,
           promo: categoryListings.promoLabel, cat: categoryListings.categoryKey,
+          hSort: hospitals.sortOrder, cSort: categoryListings.sortOrder,
         })
         .from(hospitals)
         .leftJoin(categoryListings, eq(categoryListings.hospitalId, hospitals.id))
         .where(
           and(
             eq(hospitals.isActiveForMatching, true),
+            eq(hospitals.countryCode, 'KR'),
             or(...tokens.map((tk) => sql`${hospitals.details}::text ILIKE ${'%' + tk + '%'}`)) as SQL,
           ),
         )
-        .orderBy(sql`coalesce(${categoryListings.sortOrder}, 999) asc`, sql`${hospitals.sortOrder} asc`)
-        .limit(6);
-      for (const r of byProc) {
-        if (seen.has(r.id)) continue;
-        seen.add(r.id);
-        rows.push(r as (typeof rows)[number]);
+        .limit(60);
+      const best = new Map<string, (typeof candidates)[number] & { m: MatchInfo }>();
+      for (const r of candidates) {
+        const m = matchHospital((r.details ?? {}) as Record<string, unknown>, tokens);
+        if (m.score <= 0) continue;
+        const prev = best.get(r.id);
+        // 같은 병원이 여러 카테고리 행으로 나오면 가장 앞선 카테고리 순서를 쓴다
+        if (!prev || (r.cSort ?? 999) < (prev.cSort ?? 999)) best.set(r.id, { ...r, m });
       }
+      const ranked = [...best.values()].sort((a, b) =>
+        b.m.score - a.m.score || (a.cSort ?? 999) - (b.cSort ?? 999) || (a.hSort ?? 999) - (b.hSort ?? 999) || a.name.localeCompare(b.name, 'ko'),
+      );
+      const top = ranked.slice(0, 8);
+      for (const r of top) matchInfo.set(r.id, r.m);
+      // 시술 일치 병원을 앞에, 과 목록은 그 뒤에 (중복 제거), 합쳐서 8곳까지
+      const seen = new Set(top.map((r) => r.id));
+      const rest = rows.filter((r) => !seen.has(r.id));
+      rows.length = 0;
+      rows.push(...(top as unknown as typeof rows), ...rest);
+      rows.splice(8);
     }
     if (named.length) {
       const rest = rows.filter((r) => !namedIds.has(r.id));
@@ -328,6 +403,12 @@ async function findHospitals(q: string, locale: PublicLocale): Promise<ClinicEvi
         city ? `지역: ${city}` : '',
         typeof d.station === 'string' ? `위치: ${d.station}` : '',
         proc ? `대표시술: ${proc}` : '',
+        matchInfo.get(r.id)?.reasons.length ? `질문 시술 일치: ${matchInfo.get(r.id)?.reasons.join(' · ')}` : '',
+        Array.isArray(d.trust) ? `등록 정보: ${(d.trust as string[]).slice(0, 4).join(' · ').slice(0, 220)}` : '',
+        d.foreignSupport && Array.isArray((d.foreignSupport as { languages?: string[] }).languages)
+          ? `외국어 안내: ${((d.foreignSupport as { languages: string[] }).languages).slice(0, 6).join('·')}`
+          : '',
+        Array.isArray(d.doctors) && (d.doctors as unknown[]).length ? `의료진 ${(d.doctors as unknown[]).length}명 등록` : '',
         Array.isArray(d.departments)
           ? `진료분야: ${(d.departments as Array<{ title?: string; items?: string[] }>)
               .map((dep) => `${dep.title ?? ''}(${(dep.items ?? []).join('·')})`)
@@ -677,9 +758,10 @@ Write in ${LOCALE_LANGUAGE[locale]}, warm and concise (about 150 words; up to 23
 GROUNDING RULES — critical:
 - Recommend ONLY the clinics/products in the DATA block below. Never invent a clinic, price, address, phone or claim.
 - Quote prices/hours/locations exactly as given.
-- NEVER tell the user that we have no information, no data, or that something is "not in our database". If no clinic in DATA lists the exact procedure asked about (e.g. lower blepharoplasty / 하안검), present the DATA clinics as our certified (글로우 인증) clinics for that specialty — in the given order, the first is ranked #1 — say the exact procedure and suitability are confirmed at the clinic consultation, and invite the user to send an inquiry so a concierge can arrange it (the UI shows an inquiry button).
+- NEVER tell the user that we have no information, no data, or that something is "not in our database". If no clinic in DATA lists the exact procedure asked about (e.g. lower blepharoplasty / 하안검), say honestly that none of our certified clinics has registered that exact procedure yet, present the DATA clinics as our certified (글로우 인증) clinics for that specialty, say the exact procedure and suitability are confirmed at the clinic consultation, and invite the user to send an inquiry so a concierge can arrange it (the UI shows an inquiry button).
 - When you mention an item, refer to it by its exact name so the UI can link it.
-- If the user asks who is good at a specific procedure (e.g. double-eyelid, rhinoplasty, contouring), match it against each clinic's 대표시술/진료분야 in the DATA and say which listed procedure line makes it relevant. Keep the clinics in the order given — the first entry is our featured partner.
+- 글로우 인증 (GlowUp-certified) means the clinic is directly registered on our platform and its information (specialists, procedures, languages, location, hours) was verified by our team. Every clinic in DATA is certified; cite the "등록 정보" / "외국어 안내" / "의료진" facts when relevant, exactly as written.
+- RANKING BY DATA: when the user asks who is good at / where to get a specific procedure (코, 쌍꺼풀, 임플란트, 라식 …), DATA is already ordered by how strongly each clinic's registered data matches that procedure — the "질문 시술 일치" line shows which 대표시술 / 진료분야 entry matched. List the clinics in that order, quote the matched entry for each (e.g. "대표시술로 '코성형 (콧대 보형물 + 코끝 자가조직)'을 등록"), and leave out clinics with no match line unless nothing else exists. Never call a clinic "best", "the most skilled" or "famous for" — say what its registered data shows (등록 데이터 기준). Clinic order is never a quality ranking.
 
 MEDICAL SAFETY:
 - You are not a doctor. Never diagnose, never prescribe, never promise or guarantee treatment results or recovery times.
@@ -701,7 +783,7 @@ ${kb.text}
 ` : ''}${focusEvidence.length ? `FOCUS: The user is asking about the DATA entries marked [지금 보고 있는 곳] / [질문에 나온 병원] / [질문에 나온 상품] (they appear first). Answer about that place first and in the most detail, using only its DATA line. Do not switch the answer to other clinics or products unless the user asks for alternatives; at most mention that similar options exist. If a detail is missing for it (price, menu, procedure), say the concierge can confirm it and invite an inquiry or a chat with a concierge.
 
 ` : ''}DATA (the only clinic/product facts you may use):
-${fallbackMode ? '(No clinic lists this exact procedure. The following are our certified clinics for the inferred specialty, ranked 1-5 — recommend them in this order and suggest an inquiry.)\n' : ''}${evidence.length ? evidence.map((e) => `- ${e.text}`).join('\n') : '(no matching records found — invite the user to send an inquiry so a concierge can help; do not say the database is empty)'}`;
+${fallbackMode ? '(No clinic\'s registered data lists this exact procedure. The following are our certified clinics for the inferred specialty in registration order — not a quality ranking; say that none has registered the exact procedure yet, present them as certified options, and suggest an inquiry.)\n' : ''}${evidence.length ? evidence.map((e) => `- ${e.text}`).join('\n') : '(no matching records found — invite the user to send an inquiry so a concierge can help; do not say the database is empty)'}`;
 
   const pickCards = (text: string): Card[] => {
     if (focusEvidence.length) {
