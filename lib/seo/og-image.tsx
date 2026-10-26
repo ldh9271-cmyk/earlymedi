@@ -13,6 +13,12 @@ import { ImageResponse } from 'next/og';
  */
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_ALT = '글로우업투어 GlowUpTour';
+/**
+ * 페이지가 자기 openGraph 를 정의하면 상위 세그먼트의 파일 기반 opengraph-image 가 상속되지 않아
+ * 카카오톡 등이 본문 첫 이미지(푸터 KB 에스크로 마크)를 미리보기로 집는다 (2026-10-26 VS라인 상세에서 확인).
+ * openGraph 를 쓰는 페이지는 images 에 이 값을 넣어 브랜드 로크업으로 고정한다.
+ */
+export const OG_IMAGE_META = { url: '/opengraph-image', width: OG_SIZE.width, height: OG_SIZE.height, alt: OG_ALT };
 const ROSE = '#ff385c';
 const WORDMARK = 'glow-up';
 

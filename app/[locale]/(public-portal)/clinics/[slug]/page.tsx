@@ -14,6 +14,7 @@ import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content'
 import OpenStatusBadge from '@/components/shared/open-status-badge';
 import { loadHolidayYmds } from '@/lib/hours/holidays';
 import { parseKoHours } from '@/lib/hours/parse-ko';
+import { OG_IMAGE_META } from '@/lib/seo/og-image';
 import type { WeeklyHours } from '@/lib/hours/status';
 
 export const dynamic = 'force-dynamic';
@@ -131,7 +132,10 @@ export async function generateMetadata({
         vi: 'vi_VN',
         en: 'en_US',
       } as const)[params.locale] ?? 'en_US',
+      // 링크 미리보기는 항상 글로우업투어 브랜드 이미지 — 없으면 카카오톡이 본문 첫 이미지(에스크로 마크)를 집는다
+      images: [OG_IMAGE_META],
     },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE_META.url] },
   };
 }
 
