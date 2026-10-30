@@ -22,6 +22,7 @@ import { formatLocal } from '@/lib/utils/date';
 import { TopupForm, UnlockButton } from './_components/leads-client';
 import { BIZ_FREE_PERIOD } from '@/lib/billing/free-period';
 import { FreePeriodBanner } from '@/components/shared/billing/free-period-banner';
+import { getLeadScope, leadScopeReason, type LeadScopeReason } from '@/lib/leads/scope';
 
 export const metadata = { title: '리드 마켓' };
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,10 @@ export const dynamic = 'force-dynamic';
  * 리드 마켓 — glowuptour.com 상품 문의로 들어온 환자 DB 를 병원이
  * 건당(관심 분야별 3~6만원) 열람한다. 연락처·이름은 열람 전 마스킹.
  * 충전은 10만원 단위 신청 → 마스터 입금 확인 → 잔액 반영.
+ *
+ * 노출 범위(2026-10-30): 병원 조직은 자기와 관련된 문의만 본다 — 우리 병원을 지정한 문의,
+ * 또는 병원 미지정 문의 중 관심 분야가 우리 진료 분야와 겹치는 것(lib/leads/scope).
+ * 다른 병원을 지정한 문의는 목록에도 없고 열람 액션에서도 막는다. 마스터가 병원으로 보는 중일 때도 같다.
  */
 
 async function resolveIntakeOrgId(): Promise<string | null> {
@@ -69,7 +74,7 @@ const TOPUP_STATUS_LABEL: Record<string, string> = {
 export default async function MedicalLeadsPage(): Promise<JSX.Element> {
   const ctx = await requireAccess({ allowedAccountTypes: ['medical'] });
 
-  const [[account], topups, unlockRows, intakeOrgId] = await Promise.all([
+  const [[account], topups, unlockRows, intakeOrgId, scope] = await Promise.all([
     db
       .select({ balance: billingAccounts.prepaidBalanceKrw })
       .from(billingAccounts)
@@ -86,6 +91,7 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
       .from(leadUnlocks)
       .where(eq(leadUnlocks.organizationId, ctx.orgId)),
     resolveIntakeOrgId(),
+    getLeadScope(ctx.orgId),
   ]);
 
   const balance = account?.balance ?? 0;
@@ -129,19 +135,24 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
     if (!firstByConv.has(m.conversationId)) firstByConv.set(m.conversationId, m);
   }
 
-  const leads = leadRows.map((l) => {
+  const leads = leadRows.flatMap((l) => {
     const first = firstByConv.get(l.id);
     const meta = (first?.metadata ?? {}) as {
       interests?: string[];
+      hospitalId?: string | null;
       hospitalName?: string;
       contact?: string;
       birthDate?: string;
     };
+    // 우리 병원과 무관한 문의(다른 병원 지정·분야 불일치)는 목록에서 제외
+    const scopeReason: LeadScopeReason | null = leadScopeReason(scope, meta);
+    if (!scopeReason) return [];
     const interests = meta.interests ?? [];
     const { priceWon: listPriceWon } = leadPriceWon(interests);
     const priceWon = BIZ_FREE_PERIOD ? 0 : listPriceWon;
-    return {
+    return [{
       id: l.id,
+      scopeReason,
       name: l.name ?? '',
       contact: meta.contact ?? l.contactExternalId ?? '',
       countryCode: l.countryCode ?? '—',
@@ -153,7 +164,7 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
       body: first?.body ?? '',
       priceWon,
       unlocked: unlockedIds.has(l.id),
-    };
+    }];
   });
 
   // 국내만 판매 — 해외 문의는 리드 마켓 대상이 아니다 (성사 수수료 트랙).
@@ -167,12 +178,37 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
         <Badge variant="brand" className="mb-2">🎯 리드 마켓</Badge>
         <h1 className="text-2xl font-bold tracking-tight">리드 마켓 — 환자 문의 DB</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          glowuptour.com 문의 중 <strong className="text-foreground">국내 환자 리드</strong>를 관심
+          glowuptour.com 문의 중 <strong className="text-foreground">우리 병원과 관련된 국내 환자 리드</strong>
+          (우리 병원을 지정한 문의, 또는 병원 미지정 문의 중 진료 분야가 겹치는 것)를 관심
           분야별 <strong className="text-foreground">건당 ₩30,000~60,000</strong> 에 열람합니다. 한 번
-          연 리드는 무료로 다시 볼 수 있습니다. 해외 환자 문의는 판매하지 않습니다 — 컨시어지가
-          상담을 진행하고, 시술이 성사되면 최종 결제액에 대한 수수료(계약 요율 10~30%)만 정산됩니다.
+          연 리드는 무료로 다시 볼 수 있습니다. 다른 병원을 지정한 문의는 표시되지 않습니다. 해외 환자 문의는
+          판매하지 않습니다 — 컨시어지가 상담을 진행하고, 시술이 성사되면 최종 결제액에 대한 수수료(계약
+          요율 10~30%)만 정산됩니다.
         </p>
       </div>
+
+      {/* 노출 범위 — 연결된 병원·진료 분야. 연결이 없으면 아무 리드도 보이지 않는다. */}
+      <Card className={scope.hospitals.length === 0 ? 'border-amber-300 bg-amber-50' : ''}>
+        <CardContent className="px-5 py-3.5 text-xs">
+          {scope.hospitals.length === 0 ? (
+            <p className="text-amber-800">
+              아직 이 계정에 연결된 병원 공개 정보가 없어 표시할 리드가 없습니다 — 왼쪽 메뉴
+              <strong> 병원 공개 정보</strong>에서 등록·연결하면 우리 병원 관련 문의가 여기에 표시됩니다.
+            </p>
+          ) : (
+            <p className="text-muted-foreground">
+              <span className="font-semibold text-foreground">표시 범위</span> · 연결 병원:{' '}
+              <span className="text-foreground">{scope.hospitals.map((h) => h.name).join(', ')}</span>
+              {' '}· 진료 분야:{' '}
+              <span className="text-foreground">
+                {scope.categoryKeys.size > 0
+                  ? [...scope.categoryKeys].map((k) => LEAD_CATEGORY_LABEL_KO[k] ?? k).join(', ')
+                  : '미등록 (병원 지정 문의만 표시)'}
+              </span>
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <FreePeriodBanner />
 
@@ -262,11 +298,12 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
 
       {/* 리드 목록 (국내) */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold">국내 문의 리드 {domesticLeads.length}건</h2>
+        <h2 className="text-sm font-bold">우리 병원 관련 국내 문의 리드 {domesticLeads.length}건</h2>
         {domesticLeads.length === 0 ? (
           <Card>
             <CardContent className="p-10 text-center text-sm text-muted-foreground">
-              아직 판매 가능한 국내 리드가 없습니다 — 국내 환자 문의가 들어오면 여기에 표시됩니다.
+              아직 우리 병원과 관련된 국내 리드가 없습니다 — 우리 병원을 지정했거나 진료 분야가 겹치는
+              국내 환자 문의가 들어오면 여기에 표시됩니다.
             </CardContent>
           </Card>
         ) : (
@@ -290,6 +327,10 @@ export default async function MedicalLeadsPage(): Promise<JSX.Element> {
                       {l.hospitalName ? (
                         <Badge variant="hospitality" className="text-[10px]">
                           관심 병원: {l.hospitalName}
+                        </Badge>
+                      ) : l.scopeReason === 'category' ? (
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                          병원 미지정 · 진료 분야 일치
                         </Badge>
                       ) : null}
                       {l.unlocked ? (

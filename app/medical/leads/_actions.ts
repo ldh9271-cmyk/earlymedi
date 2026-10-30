@@ -18,6 +18,7 @@ import {
   LEAD_TOPUP_UNIT_WON,
   leadPriceWon,
 } from '@/lib/leads/pricing';
+import { getLeadScope, leadScopeReason } from '@/lib/leads/scope';
 
 /**
  * 리드 마켓 서버 액션 (병원 medical 조직 전용).
@@ -120,7 +121,16 @@ export async function unlockLeadAction(input: {
     .where(and(eq(messages.conversationId, conversationId), eq(messages.direction, 'inbound')))
     .orderBy(messages.sentAt)
     .limit(1);
-  const meta = (inbound[0]?.metadata ?? {}) as { interests?: string[] };
+  const meta = (inbound[0]?.metadata ?? {}) as {
+    interests?: string[];
+    hospitalId?: string | null;
+    hospitalName?: string | null;
+  };
+  // 우리 병원과 관련된 문의만 열람 가능 — 목록 필터(page.tsx)와 같은 판정을 서버에서도 강제한다.
+  const scope = await getLeadScope(ctx.orgId);
+  if (!leadScopeReason(scope, meta)) {
+    return { ok: false, error: '우리 병원과 관련된 문의가 아니어서 열람할 수 없습니다.' };
+  }
   const { priceWon: listPriceWon, interestKey } = leadPriceWon(meta.interests ?? []);
   // 비즈니스 무료 이용 기간(lib/billing/free-period)에는 0원으로 열람 — 잔액을 건드리지 않는다
   const priceWon = BIZ_FREE_PERIOD ? 0 : listPriceWon;

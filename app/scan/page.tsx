@@ -46,7 +46,9 @@ export default async function ScanPage({ searchParams }: { searchParams: { org?:
     else if (isMaster) orgId = '';
   }
 
-  const recent = isMaster ? await recentCheckInsAll(30).catch(() => []) : await recentCheckIns(orgId, 20).catch(() => []);
+  // 마스터도 조직을 골라 보는 중이면 그 조직 화면과 같은 범위(이 조직이 확인한 방문)만 — 전체는 조직 없이 들어왔을 때만 (2026-10-30)
+  const showAll = isMaster && !orgId;
+  const recent = showAll ? await recentCheckInsAll(30).catch(() => []) : await recentCheckIns(orgId, 20).catch(() => []);
   // 마이페이지에서 들어왔으면 뒤로가기도 마이페이지로
   const fromMe = /^\/(kr|en|zh|ja|ru|vi)\/me$/.test(searchParams.from ?? '') ? (searchParams.from as string) : null;
   const backHref = fromMe ?? (isMaster && !orgId ? '/master'
@@ -63,7 +65,7 @@ export default async function ScanPage({ searchParams }: { searchParams: { org?:
       </p>
       {isMaster ? (
         <p style={{ fontSize: 12, color: '#c2143c', background: '#fff5f7', border: '1px solid #ffd7de', borderRadius: 10, padding: '8px 12px', margin: '0 0 14px' }}>
-          마스터 모드{orgLabel ? ` · ${orgLabel} 로 보는 중` : ''} — 모든 주문을 방문 확인·금액 입력할 수 있습니다. 기록에는 {orgLabel || '글로우업투어 운영'} 이름이 남습니다.
+          마스터 모드{orgLabel ? ` · ${orgLabel} 로 보는 중` : ''} — 모든 주문을 방문 확인·금액 입력할 수 있습니다. 기록에는 {orgLabel || '글로우업투어 운영'} 이름이 남습니다.{orgLabel ? ' 아래 목록은 이 조직 화면과 같은 범위(이 조직이 확인한 방문)만 보입니다.' : ''}
         </p>
       ) : null}
 
@@ -73,7 +75,7 @@ export default async function ScanPage({ searchParams }: { searchParams: { org?:
         <ScanPassLink orgs={[{ id: orgId || null, name: orgLabel || '글로우업투어 운영 (모든 예약)' }]} />
       </div>
 
-      <h2 style={{ fontSize: 15, fontWeight: 700, margin: '28px 0 8px' }}>최근 방문 확인 ({recent.length}){isMaster ? ' · 전체' : ''}</h2>
+      <h2 style={{ fontSize: 15, fontWeight: 700, margin: '28px 0 8px' }}>최근 방문 확인 ({recent.length}){showAll ? ' · 전체' : ''}</h2>
       {recent.length === 0 ? (
         <p style={{ fontSize: 13, color: '#9c9c9c', border: '1px dashed #dddddd', borderRadius: 12, padding: 16 }}>아직 방문 확인 기록이 없습니다.</p>
       ) : (
@@ -85,7 +87,7 @@ export default async function ScanPage({ searchParams }: { searchParams: { org?:
             <tbody>
               {recent.map((r) => (
                 <tr key={r.orderId} style={{ borderTop: '1px solid #f0f0f0' }}>
-                  <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>{r.checkedInAt ? new Date(r.checkedInAt).toLocaleString('ko-KR') : '—'}{isMaster && r.checkedInByName ? <div style={{ fontSize: 11, color: '#9c9c9c' }}>{r.checkedInByName}</div> : null}</td>
+                  <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>{r.checkedInAt ? new Date(r.checkedInAt).toLocaleString('ko-KR') : '—'}{showAll && r.checkedInByName ? <div style={{ fontSize: 11, color: '#9c9c9c' }}>{r.checkedInByName}</div> : null}</td>
                   <td style={{ padding: '8px 10px', fontFamily: 'monospace' }}>{r.invoiceNo}</td>
                   <td style={{ padding: '8px 10px' }}>{r.listingTitle}</td>
                   <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>{r.reserveDate} {r.reserveTime} · {r.guests}명</td>
