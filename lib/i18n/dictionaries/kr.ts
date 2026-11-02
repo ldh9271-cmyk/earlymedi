@@ -213,7 +213,7 @@ const kr = {
         skin_glow: "피부 결·광채",
       },
     },
-    note: '업로드한 사진은 분석 직후 삭제되며, 동의 없이 저장·공유되지 않습니다.',
+    note: '업로드한 사진은 AI 분석(Google Gemini API)에만 쓰이고 분석 직후 삭제되며, 어디에도 저장·공유되지 않습니다. 업로드하면 개인정보처리방침 10조(얼굴 이미지 처리)에 동의하는 것으로 봅니다.',
     trip: {
       title: 'AI 여행하기',
       subtitle: '자유여행·패키지여행·연수패키지, 무엇이든 물어보세요. AI가 글로우 인증 병원·뷰티샵·호텔·맛집·관광지로 하루 단위 일정을 짜 드립니다.',
@@ -544,6 +544,7 @@ const kr = {
       signOut: '로그아웃',
       /** 앱에서만 보이는 메뉴 — 네이티브 알림 설정 시트를 연다 (gu:openSettings) */
       appSettings: '알림 설정',
+      deleteAccount: '계정 삭제',
       langSelect: '언어 선택',
       logoAlt: 'glow-up 홈',
     },
@@ -1136,7 +1137,7 @@ const kr = {
     statusRequested: "예약 요청 중 — 병원 확인 대기",
     visitDone: "방문 확인 완료",
     hospitalVisitNote: "병원 진료 예약 · 결제 없음",
-    deleteAccount: "계정 삭제 요청",
+    deleteAccount: "계정 삭제",
     changePassword: "비밀번호 변경",
     voucherWaitingHospital: "병원 확인 대기 중",
     confirmWait: "컨시어지가 예약 가능 여부 확인 후 확정해 드립니다",

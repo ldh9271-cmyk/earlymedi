@@ -736,6 +736,20 @@ export function MainHeader({
                 >
                   {t.account.signOut}
                 </button>
+                {/* 계정 삭제 — App Store 5.1.1(v)·Play 정책: 앱 안에서 찾기 쉬운 자리에 (2026-11-03) */}
+                <Link
+                  href={`/${locale}/account/delete`}
+                  onClick={() => setAccountOpen(false)}
+                  style={{
+                    display: 'block', padding: '10px 14px', marginTop: 2,
+                    fontSize: 13, color: '#9c3b4f',
+                    borderTop: '1px solid #f0f0f0', borderRadius: 0, textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#fff5f7'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
+                >
+                  {t.account.deleteAccount}
+                </Link>
               </div>
             ) : null}
           </div>

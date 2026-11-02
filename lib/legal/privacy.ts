@@ -2,13 +2,14 @@ import type { LegalDocs } from './types';
 
 /**
  * 개인정보처리방침 — 한국어 원문 + 5개 언어 번역 (2026-10-03). 조항을 고치면 6개 언어를 함께 고친다.
+ * 2026-11-03: 10조 얼굴 이미지(AI 뷰티 분석·시뮬레이션) 처리 신설(애플 심사 2.1 face data 요구), 7조 즉시 계정 삭제, 2조·6조 보강 → 10·11조는 11·12조로.
  * 보관 기간(4조)은 /[locale]/account/delete 안내와 같게 유지한다.
  */
 export const PRIVACY: LegalDocs = {
   kr: {
     metaTitle: '개인정보처리방침 · 글로우업투어',
     title: '개인정보처리방침',
-    effective: '시행일: 2026년 1월 1일 · 최근 개정: 2026년 9월 17일',
+    effective: '시행일: 2026년 1월 1일 · 최근 개정: 2026년 11월 3일',
     backToSignup: '가입으로 돌아가기',
     sections: [
       { title: '1. 총칙', lead: '주식회사 쉐어아트(이하 “회사”)는 「개인정보 보호법」 및 「의료 해외진출 및 외국인환자 유치 지원에 관한 법률」 등 관련 법령을 준수하며, 이용자의 개인정보를 안전하게 처리하기 위해 본 방침을 수립 · 공개합니다.' },
@@ -18,6 +19,7 @@ export const PRIVACY: LegalDocs = {
         { term: '문의 · 예약 시:', text: '관심 시술 카테고리, 희망 일정, 자유 입력 메모, 첨부 이미지(선택)' },
         { term: '자동 수집:', text: '접속 IP, 브라우저 정보, 쿠키, 서비스 이용 기록, 페이지 진입 시각' },
         { term: '결제 시 (해당 시):', text: '결제 수단(카드 마스킹), 결제 금액, 결제 통화 — 카드 원번호는 PG사가 직접 처리하며 회사는 저장하지 않습니다.' },
+        { term: 'AI 뷰티 분석 · AI 스타일 시뮬레이션 이용 시 (선택):', text: '이용자가 직접 업로드한 얼굴 사진 1장 — 결과 생성에만 사용하고 저장하지 않습니다 (10조 참조)' },
       ] },
       { title: '3. 개인정보의 수집 · 이용 목적', ordered: true, items: [
         '회원 가입 및 본인 확인',
@@ -42,13 +44,13 @@ export const PRIVACY: LegalDocs = {
       ] },
       { title: '6. 개인정보 처리의 위탁', lead: '회사는 서비스 운영을 위해 다음 업무를 외부에 위탁할 수 있으며, 위탁 시 「개인정보 보호법」에 따라 안전한 관리를 위한 계약을 체결합니다.', items: [
         '클라우드 인프라: Vercel Inc., Supabase Inc.',
-        'AI 번역 · 분석: Google Cloud(Gemini), OpenAI',
+        'AI 번역 · 분석 · 얼굴 사진 처리: Google LLC(Gemini API), OpenAI',
         '메신저 채널 연동: Kakao, LINE, Meta, Naver, WeChat',
         '결제 처리: 국내외 PG사(예약 확정 단계에서 명시)',
       ] },
       { title: '7. 이용자의 권리와 행사 방법', ordered: true, items: [
         '이용자는 언제든지 본인의 개인정보를 조회 · 수정 · 삭제 · 처리정지를 요청할 수 있습니다.',
-        '회원 탈퇴는 계정 설정 페이지에서 직접 진행하거나 아래 보호 책임자 연락처로 요청하실 수 있습니다.',
+        '회원 탈퇴(계정 삭제)는 앱·웹사이트의 계정 메뉴 또는 마이페이지의 “계정 삭제”에서 직접 즉시 진행할 수 있으며, 로그인할 수 없는 경우 아래 보호 책임자 연락처로 요청하실 수 있습니다.',
         '법정대리인을 통한 14세 미만 아동의 정보 처리는 별도 동의를 받습니다(현재 만 14세 이상만 가입 가능).',
       ] },
       { title: '8. 쿠키의 사용', lead: '회사는 서비스 이용 편의성 향상을 위해 쿠키를 사용합니다. 이용자는 브라우저 설정에서 쿠키 저장을 거부할 수 있으나, 일부 기능(자동 로그인, 언어 설정 등)이 제한될 수 있습니다.' },
@@ -58,12 +60,20 @@ export const PRIVACY: LegalDocs = {
         '접근 권한 최소화 및 접근 로그 모니터링',
         '주기적 보안 점검 및 침해 대응 절차 운영',
       ] },
-      { title: '10. 개인정보 보호 책임자', items: [
+      { title: '10. 얼굴 이미지(AI 뷰티 분석 · AI 스타일 시뮬레이션) 데이터의 처리', lead: '‘AI 뷰티 분석’과 ‘AI 스타일 시뮬레이션’ 기능은 이용자가 직접 선택·촬영해 업로드한 얼굴 사진을 사용합니다. 회사는 이 사진을 다음과 같이 처리합니다.', items: [
+        { term: '수집 항목:', text: '해당 기능을 이용할 때 이용자가 스스로 업로드한 얼굴 사진 1장. 다른 기능에서는 얼굴 사진을 수집하지 않습니다.' },
+        { term: '이용 목적:', text: '퍼스널컬러·피부·헤어·눈썹 등 뷰티 스타일 코멘트 생성(분석)과 헤어·메이크업 등 스타일을 적용한 참고 이미지 생성(시뮬레이션). 얼굴 인식·신원 확인·추적·광고·프로파일링 목적으로는 사용하지 않으며, 얼굴 형상 정보(템플릿·특징값)를 생성하거나 보관하지 않습니다.' },
+        { term: '처리 위탁 · 제3자 제공:', text: '사진은 분석과 이미지 생성을 위해 Google LLC 의 Gemini API 로 암호화(TLS) 전송되어 처리됩니다. Google 은 회사의 처리 위탁을 받은 수탁자로서 결과 생성 외의 목적으로 사진을 사용할 수 없으며(회사는 유료 API 를 사용하고, 유료 API 의 입력·출력은 Google 의 모델 학습·서비스 개선에 사용되지 않습니다), 그 밖의 어떤 제3자에게도 제공·판매하지 않습니다.' },
+        { term: '보관 · 파기:', text: '회사는 업로드된 얼굴 사진과 시뮬레이션 결과 이미지를 서버·데이터베이스·파일 저장소 어디에도 저장하지 않습니다. 사진은 요청을 처리하는 동안에만 서버 메모리에서 사용되고 응답이 끝나면 즉시 파기됩니다(보관 기간 0일). AI 뷰티 분석의 텍스트 결과(퍼스널컬러 톤 코멘트 등)와 추천 목록만 ‘결과 이메일 받기’를 위해 보관하며, 계정 삭제 시 함께 삭제됩니다.' },
+        { term: '저장 위치:', text: '사진은 저장되지 않으므로 저장 위치가 없습니다. 텍스트 결과는 회사 데이터베이스(Supabase, 대한민국 서울 리전)에 보관됩니다.' },
+        { term: '동의와 선택권:', text: '사진 업로드는 선택 사항이며, 업로드 화면의 안내에 따라 업로드하는 것으로 처리에 동의합니다. 업로드하지 않아도 다른 서비스는 모두 이용할 수 있고, 텍스트 결과의 삭제는 계정 삭제 또는 11조의 보호 책임자에게 요청할 수 있습니다.' },
+      ] },
+      { title: '11. 개인정보 보호 책임자', items: [
         '이름: 이동희 (주식회사 쉐어아트 개인정보 보호 책임자)',
         '이메일: ldh9271@gmail.com',
         '운영 시간: 평일 09:00 – 18:00 (KST)',
       ] },
-      { title: '11. 개정 이력', lead: '본 방침은 법령 또는 서비스 정책 변경에 따라 개정될 수 있으며, 변경 시 시행일 7일 전 서비스 내 공지 또는 가입 이메일로 통지합니다.' },
+      { title: '12. 개정 이력', lead: '본 방침은 법령 또는 서비스 정책 변경에 따라 개정될 수 있으며, 변경 시 시행일 7일 전 서비스 내 공지 또는 가입 이메일로 통지합니다.' },
     ],
     addendum: '부칙: 본 방침은 2026년 1월 1일부터 시행합니다.',
   },
@@ -71,7 +81,7 @@ export const PRIVACY: LegalDocs = {
   en: {
     metaTitle: 'Privacy Policy · GlowUpTour',
     title: 'Privacy Policy',
-    effective: 'Effective: January 1, 2026 · Last revised: September 17, 2026',
+    effective: 'Effective: January 1, 2026 · Last revised: November 3, 2026',
     translationNotice: 'This is a translation for your convenience. If there is any discrepancy, the Korean original prevails.',
     backToSignup: 'Back to sign-up',
     sections: [
@@ -82,6 +92,7 @@ export const PRIVACY: LegalDocs = {
         { term: 'Inquiries and bookings:', text: 'treatment categories of interest, preferred dates, free-text notes, attached images (optional)' },
         { term: 'Collected automatically:', text: 'IP address, browser information, cookies, service usage records, page access times' },
         { term: 'Payments (where applicable):', text: 'payment method (masked card), amount, currency — full card numbers are processed by the payment provider and are not stored by the Company.' },
+        { term: 'AI beauty analysis · AI style simulation (optional):', text: 'one face photo you upload yourself — used only to produce the result and never stored (see Section 10)' },
       ] },
       { title: '3. Purposes of collection and use', ordered: true, items: [
         'Membership registration and identity verification',
@@ -106,13 +117,13 @@ export const PRIVACY: LegalDocs = {
       ] },
       { title: '6. Outsourcing of processing', lead: 'The Company may outsource the following tasks to operate the service, and concludes contracts for safe management under the Personal Information Protection Act when doing so.', items: [
         'Cloud infrastructure: Vercel Inc., Supabase Inc.',
-        'AI translation and analysis: Google Cloud (Gemini), OpenAI',
+        'AI translation, analysis and face-photo processing: Google LLC (Gemini API), OpenAI',
         'Messenger channel integration: Kakao, LINE, Meta, Naver, WeChat',
         'Payment processing: domestic and international payment providers (stated at booking confirmation)',
       ] },
       { title: '7. Your rights and how to exercise them', ordered: true, items: [
         'You may at any time request to access, correct, delete or suspend the processing of your personal data.',
-        'You can delete your account from the account settings page or by contacting the privacy officer below.',
+        'You can delete your account yourself, immediately, via “Delete account” in the account menu or on My page in the app and website; if you cannot sign in, contact the privacy officer below.',
         'Processing of data of children under 14 requires separate consent from a legal guardian (currently only users aged 14 or older may sign up).',
       ] },
       { title: '8. Use of cookies', lead: 'The Company uses cookies to improve convenience. You may refuse cookies in your browser settings, but some features (automatic sign-in, language settings, etc.) may be limited.' },
@@ -122,12 +133,20 @@ export const PRIVACY: LegalDocs = {
         'Least-privilege access and access-log monitoring',
         'Regular security checks and incident response procedures',
       ] },
-      { title: '10. Privacy officer', items: [
+      { title: '10. Face-image data (AI beauty analysis · AI style simulation)', lead: 'The “AI beauty analysis” and “AI style simulation” features use a face photo that you choose or take and upload yourself. The Company processes it as follows.', items: [
+        { term: 'What we collect:', text: 'One face photo that you upload yourself when using these features. No other feature collects face photos.' },
+        { term: 'Purpose:', text: 'Generating beauty styling comments (personal color, skin, hair, brows) for the analysis, and generating an illustrative image with a hairstyle, hair color or makeup applied for the simulation. Face data is never used for facial recognition, identification, tracking, advertising or profiling, and no facial geometry (templates or feature vectors) is created or kept.' },
+        { term: 'Processors and third parties:', text: 'The photo is transmitted over an encrypted (TLS) connection to the Gemini API operated by Google LLC, which processes it on the Company’s behalf as a data processor. Google may not use the photo for any purpose other than producing the result (the Company uses the paid API, whose inputs and outputs are not used to train Google’s models or improve its services), and the photo is never provided or sold to any other third party.' },
+        { term: 'Retention and deletion:', text: 'The Company does not store uploaded face photos or simulation result images anywhere — not on servers, in databases or in file storage. The photo exists only in server memory while the request is processed and is discarded as soon as the response is returned (retention: 0 days). Only the text results of the AI beauty analysis (e.g. personal-color comments) and the recommendation list are kept so that the result can be emailed to you, and they are deleted together with your account.' },
+        { term: 'Storage location:', text: 'Photos are not stored, so there is no storage location. Text results are kept in the Company’s database (Supabase, Seoul region, Republic of Korea).' },
+        { term: 'Consent and choice:', text: 'Uploading a photo is optional; by uploading it as described on the upload screen you consent to this processing. Every other service is available without uploading a photo, and you may have text results deleted by deleting your account or by contacting the privacy officer in Section 11.' },
+      ] },
+      { title: '11. Privacy officer', items: [
         'Name: Donghee Lee (Privacy Officer, Shareart Co., Ltd.)',
         'Email: ldh9271@gmail.com',
         'Hours: weekdays 09:00–18:00 (KST)',
       ] },
-      { title: '11. Revision history', lead: 'This Policy may be revised in line with changes in law or service policy. Changes are announced within the service or by email to your sign-up address at least 7 days before they take effect.' },
+      { title: '12. Revision history', lead: 'This Policy may be revised in line with changes in law or service policy. Changes are announced within the service or by email to your sign-up address at least 7 days before they take effect.' },
     ],
     addendum: 'Addendum: This Policy takes effect on January 1, 2026.',
   },
@@ -135,7 +154,7 @@ export const PRIVACY: LegalDocs = {
   ja: {
     metaTitle: 'プライバシーポリシー · GlowUpTour',
     title: 'プライバシーポリシー',
-    effective: '施行日：2026年1月1日 · 最終改定：2026年9月17日',
+    effective: '施行日：2026年1月1日 · 最終改定：2026年11月3日',
     translationNotice: 'このページは参考訳です。内容に相違がある場合は韓国語の原文が優先されます。',
     backToSignup: '会員登録に戻る',
     sections: [
@@ -146,6 +165,7 @@ export const PRIVACY: LegalDocs = {
         { term: 'お問い合わせ・予約時：', text: '関心のある施術カテゴリ、希望日程、自由記入メモ、添付画像（任意）' },
         { term: '自動収集：', text: '接続IP、ブラウザ情報、Cookie、サービス利用記録、ページ閲覧時刻' },
         { term: '決済時（該当する場合）：', text: '決済手段（カード番号はマスキング）、決済金額、決済通貨。カード番号そのものは決済代行会社が直接処理し、当社は保存しません。' },
+        { term: 'AI美容分析・AIスタイルシミュレーション利用時（任意）：', text: '利用者ご自身がアップロードした顔写真1枚。結果の生成にのみ使用し、保存しません（第10条参照）' },
       ] },
       { title: '3. 個人情報の収集・利用目的', ordered: true, items: [
         '会員登録および本人確認',
@@ -170,13 +190,13 @@ export const PRIVACY: LegalDocs = {
       ] },
       { title: '6. 個人情報処理の委託', lead: '当社はサービス運営のため次の業務を外部に委託することがあり、委託時は「個人情報保護法」に基づき安全な管理のための契約を締結します。', items: [
         'クラウドインフラ：Vercel Inc.、Supabase Inc.',
-        'AI翻訳・分析：Google Cloud（Gemini）、OpenAI',
+        'AI翻訳・分析・顔写真の処理：Google LLC（Gemini API）、OpenAI',
         'メッセンジャー連携：Kakao、LINE、Meta、Naver、WeChat',
         '決済処理：国内外の決済代行会社（予約確定の段階で明示）',
       ] },
       { title: '7. 利用者の権利と行使方法', ordered: true, items: [
         '利用者はいつでも自身の個人情報の閲覧・訂正・削除・処理停止を請求できます。',
-        '退会はアカウント設定ページから直接行うか、下記の保護責任者の連絡先に請求できます。',
+        '退会（アカウント削除）は、アプリ・ウェブサイトのアカウントメニューまたはマイページの「アカウント削除」からご自身で即時に行えます。ログインできない場合は下記の保護責任者の連絡先に請求できます。',
         '14歳未満の児童の情報処理は法定代理人の別途の同意を得ます（現在は満14歳以上のみ登録可能）。',
       ] },
       { title: '8. Cookieの使用', lead: '当社はサービス利用の利便性向上のためCookieを使用します。利用者はブラウザ設定でCookieの保存を拒否できますが、一部の機能（自動ログイン、言語設定など）が制限されることがあります。' },
@@ -186,12 +206,20 @@ export const PRIVACY: LegalDocs = {
         'アクセス権限の最小化とアクセスログの監視',
         '定期的なセキュリティ点検と侵害対応手順の運用',
       ] },
-      { title: '10. 個人情報保護責任者', items: [
+      { title: '10. 顔画像（AI美容分析・AIスタイルシミュレーション）データの取り扱い', lead: '「AI美容分析」と「AIスタイルシミュレーション」機能は、利用者ご自身が選択・撮影してアップロードした顔写真を使用します。当社はこの写真を次のとおり取り扱います。', items: [
+        { term: '収集項目：', text: 'これらの機能の利用時に利用者ご自身がアップロードした顔写真1枚。他の機能では顔写真を収集しません。' },
+        { term: '利用目的：', text: 'パーソナルカラー・肌・髪・眉などの美容スタイルコメントの生成（分析）と、ヘアスタイル・ヘアカラー・メイクなどを適用した参考画像の生成（シミュレーション）。顔認識・本人確認・追跡・広告・プロファイリングの目的には使用せず、顔の形状情報（テンプレート・特徴量）を生成・保管しません。' },
+        { term: '処理の委託・第三者提供：', text: '写真は分析と画像生成のため、Google LLC の Gemini API へ暗号化（TLS）して送信され処理されます。Google は当社から処理を委託された受託者として、結果の生成以外の目的で写真を使用できず（当社は有料APIを使用しており、有料APIの入力・出力は Google のモデル学習・サービス改善に使用されません）、その他いかなる第三者にも提供・販売しません。' },
+        { term: '保管・破棄：', text: '当社は、アップロードされた顔写真とシミュレーション結果画像を、サーバー・データベース・ファイルストレージのいずれにも保存しません。写真はリクエスト処理中にのみサーバーメモリ上で使用され、応答の完了とともに直ちに破棄されます（保管期間0日）。AI美容分析のテキスト結果（パーソナルカラーのコメントなど）とおすすめリストのみ「結果をメールで受け取る」のために保管し、アカウント削除時に一緒に削除されます。' },
+        { term: '保存場所：', text: '写真は保存されないため保存場所はありません。テキスト結果は当社のデータベース（Supabase、大韓民国ソウルリージョン）に保管されます。' },
+        { term: '同意と選択権：', text: '写真のアップロードは任意であり、アップロード画面の案内に従ってアップロードすることで処理に同意したものとみなします。アップロードしなくても他のサービスはすべて利用でき、テキスト結果の削除はアカウント削除または第11条の保護責任者へ請求できます。' },
+      ] },
+      { title: '11. 個人情報保護責任者', items: [
         '氏名：イ・ドンヒ（株式会社シェアアート 個人情報保護責任者）',
         'メール：ldh9271@gmail.com',
         '対応時間：平日 09:00〜18:00（KST）',
       ] },
-      { title: '11. 改定履歴', lead: '本方針は法令またはサービス方針の変更に伴い改定されることがあり、変更時は施行日の7日前にサービス内の告知または登録メールアドレスへの通知で知らせます。' },
+      { title: '12. 改定履歴', lead: '本方針は法令またはサービス方針の変更に伴い改定されることがあり、変更時は施行日の7日前にサービス内の告知または登録メールアドレスへの通知で知らせます。' },
     ],
     addendum: '附則：本方針は2026年1月1日から施行します。',
   },
@@ -199,7 +227,7 @@ export const PRIVACY: LegalDocs = {
   zh: {
     metaTitle: '隐私政策 · GlowUpTour',
     title: '隐私政策',
-    effective: '生效日期：2026年1月1日 · 最近修订：2026年9月17日',
+    effective: '生效日期：2026年1月1日 · 最近修订：2026年11月3日',
     translationNotice: '本页面为参考译文。如内容存在差异，以韩文原文为准。',
     backToSignup: '返回注册',
     sections: [
@@ -210,6 +238,7 @@ export const PRIVACY: LegalDocs = {
         { term: '咨询·预约时：', text: '感兴趣的项目类别、期望日程、自由填写的备注、附件图片（选填）' },
         { term: '自动收集：', text: '访问 IP、浏览器信息、Cookie、服务使用记录、页面访问时间' },
         { term: '付款时（如适用）：', text: '支付方式（卡号脱敏）、支付金额、支付货币。完整卡号由支付服务商直接处理，公司不予存储。' },
+        { term: '使用 AI 美容分析·AI 造型模拟时（选填）：', text: '用户自行上传的 1 张面部照片，仅用于生成结果，不予保存（见第10条）' },
       ] },
       { title: '3. 个人信息的收集与使用目的', ordered: true, items: [
         '会员注册及本人确认',
@@ -234,13 +263,13 @@ export const PRIVACY: LegalDocs = {
       ] },
       { title: '6. 个人信息处理的委托', lead: '为运营服务，公司可将以下业务委托给外部，并在委托时依据《个人信息保护法》签订安全管理合同。', items: [
         '云基础设施：Vercel Inc.、Supabase Inc.',
-        'AI 翻译与分析：Google Cloud（Gemini）、OpenAI',
+        'AI 翻译、分析与面部照片处理：Google LLC（Gemini API）、OpenAI',
         '通讯软件渠道对接：Kakao、LINE、Meta、Naver、WeChat',
         '支付处理：国内外支付服务商（在预约确认阶段明示）',
       ] },
       { title: '7. 用户的权利及行使方法', ordered: true, items: [
         '用户可随时要求查阅、更正、删除本人个人信息或停止处理。',
-        '注销会员可在账户设置页面自行办理，或通过下方保护负责人的联系方式申请。',
+        '注销会员（删除账户）可在应用·网站的账户菜单或“我的页面”中的“删除账户”自行即时办理；如无法登录，可通过下方保护负责人的联系方式申请。',
         '对未满 14 周岁儿童的信息处理需取得法定代理人的另行同意（目前仅限年满 14 周岁者注册）。',
       ] },
       { title: '8. Cookie 的使用', lead: '为提升使用便利性，公司使用 Cookie。用户可在浏览器设置中拒绝保存 Cookie，但部分功能（自动登录、语言设置等）可能受限。' },
@@ -250,12 +279,20 @@ export const PRIVACY: LegalDocs = {
         '访问权限最小化及访问日志监控',
         '定期安全检查及侵害应对程序',
       ] },
-      { title: '10. 个人信息保护负责人', items: [
+      { title: '10. 面部图像（AI 美容分析·AI 造型模拟）数据的处理', lead: '“AI 美容分析”和“AI 造型模拟”功能使用用户自行选择、拍摄并上传的面部照片。公司按如下方式处理该照片。', items: [
+        { term: '收集项目：', text: '使用上述功能时由用户自行上传的 1 张面部照片。其他功能不收集面部照片。' },
+        { term: '使用目的：', text: '生成个人色彩、皮肤、头发、眉毛等美容造型建议（分析），以及生成应用了发型、发色、妆容等效果的参考图片（模拟）。不用于人脸识别、身份验证、追踪、广告或画像分析，也不会生成或保存面部几何信息（模板、特征值）。' },
+        { term: '处理委托与第三方提供：', text: '照片经加密（TLS）传输至 Google LLC 的 Gemini API 进行分析和图片生成。Google 作为公司的受托处理方，不得将照片用于生成结果以外的任何目的（公司使用付费 API，付费 API 的输入和输出不会用于 Google 的模型训练或服务改进），照片也不会提供或出售给任何其他第三方。' },
+        { term: '保存与销毁：', text: '公司不会在服务器、数据库或文件存储中的任何位置保存上传的面部照片及模拟结果图片。照片仅在处理请求期间存在于服务器内存中，响应完成后立即销毁（保存期限为 0 天）。仅 AI 美容分析的文字结果（如个人色彩建议）和推荐列表会为“通过邮件接收结果”而保存，并在删除账户时一并删除。' },
+        { term: '存储位置：', text: '照片不被保存，因此不存在存储位置。文字结果保存在公司数据库（Supabase，大韩民国首尔区域）。' },
+        { term: '同意与选择权：', text: '上传照片为自愿行为，按照上传页面的说明上传即视为同意本处理。不上传照片也可使用其他全部服务；如需删除文字结果，可删除账户或向第11条的保护负责人提出申请。' },
+      ] },
+      { title: '11. 个人信息保护负责人', items: [
         '姓名：李东熙（Shareart 株式会社 个人信息保护负责人）',
         '邮箱：ldh9271@gmail.com',
         '工作时间：工作日 09:00–18:00（韩国时间）',
       ] },
-      { title: '11. 修订记录', lead: '本政策可能因法律或服务政策变更而修订，变更时将在生效日 7 天前通过服务内公告或注册邮箱通知。' },
+      { title: '12. 修订记录', lead: '本政策可能因法律或服务政策变更而修订，变更时将在生效日 7 天前通过服务内公告或注册邮箱通知。' },
     ],
     addendum: '附则：本政策自 2026 年 1 月 1 日起施行。',
   },
@@ -263,7 +300,7 @@ export const PRIVACY: LegalDocs = {
   ru: {
     metaTitle: 'Политика конфиденциальности · GlowUpTour',
     title: 'Политика конфиденциальности',
-    effective: 'Вступает в силу: 1 января 2026 г. · Последняя редакция: 17 сентября 2026 г.',
+    effective: 'Вступает в силу: 1 января 2026 г. · Последняя редакция: 3 ноября 2026 г.',
     translationNotice: 'Это перевод для удобства. При расхождениях приоритет имеет оригинал на корейском языке.',
     backToSignup: 'Вернуться к регистрации',
     sections: [
@@ -274,6 +311,7 @@ export const PRIVACY: LegalDocs = {
         { term: 'При запросах и бронировании:', text: 'интересующие категории процедур, желаемые даты, свободные заметки, прикреплённые изображения (по желанию)' },
         { term: 'Автоматически:', text: 'IP-адрес, данные браузера, cookie, история использования сервиса, время посещения страниц' },
         { term: 'При оплате (если применимо):', text: 'способ оплаты (маскированная карта), сумма, валюта. Полный номер карты обрабатывает платёжный провайдер; Компания его не хранит.' },
+        { term: 'AI-анализ красоты · AI-симуляция стиля (по желанию):', text: 'одно фото лица, загруженное вами; используется только для получения результата и не сохраняется (см. раздел 10)' },
       ] },
       { title: '3. Цели сбора и использования', ordered: true, items: [
         'Регистрация и подтверждение личности',
@@ -298,13 +336,13 @@ export const PRIVACY: LegalDocs = {
       ] },
       { title: '6. Поручение обработки', lead: 'Для работы сервиса Компания может поручать следующие задачи внешним исполнителям, заключая договоры о безопасной обработке в соответствии с Законом о защите персональных данных.', items: [
         'Облачная инфраструктура: Vercel Inc., Supabase Inc.',
-        'AI-перевод и анализ: Google Cloud (Gemini), OpenAI',
+        'AI-перевод, анализ и обработка фото лица: Google LLC (Gemini API), OpenAI',
         'Интеграция мессенджеров: Kakao, LINE, Meta, Naver, WeChat',
         'Обработка платежей: корейские и международные платёжные провайдеры (указываются при подтверждении бронирования)',
       ] },
       { title: '7. Права пользователя и порядок их реализации', ordered: true, items: [
         'Вы можете в любое время запросить доступ к своим данным, их исправление, удаление или приостановку обработки.',
-        'Удалить аккаунт можно на странице настроек аккаунта или обратившись к ответственному за защиту данных (ниже).',
+        'Удалить аккаунт можно самостоятельно и сразу через пункт «Удалить аккаунт» в меню аккаунта или на «Моей странице» приложения и сайта; если войти не получается, обратитесь к ответственному за защиту данных (ниже).',
         'Обработка данных детей младше 14 лет требует отдельного согласия законного представителя (в настоящее время регистрация доступна только с 14 лет).',
       ] },
       { title: '8. Использование cookie', lead: 'Компания использует cookie для удобства пользования сервисом. Вы можете отключить cookie в настройках браузера, однако некоторые функции (автоматический вход, настройки языка и др.) могут быть ограничены.' },
@@ -314,12 +352,20 @@ export const PRIVACY: LegalDocs = {
         'Минимизация прав доступа и мониторинг журналов доступа',
         'Регулярные проверки безопасности и процедуры реагирования на инциденты',
       ] },
-      { title: '10. Ответственный за защиту персональных данных', items: [
+      { title: '10. Данные изображения лица (AI-анализ красоты · AI-симуляция стиля)', lead: 'Функции «AI-анализ красоты» и «AI-симуляция стиля» используют фото лица, которое вы сами выбираете или снимаете и загружаете. Компания обрабатывает его следующим образом.', items: [
+        { term: 'Что собирается:', text: 'Одно фото лица, которое вы сами загружаете при использовании этих функций. Другие функции фото лица не собирают.' },
+        { term: 'Цель:', text: 'Формирование рекомендаций по стилю (цветотип, кожа, волосы, брови) при анализе и создание иллюстративного изображения с причёской, цветом волос или макияжем при симуляции. Данные лица никогда не используются для распознавания, идентификации, отслеживания, рекламы или профилирования; геометрия лица (шаблоны, векторы признаков) не создаётся и не хранится.' },
+        { term: 'Обработчики и третьи лица:', text: 'Фото передаётся по зашифрованному (TLS) соединению в Gemini API компании Google LLC, которая обрабатывает его по поручению Компании как обработчик данных. Google не вправе использовать фото ни для чего, кроме получения результата (Компания использует платный API, входные и выходные данные которого не используются для обучения моделей Google или улучшения её сервисов); никаким иным третьим лицам фото не передаётся и не продаётся.' },
+        { term: 'Хранение и удаление:', text: 'Компания нигде не хранит загруженные фото лица и изображения-результаты симуляции — ни на серверах, ни в базах данных, ни в файловых хранилищах. Фото существует только в оперативной памяти сервера во время обработки запроса и уничтожается сразу после отправки ответа (срок хранения — 0 дней). Хранятся только текстовые результаты AI-анализа (например, комментарии по цветотипу) и список рекомендаций, чтобы отправить результат на e-mail; они удаляются вместе с аккаунтом.' },
+        { term: 'Место хранения:', text: 'Фото не сохраняются, поэтому места хранения нет. Текстовые результаты хранятся в базе данных Компании (Supabase, регион Сеул, Республика Корея).' },
+        { term: 'Согласие и выбор:', text: 'Загрузка фото добровольна; загружая его в соответствии с пояснением на экране загрузки, вы соглашаетесь на эту обработку. Все остальные сервисы доступны без загрузки фото; текстовые результаты можно удалить, удалив аккаунт или обратившись к ответственному лицу из раздела 11.' },
+      ] },
+      { title: '11. Ответственный за защиту персональных данных', items: [
         'Имя: Ли Донхи (ответственный за защиту персональных данных, Shareart Co., Ltd.)',
         'E-mail: ldh9271@gmail.com',
         'Часы работы: будни 09:00–18:00 (KST)',
       ] },
-      { title: '11. История изменений', lead: 'Политика может изменяться в связи с изменением законодательства или политики сервиса. Об изменениях сообщается в сервисе или по e-mail регистрации не позднее чем за 7 дней до вступления в силу.' },
+      { title: '12. История изменений', lead: 'Политика может изменяться в связи с изменением законодательства или политики сервиса. Об изменениях сообщается в сервисе или по e-mail регистрации не позднее чем за 7 дней до вступления в силу.' },
     ],
     addendum: 'Дополнение: настоящая Политика вступает в силу 1 января 2026 г.',
   },
@@ -327,7 +373,7 @@ export const PRIVACY: LegalDocs = {
   vi: {
     metaTitle: 'Chính sách quyền riêng tư · GlowUpTour',
     title: 'Chính sách quyền riêng tư',
-    effective: 'Có hiệu lực: 01/01/2026 · Sửa đổi gần nhất: 17/09/2026',
+    effective: 'Có hiệu lực: 01/01/2026 · Sửa đổi gần nhất: 03/11/2026',
     translationNotice: 'Đây là bản dịch tham khảo. Nếu có khác biệt, bản gốc tiếng Hàn được ưu tiên áp dụng.',
     backToSignup: 'Quay lại đăng ký',
     sections: [
@@ -338,6 +384,7 @@ export const PRIVACY: LegalDocs = {
         { term: 'Khi hỏi đáp, đặt chỗ:', text: 'danh mục liệu trình quan tâm, lịch mong muốn, ghi chú tự do, ảnh đính kèm (tùy chọn)' },
         { term: 'Thu thập tự động:', text: 'IP truy cập, thông tin trình duyệt, cookie, lịch sử sử dụng dịch vụ, thời điểm truy cập trang' },
         { term: 'Khi thanh toán (nếu có):', text: 'phương thức thanh toán (số thẻ được che), số tiền, loại tiền. Số thẻ đầy đủ do đơn vị thanh toán xử lý trực tiếp, Công ty không lưu.' },
+        { term: 'Khi dùng phân tích sắc đẹp AI · mô phỏng phong cách AI (tùy chọn):', text: '1 ảnh khuôn mặt do người dùng tự tải lên — chỉ dùng để tạo kết quả và không được lưu (xem Điều 10)' },
       ] },
       { title: '3. Mục đích thu thập và sử dụng', ordered: true, items: [
         'Đăng ký thành viên và xác minh danh tính',
@@ -362,13 +409,13 @@ export const PRIVACY: LegalDocs = {
       ] },
       { title: '6. Ủy thác xử lý thông tin cá nhân', lead: 'Để vận hành dịch vụ, Công ty có thể ủy thác các công việc sau cho bên ngoài và ký hợp đồng quản lý an toàn theo Luật Bảo vệ thông tin cá nhân khi ủy thác.', items: [
         'Hạ tầng đám mây: Vercel Inc., Supabase Inc.',
-        'Dịch và phân tích AI: Google Cloud (Gemini), OpenAI',
+        'Dịch, phân tích AI và xử lý ảnh khuôn mặt: Google LLC (Gemini API), OpenAI',
         'Kết nối kênh nhắn tin: Kakao, LINE, Meta, Naver, WeChat',
         'Xử lý thanh toán: các đơn vị thanh toán trong và ngoài nước (nêu rõ ở bước xác nhận đặt chỗ)',
       ] },
       { title: '7. Quyền của người dùng và cách thực hiện', ordered: true, items: [
         'Người dùng có thể yêu cầu xem, sửa, xóa hoặc tạm dừng xử lý thông tin cá nhân của mình bất cứ lúc nào.',
-        'Có thể xóa tài khoản trực tiếp tại trang cài đặt tài khoản hoặc yêu cầu qua liên hệ của người phụ trách bảo vệ thông tin bên dưới.',
+        'Bạn có thể tự xóa tài khoản ngay lập tức qua mục “Xóa tài khoản” trong menu tài khoản hoặc Trang của tôi trên ứng dụng và website; nếu không đăng nhập được, hãy liên hệ người phụ trách bảo vệ thông tin bên dưới.',
         'Việc xử lý thông tin của trẻ dưới 14 tuổi cần có sự đồng ý riêng của người đại diện hợp pháp (hiện chỉ người từ 14 tuổi trở lên được đăng ký).',
       ] },
       { title: '8. Sử dụng cookie', lead: 'Công ty sử dụng cookie để nâng cao tiện ích sử dụng. Người dùng có thể từ chối lưu cookie trong cài đặt trình duyệt, nhưng một số tính năng (tự động đăng nhập, cài đặt ngôn ngữ, v.v.) có thể bị hạn chế.' },
@@ -378,12 +425,20 @@ export const PRIVACY: LegalDocs = {
         'Giới hạn quyền truy cập tối thiểu và giám sát nhật ký truy cập',
         'Kiểm tra bảo mật định kỳ và quy trình ứng phó sự cố',
       ] },
-      { title: '10. Người phụ trách bảo vệ thông tin cá nhân', items: [
+      { title: '10. Dữ liệu ảnh khuôn mặt (phân tích sắc đẹp AI · mô phỏng phong cách AI)', lead: 'Tính năng “Phân tích sắc đẹp AI” và “Mô phỏng phong cách AI” sử dụng ảnh khuôn mặt do người dùng tự chọn hoặc chụp rồi tải lên. Công ty xử lý ảnh này như sau.', items: [
+        { term: 'Thu thập:', text: '1 ảnh khuôn mặt do người dùng tự tải lên khi dùng các tính năng này. Không tính năng nào khác thu thập ảnh khuôn mặt.' },
+        { term: 'Mục đích:', text: 'Tạo nhận xét phong cách làm đẹp (tông màu cá nhân, da, tóc, chân mày) cho phần phân tích, và tạo ảnh minh họa áp dụng kiểu tóc, màu tóc, trang điểm cho phần mô phỏng. Không dùng cho nhận diện khuôn mặt, xác minh danh tính, theo dõi, quảng cáo hay lập hồ sơ; không tạo hay lưu dữ liệu hình học khuôn mặt (mẫu, vector đặc trưng).' },
+        { term: 'Ủy thác xử lý và bên thứ ba:', text: 'Ảnh được truyền qua kết nối mã hóa (TLS) tới Gemini API của Google LLC để phân tích và tạo ảnh. Google là bên xử lý theo ủy thác của Công ty, không được dùng ảnh cho mục đích nào khác ngoài việc tạo kết quả (Công ty dùng API trả phí, dữ liệu đầu vào và đầu ra của API trả phí không được dùng để huấn luyện mô hình hay cải thiện dịch vụ của Google), và ảnh không được cung cấp hay bán cho bất kỳ bên thứ ba nào khác.' },
+        { term: 'Lưu giữ và hủy:', text: 'Công ty không lưu ảnh khuôn mặt đã tải lên hay ảnh kết quả mô phỏng ở bất kỳ đâu — không trên máy chủ, cơ sở dữ liệu hay kho tệp. Ảnh chỉ tồn tại trong bộ nhớ máy chủ trong lúc xử lý yêu cầu và bị hủy ngay khi trả kết quả (thời hạn lưu: 0 ngày). Chỉ kết quả dạng văn bản của phân tích sắc đẹp AI (ví dụ nhận xét tông màu cá nhân) và danh sách gợi ý được lưu để “nhận kết quả qua email”, và sẽ bị xóa cùng tài khoản.' },
+        { term: 'Nơi lưu trữ:', text: 'Ảnh không được lưu nên không có nơi lưu trữ. Kết quả văn bản được lưu trong cơ sở dữ liệu của Công ty (Supabase, khu vực Seoul, Hàn Quốc).' },
+        { term: 'Đồng ý và quyền lựa chọn:', text: 'Việc tải ảnh là tùy chọn; khi tải ảnh theo hướng dẫn trên màn hình tải lên, bạn đồng ý với việc xử lý này. Mọi dịch vụ khác vẫn dùng được mà không cần tải ảnh; bạn có thể yêu cầu xóa kết quả văn bản bằng cách xóa tài khoản hoặc liên hệ người phụ trách tại Điều 11.' },
+      ] },
+      { title: '11. Người phụ trách bảo vệ thông tin cá nhân', items: [
         'Họ tên: Lee Donghee (Người phụ trách bảo vệ thông tin cá nhân, Shareart Co., Ltd.)',
         'Email: ldh9271@gmail.com',
         'Giờ làm việc: ngày thường 09:00–18:00 (giờ Hàn Quốc)',
       ] },
-      { title: '11. Lịch sử sửa đổi', lead: 'Chính sách này có thể được sửa đổi theo thay đổi của pháp luật hoặc chính sách dịch vụ; khi thay đổi sẽ thông báo trong dịch vụ hoặc qua email đăng ký trước ngày hiệu lực 7 ngày.' },
+      { title: '12. Lịch sử sửa đổi', lead: 'Chính sách này có thể được sửa đổi theo thay đổi của pháp luật hoặc chính sách dịch vụ; khi thay đổi sẽ thông báo trong dịch vụ hoặc qua email đăng ký trước ngày hiệu lực 7 ngày.' },
     ],
     addendum: 'Phụ lục: Chính sách này có hiệu lực từ ngày 01/01/2026.',
   },

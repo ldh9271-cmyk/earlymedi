@@ -381,11 +381,11 @@ export default async function MyPage({
         {t.footNote}
         {' '}<Link href={`/${locale}/policy/refund`} style={{ color: '#1d4ed8', fontWeight: 600 }}>{tr.policyLink} →</Link>
       </p>
-      {/* Google Play 계정 삭제 정책 — 앱 안에서 찾을 수 있는 삭제 요청 경로 */}
-      <p style={{ fontSize: 12, marginTop: 10 }}>
-        <Link href={`/${locale}/account/password`} style={{ color: '#9c9c9c', textDecoration: 'underline', marginRight: 14 }}>{t.changePassword}</Link>
-        <Link href={`/${locale}/account/delete`} style={{ color: '#9c9c9c', textDecoration: 'underline' }}>{t.deleteAccount}</Link>
-      </p>
+      {/* 계정 관리 — 비밀번호 변경 · 계정 삭제(App Store 5.1.1(v)·Play 정책: 앱 안에서 바로 찾을 수 있게 버튼으로, 2026-11-03) */}
+      <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <Link href={`/${locale}/account/password`} style={{ border: '1px solid #dddddd', borderRadius: 10, padding: '9px 14px', fontSize: 13, color: '#222', fontWeight: 600, textDecoration: 'none' }}>{t.changePassword}</Link>
+        <Link href={`/${locale}/account/delete`} data-testid="me-delete-account" style={{ border: '1px solid #f3c2cc', background: '#fff5f7', borderRadius: 10, padding: '9px 14px', fontSize: 13, color: '#c81e42', fontWeight: 600, textDecoration: 'none' }}>{t.deleteAccount}</Link>
+      </div>
     </section>
   );
 }
