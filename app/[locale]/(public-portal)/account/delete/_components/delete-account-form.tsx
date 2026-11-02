@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 import { deleteAccountAction } from '../actions';
@@ -16,7 +15,6 @@ export type DeleteFormCopy = {
 
 /** 로그인한 회원의 즉시 계정 삭제 — 체크 → 확인 창 → 삭제 → 로그아웃. */
 export default function DeleteAccountForm({ locale, email, t }: { locale: PublicLocale; email: string | null; t: DeleteFormCopy }): JSX.Element {
-  const router = useRouter();
   const [agree, setAgree] = useState(false);
   const [state, setState] = useState<'idle' | 'deleting' | 'done' | 'error'>('idle');
   const [errorKind, setErrorKind] = useState<'failed' | 'login_required' | 'active_bookings' | 'business_account'>('failed');
@@ -31,8 +29,9 @@ export default function DeleteAccountForm({ locale, email, t }: { locale: Public
       if (r.ok) {
         const sb = createSupabaseBrowserClient();
         await sb?.auth.signOut().catch(() => undefined);
+        // router.refresh() 는 하지 않는다 — 서버가 비로그인 화면으로 다시 그리면 완료 메시지가 사라진다
+        // (2026-11-03 아이패드 녹화에서 확인). 헤더는 onAuthStateChange 로 스스로 로그아웃 상태가 된다.
         setState('done');
-        router.refresh();
       } else {
         setErrorKind(r.error);
         setState('error');
