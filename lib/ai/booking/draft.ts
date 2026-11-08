@@ -33,6 +33,8 @@ export const BookingDraftSchema = z.object({
   email: optText(200),
   birthDate: ymd,
   memo: optText(2000),
+  /** 외국인(countryCode≠KR) 병원 접수용 여권번호 — 선택, 폼과 같은 규칙(영문·숫자 5~15자)으로 서버가 정규화 */
+  passportNo: optText(40),
 });
 export type BookingDraftInput = z.infer<typeof BookingDraftSchema>;
 
@@ -106,9 +108,10 @@ export function bookingPrompt(opts: { todayYmd: string; member: boolean; profile
   return `BOOKING (clinic visit request) — the user wants to reserve a clinic visit. Today in Korea: ${opts.todayYmd} (${weekday}).
 - Collect what is still missing, one or two items per turn, conversationally (never dump a long form): the clinic (one from DATA — if several fit, ask which), preferred date (within 3 months from today, Korea time) and time (24-hour) that fits that clinic's 진료시간 in DATA (avoid closed days, lunch and holidays; if the wish conflicts, propose the nearest option), full name, gender (female/male/other), nationality as a 2-letter country code, phone with country code, messenger app (${MESSENGERS.join(', ')}) and ID, date of birth, email (optional), and a one-line note of what they want (memo).
 - Reuse anything already given anywhere in the conversation${p ? ' or in MEMBER PROFILE' : ''}; never ask twice. Resolve relative dates ("next Tuesday", "来週の火曜日") to an exact date and say it back.
+- If countryCode is not KR, also ask for the passport number (clinics need it to register international patients; letters and digits exactly as printed in the passport, no spaces). Korean nationals (KR): do not ask, leave passportNo empty.
 ${p ? `- MEMBER PROFILE (logged-in user — use these unless the user says they differ): ${profileLines || '(empty)'}\n` : opts.member ? '' : '- The user is not signed in. Collect the details anyway; the card will ask them to sign in before sending (their draft is kept).\n'}- STATUS LINE: start every booking-related reply with one short line that states the current state in the user's language, so the user is never unsure. Exactly one of: (a) "collecting — still needed: <items>" while anything is missing; (b) "NOT sent yet — press the send button on the card below to submit" when the card is shown; (c) only after a ✅ receipt line exists: "sent — waiting for the clinic". Never say or imply that the visit is booked, reserved, confirmed or "almost done".
 - Once every required item is known, write the status line (b), a short summary, and then append this block as the very last line (machine-read, hidden from the user; one line of JSON, no comments, no code fence):
-<booking>{"hospital":"<exact clinic name from DATA>","visitYmd":"YYYY-MM-DD","visitTime":"HH:mm","name":"","gender":"female|male|other","countryCode":"XX","phone":"","messengerType":"WhatsApp","messengerId":"","email":"","birthDate":"YYYY-MM-DD","memo":""}</booking>
+<booking>{"hospital":"<exact clinic name from DATA>","visitYmd":"YYYY-MM-DD","visitTime":"HH:mm","name":"","gender":"female|male|other","countryCode":"XX","phone":"","messengerType":"WhatsApp","messengerId":"","email":"","birthDate":"YYYY-MM-DD","memo":"","passportNo":""}</booking>
 - Mention the card or the send button ONLY in a reply that ends with that block. If something is still missing, ask for it and say nothing about a card.
 - Every time the user asks whether it is booked, asks to send, or changes a detail, and all items are known, output the block again (the card reappears at the bottom) with status line (b). The block is harmless to repeat.
 - Pressing the button sends a visit REQUEST; the clinic confirms the final date and time and the user then gets a confirmation email with a QR code. Never invent availability.`;

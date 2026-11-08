@@ -84,6 +84,7 @@ const zh: Dictionary = {
       booking: {
         title: '就诊预约申请',
         hospital: '医院', when: '希望时间', name: '姓名', gender: '性别', country: '国家', phone: '电话', messenger: '即时通讯', email: '邮箱', birth: '出生日期', memo: '需求说明', hoursLabel: '门诊时间',
+        passport: "护照号码",
         female: '女', male: '男', other: '其他',
         note: '医院确认后会发送确认邮件和二维码。日期和时间可能会根据医院情况调整。',
         send: '发送预约申请', sending: '发送中…', sent: '申请已发送 · 编号 {no}。医院确认后会发送确认邮件。', myPage: '我的页面 →',
@@ -301,6 +302,9 @@ const zh: Dictionary = {
     phoneLabel: '电话号码',
     messengerLabel: '即时通讯',
     messengerIdLabel: '即时通讯ID',
+    passportLabel: "护照号码（外国患者）",
+    passportHint: "医院登记时需要。请按护照上的内容填写。加密保存，仅用于向预约医院核实。",
+    passportInvalid: "护照号码请填写5–15位字母或数字。",
     emailLabel: '邮箱（可选，用于接收确认）',
     visitDateLabel: '期望日期',
     visitTimeLabel: '期望时间',

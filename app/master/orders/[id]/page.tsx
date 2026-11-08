@@ -15,6 +15,7 @@ import type { RefundCategory } from '@/lib/refund/policy';
 import { payLinkFor } from '@/lib/quote/service';
 import { SETTLEMENT_STATUS_KO } from '@/lib/voucher/settlement';
 import { LEAD_CATEGORY_LABEL_KO } from '@/lib/leads/pricing';
+import { decryptPii } from '@/lib/encryption/pgcrypto';
 import { OrderActions } from '../_components/order-actions';
 import {
   customerOf, fmtDateTime, GENDER_KO, kindLabel, metaOf, PAYMENT_METHOD_KO, statusOf, won, type OrderRow,
@@ -117,6 +118,8 @@ export default async function MasterOrderDetailPage({
     resolveRefundCategory(r).catch((): RefundCategory => 'travel'),
   ]);
   const profile = profileRes.profile;
+  // 외국인 환자 여권번호 — 암호화 저장분을 운영자 화면에서만 복호화 (실패하면 마스킹만)
+  const passportNo = m.passportEnc ? await decryptPii(m.passportEnc).catch(() => null) : null;
   const partnerById = new Map(partners.map((p) => [p.id, p]));
   const est = r.status === 'paid' ? orderEstimate(r, category) : null;
   const st = m.voucher?.settlement;
@@ -227,6 +230,14 @@ export default async function MasterOrderDetailPage({
           <Row label="국가" value={country ?? <Muted>-</Muted>} />
           {gender ? <Row label="성별" value={GENDER_KO[gender] ?? gender} /> : null}
           {birthDate ? <Row label="생년월일" value={birthDate} /> : null}
+          {passportNo || m.passportMasked ? (
+            <Row
+              label="여권번호"
+              value={passportNo
+                ? <span><b style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: 1 }}>{passportNo}</b><span style={{ fontSize: 11, color: '#9c9c9c' }}> · 암호화 저장 · 병원 접수용</span></span>
+                : <span>{m.passportMasked} <span style={{ fontSize: 11, color: '#9c9c9c' }}>(복호화 실패 — 마스킹만 표시)</span></span>}
+            />
+          ) : null}
           <Row label="언어" value={`${r.locale}${m.portalLocale && m.portalLocale !== r.locale ? ` (포털 ${m.portalLocale})` : ''}`} />
           {c.member ? (
             <>

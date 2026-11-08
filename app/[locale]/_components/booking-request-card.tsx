@@ -83,6 +83,7 @@ export default function BookingRequestCard({
     [labels.messenger, `${d.messengerType} ${d.messengerId}`],
     ...(d.email ? [[labels.email, d.email] as [string, string]] : []),
     [labels.birth, d.birthDate],
+    ...(d.passportNo ? [[labels.passport, d.passportNo] as [string, string]] : []),
     ...(d.memo ? [[labels.memo, d.memo] as [string, string]] : []),
   ];
 

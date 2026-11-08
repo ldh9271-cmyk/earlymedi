@@ -86,6 +86,7 @@ const ja: Dictionary = {
       booking: {
         title: '診療予約リクエスト',
         hospital: '病院', when: '希望日時', name: 'お名前', gender: '性別', country: '国', phone: '電話', messenger: 'メッセンジャー', email: 'メール', birth: '生年月日', memo: 'ご要望', hoursLabel: '診療時間',
+        passport: "パスポート番号",
         female: '女性', male: '男性', other: 'その他',
         note: '病院が確認した後、確定メールとQRコードをお送りします。日時は病院の都合で調整されることがあります。',
         send: '予約リクエストを送る', sending: '送信中…', sent: 'リクエストを送りました · 番号 {no}。病院確認後に確定メールをお送りします。', myPage: 'マイページ →',
@@ -303,6 +304,9 @@ const ja: Dictionary = {
     phoneLabel: '電話番号',
     messengerLabel: 'メッセンジャー',
     messengerIdLabel: 'メッセンジャーID',
+    passportLabel: "パスポート番号（外国人患者）",
+    passportHint: "病院での受付に必要です。パスポートの記載どおりに入力してください。暗号化して保存し、予約した病院の確認にのみ使用します。",
+    passportInvalid: "パスポート番号は英数字5〜15桁で入力してください。",
     emailLabel: 'メール（任意・確定案内用）',
     visitDateLabel: '希望日',
     visitTimeLabel: '希望時間',

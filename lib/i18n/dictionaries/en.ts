@@ -87,6 +87,7 @@ const en: Dictionary = {
       booking: {
         title: 'Clinic visit request',
         hospital: 'Clinic', when: 'Preferred time', name: 'Name', gender: 'Gender', country: 'Country', phone: 'Phone', messenger: 'Messenger', email: 'Email', birth: 'Date of birth', memo: 'Request', hoursLabel: 'Clinic hours',
+        passport: "Passport no.",
         female: 'Female', male: 'Male', other: 'Other',
         note: 'The clinic confirms your visit, then you get a confirmation email with a QR code. Date and time may be adjusted by the clinic.',
         send: 'Send visit request', sending: 'Sending…', sent: 'Request sent · No. {no}. You will get a confirmation email once the clinic confirms.', myPage: 'My page →',
@@ -304,6 +305,9 @@ const en: Dictionary = {
     phoneLabel: 'Phone number',
     messengerLabel: 'Messenger',
     messengerIdLabel: 'Messenger ID',
+    passportLabel: "Passport number (international patients)",
+    passportHint: "Required for clinic registration. Enter it exactly as shown in your passport. Stored encrypted and used only to confirm your visit with the clinic.",
+    passportInvalid: "Passport number must be 5–15 letters or digits.",
     emailLabel: 'Email (optional — for the confirmation)',
     visitDateLabel: 'Preferred date',
     visitTimeLabel: 'Preferred time',

@@ -87,6 +87,7 @@ const vi: Dictionary = {
       booking: {
         title: 'Yêu cầu đặt lịch khám',
         hospital: 'Phòng khám', when: 'Thời gian mong muốn', name: 'Họ tên', gender: 'Giới tính', country: 'Quốc gia', phone: 'Điện thoại', messenger: 'Ứng dụng nhắn tin', email: 'Email', birth: 'Ngày sinh', memo: 'Yêu cầu', hoursLabel: 'Giờ khám',
+        passport: "Số hộ chiếu",
         female: 'Nữ', male: 'Nam', other: 'Khác',
         note: 'Sau khi phòng khám xác nhận, bạn sẽ nhận email xác nhận kèm mã QR. Ngày giờ có thể được phòng khám điều chỉnh.',
         send: 'Gửi yêu cầu đặt lịch', sending: 'Đang gửi…', sent: 'Đã gửi yêu cầu · Số {no}. Bạn sẽ nhận email xác nhận sau khi phòng khám xác nhận.', myPage: 'Trang của tôi →',
@@ -304,6 +305,9 @@ const vi: Dictionary = {
     phoneLabel: 'Số điện thoại',
     messengerLabel: 'Ứng dụng nhắn tin',
     messengerIdLabel: 'ID nhắn tin',
+    passportLabel: "Số hộ chiếu (bệnh nhân nước ngoài)",
+    passportHint: "Cần cho thủ tục tiếp nhận tại phòng khám. Nhập đúng như trên hộ chiếu. Được lưu mã hóa và chỉ dùng để xác nhận lịch khám với phòng khám.",
+    passportInvalid: "Số hộ chiếu gồm 5–15 chữ cái hoặc chữ số.",
     emailLabel: 'Email (tùy chọn — để nhận xác nhận)',
     visitDateLabel: 'Ngày mong muốn',
     visitTimeLabel: 'Giờ mong muốn',

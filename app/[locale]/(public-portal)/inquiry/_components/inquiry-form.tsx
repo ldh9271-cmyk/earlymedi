@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import type { PublicLocale } from '@/lib/i18n/locales';
 import type { Dictionary } from '@/lib/i18n/dictionaries/kr';
 import { submitPublicInquiryAction } from '../actions';
+import { isValidPassportNo, needsPassport, normalizePassportNo } from '@/lib/hospital-visit/passport';
 
 /**
  * Public inquiry form — Airbnb-styled.
@@ -85,6 +86,9 @@ export function InquiryForm({
     phone: string;
     messenger: string;
     messengerId: string;
+    passport: string;
+    passportHint: string;
+    passportInvalid: string;
     email: string;
     visitDate: string;
     visitTime: string;
@@ -104,6 +108,8 @@ export function InquiryForm({
   const [phone, setPhone] = useState('');
   const [messengerType, setMessengerType] = useState('WhatsApp');
   const [messengerId, setMessengerId] = useState('');
+  // 외국인 환자 여권번호 — 병원 진료 예약(reserveMode)에서 국적이 KR 이 아닐 때만 받는다 (2026-11-09)
+  const [passportNo, setPassportNo] = useState('');
   const [email, setEmail] = useState('');
   const [contact, setContact] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -163,11 +169,18 @@ export function InquiryForm({
     );
   }
 
+  const needPassport = reserveMode && needsPassport(country);
+
   async function onSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     if (reserveMode) {
       const missing = !name.trim() || !gender || !phone.trim() || !messengerType || !messengerId.trim() || !birthDate || !visitYmd || !visitTime || !memo.trim();
       if (missing) { toast.error(labels.requiredMissing); return; }
+      if (needPassport) {
+        const pn = normalizePassportNo(passportNo);
+        if (!pn) { toast.error(labels.requiredMissing); return; }
+        if (!isValidPassportNo(pn)) { toast.error(labels.passportInvalid); return; }
+      }
     } else if (!name.trim() || !(contact.trim() || email.trim() || phone.trim())) {
       toast.error(labels.requiredMissing);
       return;
@@ -192,6 +205,7 @@ export function InquiryForm({
         email: email.trim() || null,
         visitYmd: visitYmd || null,
         visitTime: visitTime || null,
+        passportNo: needPassport ? normalizePassportNo(passportNo) : null,
       });
       if (!res.ok) {
         toast.error(res.error ?? '문의 접수에 실패했습니다.');
@@ -309,6 +323,19 @@ export function InquiryForm({
           <input id="inq-phone" type="tel" placeholder="+82 10-1234-5678" value={phone} onChange={(e) => setPhone(e.target.value)} required={reserveMode} style={inputStyle} autoComplete="tel" />
         </div>
       </div>
+
+      {needPassport ? (
+        <div>
+          <label htmlFor="inq-passport" style={labelStyle}>{labels.passport}<Req /></label>
+          <input
+            id="inq-passport" placeholder="M12345678" value={passportNo} maxLength={20} required
+            onChange={(e) => setPassportNo(e.target.value.toUpperCase())}
+            style={{ ...inputStyle, textTransform: 'uppercase', letterSpacing: 1 }}
+            autoComplete="off" autoCapitalize="characters" spellCheck={false}
+          />
+          <p style={{ fontSize: 12, color: '#6a6a6a', margin: '6px 0 0', lineHeight: 1.5 }}>{labels.passportHint}</p>
+        </div>
+      ) : null}
 
       <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: 14 }}>
         <div>

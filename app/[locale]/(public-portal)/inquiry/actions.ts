@@ -13,6 +13,7 @@ import { auditLogs } from '@/drizzle/schema/audit';
 import { detectLocale } from '@/lib/ai/translation';
 import { notifyInquiryEvent } from '@/lib/notify/admin-alert';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
+import { isValidPassportNo, maskPassportNo, normalizePassportNo } from '@/lib/hospital-visit/passport';
 import { createHospitalVisitRequest } from '@/lib/hospital-visit/service';
 
 /**
@@ -51,6 +52,8 @@ const InputSchema = z.object({
   email: z.string().max(200).nullable().optional(),
   visitYmd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   visitTime: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),
+  // 외국인 환자 여권번호(병원 진료 예약) — 선택. 서버가 정규화·형식 검사, 저장은 암호화(lib/hospital-visit/service)
+  passportNo: z.string().max(40).nullable().optional(),
 });
 
 export type PublicInquiryInput = z.infer<typeof InputSchema>;
@@ -111,6 +114,9 @@ export async function submitPublicInquiryAction(
   raw: PublicInquiryInput,
 ): Promise<PublicInquiryResult> {
   const input = InputSchema.parse(raw);
+  // 외국인 환자 여권번호(병원 진료 예약) — 정규화 뒤 형식이 틀리면 접수하지 않는다. 저장은 암호화(createHospitalVisitRequest)
+  const passportNo = normalizePassportNo(input.passportNo);
+  if (passportNo && !isValidPassportNo(passportNo)) return { ok: false, error: '여권번호 형식이 올바르지 않습니다 (영문·숫자 5~15자).' };
   const reserveMode = Boolean(input.hospitalId);
   if (reserveMode && (!input.gender || !input.phone?.trim() || !input.messengerType || !input.messengerId?.trim() || !input.birthDate || !input.visitYmd || !input.visitTime || !input.memo.trim())) {
     return { ok: false, error: '예약 요청에는 이름·성별·국가·전화번호·메신저·생년월일·희망 예약 일시·문의 내용이 모두 필요합니다.' };
@@ -159,6 +165,7 @@ export async function submitPublicInquiryAction(
     input.phone ? `\n전화: ${input.phone}` : '',
     input.messengerId ? `\n메신저: ${input.messengerType ?? ''} ${input.messengerId}` : '',
     input.email ? `\n이메일: ${input.email}` : '',
+    passportNo ? `\n여권번호: ${maskPassportNo(passportNo)}` : '',
     input.visitYmd ? `\n희망 예약: ${input.visitYmd} ${input.visitTime ?? ''}` : '',
   ].join('');
   const composedBody =
@@ -245,6 +252,7 @@ export async function submitPublicInquiryAction(
       hospitalName: input.hospitalName ?? undefined,
       memberId: memberId ?? undefined,
       memberEmail: memberEmail ?? undefined,
+      passportMasked: passportNo ? maskPassportNo(passportNo) : undefined,
     },
   });
 
@@ -261,7 +269,7 @@ export async function submitPublicInquiryAction(
         locale: input.locale, hospitalId: input.hospitalId, hospitalName: input.hospitalName ?? '병원', name: input.name,
         gender: input.gender ?? '', countryCode: input.countryCode, phone: input.phone ?? '', messengerType: input.messengerType ?? '', messengerId: input.messengerId ?? '',
         email: input.email ?? null, birthDate: input.birthDate ?? '', visitYmd: input.visitYmd ?? '', visitTime: input.visitTime ?? '', memo: input.memo, interests: input.interests,
-        conversationId: conv.id, userId, userEmail,
+        passportNo, conversationId: conv.id, userId, userEmail,
       });
       invoiceNo = r.invoiceNo;
     } catch (err) {

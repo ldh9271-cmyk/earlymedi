@@ -3,6 +3,8 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { checkoutOrders } from '@/drizzle/schema/checkout-orders';
 import { sendAdminTelegram } from '@/lib/notify/admin-alert';
+import { encryptPii } from '@/lib/encryption/pgcrypto';
+import { maskPassportNo } from '@/lib/hospital-visit/passport';
 import { fill, sendPushToUser } from '@/lib/push/expo';
 import { sendTripEmail } from '@/lib/ai/trip-planner';
 import { voucherUrl } from '@/lib/voucher/token';
@@ -36,6 +38,10 @@ export type HospitalVisitMeta = {
   conversationId: string | null;
   source: 'hospital_inquiry';
   portalLocale: string;
+  /** 외국인 환자 여권번호 — pgcrypto 암호화 base64(encryptPii). 평문은 저장하지 않고 마스터 상세에서만 복호화 */
+  passportEnc?: string;
+  /** 운영 로그·인박스용 마스킹(M1****78) */
+  passportMasked?: string;
   reserveConfirmedAt?: string;
 };
 
@@ -78,6 +84,8 @@ export type HospitalVisitRequestInput = {
   memo: string;
   interests: string[];
   conversationId: string | null;
+  /** 외국인 환자 여권번호(정규화된 값) — 한국 국적·미입력은 null */
+  passportNo: string | null;
   userId: string | null;
   userEmail: string | null;
 };
@@ -88,6 +96,11 @@ export async function createHospitalVisitRequest(input: HospitalVisitRequestInpu
     messengerId: input.messengerId, email: input.email, birthDate: input.birthDate, visitYmd: input.visitYmd, visitTime: input.visitTime,
     memo: input.memo, interests: input.interests, conversationId: input.conversationId, source: 'hospital_inquiry', portalLocale: input.locale,
   };
+  if (input.passportNo) {
+    // 암호화 실패(키 없음 등)면 예약을 만들지 않는다 — 여권번호를 평문으로 남기지 않기 위해
+    meta.passportEnc = await encryptPii(input.passportNo);
+    meta.passportMasked = maskPassportNo(input.passportNo);
+  }
   for (let i = 0; i < 5; i++) {
     try {
       const [r] = await db.insert(checkoutOrders).values({

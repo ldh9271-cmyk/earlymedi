@@ -63,6 +63,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     email: d.email || null,
     visitYmd: d.visitYmd,
     visitTime: d.visitTime,
+    passportNo: d.passportNo || null,
   });
   if (!r.ok) return NextResponse.json({ ok: false, error: r.error }, { status: 400 });
   return NextResponse.json({ ok: true, invoiceNo: r.invoiceNo ?? null, conversationId: r.conversationId });

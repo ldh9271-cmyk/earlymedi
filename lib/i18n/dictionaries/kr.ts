@@ -98,6 +98,7 @@ const kr = {
       booking: {
         title: '진료 예약 요청',
         hospital: '병원', when: '희망 일시', name: '이름', gender: '성별', country: '국가', phone: '전화', messenger: '메신저', email: '이메일', birth: '생년월일', memo: '요청 내용', hoursLabel: '진료시간',
+        passport: "여권번호",
         female: '여성', male: '남성', other: '기타',
         note: '병원이 확인한 뒤 확정 메일과 QR을 보내드려요. 날짜·시간은 병원 사정에 따라 조정될 수 있어요.',
         send: '예약 요청 보내기', sending: '보내는 중…', sent: '예약 요청을 보냈어요 · 번호 {no}. 병원 확인 후 확정 메일을 드려요.', myPage: '마이페이지 →',
@@ -315,6 +316,9 @@ const kr = {
     phoneLabel: '전화번호',
     messengerLabel: '메신저',
     messengerIdLabel: '메신저 ID',
+    passportLabel: "여권번호 (외국인 환자)",
+    passportHint: "병원 접수에 필요합니다. 여권에 적힌 대로 입력해 주세요. 암호화되어 저장되며 예약한 병원 확인에만 사용합니다.",
+    passportInvalid: "여권번호는 영문·숫자 5~15자로 입력해 주세요.",
     emailLabel: '이메일 (선택 — 예약 확정 안내 수신)',
     visitDateLabel: '희망 예약일',
     visitTimeLabel: '희망 시간',

@@ -2,6 +2,7 @@ import type { LegalDocs } from './types';
 
 /**
  * 개인정보처리방침 — 한국어 원문 + 5개 언어 번역 (2026-10-03). 조항을 고치면 6개 언어를 함께 고친다.
+ * 2026-11-09: 2조 수집 항목에 외국인 환자 여권번호(병원 진료 예약 시, 암호화 저장·예약 병원 외 미제공) 추가.
  * 2026-11-03: 10조 얼굴 이미지(AI 뷰티 분석·시뮬레이션) 처리 신설(애플 심사 2.1 face data 요구), 7조 즉시 계정 삭제, 2조·6조 보강 → 10·11조는 11·12조로.
  * 보관 기간(4조)은 /[locale]/account/delete 안내와 같게 유지한다.
  */
@@ -9,7 +10,7 @@ export const PRIVACY: LegalDocs = {
   kr: {
     metaTitle: '개인정보처리방침 · 글로우업투어',
     title: '개인정보처리방침',
-    effective: '시행일: 2026년 1월 1일 · 최근 개정: 2026년 11월 3일',
+    effective: '시행일: 2026년 1월 1일 · 최근 개정: 2026년 11월 9일',
     backToSignup: '가입으로 돌아가기',
     sections: [
       { title: '1. 총칙', lead: '주식회사 쉐어아트(이하 “회사”)는 「개인정보 보호법」 및 「의료 해외진출 및 외국인환자 유치 지원에 관한 법률」 등 관련 법령을 준수하며, 이용자의 개인정보를 안전하게 처리하기 위해 본 방침을 수립 · 공개합니다.' },
@@ -17,6 +18,7 @@ export const PRIVACY: LegalDocs = {
         { term: '가입 시 (필수):', text: '이메일, 비밀번호(암호화 저장), 이름, 국가, 전화번호' },
         { term: '가입 시 (선택):', text: '메신저 종류 및 ID(KakaoTalk / WhatsApp / LINE / WeChat 등)' },
         { term: '문의 · 예약 시:', text: '관심 시술 카테고리, 희망 일정, 자유 입력 메모, 첨부 이미지(선택)' },
+        { term: '병원 진료 예약 시 (외국인 환자):', text: '여권번호 — 병원 접수·본인 확인 목적. 암호화하여 저장하며 예약한 병원 외에는 제공하지 않습니다' },
         { term: '자동 수집:', text: '접속 IP, 브라우저 정보, 쿠키, 서비스 이용 기록, 페이지 진입 시각' },
         { term: '결제 시 (해당 시):', text: '결제 수단(카드 마스킹), 결제 금액, 결제 통화 — 카드 원번호는 PG사가 직접 처리하며 회사는 저장하지 않습니다.' },
         { term: 'AI 뷰티 분석 · AI 스타일 시뮬레이션 이용 시 (선택):', text: '이용자가 직접 업로드한 얼굴 사진 1장 — 결과 생성에만 사용하고 저장하지 않습니다 (10조 참조)' },
@@ -81,7 +83,7 @@ export const PRIVACY: LegalDocs = {
   en: {
     metaTitle: 'Privacy Policy · GlowUpTour',
     title: 'Privacy Policy',
-    effective: 'Effective: January 1, 2026 · Last revised: November 3, 2026',
+    effective: 'Effective: January 1, 2026 · Last revised: November 9, 2026',
     translationNotice: 'This is a translation for your convenience. If there is any discrepancy, the Korean original prevails.',
     backToSignup: 'Back to sign-up',
     sections: [
@@ -90,6 +92,7 @@ export const PRIVACY: LegalDocs = {
         { term: 'At sign-up (required):', text: 'email, password (stored encrypted), name, country, phone number' },
         { term: 'At sign-up (optional):', text: 'messenger type and ID (KakaoTalk / WhatsApp / LINE / WeChat, etc.)' },
         { term: 'Inquiries and bookings:', text: 'treatment categories of interest, preferred dates, free-text notes, attached images (optional)' },
+        { term: 'Clinic visit requests (international patients):', text: 'passport number — for clinic registration and identity verification; stored encrypted and shared only with the clinic you booked' },
         { term: 'Collected automatically:', text: 'IP address, browser information, cookies, service usage records, page access times' },
         { term: 'Payments (where applicable):', text: 'payment method (masked card), amount, currency — full card numbers are processed by the payment provider and are not stored by the Company.' },
         { term: 'AI beauty analysis · AI style simulation (optional):', text: 'one face photo you upload yourself — used only to produce the result and never stored (see Section 10)' },
@@ -154,7 +157,7 @@ export const PRIVACY: LegalDocs = {
   ja: {
     metaTitle: 'プライバシーポリシー · GlowUpTour',
     title: 'プライバシーポリシー',
-    effective: '施行日：2026年1月1日 · 最終改定：2026年11月3日',
+    effective: '施行日：2026年1月1日 · 最終改定：2026年11月9日',
     translationNotice: 'このページは参考訳です。内容に相違がある場合は韓国語の原文が優先されます。',
     backToSignup: '会員登録に戻る',
     sections: [
@@ -163,6 +166,7 @@ export const PRIVACY: LegalDocs = {
         { term: '登録時（必須）：', text: 'メールアドレス、パスワード（暗号化して保存）、氏名、国、電話番号' },
         { term: '登録時（任意）：', text: 'メッセンジャーの種類とID（KakaoTalk / WhatsApp / LINE / WeChat など）' },
         { term: 'お問い合わせ・予約時：', text: '関心のある施術カテゴリ、希望日程、自由記入メモ、添付画像（任意）' },
+        { term: '病院の診療予約時（外国人患者）：', text: 'パスポート番号 — 病院での受付・本人確認のため。暗号化して保存し、予約した病院以外には提供しません' },
         { term: '自動収集：', text: '接続IP、ブラウザ情報、Cookie、サービス利用記録、ページ閲覧時刻' },
         { term: '決済時（該当する場合）：', text: '決済手段（カード番号はマスキング）、決済金額、決済通貨。カード番号そのものは決済代行会社が直接処理し、当社は保存しません。' },
         { term: 'AI美容分析・AIスタイルシミュレーション利用時（任意）：', text: '利用者ご自身がアップロードした顔写真1枚。結果の生成にのみ使用し、保存しません（第10条参照）' },
@@ -227,7 +231,7 @@ export const PRIVACY: LegalDocs = {
   zh: {
     metaTitle: '隐私政策 · GlowUpTour',
     title: '隐私政策',
-    effective: '生效日期：2026年1月1日 · 最近修订：2026年11月3日',
+    effective: '生效日期：2026年1月1日 · 最近修订：2026年11月9日',
     translationNotice: '本页面为参考译文。如内容存在差异，以韩文原文为准。',
     backToSignup: '返回注册',
     sections: [
@@ -236,6 +240,7 @@ export const PRIVACY: LegalDocs = {
         { term: '注册时（必填）：', text: '邮箱、密码（加密存储）、姓名、国家、电话号码' },
         { term: '注册时（选填）：', text: '通讯软件种类及 ID（KakaoTalk / WhatsApp / LINE / WeChat 等）' },
         { term: '咨询·预约时：', text: '感兴趣的项目类别、期望日程、自由填写的备注、附件图片（选填）' },
+        { term: '医院诊疗预约时（外国患者）：', text: '护照号码 — 用于医院登记和身份核实；加密保存，除所预约医院外不向第三方提供' },
         { term: '自动收集：', text: '访问 IP、浏览器信息、Cookie、服务使用记录、页面访问时间' },
         { term: '付款时（如适用）：', text: '支付方式（卡号脱敏）、支付金额、支付货币。完整卡号由支付服务商直接处理，公司不予存储。' },
         { term: '使用 AI 美容分析·AI 造型模拟时（选填）：', text: '用户自行上传的 1 张面部照片，仅用于生成结果，不予保存（见第10条）' },
@@ -300,7 +305,7 @@ export const PRIVACY: LegalDocs = {
   ru: {
     metaTitle: 'Политика конфиденциальности · GlowUpTour',
     title: 'Политика конфиденциальности',
-    effective: 'Вступает в силу: 1 января 2026 г. · Последняя редакция: 3 ноября 2026 г.',
+    effective: 'Вступает в силу: 1 января 2026 г. · Последняя редакция: 9 ноября 2026 г.',
     translationNotice: 'Это перевод для удобства. При расхождениях приоритет имеет оригинал на корейском языке.',
     backToSignup: 'Вернуться к регистрации',
     sections: [
@@ -309,6 +314,7 @@ export const PRIVACY: LegalDocs = {
         { term: 'При регистрации (обязательно):', text: 'e-mail, пароль (хранится в зашифрованном виде), имя, страна, номер телефона' },
         { term: 'При регистрации (по желанию):', text: 'тип и ID мессенджера (KakaoTalk / WhatsApp / LINE / WeChat и др.)' },
         { term: 'При запросах и бронировании:', text: 'интересующие категории процедур, желаемые даты, свободные заметки, прикреплённые изображения (по желанию)' },
+        { term: 'При запросе визита в клинику (иностранные пациенты):', text: 'номер паспорта — для регистрации в клинике и подтверждения личности; хранится в зашифрованном виде и передаётся только выбранной клинике' },
         { term: 'Автоматически:', text: 'IP-адрес, данные браузера, cookie, история использования сервиса, время посещения страниц' },
         { term: 'При оплате (если применимо):', text: 'способ оплаты (маскированная карта), сумма, валюта. Полный номер карты обрабатывает платёжный провайдер; Компания его не хранит.' },
         { term: 'AI-анализ красоты · AI-симуляция стиля (по желанию):', text: 'одно фото лица, загруженное вами; используется только для получения результата и не сохраняется (см. раздел 10)' },
@@ -373,7 +379,7 @@ export const PRIVACY: LegalDocs = {
   vi: {
     metaTitle: 'Chính sách quyền riêng tư · GlowUpTour',
     title: 'Chính sách quyền riêng tư',
-    effective: 'Có hiệu lực: 01/01/2026 · Sửa đổi gần nhất: 03/11/2026',
+    effective: 'Có hiệu lực: 01/01/2026 · Sửa đổi gần nhất: 09/11/2026',
     translationNotice: 'Đây là bản dịch tham khảo. Nếu có khác biệt, bản gốc tiếng Hàn được ưu tiên áp dụng.',
     backToSignup: 'Quay lại đăng ký',
     sections: [
@@ -382,6 +388,7 @@ export const PRIVACY: LegalDocs = {
         { term: 'Khi đăng ký (bắt buộc):', text: 'email, mật khẩu (lưu mã hóa), họ tên, quốc gia, số điện thoại' },
         { term: 'Khi đăng ký (tùy chọn):', text: 'loại ứng dụng nhắn tin và ID (KakaoTalk / WhatsApp / LINE / WeChat, v.v.)' },
         { term: 'Khi hỏi đáp, đặt chỗ:', text: 'danh mục liệu trình quan tâm, lịch mong muốn, ghi chú tự do, ảnh đính kèm (tùy chọn)' },
+        { term: 'Khi đặt lịch khám tại phòng khám (bệnh nhân nước ngoài):', text: 'số hộ chiếu — dùng để tiếp nhận tại phòng khám và xác minh danh tính; được lưu mã hóa và chỉ cung cấp cho phòng khám đã đặt' },
         { term: 'Thu thập tự động:', text: 'IP truy cập, thông tin trình duyệt, cookie, lịch sử sử dụng dịch vụ, thời điểm truy cập trang' },
         { term: 'Khi thanh toán (nếu có):', text: 'phương thức thanh toán (số thẻ được che), số tiền, loại tiền. Số thẻ đầy đủ do đơn vị thanh toán xử lý trực tiếp, Công ty không lưu.' },
         { term: 'Khi dùng phân tích sắc đẹp AI · mô phỏng phong cách AI (tùy chọn):', text: '1 ảnh khuôn mặt do người dùng tự tải lên — chỉ dùng để tạo kết quả và không được lưu (xem Điều 10)' },
