@@ -110,7 +110,7 @@ export async function createStayRequest(input: StayRequestInput): Promise<StayRe
         `<b>${isHotel ? '🏨 호텔 예약 문의' : sub === 'free' ? '🧳 자유여행 견적 문의' : '📩 예약 요청'}</b> ${esc(listing.title)}${!isHotel && unit > 0 ? ` (표시가 ₩${unit.toLocaleString('ko-KR')} × ${input.guests})` : ''}\n` +
         `${esc(input.name)} · ${esc(input.contact)}${input.messengerId ? ` · ${esc(input.messengerKind ?? '')} ${esc(input.messengerId)}` : ''}\n` +
         `${isHotel ? '체크인' : '희망일'} ${esc(input.checkIn)}${periodLabel ? ` · ${periodLabel}` : ''}${input.arrival ? ` · ${isHotel ? '도착' : '시간'} ${esc(input.arrival)}` : ''} · ${input.guests}명${input.userEmail ? ` · 회원 ${esc(input.userEmail)}` : ' · 비회원'}\n` +
-        `${input.note ? `요청: ${esc(input.note).slice(0, 200)}\n` : ''}${SITE_URL}/master/orders`,
+        `${input.note ? `요청: ${esc(input.note).slice(0, 200)}\n` : ''}${SITE_URL}/master/orders/${r.invoiceNo}`,
       ).catch(() => false);
       return { ok: true, orderId: r.id, invoiceNo: r.invoiceNo, pay: false, amountWon: 0 };
     } catch (e) {

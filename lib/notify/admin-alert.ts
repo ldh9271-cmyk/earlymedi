@@ -185,6 +185,6 @@ export async function notifyOrderEvent(
   if (o.userEmail) lines.push(`회원: ${esc(o.userEmail)}`);
   if (o.contact) lines.push(`연락처: ${esc(o.contact)}`);
   if (o.extra) lines.push(esc(o.extra));
-  lines.push('https://www.glowuptour.com/master/orders');
+  lines.push(`https://www.glowuptour.com/master/orders/${encodeURIComponent(o.invoiceNo)}`);
   return sendAdminTelegram(lines.join('\n'));
 }

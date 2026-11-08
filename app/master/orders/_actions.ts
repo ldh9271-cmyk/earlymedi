@@ -40,6 +40,16 @@ async function assertMaster(): Promise<void> {
 }
 
 /**
+ * 처리 뒤 돌아갈 곳 — 상세 페이지(/master/orders/[id])의 폼은 <ReturnTo /> 숨은 필드로 자기 경로를
+ * 보내므로 그 페이지로, 아니면 목록으로. ok/error 쿼리는 두 페이지가 똑같이 읽는다.
+ */
+function back(formData: FormData, query = ''): never {
+  const to = String(formData.get('returnTo') ?? '');
+  const base = /^\/master\/orders\/[A-Za-z0-9-]+$/.test(to) ? to : '/master/orders';
+  redirect(`${base}${query}`);
+}
+
+/**
  * 취소·환불 확정 — 결제(paid) 주문. 토스 결제는 취소 API 로 원결제수단(카드·카카오페이 등)에
  * 환불되고, 알리페이 QR 은 수동 송금 표식만 남는다. 마진 원장 환수 + 고객 이메일.
  */
@@ -48,12 +58,12 @@ export async function refundCancelOrderAction(formData: FormData): Promise<void>
   const id = String(formData.get('id') ?? '');
   const refundWon = Math.round(Number(String(formData.get('refundWon') ?? '0').replace(/[^\d]/g, '')));
   const note = String(formData.get('note') ?? '').trim() || null;
-  if (!id) redirect('/master/orders?error=missing_id');
-  if (!Number.isFinite(refundWon) || refundWon < 0) redirect(`/master/orders?error=${encodeURIComponent('환불 금액이 올바르지 않습니다')}`);
+  if (!id) back(formData, '?error=missing_id');
+  if (!Number.isFinite(refundWon) || refundWon < 0) back(formData, `?error=${encodeURIComponent('환불 금액이 올바르지 않습니다')}`);
   const r = await refundAndCancel(id, { refundWon, note });
-  if (!r.ok) redirect(`/master/orders?error=${encodeURIComponent(r.error)}`);
+  if (!r.ok) back(formData, `?error=${encodeURIComponent(r.error)}`);
   revalidatePath('/master/orders');
-  redirect(`/master/orders?ok=${encodeURIComponent(r.method === 'toss' ? `토스 환불 ₩${r.refundWon.toLocaleString('ko-KR')} 완료` : r.method === 'alipay_manual' ? `취소됨 — 알리페이 ₩${r.refundWon.toLocaleString('ko-KR')} 수동 송금 필요` : '취소됨 (환불 없음)')}`);
+  back(formData, `?ok=${encodeURIComponent(r.method === 'toss' ? `토스 환불 ₩${r.refundWon.toLocaleString('ko-KR')} 완료` : r.method === 'alipay_manual' ? `취소됨 — 알리페이 ₩${r.refundWon.toLocaleString('ko-KR')} 수동 송금 필요` : '취소됨 (환불 없음)')}`);
 }
 
 /** QR 3자 검증 정산 상태 전환 — 이의 조정 후 확정, 수수료 청구/입금 표시, 되돌리기. */
@@ -61,11 +71,11 @@ export async function setMerchantSettlementStatusAction(formData: FormData): Pro
   await assertMaster();
   const id = String(formData.get('id') ?? '');
   const status = String(formData.get('status') ?? '') as SettlementStatus;
-  if (!id || !['declared', 'confirmed', 'disputed', 'invoiced', 'paid'].includes(status)) redirect('/master/orders?error=bad_settlement_status');
+  if (!id || !['declared', 'confirmed', 'disputed', 'invoiced', 'paid'].includes(status)) back(formData, '?error=bad_settlement_status');
   const row = await masterSetSettlementStatus(id, status);
-  if (!row) redirect(`/master/orders?error=${encodeURIComponent('정산 기록이 없는 주문입니다')}`);
+  if (!row) back(formData, `?error=${encodeURIComponent('정산 기록이 없는 주문입니다')}`);
   revalidatePath('/master/orders');
-  redirect('/master/orders');
+  back(formData);
 }
 
 /** 가맹점이 금액을 안 넣었을 때 운영자가 대신 최종 결제금액을 기록/정정. */
@@ -73,23 +83,23 @@ export async function masterDeclareSettlementAction(formData: FormData): Promise
   await assertMaster();
   const id = String(formData.get('id') ?? '');
   const amount = Math.round(Number(String(formData.get('finalAmountWon') ?? '').replace(/[^\d]/g, '')));
-  if (!id) redirect('/master/orders?error=missing_id');
-  if (!Number.isFinite(amount) || amount < 0) redirect(`/master/orders?error=${encodeURIComponent('최종 결제금액을 입력해 주세요')}`);
+  if (!id) back(formData, '?error=missing_id');
+  if (!Number.isFinite(amount) || amount < 0) back(formData, `?error=${encodeURIComponent('최종 결제금액을 입력해 주세요')}`);
   const [order] = await db.select().from(checkoutOrders).where(eq(checkoutOrders.id, id)).limit(1);
-  if (!order) redirect('/master/orders?error=not_found');
+  if (!order) back(formData, '?error=not_found');
   const r = await declareFinalAmount(order, { id: 'master', name: '글로우업투어 운영', isMaster: true }, { finalAmountWon: amount, note: String(formData.get('note') ?? '') || null });
   if (!r.ok) {
     const msg: Record<string, string> = { not_checked_in: '방문 확인(QR 스캔)이 먼저 필요합니다', locked: '이미 청구·입금된 건입니다', not_paid: '결제 완료 주문만 가능합니다', cancelled: '취소된 주문입니다', bad_amount: '금액이 올바르지 않습니다', forbidden: '권한이 없습니다' };
-    redirect(`/master/orders?error=${encodeURIComponent(msg[r.reason] ?? r.reason)}`);
+    back(formData, `?error=${encodeURIComponent(msg[r.reason] ?? r.reason)}`);
   }
   revalidatePath('/master/orders');
-  redirect('/master/orders');
+  back(formData);
 }
 
 export async function markOrderPaidAction(formData: FormData): Promise<void> {
   await assertMaster();
   const id = String(formData.get('id') ?? '');
-  if (!id) redirect('/master/orders?error=missing_id');
+  if (!id) back(formData, '?error=missing_id');
   try {
     await db
       .update(checkoutOrders)
@@ -117,10 +127,10 @@ export async function markOrderPaidAction(formData: FormData): Promise<void> {
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'update_failed';
     if (msg.includes('NEXT_REDIRECT')) throw err;
-    redirect(`/master/orders?error=${encodeURIComponent(msg)}`);
+    back(formData, `?error=${encodeURIComponent(msg)}`);
   }
   revalidatePath('/master/orders');
-  redirect('/master/orders');
+  back(formData);
 }
 
 /**
@@ -134,19 +144,19 @@ export async function settleHospitalActualAction(formData: FormData): Promise<vo
   const id = String(formData.get('id') ?? '');
   const actualAmountWon = Math.round(Number(formData.get('actualAmountWon') ?? 0));
   const procedureYmd = String(formData.get('procedureYmd') ?? '') || null;
-  if (!id) redirect('/master/orders?error=missing_id');
+  if (!id) back(formData, '?error=missing_id');
   if (!Number.isFinite(actualAmountWon) || actualAmountWon <= 0) {
-    redirect(`/master/orders?error=${encodeURIComponent('실결제액을 입력해 주세요')}`);
+    back(formData, `?error=${encodeURIComponent('실결제액을 입력해 주세요')}`);
   }
   try {
     await settleOrderHospitalFeeActual({ orderId: id, actualAmountWon, procedureYmd });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'settle_failed';
     if (msg.includes('NEXT_REDIRECT')) throw err;
-    redirect(`/master/orders?error=${encodeURIComponent(msg)}`);
+    back(formData, `?error=${encodeURIComponent(msg)}`);
   }
   revalidatePath('/master/orders');
-  redirect('/master/orders');
+  back(formData);
 }
 
 /**
@@ -157,16 +167,16 @@ export async function settleHospitalActualAction(formData: FormData): Promise<vo
 export async function confirmReservationAction(formData: FormData): Promise<void> {
   await assertMaster();
   const id = String(formData.get('id') ?? '');
-  if (!id) redirect('/master/orders?error=missing_id');
+  if (!id) back(formData, '?error=missing_id');
   try {
     const [order] = await db
       .select({ id: checkoutOrders.id, status: checkoutOrders.status, meta: checkoutOrders.meta, userId: checkoutOrders.userId, invoiceNo: checkoutOrders.invoiceNo, listingTitle: checkoutOrders.listingTitle, reserveDate: checkoutOrders.reserveDate, reserveTime: checkoutOrders.reserveTime, locale: checkoutOrders.locale })
       .from(checkoutOrders)
       .where(eq(checkoutOrders.id, id))
       .limit(1);
-    if (!order) redirect('/master/orders?error=not_found');
+    if (!order) back(formData, '?error=not_found');
     if (order.status !== 'paid') {
-      redirect(`/master/orders?error=${encodeURIComponent('예약금 입금 확인(paid) 후 확정할 수 있습니다')}`);
+      back(formData, `?error=${encodeURIComponent('예약금 입금 확인(paid) 후 확정할 수 있습니다')}`);
     }
     await db
       .update(checkoutOrders)
@@ -187,16 +197,16 @@ export async function confirmReservationAction(formData: FormData): Promise<void
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'confirm_failed';
     if (msg.includes('NEXT_REDIRECT')) throw err;
-    redirect(`/master/orders?error=${encodeURIComponent(msg)}`);
+    back(formData, `?error=${encodeURIComponent(msg)}`);
   }
   revalidatePath('/master/orders');
-  redirect('/master/orders');
+  back(formData);
 }
 
 export async function cancelOrderAction(formData: FormData): Promise<void> {
   await assertMaster();
   const id = String(formData.get('id') ?? '');
-  if (!id) redirect('/master/orders?error=missing_id');
+  if (!id) back(formData, '?error=missing_id');
   try {
     // 적립된 마진이 있으면 함께 환수하고 주문을 취소한다.
     // reverseOrder 는 원장 환수 + 주문 상태를 cancelled 로 바꾼다.
@@ -209,10 +219,10 @@ export async function cancelOrderAction(formData: FormData): Promise<void> {
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'update_failed';
     if (msg.includes('NEXT_REDIRECT')) throw err;
-    redirect(`/master/orders?error=${encodeURIComponent(msg)}`);
+    back(formData, `?error=${encodeURIComponent(msg)}`);
   }
   revalidatePath('/master/orders');
-  redirect('/master/orders');
+  back(formData);
 }
 
 /** 병원 진료 예약 요청(hospital_visit) 확정 — 결제 없이 status paid + reserveConfirmedAt. 병원과 맞춘 날짜·시간으로 바꿔 확정할 수 있다. */
@@ -221,12 +231,12 @@ export async function confirmHospitalVisitAction(formData: FormData): Promise<vo
   const id = String(formData.get('id') ?? '');
   const visitYmd = String(formData.get('visitYmd') ?? '').trim();
   const visitTime = String(formData.get('visitTime') ?? '').trim();
-  if (!id) redirect('/master/orders?error=missing_id');
-  if (visitYmd && !/^\d{4}-\d{2}-\d{2}$/.test(visitYmd)) redirect(`/master/orders?error=${encodeURIComponent('날짜 형식이 올바르지 않습니다')}`);
+  if (!id) back(formData, '?error=missing_id');
+  if (visitYmd && !/^\d{4}-\d{2}-\d{2}$/.test(visitYmd)) back(formData, `?error=${encodeURIComponent('날짜 형식이 올바르지 않습니다')}`);
   const r = await confirmHospitalVisit(id, { visitYmd: visitYmd || undefined, visitTime: visitTime || undefined });
-  if (!r.ok) redirect(`/master/orders?error=${encodeURIComponent(r.reason)}`);
+  if (!r.ok) back(formData, `?error=${encodeURIComponent(r.reason)}`);
   revalidatePath('/master/orders');
-  redirect(`/master/orders?ok=${encodeURIComponent(`${r.invoiceNo} 진료 예약 확정 — 환자 마이페이지에 QR 예약증 생성${r.emailed ? ' · 이메일 발송' : ''}`)}`);
+  back(formData, `?ok=${encodeURIComponent(`${r.invoiceNo} 진료 예약 확정 — 환자 마이페이지에 QR 예약증 생성${r.emailed ? ' · 이메일 발송' : ''}`)}`);
 }
 
 /**
@@ -248,9 +258,9 @@ export async function issueQuoteInvoiceAction(formData: FormData): Promise<void>
   const listingSlug = String(formData.get('listingSlug') ?? '').trim() || null;
   const interestKey = String(formData.get('interestKey') ?? 'hotel').trim() || 'hotel';
   const r = await issueQuoteInvoice({ email, locale, title, amountWon, note, dateYmd, periodLabel, guests, listingSlug, interestKey });
-  if (!r.ok) redirect(`/master/orders?error=${encodeURIComponent(r.error)}`);
+  if (!r.ok) back(formData, `?error=${encodeURIComponent(r.error)}`);
   revalidatePath('/master/orders');
-  redirect(`/master/orders?ok=${encodeURIComponent(`견적 인보이스 발행 · ${r.invoiceNo}${r.emailSent ? ' · 이메일 발송됨' : ' · 이메일 발송 실패(회원에게 직접 안내)'}`)}`);
+  back(formData, `?ok=${encodeURIComponent(`견적 인보이스 발행 · ${r.invoiceNo}${r.emailSent ? ' · 이메일 발송됨' : ' · 이메일 발송 실패(회원에게 직접 안내)'}`)}`);
 }
 
 /** 호텔 예약 문의 행에 금액을 넣어 그 자리에서 견적 인보이스(토스)로 바꾼다 — 회원 메일 + 메신저용 결제 링크. */
@@ -261,10 +271,10 @@ export async function issueQuoteFromRequestAction(formData: FormData): Promise<v
   const note = String(formData.get('note') ?? '').trim() || null;
   const localeRaw = String(formData.get('locale') ?? 'kr');
   const locale = (PUBLIC_LOCALES as readonly string[]).includes(localeRaw) ? (localeRaw as PublicLocale) : 'kr';
-  if (!id) redirect('/master/orders?error=missing_id');
+  if (!id) back(formData, '?error=missing_id');
   const r = await convertStayRequestToQuote(id, { amountWon, note, locale });
-  if (!r.ok) redirect(`/master/orders?error=${encodeURIComponent(r.error)}`);
+  if (!r.ok) back(formData, `?error=${encodeURIComponent(r.error)}`);
   revalidatePath('/master/orders');
-  redirect(`/master/orders?ok=${encodeURIComponent(`견적 발행 · ${r.invoiceNo} · ${r.member ? (r.emailSent ? '회원 메일 발송됨' : '회원 (메일 발송 실패 — 직접 안내)') : (r.emailSent ? '비회원 메일 발송됨' : '비회원')} · 메신저용 결제 링크: ${r.payLink}`)}`);
+  back(formData, `?ok=${encodeURIComponent(`견적 발행 · ${r.invoiceNo} · ${r.member ? (r.emailSent ? '회원 메일 발송됨' : '회원 (메일 발송 실패 — 직접 안내)') : (r.emailSent ? '비회원 메일 발송됨' : '비회원')} · 메신저용 결제 링크: ${r.payLink}`)}`);
 }
 
