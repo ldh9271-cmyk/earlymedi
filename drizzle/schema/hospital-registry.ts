@@ -85,6 +85,8 @@ export type RegistrySubmission = {
   contactEmail?: string;
   reviewedAt?: string;
   reviewNote?: string;
+  /** 마스터가 승인 전 서류를 눈으로 확인한 기록(2026-11-12) — 사업자등록증·외국인환자 유치의료기관 등록증 둘 다 필수 */
+  docsVerified?: { businessLicense: boolean; foreignPatientCert: boolean; businessNo?: string; foreignNo?: string; by?: string; at?: string };
 };
 export type RegistryAgency = {
   requestedAt: string;

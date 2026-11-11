@@ -566,7 +566,7 @@ export default async function RegistryAdminPage({ searchParams }: { searchParams
       <div style={card}>
         <h2 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px' }}>병원 등록 검수 ({submissions.filter((s) => s.d.submission?.status === 'submitted').length})</h2>
         <p style={{ fontSize: 12, color: '#6a6a6a', margin: '0 0 10px' }}>
-          의료기관 콘솔 &quot;병원 공개 정보&quot; 에서 검수 요청한 건입니다. 서류(사업자등록증·유치기관 등록증)와 프로필을 확인해 1~2 영업일 내 승인하면 클레임 승인과 함께 공개 상세에 그대로 게시됩니다.
+          의료기관 콘솔 &quot;병원 공개 정보&quot; 에서 검수 요청한 건입니다. 서류 2종(사업자등록증·외국인환자 유치의료기관 등록증)을 열어 확인 체크한 뒤 승인하세요(둘 다 체크해야 승인됩니다). 프로필을 확인해 1~2 영업일 내 승인하면 클레임 승인과 함께 공개 상세에 그대로 게시됩니다.
           대행(₩{REGISTRY_AGENCY_FEE_WON.toLocaleString('ko-KR')}) 결제 건은 자료를 바탕으로 운영팀이 콘솔 양식을 대신 채운 뒤 승인합니다.
         </p>
         {submissions.length === 0 ? <p style={{ fontSize: 13, color: '#9c9c9c', margin: 0 }}>검수 대기 건이 없습니다.</p> : (
@@ -603,8 +603,21 @@ export default async function RegistryAdminPage({ searchParams }: { searchParams
                   {sub?.status === 'rejected' && sub.reviewNote ? <p style={{ fontSize: 11, color: '#c2143c', margin: '6px 0 0' }}>보완 요청 사유: {sub.reviewNote}</p> : null}
                   <form action={reviewSubmissionAction} style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginTop: 8 }}>
                     <input type="hidden" name="registryId" value={s.id} />
+                    {/* 서류 확인 (2026-11-12): 두 서류를 열어 보고 체크해야 '승인 · 게시'가 통과된다. 등록번호는 선택(조직 정보에 저장) */}
+                    <div style={{ flexBasis: '100%', display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', padding: '8px 10px', borderRadius: 8, background: '#fff', border: '1px solid #e5e7eb', fontSize: 12 }}>
+                      <b style={{ color: '#222' }}>서류 확인</b>
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: s.bizUrl ? '#222' : '#c2143c' }}>
+                        <input type="checkbox" name="docBiz" value="1" disabled={!s.bizUrl} /> 사업자등록증 확인함{s.bizUrl ? '' : ' (첨부 없음)'}
+                      </label>
+                      <input name="bizNo" placeholder="사업자등록번호 (선택)" style={{ width: 150, border: '1px solid #dddddd', borderRadius: 6, padding: '4px 8px', fontSize: 12 }} />
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: s.foreignUrl ? '#222' : '#c2143c' }}>
+                        <input type="checkbox" name="docForeign" value="1" disabled={!s.foreignUrl} /> 유치기관 등록증 확인함{s.foreignUrl ? '' : ' (첨부 없음)'}
+                      </label>
+                      <input name="foreignNo" placeholder="유치기관 등록번호 (선택)" style={{ width: 170, border: '1px solid #dddddd', borderRadius: 6, padding: '4px 8px', fontSize: 12 }} />
+                      {!s.bizUrl || !s.foreignUrl ? <span style={{ color: '#c2143c' }}>서류가 빠져 있으면 승인할 수 없습니다 — 보완 요청으로 받아 주세요.</span> : null}
+                    </div>
                     <input name="note" placeholder="메모 / 반려 사유 (병원 이메일로 전달)" style={{ flex: '1 1 260px', border: '1px solid #dddddd', borderRadius: 8, padding: '6px 10px', fontSize: 12, fontFamily: 'inherit' }} />
-                    <button type="submit" name="decision" value="approved" style={{ ...btn('#047857'), padding: '6px 14px', fontSize: 12 }}>승인 · 게시</button>
+                    <button type="submit" name="decision" value="approved" disabled={!s.bizUrl || !s.foreignUrl} style={{ ...btn('#047857'), padding: '6px 14px', fontSize: 12, opacity: !s.bizUrl || !s.foreignUrl ? 0.45 : 1 }}>승인 · 게시</button>
                     <button type="submit" name="decision" value="rejected" style={{ ...btn('#c2143c'), padding: '6px 14px', fontSize: 12 }}>보완 요청</button>
                   </form>
                 </div>

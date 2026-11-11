@@ -150,7 +150,14 @@ export async function reviewSubmissionAction(fd: FormData): Promise<void> {
   const note = String(fd.get('note') ?? '').trim();
   if (!registryId || !['approved', 'rejected'].includes(decision)) back({ error: 'bad_request' });
   if (decision === 'rejected' && !note) back({ error: '반려 사유를 적어 주세요 (병원에 이메일로 전달됩니다)' });
-  const r = decision === 'approved' ? await approveSubmission(registryId, note || null) : await rejectSubmission(registryId, note);
+  // 승인은 서류 2종(사업자등록증·외국인환자 유치의료기관 등록증)을 열어 확인했다는 체크가 둘 다 있어야 한다 (2026-11-12)
+  const docBiz = fd.get('docBiz') === '1';
+  const docForeign = fd.get('docForeign') === '1';
+  if (decision === 'approved' && (!docBiz || !docForeign)) back({ error: '사업자등록증과 외국인환자 유치의료기관 등록증을 열어 확인한 뒤 확인 체크 2개를 모두 선택해 주세요' });
+  const { data: me } = await createSupabaseServerClient().auth.getUser();
+  const r = decision === 'approved'
+    ? await approveSubmission(registryId, note || null, { businessLicense: docBiz, foreignPatientCert: docForeign, businessNo: String(fd.get('bizNo') ?? ''), foreignNo: String(fd.get('foreignNo') ?? ''), by: me.user?.email ?? null })
+    : await rejectSubmission(registryId, note);
   if (!r.ok) back({ error: r.error ?? 'failed' });
   revalidatePath('/master/registry');
   revalidatePath('/kr/clinics', 'layout');

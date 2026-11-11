@@ -298,7 +298,7 @@ export default async function MedicalRegistryPage({ searchParams }: { searchPara
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">서류 첨부 (검수용 · 비공개)</CardTitle>
-                  <CardDescription className="text-xs">PDF·JPG·PNG, 10MB 이하. 공개 페이지에는 노출되지 않고 관리자 검수에만 쓰입니다.</CardDescription>
+                  <CardDescription className="text-xs">사업자등록증과 외국인환자 유치의료기관 등록증 2종은 검수 요청에 필수입니다. PDF·JPG·PNG, 10MB 이하. 공개 페이지에는 노출되지 않고 관리자 검수에만 쓰입니다.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -307,7 +307,7 @@ export default async function MedicalRegistryPage({ searchParams }: { searchPara
                     <input type="file" name="businessLicense" accept="application/pdf,image/jpeg,image/png" className="text-sm" />
                   </div>
                   <div>
-                    <span className={label}>외국인환자 유치의료기관 등록증 {row.foreignLicensed ? '(유치기관)' : '(해당 시)'}</span>
+                    <span className={label}>외국인환자 유치의료기관 등록증 <span className="text-destructive">*</span>{row.foreignLicensed ? ' (복지부 유치기관 명단에 있음)' : ''}</span>
                     {d.docs?.foreignPatientCert ? <p className="mb-1 text-xs text-emerald-700">첨부됨 · {d.docs.foreignPatientCert.name} ({Math.round(d.docs.foreignPatientCert.size / 1024)}KB)</p> : null}
                     <input type="file" name="foreignCert" accept="application/pdf,image/jpeg,image/png" className="text-sm" />
                   </div>
