@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { ArrowLeft, ExternalLink, Image as ImageIcon, Plus, X, Languages, Copy } from 'lucide-react';
 import HoursBulkApply from '@/components/shared/hours-bulk-apply';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
@@ -25,6 +25,7 @@ import {
   updateHospitalHours,
 } from './_action';
 import { fmtHM, parseRange, type WeeklyHours } from '@/lib/hours/status';
+import { linkHospitalOrgAction } from '../../../_actions/org-approval';
 
 export const metadata = { title: '병원 다국어 콘텐츠 편집 · 마스터' };
 export const dynamic = 'force-dynamic';
@@ -213,6 +214,17 @@ export default async function MasterHospitalEditPage({
   const lunchHM = (i: 0 | 1): string => (lunchRange ? fmtHM(lunchRange[i]) : '');
   const timeInput = 'h-9 w-full rounded-md border border-input bg-background px-2 text-sm';
   const fallbackLanding = base.landingImageUrl;
+  // 사업자 계정 연결 · 승인 (2026-11-11): 큐레이션 병원 ↔ 의료기관 조직(hospitals.linked_org_id)
+  const [linkRow] = await db.select({ linkedOrgId: hospitals.linkedOrgId }).from(hospitals).where(eq(hospitals.id, params.id)).limit(1);
+  type OrgOpt = { id: string; name: string; representativeName: string | null; verificationStatus: string; createdAt: Date };
+  const medicalOrgs: OrgOpt[] = await db
+    .select({ id: organizations.id, name: organizations.name, representativeName: organizations.representativeName, verificationStatus: organizations.verificationStatus, createdAt: organizations.createdAt })
+    .from(organizations)
+    .where(and(eq(organizations.accountType, 'medical'), eq(organizations.isActive, true)))
+    .orderBy(desc(organizations.createdAt))
+    .limit(300)
+    .catch(() => [] as OrgOpt[]);
+  const linkedOrg = linkRow?.linkedOrgId ? medicalOrgs.find((o) => o.id === linkRow.linkedOrgId) ?? null : null;
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-8">
@@ -245,6 +257,60 @@ export default async function MasterHospitalEditPage({
           </Link>
         </p>
       </header>
+
+      {/* ─── 사업자 계정 연결 · 승인 (2026-11-11) ─────────────────── */}
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">사업자 계정 연결 · 승인</CardTitle>
+          <CardDescription className="text-xs">
+            병원이 /biz 에서 만든 의료기관 조직을 이 병원에 연결하면 /medical 콘솔·상담원 채팅·QR 방문 확인이 그 계정에 붙습니다.
+            승인(verified)된 계정은 마이페이지에서 관리자 콘솔로 바로 이동합니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs">
+            현재 연결:{' '}
+            {linkedOrg ? (
+              <>
+                <strong>{linkedOrg.name}</strong>
+                {linkedOrg.representativeName ? ` · 대표 ${linkedOrg.representativeName}` : ''}
+                {' · '}
+                {linkedOrg.verificationStatus === 'verified' ? '승인됨' : `승인 전 (${linkedOrg.verificationStatus})`}
+                {' · '}
+                <Link href={`/master/orgs/${linkedOrg.id}`} className="underline">조직 관리</Link>
+              </>
+            ) : linkRow?.linkedOrgId ? (
+              <code className="font-mono text-[11px]">{linkRow.linkedOrgId}</code>
+            ) : (
+              <span className="text-muted-foreground">없음</span>
+            )}
+          </p>
+          <form action={linkHospitalOrgAction} className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="hospitalId" value={base.id} />
+            <input type="hidden" name="lng" value={activeLocale} />
+            <select name="orgId" defaultValue={linkRow?.linkedOrgId ?? ''} className="h-9 min-w-[280px] rounded-md border border-input bg-background px-2 text-sm">
+              <option value="">— 의료기관 조직 선택 —</option>
+              {medicalOrgs.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}{o.representativeName ? ` · ${o.representativeName}` : ''} · {o.verificationStatus === 'verified' ? '승인됨' : '승인 전'} · {o.createdAt.toISOString().slice(0, 10)}
+                </option>
+              ))}
+            </select>
+            <label className="flex items-center gap-1 text-xs">
+              <input type="checkbox" name="approve" value="1" defaultChecked /> 연결하며 승인(verified)
+            </label>
+            <Button type="submit">연결 저장</Button>
+          </form>
+          {linkRow?.linkedOrgId ? (
+            <form action={linkHospitalOrgAction}>
+              <input type="hidden" name="hospitalId" value={base.id} />
+              <input type="hidden" name="lng" value={activeLocale} />
+              <input type="hidden" name="orgId" value="" />
+              <Button type="submit" variant="outline">연결 해제</Button>
+            </form>
+          ) : null}
+        </CardContent>
+      </Card>
 
       {/* ─── Locale tab strip ───────────────────────────────────── */}
       <div className="mb-6 flex flex-wrap items-center gap-1 rounded-lg border bg-muted/30 p-1">

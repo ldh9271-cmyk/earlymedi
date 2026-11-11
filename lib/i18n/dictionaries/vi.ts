@@ -1089,6 +1089,9 @@ const vi: Dictionary = {
     title: "Đặt chỗ của tôi",
     subtitle: "Lịch sử đặt chỗ với tài khoản {email}.",
     qrScan: "Quét QR · Xác nhận đến",
+    bizPending: "Tài khoản doanh nghiệp đang chờ duyệt",
+    bizPendingBody: "Bảng điều khiển của tổ chức sẽ mở sau khi đội ngũ xác nhận. Khi được duyệt, trang này sẽ chuyển thẳng tới bảng điều khiển.",
+    bizConsole: "Mở bảng điều khiển",
     qrScanHint: "Tài khoản doanh nghiệp — quét mã QR thanh toán của khách để xác nhận lượt đến.",
     scanPass: {
       open: "🔗 Liên kết quét dùng một lần cho cơ sở",

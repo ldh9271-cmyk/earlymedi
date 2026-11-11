@@ -1089,6 +1089,9 @@ const en: Dictionary = {
     title: "My bookings",
     subtitle: "Bookings made with {email}.",
     qrScan: "Scan QR · Check-in",
+    bizPending: "Business account pending approval",
+    bizPendingBody: "Your business organization opens its admin console after our team confirms it. Once approved, this page takes you straight to the console.",
+    bizConsole: "Open admin console",
     qrScanHint: "Business account — scan a customer's payment QR to confirm the visit.",
     scanPass: {
       open: "🔗 One-time scan link for the venue",

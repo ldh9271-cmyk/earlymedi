@@ -1110,6 +1110,9 @@ const kr = {
     title: "내 예약·결제",
     subtitle: "{email} 계정으로 진행한 예약 내역입니다.",
     qrScan: "QR 스캔 · 방문 확인",
+    bizPending: "사업자 계정 승인 대기 중",
+    bizPendingBody: "가입하신 사업자 조직은 운영자 확인 뒤 관리자 콘솔이 열립니다. 승인되면 이 페이지에서 콘솔로 바로 이동합니다.",
+    bizConsole: "관리자 콘솔 열기",
     qrScanHint: "사업자 계정 — 고객의 결제 QR을 바로 읽어 방문을 확인합니다.",
     scanPass: {
       open: "🔗 방문지에 보낼 1회용 스캔 링크",

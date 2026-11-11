@@ -188,3 +188,29 @@ export async function notifyOrderEvent(
   lines.push(`https://www.glowuptour.com/master/orders/${encodeURIComponent(o.invoiceNo)}`);
   return sendAdminTelegram(lines.join('\n'));
 }
+
+/**
+ * 사업자(파트너 센터) 조직 가입 알림 — /signup 의 quickSignupAction·provisionOrganizationAction 이 조직·소유자 멤버십을
+ * 만든 직후 1회. (notifySignupEvent 는 OAuth 콜백에서만 울려 이메일 가입 사업자는 알림이 없었음 — 2026-11-11 Early 지적)
+ * 마스터가 승인·병원 연결을 할 수 있는 화면 링크를 함께 보낸다.
+ */
+export async function notifyBusinessSignupEvent(q: {
+  orgId: string;
+  orgName: string;
+  accountType: string;
+  partnerSubtype?: string | null;
+  representativeName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  claimed?: string | null;
+}): Promise<boolean> {
+  const typeKo: Record<string, string> = { medical: '의료기관', non_medical: '파트너(뷰티·숙박·식당·여행)', agency: '유치업체(에이전시)', freelancer: '프리랜서 추천인' };
+  const lines = [
+    `<b>🏢 사업자 가입</b> ${esc(typeKo[q.accountType] ?? q.accountType)}${q.partnerSubtype ? ` · ${esc(q.partnerSubtype)}` : ''}`,
+    `조직: ${esc(q.orgName)}`,
+    `${q.representativeName ? `대표: ${esc(q.representativeName)} · ` : ''}${esc(q.email ?? '(이메일 없음)')}${q.phone ? ` · ${esc(q.phone)}` : ''}`,
+  ];
+  if (q.claimed) lines.push(`레지스트리 연결 요청: ${esc(q.claimed)}`);
+  lines.push('', `승인·병원 연결: https://www.glowuptour.com/master/orgs/${q.orgId}`, 'https://www.glowuptour.com/master/members?tab=biz');
+  return sendAdminTelegram(lines.join('\n'));
+}

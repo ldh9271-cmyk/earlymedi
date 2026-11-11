@@ -1088,6 +1088,9 @@ const ja: Dictionary = {
     title: "予約・お支払い",
     subtitle: "{email} でお申し込みいただいた予約履歴です。",
     qrScan: "QRスキャン・来店確認",
+    bizPending: "事業者アカウント承認待ち",
+    bizPendingBody: "ご登録の事業者組織は運営者の確認後に管理コンソールが開きます。承認されるとこのページからコンソールへ移動します。",
+    bizConsole: "管理コンソールを開く",
     qrScanHint: "事業者アカウント — お客様の決済QRを読み取り、来店を確認します。",
     scanPass: {
       open: "🔗 来店先に送る1回用スキャンリンク",

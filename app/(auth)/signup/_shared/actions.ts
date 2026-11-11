@@ -22,6 +22,7 @@ import {
   type AccountType,
 } from '@/lib/auth/account-types';
 import { auditLogs } from '@/drizzle/schema/audit';
+import { notifyBusinessSignupEvent } from '@/lib/notify/admin-alert';
 
 const SignupInputSchema = z.object({
   accountType: z.enum(['agency', 'freelancer', 'medical', 'non_medical']),
@@ -287,6 +288,12 @@ export async function quickSignupAction(rawInput: QuickSignupInput): Promise<str
       .catch(() => undefined);
   }
 
+  // 운영자 텔레그램 알림 — 실패해도 가입을 막지 않는다
+  await notifyBusinessSignupEvent({
+    orgId: org.id, orgName: input.orgName, accountType: input.accountType, partnerSubtype: input.partnerSubtype ?? null,
+    representativeName: input.representativeName, email: auth.user.email ?? null, phone: input.contactPhone,
+    claimed: [input.claimYkiho ? `병원 ykiho ${input.claimYkiho}` : null, input.claimShopMgtNo ? `뷰티 ${input.claimShopMgtNo}` : null, input.claimStayMgtNo ? `숙박 ${input.claimStayMgtNo}` : null, input.claimEatMgtNo ? `식당 ${input.claimEatMgtNo}` : null].filter(Boolean).join(', ') || null,
+  }).catch(() => false);
   setActiveOrgCookie(org.id, input.accountType);
 
   return `${ACCOUNT_TYPE_TO_PREFIX[input.accountType]}/dashboard?welcome=1`;
@@ -413,6 +420,11 @@ export async function provisionOrganizationAction(rawInput: SignupInput): Promis
 
   // 6. Update user pointer + active org cookie
   await db.update(users).set({ activeOrgId: org.id }).where(eq(users.id, auth.user.id));
+  // 운영자 텔레그램 알림 — 실패해도 가입을 막지 않는다
+  await notifyBusinessSignupEvent({
+    orgId: org.id, orgName: input.orgName, accountType: input.accountType, partnerSubtype: input.partnerSubtype ?? null,
+    representativeName: input.representativeName ?? null, email: auth.user.email ?? null,
+  }).catch(() => false);
   setActiveOrgCookie(org.id, input.accountType);
 
   // 7. Redirect

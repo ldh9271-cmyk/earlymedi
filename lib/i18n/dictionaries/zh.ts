@@ -1086,6 +1086,9 @@ const zh: Dictionary = {
     title: "我的预订与付款",
     subtitle: "使用 {email} 账户完成的预订记录。",
     qrScan: "扫描二维码 · 到店确认",
+    bizPending: "商户账号待审核",
+    bizPendingBody: "您的商户组织在运营方确认后将开放管理后台。审核通过后，此页面会直接跳转到后台。",
+    bizConsole: "打开管理后台",
     qrScanHint: "商家账户 — 扫描顾客的付款二维码，确认到店。",
     scanPass: {
       open: "🔗 发送给到店商家的一次性扫码链接",

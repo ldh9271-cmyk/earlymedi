@@ -17,6 +17,7 @@ import {
   deleteOrgAsMaster,
   mergeOrgAsMaster,
 } from '../../_actions/org-admin';
+import { setOrgVerificationAction } from '../../_actions/org-approval';
 
 export const metadata = { title: '조직 관리 · 마스터' };
 export const dynamic = 'force-dynamic';
@@ -26,7 +27,7 @@ export default async function MasterOrgManagePage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { confirm?: string };
+  searchParams: { confirm?: string; saved?: string; error?: string };
 }): Promise<JSX.Element> {
   const supabase = createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -85,6 +86,31 @@ export default async function MasterOrgManagePage({
         </p>
         <p className="mt-1 font-mono text-[10px] text-muted-foreground">{org.id}</p>
       </header>
+
+      {searchParams.saved ? <div className="mb-4 rounded-md border border-care-300 bg-care-50 p-3 text-xs text-care-900">✅ 저장되었습니다.</div> : null}
+      {searchParams.error ? <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">⚠ {decodeURIComponent(searchParams.error)}</div> : null}
+
+      {/* 승인 상태 (2026-11-11) */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">승인 상태</CardTitle>
+          <CardDescription>
+            현재 <strong className="text-foreground">{org.verificationStatus}</strong>. verified 로 승인하면 이 조직의 소유자가 마이페이지에 들어왔을 때 관리자 콘솔로 바로 이동합니다.
+            {org.accountType === 'medical' ? ' 의료기관은 병원 통합 관리 → 병원 편집의 "사업자 계정 연결 · 승인"에서 병원 상세와 함께 연결하는 것이 좋습니다.' : ''}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={setOrgVerificationAction} className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="orgId" value={org.id} />
+            <select name="status" defaultValue={org.verificationStatus} className="h-9 rounded-md border border-input bg-background px-2 text-sm">
+              {['unverified', 'documents_submitted', 'in_review', 'verified', 'rejected'].map((st) => (
+                <option key={st} value={st}>{st}</option>
+              ))}
+            </select>
+            <Button type="submit">저장</Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Dependency counts */}
       <Card className="mb-6">

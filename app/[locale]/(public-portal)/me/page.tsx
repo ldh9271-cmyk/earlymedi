@@ -52,7 +52,7 @@ export default async function MyPage({
   searchParams,
 }: {
   params: { locale: string };
-  searchParams: { invoice?: string };
+  searchParams: { invoice?: string; consumer?: string };
 }): Promise<JSX.Element> {
   if (!isPublicLocale(params.locale)) notFound();
   const locale = params.locale as PublicLocale;
@@ -79,6 +79,19 @@ export default async function MyPage({
     .where(and(eq(orgMemberships.userId, auth.user.id), eq(orgMemberships.status, 'active')))
     .limit(4)
     .catch(() => [] as Array<{ id: string; name: string }>);
+  // 사업자 계정(2026-11-11): 승인(verified)된 조직이 있으면 관리자 콘솔로 바로 보낸다(?consumer=1 이면 마이페이지에 머무름).
+  // 승인 전이면 아래 '승인 대기' 배너. 쿠키는 서버 컴포넌트에서 못 쓰므로 /api/auth/enter-console 이 활성 조직 쿠키를 심고 콘솔로 보낸다.
+  type BizOrg = { id: string; name: string; accountType: string; verificationStatus: string };
+  const bizOrgs: BizOrg[] = await db
+    .select({ id: organizations.id, name: organizations.name, accountType: organizations.accountType, verificationStatus: organizations.verificationStatus })
+    .from(orgMemberships)
+    .innerJoin(organizations, eq(orgMemberships.organizationId, organizations.id))
+    .where(and(eq(orgMemberships.userId, auth.user.id), eq(orgMemberships.status, 'active'), eq(organizations.isActive, true)))
+    .limit(4)
+    .catch(() => [] as BizOrg[]);
+  const approvedBiz = bizOrgs.find((o) => o.verificationStatus === 'verified') ?? null;
+  if (approvedBiz && !isMaster && searchParams.consumer !== '1') redirect(`/api/auth/enter-console?org=${approvedBiz.id}`);
+  const pendingBiz = !approvedBiz && bizOrgs.length > 0 ? bizOrgs[0] : null;
   const scanBack = encodeURIComponent(`/${locale}/me`);
   const scanLinks = scanOrgs.length > 0
     ? scanOrgs.map((o) => ({ href: `/scan?org=${o.id}&from=${scanBack}`, label: scanOrgs.length > 1 ? `${t.qrScan} · ${o.name}` : t.qrScan }))
@@ -136,6 +149,13 @@ export default async function MyPage({
       <p style={{ fontSize: 14, color: '#6a6a6a', margin: '6px 0 0' }}>
         {t.subtitle.replace('{email}', auth.user.email ?? '')}
       </p>
+      {pendingBiz ? (
+        <div style={{ marginTop: 14, border: '1px solid #fde68a', background: '#fffbeb', borderRadius: 14, padding: '12px 16px' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#b45309' }}>⏳ {t.bizPending} · {pendingBiz.name}</div>
+          <p style={{ fontSize: 12, color: '#6a6a6a', margin: '4px 0 8px', lineHeight: 1.5 }}>{t.bizPendingBody}</p>
+          <a href={`/api/auth/enter-console?org=${pendingBiz.id}`} style={{ display: 'inline-block', fontSize: 13, fontWeight: 700, color: '#222', textDecoration: 'underline' }}>{t.bizConsole} →</a>
+        </div>
+      ) : null}
       {scanLinks.length > 0 ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 14, border: '1px solid #e5e5e5', background: '#fff', borderRadius: 14, padding: '12px 16px' }}>
           {scanLinks.map((l) => (
