@@ -25,7 +25,7 @@ import {
   updateHospitalHours,
   updateHospitalHoursExceptions,
 } from './_action';
-import { fmtHM, parseRange, type HoursException, type WeeklyHours } from '@/lib/hours/status';
+import { fmtHM, normalizeWeeklyHours, parseRange, type HoursException, type WeeklyHours } from '@/lib/hours/status';
 import { formatHoursExceptions } from '@/lib/hours/exceptions';
 import { linkHospitalOrgAction } from '../../../_actions/org-approval';
 
@@ -212,7 +212,8 @@ export default async function MasterHospitalEditPage({
   const hd = (dRow?.details ?? {}) as { hours?: string; hoursWeekly?: WeeklyHours; hoursWeeklySource?: string; hoursExceptions?: HoursException[] };
   const hoursExceptions = Array.isArray(hd.hoursExceptions) ? hd.hoursExceptions : [];
   const seoulYear = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', year: 'numeric' }).format(new Date()));
-  const hw = hd.hoursWeekly ?? {};
+  // 스크립트로 넣은 "11:00-20:30" 문자열 모양도 입력칸에 보이도록 튜플로 통일
+  const hw = normalizeWeeklyHours(hd.hoursWeekly) ?? {};
   const toHM = (v?: string): string => (v && /^\d{4}$/.test(v) ? `${v.slice(0, 2)}:${v.slice(2)}` : '');
   const lunchRange = parseRange(hw.lunchWeek);
   const lunchHM = (i: 0 | 1): string => (lunchRange ? fmtHM(lunchRange[i]) : '');

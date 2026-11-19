@@ -15,7 +15,7 @@ import OpenStatusBadge from '@/components/shared/open-status-badge';
 import { loadHolidayYmds } from '@/lib/hours/holidays';
 import { parseKoHours } from '@/lib/hours/parse-ko';
 import { OG_IMAGE_META } from '@/lib/seo/og-image';
-import { seoulParts, type HoursException, type WeeklyHours } from '@/lib/hours/status';
+import { normalizeWeeklyHours, seoulParts, type HoursException, type WeeklyHours } from '@/lib/hours/status';
 import { upcomingExceptions } from '@/lib/hours/exceptions';
 import { LOCALE_TO_BCP47 } from '@/lib/i18n/locales';
 
@@ -280,7 +280,7 @@ export default async function ClinicDetailPage({
   const aboutText = lc?.intro?.trim() || row.notes?.trim() || null;
   const detailData = (row.details ?? {}) as ClinicDetails;
   // 진료 중/종료 배지 — 관리자 입력(hoursWeekly) 우선, 없으면 자유 문장 진료시간을 파싱. 공휴일은 kr_holidays.
-  const baseWeekly: WeeklyHours | null = detailData.hoursWeekly ?? parseKoHours(detailData.hours);
+  const baseWeekly: WeeklyHours | null = normalizeWeeklyHours(detailData.hoursWeekly) ?? parseKoHours(detailData.hours);
   // 날짜별 예외(임시 휴무·특별진료, 마스터 입력 details.hoursExceptions)는 요일 규칙 위에 얹는다
   const hoursExceptions: HoursException[] = Array.isArray(detailData.hoursExceptions) ? detailData.hoursExceptions : [];
   const weeklyHours: WeeklyHours | null = baseWeekly ? (hoursExceptions.length ? { ...baseWeekly, exceptions: hoursExceptions } : baseWeekly) : null;

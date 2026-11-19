@@ -129,11 +129,44 @@ export function todayWindow(h: WeeklyHours, dayIdx: number, isHoliday: boolean, 
   return { win: [a, b], lunch };
 }
 
+const DAY_STR_RE = /^\s*(\d{1,2})\s*:?\s*(\d{2})\s*[~\-–〜]\s*(\d{1,2})\s*:?\s*(\d{2})\s*$/;
+const pairOf = (v: unknown): [string, string] | undefined => {
+  if (Array.isArray(v) && v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string') {
+    const a = toMin(v[0]); const b = toMin(v[1]);
+    return a != null && b != null ? [fmtHM(a).replace(':', ''), fmtHM(b).replace(':', '')] : undefined;
+  }
+  if (typeof v === 'string') {
+    // 스크립트 등록분은 "11:00-20:30" 처럼 문자열 하나로 들어오기도 한다 (VS라인의원 강남점, 2026-11-19 발견)
+    const m = DAY_STR_RE.exec(v);
+    if (!m) return undefined;
+    const a = Number(m[1]) * 60 + Number(m[2]); const b = Number(m[3]) * 60 + Number(m[4]);
+    return a < b && b <= 24 * 60 ? [fmtHM(a).replace(':', ''), fmtHM(b).replace(':', '')] : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * 저장된 모양이 제각각인 요일별 시간을 ["HHMM","HHMM"] 튜플로 통일한다.
+ * 튜플이 아닌 요일(문자열 "11:00-20:30", "휴진", null)은 읽을 수 있으면 바꾸고 아니면 뺀다. 순수 함수 — 입력을 바꾸지 않는다.
+ */
+export function normalizeWeeklyHours(h: WeeklyHours | null | undefined): WeeklyHours | null {
+  if (!h || typeof h !== 'object') return null;
+  const out: WeeklyHours = { ...h };
+  for (const k of DAY_KEYS) {
+    const v = pairOf((h as Record<string, unknown>)[k]);
+    if (v) out[k] = v; else delete out[k];
+  }
+  const hol = pairOf((h as Record<string, unknown>).holidayHours);
+  if (hol) out.holidayHours = hol; else delete out.holidayHours;
+  return out;
+}
+
 export function hasAnyHours(h: WeeklyHours | null | undefined): boolean {
   return Boolean(h && DAY_KEYS.some((k) => Array.isArray(h[k]) && h[k]?.length === 2));
 }
 
-export function computeOpenStatus(h: WeeklyHours | null | undefined, now: Date, holidays: ReadonlySet<string> | string[] = []): OpenStatus {
+export function computeOpenStatus(raw: WeeklyHours | null | undefined, now: Date, holidays: ReadonlySet<string> | string[] = []): OpenStatus {
+  const h = normalizeWeeklyHours(raw);
   const hol = holidays instanceof Set ? holidays : new Set(holidays);
   const { ymd, dayIdx, minutes } = seoulParts(now);
   const day = dayKeyOf(dayIdx);

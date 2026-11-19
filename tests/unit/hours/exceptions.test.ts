@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatHoursExceptions, parseHoursExceptions, upcomingExceptions } from '@/lib/hours/exceptions';
-import { computeOpenStatus, exceptionOn, type WeeklyHours } from '@/lib/hours/status';
+import { computeOpenStatus, exceptionOn, normalizeWeeklyHours, type WeeklyHours } from '@/lib/hours/status';
 
 // VS라인의원 강남점 2027 공지 — 병원이 보낸 문장을 그대로 붙여 넣는 경우
 const NOTICE = `2027 휴무 일정 공유드립니다!
@@ -107,5 +107,23 @@ describe('computeOpenStatus with exceptions', () => {
     expect(describeOpenStatus(computeOpenStatus(hours, kst('2027-02-07', '11:00'), holidays), t)?.main).toBe('오늘 휴진');
     expect(describeOpenStatus(computeOpenStatus(hours, kst('2027-02-09', '14:30'), holidays), t)).toEqual({ main: '진료 중', sub: '특별진료 · 19:00까지' });
     expect(describeOpenStatus(computeOpenStatus(hours, kst('2027-02-10', '14:30'), holidays), t)).toEqual({ main: '진료 중', sub: '19:00까지' });
+  });
+});
+
+describe('normalizeWeeklyHours', () => {
+  it('문자열 "11:00-20:30" 모양(스크립트 등록분)도 튜플로 읽어 배지를 계산한다', () => {
+    const raw = { mon: '11:00-20:30', tue: '11:00-20:30', wed: '11:00~20:30', thu: '11:00-20:30', fri: '11:00-20:30', sat: '10:00-17:00', sun: null, closedHoliday: 'Y' } as unknown as WeeklyHours;
+    const n = normalizeWeeklyHours(raw);
+    expect(n?.mon).toEqual(['1100', '2030']);
+    expect(n?.sat).toEqual(['1000', '1700']);
+    expect(n && 'sun' in n).toBe(false);
+    const s = computeOpenStatus(raw, new Date('2026-11-19T19:32:00+09:00'), []); // 목요일 19:32
+    expect(s).toMatchObject({ state: 'open', until: '20:30' });
+    expect(computeOpenStatus(raw, new Date('2026-11-22T12:00:00+09:00'), []).state).toBe('closed_today'); // 일요일
+  });
+  it('튜플 모양은 그대로, 못 읽는 값은 뺀다', () => {
+    const n = normalizeWeeklyHours({ mon: ['0900', '1800'], tue: ['9:00', '18:00'], wed: '휴진' as unknown as [string, string], holidayHours: '10:00-14:00' as unknown as [string, string] });
+    expect(n).toEqual({ mon: ['0900', '1800'], tue: ['0900', '1800'], holidayHours: ['1000', '1400'] });
+    expect(normalizeWeeklyHours(null)).toBeNull();
   });
 });
