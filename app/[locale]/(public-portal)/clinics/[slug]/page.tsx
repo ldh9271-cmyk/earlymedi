@@ -15,7 +15,9 @@ import OpenStatusBadge from '@/components/shared/open-status-badge';
 import { loadHolidayYmds } from '@/lib/hours/holidays';
 import { parseKoHours } from '@/lib/hours/parse-ko';
 import { OG_IMAGE_META } from '@/lib/seo/og-image';
-import type { WeeklyHours } from '@/lib/hours/status';
+import { seoulParts, type HoursException, type WeeklyHours } from '@/lib/hours/status';
+import { upcomingExceptions } from '@/lib/hours/exceptions';
+import { LOCALE_TO_BCP47 } from '@/lib/i18n/locales';
 
 export const dynamic = 'force-dynamic';
 
@@ -278,7 +280,11 @@ export default async function ClinicDetailPage({
   const aboutText = lc?.intro?.trim() || row.notes?.trim() || null;
   const detailData = (row.details ?? {}) as ClinicDetails;
   // 진료 중/종료 배지 — 관리자 입력(hoursWeekly) 우선, 없으면 자유 문장 진료시간을 파싱. 공휴일은 kr_holidays.
-  const weeklyHours: WeeklyHours | null = detailData.hoursWeekly ?? parseKoHours(detailData.hours);
+  const baseWeekly: WeeklyHours | null = detailData.hoursWeekly ?? parseKoHours(detailData.hours);
+  // 날짜별 예외(임시 휴무·특별진료, 마스터 입력 details.hoursExceptions)는 요일 규칙 위에 얹는다
+  const hoursExceptions: HoursException[] = Array.isArray(detailData.hoursExceptions) ? detailData.hoursExceptions : [];
+  const weeklyHours: WeeklyHours | null = baseWeekly ? (hoursExceptions.length ? { ...baseWeekly, exceptions: hoursExceptions } : baseWeekly) : null;
+  const upcomingClosures = upcomingExceptions(hoursExceptions, seoulParts(new Date()).ymd, 8);
   const holidays = weeklyHours ? await loadHolidayYmds().catch(() => [] as string[]) : [];
   const coverUrl = lc?.coverImageUrl || row.coverImageUrl;
   const galleryRaw = lc?.galleryImageUrls && lc.galleryImageUrls.length > 0
@@ -440,7 +446,8 @@ export default async function ClinicDetailPage({
           </div>
 
           {/* 구조화 콘텐츠 — hospitals.details (병원 홈페이지 기반). */}
-          <ClinicDetailSections d={detailData} t={dict.clinicsPage} locale={params.locale} hoursBadge={weeklyHours ? <OpenStatusBadge hours={weeklyHours} holidays={holidays} labels={dict.openStatus} size="sm" /> : null} />
+          <ClinicDetailSections d={detailData} t={dict.clinicsPage} locale={params.locale} hoursBadge={weeklyHours ? <OpenStatusBadge hours={weeklyHours} holidays={holidays} labels={dict.openStatus} size="sm" /> : null}
+            schedule={upcomingClosures.length ? <HoursExceptionList list={upcomingClosures} bcp47={LOCALE_TO_BCP47[params.locale]} labels={dict.openStatus} /> : null} />
 
           {landingUrl ? (
             <div
@@ -570,6 +577,8 @@ type ClinicDetails = {
   hours?: string;
   /** 관리자 입력 요일별 진료시간 — 진료 중/종료 배지 계산용 (없으면 hours 문장을 파싱) */
   hoursWeekly?: WeeklyHours;
+  /** 날짜별 예외 — 임시 휴무 · 공휴일 특별진료 (마스터 입력) */
+  hoursExceptions?: HoursException[];
   website?: string;
   station?: string;
   signatureProcedures?: string[];
@@ -587,11 +596,14 @@ function ClinicDetailSections({
   t,
   locale,
   hoursBadge,
+  schedule,
 }: {
   d: ClinicDetails;
   t: Dictionary['clinicsPage'];
   locale: PublicLocale;
   hoursBadge?: React.ReactNode;
+  /** 휴무·특별진료 안내 목록 (날짜별 예외) — 진료시간 줄 아래 */
+  schedule?: React.ReactNode;
 }): JSX.Element | null {
   // details 안의 한국어 라벨은 생성된 번역 맵으로 치환 (kr 은 원문 유지).
   const L = (v: string): string => localizeKoLabel(v, locale);
@@ -730,6 +742,7 @@ function ClinicDetailSections({
               </InfoRow>
             ) : null}
             {d.hours ? <InfoRow label={t.detailHours}>{hoursBadge ? <span style={{ display: 'inline-block', marginRight: 8, verticalAlign: 'middle' }}>{hoursBadge}</span> : null}{L(d.hours)}</InfoRow> : null}
+            {schedule}
             {d.station ? <InfoRow label={t.detailStation}>{L(d.station)}</InfoRow> : null}
             {d.website ? (
               <InfoRow label={t.detailWebsite}>
@@ -768,5 +781,27 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
       <span style={{ width: 92, flexShrink: 0, color: '#6a6a6a' }}>{label}</span>
       <span style={{ color: '#222', lineHeight: 1.5 }}>{children}</span>
     </div>
+  );
+}
+
+// ─── 휴무 · 특별진료 안내 (날짜별 예외, 2026-11-19) ─────────────────
+// 병원이 공지한 임시 휴무·공휴일 특별진료를 오늘 이후 것만 날짜순으로 보여 준다. 메모는 병원 공지 문구 그대로.
+function HoursExceptionList({ list, bcp47, labels }: { list: HoursException[]; bcp47: string; labels: { scheduleTitle?: string; closedDay?: string; special?: string } }): JSX.Element {
+  const fmt = new Intl.DateTimeFormat(bcp47, { month: 'short', day: 'numeric', weekday: 'short', timeZone: 'Asia/Seoul' });
+  const hm = (v: string): string => `${v.slice(0, 2)}:${v.slice(2)}`;
+  return (
+    <InfoRow label={labels.scheduleTitle ?? ''}>
+      <span style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 8px' }}>
+        {list.map((e) => {
+          const closed = e.kind === 'closed';
+          return (
+            <span key={e.date} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, borderRadius: 999, padding: '3px 10px', fontSize: 12, fontWeight: 600, background: closed ? '#f5f5f5' : '#ecfdf5', color: closed ? '#6a6a6a' : '#047857' }}>
+              {fmt.format(new Date(`${e.date}T00:00:00+09:00`))}
+              <span style={{ fontWeight: 500, opacity: 0.9 }}>· {closed ? labels.closedDay : labels.special}{e.hours ? ` ${hm(e.hours[0])}~${hm(e.hours[1])}` : ''}{e.note ? ` (${e.note})` : ''}</span>
+            </span>
+          );
+        })}
+      </span>
+    </InfoRow>
   );
 }

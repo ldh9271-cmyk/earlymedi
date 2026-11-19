@@ -736,6 +736,9 @@ const en: Dictionary = {
     opensOn: "Opens {day} at {time}",
     days: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
     liveNote: "Seoul time · based on registered hours",
+    special: "Special hours",
+    scheduleTitle: "Closures & special clinic days",
+    closedDay: "Closed",
   },
   whatsapp: {
     title: "Sign in with WhatsApp",

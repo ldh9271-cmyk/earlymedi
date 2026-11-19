@@ -755,6 +755,9 @@ const kr = {
     opensOn: "{day}요일 {time} 진료 시작",
     days: ["월","화","수","목","금","토","일"],
     liveNote: "서울 시간 기준 · 등록된 진료시간으로 계산",
+    special: "특별진료",
+    scheduleTitle: "휴무·특별진료 안내",
+    closedDay: "휴무",
   },
   whatsapp: {
     title: "왓츠앱으로 로그인",

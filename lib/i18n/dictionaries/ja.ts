@@ -735,6 +735,9 @@ const ja: Dictionary = {
     opensOn: "{day}曜日 {time} 診療開始",
     days: ["月","火","水","木","金","土","日"],
     liveNote: "ソウル時間 · 登録された診療時間で計算",
+    special: "特別診療",
+    scheduleTitle: "休診・特別診療のご案内",
+    closedDay: "休診",
   },
   whatsapp: {
     title: "WhatsAppでログイン",

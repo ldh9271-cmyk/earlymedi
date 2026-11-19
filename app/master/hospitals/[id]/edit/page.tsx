@@ -23,8 +23,10 @@ import {
   removeLocaleLanding,
   copyLocaleContent,
   updateHospitalHours,
+  updateHospitalHoursExceptions,
 } from './_action';
-import { fmtHM, parseRange, type WeeklyHours } from '@/lib/hours/status';
+import { fmtHM, parseRange, type HoursException, type WeeklyHours } from '@/lib/hours/status';
+import { formatHoursExceptions } from '@/lib/hours/exceptions';
 import { linkHospitalOrgAction } from '../../../_actions/org-approval';
 
 export const metadata = { title: '병원 다국어 콘텐츠 편집 · 마스터' };
@@ -207,7 +209,9 @@ export default async function MasterHospitalEditPage({
   const fallbackCover = base.coverImageUrl;
   // 진료시간 (요일별) — 언어와 무관한 기본 행 details.hoursWeekly / hours
   const [dRow] = await db.select({ details: hospitals.details }).from(hospitals).where(eq(hospitals.id, params.id)).limit(1);
-  const hd = (dRow?.details ?? {}) as { hours?: string; hoursWeekly?: WeeklyHours; hoursWeeklySource?: string };
+  const hd = (dRow?.details ?? {}) as { hours?: string; hoursWeekly?: WeeklyHours; hoursWeeklySource?: string; hoursExceptions?: HoursException[] };
+  const hoursExceptions = Array.isArray(hd.hoursExceptions) ? hd.hoursExceptions : [];
+  const seoulYear = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', year: 'numeric' }).format(new Date()));
   const hw = hd.hoursWeekly ?? {};
   const toHM = (v?: string): string => (v && /^\d{4}$/.test(v) ? `${v.slice(0, 2)}:${v.slice(2)}` : '');
   const lunchRange = parseRange(hw.lunchWeek);
@@ -550,6 +554,33 @@ export default async function MasterHospitalEditPage({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
             </div>
             <Button type="submit" variant="brand">진료시간 저장</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* ─── 휴무 · 특별진료 일정 (날짜별 예외, 2026-11-19) ───────────── */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">휴무 · 특별진료 일정 (날짜별 예외)</CardTitle>
+          <CardDescription>
+            병원이 공지한 임시 휴무일과 공휴일 특별진료일을 한 줄에 하나씩 적으세요. 위 요일별 진료시간·공휴일 규칙보다 우선하며, 상세 페이지 배지와
+            &quot;휴무·특별진료 안내&quot; 목록에 반영됩니다. 병원 공지 문장(&quot;2/7,8 설연휴 휴무&quot;, &quot;2/9(화) 대체공휴일 특별진료&quot;)을 그대로 붙여 넣어도 읽힙니다.
+            연도 없는 날짜는 아래 기준 연도로 보고, 시간을 적지 않은 특별진료는 그 요일의 평소 시간으로 계산합니다. 현재 {hoursExceptions.length}건.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={updateHospitalHoursExceptions} className="space-y-3">
+            <input type="hidden" name="id" value={base.id} />
+            <input type="hidden" name="lng" value={activeLocale} />
+            <div className="flex items-center gap-2">
+              <Label htmlFor="exYear" className="shrink-0">연도 없는 날짜의 기준 연도</Label>
+              <input id="exYear" type="number" name="year" min={2024} max={2100} defaultValue={seoulYear} className="h-9 w-28 rounded-md border border-input bg-background px-2 text-sm" />
+            </div>
+            <textarea name="exceptionsText" rows={Math.min(14, Math.max(6, hoursExceptions.length + 2))} defaultValue={formatHoursExceptions(hoursExceptions)}
+              placeholder={'예)\n2027-01-01 휴무 신정\n2/6(토) 설연휴 첫날 특별진료\n2/7,8 설연휴 휴무\n2027-02-09 특별진료 10:00~17:00 대체공휴일'}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm" />
+            <p className="text-[11px] text-muted-foreground">저장하면 &quot;YYYY-MM-DD 휴무|특별진료 [시간] [메모]&quot; 형식으로 정리됩니다. 전부 지우고 저장하면 예외가 없어집니다.</p>
+            <Button type="submit" variant="brand">예외 일정 저장</Button>
           </form>
         </CardContent>
       </Card>

@@ -733,6 +733,9 @@ const zh: Dictionary = {
     opensOn: "{day} {time} 开始接诊",
     days: ["周一","周二","周三","周四","周五","周六","周日"],
     liveNote: "首尔时间 · 按登记的诊疗时间计算",
+    special: "特别门诊",
+    scheduleTitle: "休诊·特别门诊安排",
+    closedDay: "休诊",
   },
   whatsapp: {
     title: "用 WhatsApp 登录",

@@ -10,6 +10,7 @@ import { hospitalLocaleContent } from '@/drizzle/schema/hospital-locale-content'
 import { auditLogs } from '@/drizzle/schema/audit';
 import { createSupabaseServerClient } from '@/lib/auth/supabase-server';
 import { isMasterEmail } from '@/lib/auth/master';
+import { parseHoursExceptions } from '@/lib/hours/exceptions';
 import {
   uploadHospitalImage,
   deleteHospitalImageByUrl,
@@ -558,6 +559,47 @@ export async function updateHospitalHours(formData: FormData): Promise<void> {
       organizationId: orgId, actorUserId: master.userId, action: 'update', entityType: 'hospital', entityId: id,
       diff: { hoursWeekly: anyDay ? weekly : null, hoursText },
       metadata: { isMaster: true, source: 'master_console', kind: 'hospital_hours' },
+    }).catch(() => {});
+  }
+  revalidateClinicSurfaces();
+  backToEdit(id, locale, 'saved=1');
+}
+
+/**
+ * 휴무 · 특별진료 일정(날짜별 예외) 저장 — details.hoursExceptions (2026-11-19).
+ *  textarea 한 줄 = 하루(또는 "2/7,8" 같은 나열). 못 읽은 줄이 있으면 저장하지 않고 그 줄을 돌려준다.
+ */
+export async function updateHospitalHoursExceptions(formData: FormData): Promise<void> {
+  const master = await requireMaster();
+  if (!master) redirect('/select-org');
+  const id = String(formData.get('id') ?? '');
+  const locale = parseLocale(formData.get('lng'));
+  if (!id) redirect('/master/hospitals?error=missing_id');
+  const yearRaw = Number(formData.get('year'));
+  const year = Number.isInteger(yearRaw) && yearRaw >= 2024 && yearRaw <= 2100 ? yearRaw : new Date().getFullYear();
+  const text = String(formData.get('exceptionsText') ?? '');
+  const { list, errors } = parseHoursExceptions(text, year);
+  if (errors.length) backToEdit(id, locale, `error=${encodeURIComponent(`읽지 못한 줄 ${errors.length}개 — 저장하지 않았습니다: ${errors.slice(0, 5).join(' / ')}`)}`);
+
+  if (list.length) {
+    await db.execute(sql`
+      update hospitals
+         set details = (coalesce(details, '{}'::jsonb) || ${JSON.stringify({ hoursExceptions: list })}::jsonb),
+             updated_at = now()
+       where id = ${id}`);
+  } else {
+    await db.execute(sql`
+      update hospitals
+         set details = (coalesce(details, '{}'::jsonb) - 'hoursExceptions'),
+             updated_at = now()
+       where id = ${id}`);
+  }
+  const orgId = await getHospitalOrgId(id);
+  if (orgId) {
+    await db.insert(auditLogs).values({
+      organizationId: orgId, actorUserId: master.userId, action: 'update', entityType: 'hospital', entityId: id,
+      diff: { hoursExceptions: list },
+      metadata: { isMaster: true, source: 'master_console', kind: 'hospital_hours_exceptions' },
     }).catch(() => {});
   }
   revalidateClinicSurfaces();

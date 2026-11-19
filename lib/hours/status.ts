@@ -22,7 +22,33 @@ export type WeeklyHours = {
   /** 공휴일에도 진료하면 그 시간 */
   holidayHours?: [string, string];
   note?: string;
+  /** 날짜별 예외 — 임시 휴무·특별진료 (2026-11-19). 요일·공휴일 규칙보다 우선한다. */
+  exceptions?: HoursException[];
 };
+
+/**
+ * 날짜별 예외: 병원이 공지한 휴무일(설연휴 둘째 날 등)과 특별진료일(대체공휴일에도 진료 등).
+ *  - kind 'closed' → 그날은 요일·공휴일 규칙과 무관하게 휴진
+ *  - kind 'open'   → 공휴일이어도 진료. hours 가 있으면 그 시간, 없으면 그 요일의 평소 시간
+ */
+export type HoursException = {
+  /** YYYY-MM-DD (서울 날짜) */
+  date: string;
+  kind: 'closed' | 'open';
+  /** 'open' 일 때 그날 진료시간 "HHMM" — 없으면 요일 평소 시간 */
+  hours?: [string, string];
+  /** 공지 문구 — "설연휴", "대체공휴일 특별진료" 등 */
+  note?: string;
+};
+
+/** 그 날짜의 예외 (없으면 undefined). 같은 날짜가 여러 개면 뒤의 것이 이긴다. */
+export function exceptionOn(h: WeeklyHours | null | undefined, ymd: string): HoursException | undefined {
+  const list = h?.exceptions;
+  if (!Array.isArray(list) || list.length === 0) return undefined;
+  let found: HoursException | undefined;
+  for (const e of list) if (e && e.date === ymd && (e.kind === 'closed' || e.kind === 'open')) found = e;
+  return found;
+}
 
 export type OpenState = 'open' | 'closing_soon' | 'lunch' | 'closed' | 'closed_today' | 'unknown';
 export type OpenStatus = {
@@ -32,6 +58,8 @@ export type OpenStatus = {
   /** 다음 진료 시작 — dayOffset 0 = 오늘, 1 = 내일 … */
   opensAt?: { dayOffset: number; day: DayKey; time: string };
   isHoliday: boolean;
+  /** 오늘 적용된 날짜별 예외 — 휴무 공지 / 특별진료 (배지 문구용) */
+  exception?: { kind: 'closed' | 'open'; note?: string };
   /** 판정에 쓴 서울 시각 */
   seoul: { ymd: string; day: DayKey; hm: string };
 };
@@ -79,12 +107,18 @@ function closedOnHoliday(h: WeeklyHours): boolean {
   return !/진료|open/i.test(v);
 }
 
-/** 오늘 적용할 [시작, 종료] (분). 공휴일·요일 휴진이면 null. */
-export function todayWindow(h: WeeklyHours, dayIdx: number, isHoliday: boolean): { win: [number, number] | null; lunch: [number, number] | null } {
+/** 오늘 적용할 [시작, 종료] (분). 공휴일·요일 휴진이면 null. 날짜별 예외(ex)가 있으면 그것이 먼저다. */
+export function todayWindow(h: WeeklyHours, dayIdx: number, isHoliday: boolean, ex?: HoursException): { win: [number, number] | null; lunch: [number, number] | null } {
   const key = dayKeyOf(dayIdx);
   const lunchText = key === 'sat' ? (h.lunchSat ?? undefined) : key === 'sun' ? undefined : h.lunchWeek;
   const lunch = parseRange(lunchText);
-  if (isHoliday) {
+  if (ex?.kind === 'closed') return { win: null, lunch: null };
+  if (ex?.kind === 'open' && ex.hours) {
+    const a = toMin(ex.hours[0]); const b = toMin(ex.hours[1]);
+    return { win: a != null && b != null && a < b ? [a, b] : null, lunch };
+  }
+  // 특별진료(시간 미기재)는 공휴일이어도 그 요일의 평소 시간으로 본다
+  if (isHoliday && ex?.kind !== 'open') {
     if (h.holidayHours) { const a = toMin(h.holidayHours[0]); const b = toMin(h.holidayHours[1]); return { win: a != null && b != null && a < b ? [a, b] : null, lunch: null }; }
     if (closedOnHoliday(h)) return { win: null, lunch: null };
   }
@@ -104,7 +138,9 @@ export function computeOpenStatus(h: WeeklyHours | null | undefined, now: Date, 
   const { ymd, dayIdx, minutes } = seoulParts(now);
   const day = dayKeyOf(dayIdx);
   const isHoliday = hol.has(ymd);
+  const ex = exceptionOn(h, ymd);
   const base: OpenStatus = { state: 'unknown', isHoliday, seoul: { ymd, day, hm: fmtHM(minutes) } };
+  if (ex) base.exception = ex.note ? { kind: ex.kind, note: ex.note } : { kind: ex.kind };
   if (!hasAnyHours(h) || !h) return base;
 
   const nextOpen = (): OpenStatus['opensAt'] | undefined => {
@@ -113,13 +149,13 @@ export function computeOpenStatus(h: WeeklyHours | null | undefined, now: Date, 
       // 다음 날의 공휴일 여부는 날짜 계산이 필요 — 하루씩 더해 ymd 를 만든다
       const d = new Date(now.getTime() + off * 86_400_000);
       const p = seoulParts(d);
-      const w = todayWindow(h, idx, hol.has(p.ymd)).win;
+      const w = todayWindow(h, idx, hol.has(p.ymd), exceptionOn(h, p.ymd)).win;
       if (w) return { dayOffset: off, day: dayKeyOf(idx), time: fmtHM(w[0]) };
     }
     return undefined;
   };
 
-  const { win, lunch } = todayWindow(h, dayIdx, isHoliday);
+  const { win, lunch } = todayWindow(h, dayIdx, isHoliday, ex);
   if (!win) return { ...base, state: 'closed_today', opensAt: nextOpen() };
   const [start, end] = win;
   if (minutes < start) return { ...base, state: 'closed', opensAt: { dayOffset: 0, day, time: fmtHM(start) } };

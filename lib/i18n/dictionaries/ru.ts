@@ -736,6 +736,9 @@ const ru: Dictionary = {
     opensOn: "Откроется {day} в {time}",
     days: ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],
     liveNote: "Время Сеула · по зарегистрированным часам приёма",
+    special: "Особый приём",
+    scheduleTitle: "Выходные и особые дни приёма",
+    closedDay: "Выходной",
   },
   whatsapp: {
     title: "Вход через WhatsApp",

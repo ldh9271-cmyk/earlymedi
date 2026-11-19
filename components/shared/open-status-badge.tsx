@@ -11,6 +11,8 @@ import { computeOpenStatus, type OpenStatus, type WeeklyHours } from '@/lib/hour
 export type OpenStatusLabels = {
   open: string; closingSoon: string; lunch: string; closed: string; closedToday: string; holidayClosed: string;
   until: string; opensToday: string; opensTomorrow: string; opensOn: string; days: string[]; liveNote: string;
+  /** 날짜별 예외 — 공휴일 특별진료 표시 (2026-11-19) */
+  special?: string;
 };
 
 const TONE: Record<OpenStatus['state'], { bg: string; fg: string; dot: string }> = {
@@ -25,6 +27,8 @@ const DAY_IDX: Record<string, number> = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4
 
 export function describeOpenStatus(s: OpenStatus, t: OpenStatusLabels): { main: string; sub: string | null } | null {
   const fill = (tpl: string, v: Record<string, string>): string => tpl.replace(/\{(\w+)\}/g, (_m, k: string) => v[k] ?? '');
+  // 공휴일 특별진료(예외 open)면 "특별진료 · 19:00까지" 처럼 앞에 붙인다
+  const withSpecial = (sub: string | null): string | null => (s.exception?.kind === 'open' && s.isHoliday && t.special ? [t.special, sub].filter(Boolean).join(' · ') : sub);
   const opens = (): string | null => {
     const o = s.opensAt;
     if (!o) return null;
@@ -33,11 +37,12 @@ export function describeOpenStatus(s: OpenStatus, t: OpenStatusLabels): { main: 
     return fill(t.opensOn, { day: t.days[DAY_IDX[o.day] ?? 0] ?? o.day, time: o.time });
   };
   switch (s.state) {
-    case 'open': return { main: t.open, sub: s.until ? fill(t.until, { time: s.until }) : null };
-    case 'closing_soon': return { main: t.closingSoon, sub: s.until ? fill(t.until, { time: s.until }) : null };
+    case 'open': return { main: t.open, sub: withSpecial(s.until ? fill(t.until, { time: s.until }) : null) };
+    case 'closing_soon': return { main: t.closingSoon, sub: withSpecial(s.until ? fill(t.until, { time: s.until }) : null) };
     case 'lunch': return { main: t.lunch, sub: s.until ? fill(t.until, { time: s.until }) : null };
     case 'closed': return { main: t.closed, sub: opens() };
-    case 'closed_today': return { main: s.isHoliday ? t.holidayClosed : t.closedToday, sub: opens() };
+    // 날짜별 예외로 쉬는 날은 공휴일이어도 '오늘 휴진'(병원 공지) 으로 표시
+    case 'closed_today': return { main: s.exception?.kind === 'closed' ? t.closedToday : s.isHoliday ? t.holidayClosed : t.closedToday, sub: opens() };
     default: return null;
   }
 }

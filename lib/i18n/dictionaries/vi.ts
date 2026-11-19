@@ -736,6 +736,9 @@ const vi: Dictionary = {
     opensOn: "Mở cửa {day} lúc {time}",
     days: ["T2","T3","T4","T5","T6","T7","CN"],
     liveNote: "Giờ Seoul · tính theo giờ khám đã đăng ký",
+    special: "Khám đặc biệt",
+    scheduleTitle: "Lịch nghỉ & ngày khám đặc biệt",
+    closedDay: "Nghỉ",
   },
   whatsapp: {
     title: "Đăng nhập bằng WhatsApp",
