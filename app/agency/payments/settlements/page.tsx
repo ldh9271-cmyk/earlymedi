@@ -141,14 +141,15 @@ export default async function TossSettlementsPage({
           {result?.errorCode}
           {result?.errorMessage ? ` — ${result.errorMessage}` : ''}
           <br />
-          테스트(sandbox) 키는 정산 API 를 지원하지 않을 수 있습니다 — MID 심사 승인 후 라이브
-          키로 전환하면 정상 조회됩니다.
+          테스트(sandbox) 키로 운영 중이면 정산 API 가 비어 있거나 거부될 수 있습니다. 운영은
+          2026-11-27 부터 쉐어아트 라이브 키(MID glowkrlv4c)로 조회합니다 — 그래도 실패하면 키
+          재발급·만료 여부를 토스 개발자센터에서 확인하세요.
         </Notice>
       ) : rows.length === 0 ? (
         <Notice title="해당 기간의 정산 내역이 없습니다">
-          현재 심사중이라 테스트 키로 운영 중입니다 — 테스트 결제는 실제 정산이 생기지 않아 비어
-          있는 게 정상입니다. 심사 승인 → 라이브 키 전환 후 실 카드 결제가 발생하면 여기에 거래별
-          수수료 · 지급 일정이 표시됩니다.
+          실 카드 결제가 일어나면 거래별 수수료 · 지급 일정이 여기에 표시됩니다. 카드 승인 뒤 정산
+          데이터가 잡히기까지 하루 정도 걸릴 수 있고, 신용·체크카드 정산액은 주정산 + 6영업일에
+          입금됩니다(쉐어아트 MID glowkrlv4c 계약 기준).
         </Notice>
       ) : (
         <Card>

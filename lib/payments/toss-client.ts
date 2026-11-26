@@ -35,17 +35,32 @@ function loadSdk(): Promise<TossPaymentsFn | null> {
 export type TossOpenOutcome = 'redirected' | 'cancelled' | 'error';
 
 /**
+ * 해외카드(Visa·Master·JCB·UnionPay) 다국어 결제창 사용 여부.
+ * 토스 상점에 '해외결제' 서비스가 계약돼 있어야 열린다. 2026-11-27 라이브 전환
+ * 시점의 쉐어아트 MID(glowkrlv4c)는 국내 신용·체크카드 + 계좌이체만 계약돼 있어
+ * 기본은 끔. 해외결제 계약이 끝나면 NEXT_PUBLIC_TOSS_INTL_CARD=1 로 켠다
+ * (빌드 시 인라인되는 공개 값 — 바꾸면 재배포 필요).
+ */
+export function tossIntlCardEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_TOSS_INTL_CARD === '1';
+}
+
+/**
  * 사이트 로케일 → 결제창 구성.
  *   kr        → 국내 결제창 (한국어 UI · 카카오페이 등 국내 간편결제)
  *   ja/zh     → 해외카드 다국어 결제창, 해당 언어로 시작
  *   en/ru/vi  → 해외카드 다국어 결제창, 영어 (토스는 KO/EN/JA/ZH 만 지원)
  * 다국어 결제창은 Visa·Master·JCB·UnionPay 등 해외 발급 카드 전용이다 —
- * 외국인 고객이 실제로 쓰는 카드와도 맞는다.
+ * 외국인 고객이 실제로 쓰는 카드와도 맞는다. 해외결제가 아직 계약 전이면
+ * (tossIntlCardEnabled() = false) 외국어 로케일도 국내 결제창을 연다 — 언어만
+ * 넘기고 useInternationalCardOnly 는 붙이지 않는다 (붙이면 계약 없는 상점에서
+ * 결제창이 열리지 않아 QR 폴백으로 떨어진다).
  */
 function cardOptionsForLocale(locale?: string): Record<string, unknown> {
   const base = { useEscrow: false, flowMode: 'DEFAULT', useCardPoint: false, useAppCardOnly: false };
   if (!locale || locale === 'kr' || locale === 'ko') return base;
   const language = locale === 'ja' ? 'JA' : locale === 'zh' ? 'ZH' : 'EN';
+  if (!tossIntlCardEnabled()) return { ...base, language };
   return { ...base, useInternationalCardOnly: true, language };
 }
 

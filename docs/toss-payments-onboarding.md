@@ -84,3 +84,31 @@ PG 심사관이 사이트를 직접 확인한다. 현재 상태 기준:
   취소/실패는 웹훅이 토스 API 재조회로 동기화.
 - 이용자가 결제창을 닫으면 예약 정보 화면에 남고 같은 인보이스로 재시도
   가능. SDK 로드 실패 시 알리페이 QR로 폴백.
+
+---
+
+## 6. 2026-11-27 라이브(정식) 키 전환 기록
+
+- 계약 주체 **주식회사 쉐어아트**(토스 상점관리자 tm/1768487, 개발자센터 상점 선택 → '주식회사 쉐어아트').
+- 글로우업투어용 라이브 MID = **glowkrlv4c** (개발자센터 account 2649127, 홈페이지
+  https://www.glowuptour.com/kr, 계약일 2026-11-20). 이용 서비스: **신용·체크카드 + 계좌이체**
+  (간편결제는 카드 아래 포함). 카드사 심사: 하나·BC·신한·삼성·현대·롯데·농협·우리 승인,
+  **국민 심사중**(11-27 기준). **해외카드(VISA·Mastercard·JCB·AMEX·UnionPay) 전부 '미신청'**
+  → 상점관리자 > 이용정보 > '서비스 추가 신청'에서 해외결제를 따로 신청해야 외국 발급 카드가 된다.
+  신청·승인 후 Vercel 에 `NEXT_PUBLIC_TOSS_INTL_CARD=1` 추가 + 재배포하면 외국어 로케일이
+  다시 해외카드 다국어 결제창을 연다 (`lib/payments/toss-client.ts` `tossIntlCardEnabled`).
+- 같은 계정의 다른 MID: glowkr9caq 는 **지급대행(정산지급대행) 계약**(11-10) — 결제창용이 아님.
+  glowkr1x32 · glowkr2yv9 · glowkry8x8 · glowkrywo4 · glowup9isa 는 계약 전(라이브 결제 불가),
+  csharer1jr 은 쉐어아트 cafe24 상점.
+- 키 보관: `.secrets/toss-live-{client,secret}-key.txt`(git 제외, 600). 라이브 시크릿 키는
+  개발자센터 > API 키 > 라이브 > 'API 개별 연동 키' MID glowkrlv4c > 시크릿 키 '보기'(본인인증 필요)
+  → '복사' 버튼 → `pbpaste > 파일` 로 옮긴다(채팅·셸 출력에 값을 찍지 않는다).
+  키 유효성 확인: `curl -u "$(cat .secrets/toss-live-secret-key.txt):" https://api.tosspayments.com/v1/payments/orders/GU-NOSUCH`
+  → `NOT_FOUND_PAYMENT`(유효) / `UNAUTHORIZED_KEY`(무효).
+- Vercel production 환경변수: `NEXT_PUBLIC_TOSS_CLIENT_KEY`(live_ck_…) · `TOSS_SECRET_KEY`(live_sk_…).
+  `.env.local` 에는 라이브 키를 넣지 않는다(로컬 개발이 실결제를 열지 않도록 — 로컬은 QR 폴백).
+- 라이브 웹훅: 개발자센터 > 웹훅 > 라이브 > MID glowkrlv4c → `https://www.glowuptour.com/api/payments/toss/webhook`,
+  이벤트 PAYMENT_STATUS_CHANGED (+ CANCEL_STATUS_CHANGED). 테스트 단계 웹훅(체험 상점·glowkrywo4)은 그대로 둔다.
+- 정산: 신용·체크카드 주정산 + 6영업일, 월 정산한도 3,000만 원, 안심정산플랜 연이용권(2026-11-03 ~ 2027-11-02).
+  정산 내역은 `/agency/payments/settlements`(GET /v1/settlements).
+- 마지막 확인: 운영에서 실카드 소액 결제 1건 → 마이페이지 paid → 마스터 환불 → 토스 CANCELED 웹훅 수신.
